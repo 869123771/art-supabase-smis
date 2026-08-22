@@ -79,7 +79,7 @@ values
   ('5a150000-0000-4000-8000-000000000074', '5a150000-0000-4000-8000-000000000018', 'SmisDocRiskAssessmentStandard', 'risk-assessment-standard', '/smis/catalog', '{"title":"风险评估标准设置","icon":"ri:radar-line","catalogCode":"risk-assessment-standard"}'::jsonb, 4, 'menu', 'smis', 'smis-doc-v1'),
   ('5a150000-0000-4000-8000-000000000075', '5a150000-0000-4000-8000-000000000018', 'SmisDocRiskFourColorMap', 'risk-four-color-map', '/smis/catalog', '{"title":"风险四色图","icon":"ri:radar-line","catalogCode":"risk-four-color-map"}'::jsonb, 5, 'menu', 'smis', 'smis-doc-v1'),
   ('5a150000-0000-4000-8000-000000000076', '5a150000-0000-4000-8000-000000000018', 'SmisDocQuantitativeRiskControl', 'quantitative-risk-control', '/smis/catalog', '{"title":"风险定量评价及管控","icon":"ri:radar-line","catalogCode":"quantitative-risk-control"}'::jsonb, 6, 'menu', 'smis', 'smis-doc-v1'),
-  ('5a150000-0000-4000-8000-000000000077', '5a150000-0000-4000-8000-000000000018', 'SmisDocInspectionPlan', 'inspection-plan', '/smis/inspection-control/hidden-danger', '{"title":"隐患排查计划","icon":"ri:radar-line"}'::jsonb, 7, 'menu', 'smis', 'smis-doc-v1'),
+  ('5a150000-0000-4000-8000-000000000077', '5a150000-0000-4000-8000-000000000018', 'SmisDocInspectionPlan', 'inspection-plan', '/smis/catalog', '{"title":"隐患排查计划","icon":"ri:radar-line","catalogCode":"inspection-plan"}'::jsonb, 7, 'menu', 'smis', 'smis-doc-v1'),
   ('5a150000-0000-4000-8000-000000000078', '5a150000-0000-4000-8000-000000000018', 'SmisDocInspectionTask', 'inspection-task', '/smis/inspection-control/hidden-danger', '{"title":"隐患排查任务","icon":"ri:radar-line"}'::jsonb, 8, 'menu', 'smis', 'smis-doc-v1'),
   ('5a150000-0000-4000-8000-000000000079', '5a150000-0000-4000-8000-000000000018', 'SmisDocDangerGovernance', 'danger-governance', '/smis/inspection-control/hidden-danger', '{"title":"隐患治理跟踪","icon":"ri:radar-line"}'::jsonb, 9, 'menu', 'smis', 'smis-doc-v1'),
   ('5a150000-0000-4000-8000-000000000080', '5a150000-0000-4000-8000-000000000018', 'SmisDocInspectionForm', 'inspection-form', '/smis/catalog', '{"title":"排查表","icon":"ri:radar-line","catalogCode":"inspection-form"}'::jsonb, 10, 'menu', 'smis', 'smis-doc-v1'),
@@ -114,16 +114,15 @@ values
   ('5a150000-0000-4000-8000-000000000109', '5a150000-0000-4000-8000-000000000020', 'SmisRiskPoint:Assess', '', '', '{"title":"维护风险评估"}'::jsonb, 910, 'button', 'smis', 'smis-doc-v1'),
   ('5a150000-0000-4000-8000-000000000110', '5a150000-0000-4000-8000-000000000020', 'SmisRiskPoint:ActivateAssessment', '', '', '{"title":"评估生效"}'::jsonb, 911, 'button', 'smis', 'smis-doc-v1'),
   ('5a150000-0000-4000-8000-000000000111', '5a150000-0000-4000-8000-000000000079', 'SmisHiddenDanger:View', '', '', '{"title":"查看隐患"}'::jsonb, 912, 'button', 'smis', 'smis-doc-v1'),
-  ('5a150000-0000-4000-8000-000000000112', '5a150000-0000-4000-8000-000000000079', 'SmisHiddenDanger:ManagePlan', '', '', '{"title":"维护检查计划"}'::jsonb, 913, 'button', 'smis', 'smis-doc-v1'),
-  ('5a150000-0000-4000-8000-000000000113', '5a150000-0000-4000-8000-000000000079', 'SmisHiddenDanger:ExecuteInspection', '', '', '{"title":"执行检查"}'::jsonb, 914, 'button', 'smis', 'smis-doc-v1'),
-  ('5a150000-0000-4000-8000-000000000114', '5a150000-0000-4000-8000-000000000079', 'SmisHiddenDanger:Report', '', '', '{"title":"上报隐患"}'::jsonb, 915, 'button', 'smis', 'smis-doc-v1'),
-  ('5a150000-0000-4000-8000-000000000115', '5a150000-0000-4000-8000-000000000079', 'SmisHiddenDanger:Assign', '', '', '{"title":"指派整改"}'::jsonb, 916, 'button', 'smis', 'smis-doc-v1'),
-  ('5a150000-0000-4000-8000-000000000116', '5a150000-0000-4000-8000-000000000079', 'SmisHiddenDanger:Rectify', '', '', '{"title":"提交整改"}'::jsonb, 917, 'button', 'smis', 'smis-doc-v1'),
-  ('5a150000-0000-4000-8000-000000000117', '5a150000-0000-4000-8000-000000000079', 'SmisHiddenDanger:Review', '', '', '{"title":"复查销号"}'::jsonb, 918, 'button', 'smis', 'smis-doc-v1'),
-  ('5a150000-0000-4000-8000-000000000118', '5a150000-0000-4000-8000-000000000044', 'SmisAccidentEmergency:View', '', '', '{"title":"查看事故与应急"}'::jsonb, 919, 'button', 'smis', 'smis-doc-v1'),
-  ('5a150000-0000-4000-8000-000000000119', '5a150000-0000-4000-8000-000000000044', 'SmisAccidentEmergency:ManageAccident', '', '', '{"title":"管理事故事件"}'::jsonb, 920, 'button', 'smis', 'smis-doc-v1'),
-  ('5a150000-0000-4000-8000-000000000120', '5a150000-0000-4000-8000-000000000044', 'SmisAccidentEmergency:ManagePlan', '', '', '{"title":"管理应急预案"}'::jsonb, 921, 'button', 'smis', 'smis-doc-v1'),
-  ('5a150000-0000-4000-8000-000000000121', '5a150000-0000-4000-8000-000000000044', 'SmisAccidentEmergency:ManageDrill', '', '', '{"title":"管理应急演练"}'::jsonb, 922, 'button', 'smis', 'smis-doc-v1')
+  ('5a150000-0000-4000-8000-000000000112', '5a150000-0000-4000-8000-000000000079', 'SmisHiddenDanger:ExecuteInspection', '', '', '{"title":"执行检查"}'::jsonb, 913, 'button', 'smis', 'smis-doc-v1'),
+  ('5a150000-0000-4000-8000-000000000113', '5a150000-0000-4000-8000-000000000079', 'SmisHiddenDanger:Report', '', '', '{"title":"上报隐患"}'::jsonb, 914, 'button', 'smis', 'smis-doc-v1'),
+  ('5a150000-0000-4000-8000-000000000114', '5a150000-0000-4000-8000-000000000079', 'SmisHiddenDanger:Assign', '', '', '{"title":"指派整改"}'::jsonb, 915, 'button', 'smis', 'smis-doc-v1'),
+  ('5a150000-0000-4000-8000-000000000115', '5a150000-0000-4000-8000-000000000079', 'SmisHiddenDanger:Rectify', '', '', '{"title":"提交整改"}'::jsonb, 916, 'button', 'smis', 'smis-doc-v1'),
+  ('5a150000-0000-4000-8000-000000000116', '5a150000-0000-4000-8000-000000000079', 'SmisHiddenDanger:Review', '', '', '{"title":"复查销号"}'::jsonb, 917, 'button', 'smis', 'smis-doc-v1'),
+  ('5a150000-0000-4000-8000-000000000117', '5a150000-0000-4000-8000-000000000044', 'SmisAccidentEmergency:View', '', '', '{"title":"查看事故与应急"}'::jsonb, 918, 'button', 'smis', 'smis-doc-v1'),
+  ('5a150000-0000-4000-8000-000000000118', '5a150000-0000-4000-8000-000000000044', 'SmisAccidentEmergency:ManageAccident', '', '', '{"title":"管理事故事件"}'::jsonb, 919, 'button', 'smis', 'smis-doc-v1'),
+  ('5a150000-0000-4000-8000-000000000119', '5a150000-0000-4000-8000-000000000044', 'SmisAccidentEmergency:ManagePlan', '', '', '{"title":"管理应急预案"}'::jsonb, 920, 'button', 'smis', 'smis-doc-v1'),
+  ('5a150000-0000-4000-8000-000000000120', '5a150000-0000-4000-8000-000000000044', 'SmisAccidentEmergency:ManageDrill', '', '', '{"title":"管理应急演练"}'::jsonb, 921, 'button', 'smis', 'smis-doc-v1')
 on conflict (id) do update
 set parent_id = excluded.parent_id, name = excluded.name, path = excluded.path,
     component = excluded.component, meta = excluded.meta, sort = excluded.sort,
@@ -251,8 +250,7 @@ where app_code = 'smis'
     '5a150000-0000-4000-8000-000000000117',
     '5a150000-0000-4000-8000-000000000118',
     '5a150000-0000-4000-8000-000000000119',
-    '5a150000-0000-4000-8000-000000000120',
-    '5a150000-0000-4000-8000-000000000121'
+    '5a150000-0000-4000-8000-000000000120'
   );
 
 commit;

@@ -136,7 +136,7 @@ const accidentEmergencyCodes = new Set([
   'emergency-drill-analysis',
   'casualty-quick-report'
 ])
-const hiddenDangerCodes = new Set(['inspection-plan', 'inspection-task', 'danger-governance'])
+const hiddenDangerCodes = new Set(['inspection-task', 'danger-governance'])
 
 const sortByParent = new Map<string, number>()
 for (const definition of safetyModuleCatalog) {
@@ -180,7 +180,6 @@ const permissionButtons: Array<[string, string, string]> = [
   ['SmisRiskPoint:Assess', '维护风险评估', 'risk-identification'],
   ['SmisRiskPoint:ActivateAssessment', '评估生效', 'risk-identification'],
   ['SmisHiddenDanger:View', '查看隐患', 'catalog-danger-governance'],
-  ['SmisHiddenDanger:ManagePlan', '维护检查计划', 'catalog-danger-governance'],
   ['SmisHiddenDanger:ExecuteInspection', '执行检查', 'catalog-danger-governance'],
   ['SmisHiddenDanger:Report', '上报隐患', 'catalog-danger-governance'],
   ['SmisHiddenDanger:Assign', '指派整改', 'catalog-danger-governance'],

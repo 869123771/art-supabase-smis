@@ -1,5 +1,5 @@
 <template>
-  <div class="smis-safety-dashboard art-full-height">
+  <div v-auth="'SmisSafetyDashboard:View'" class="smis-safety-dashboard art-full-height">
     <BusinessWorkspaceHeader
       eyebrow="SAFETY OPERATIONS CENTER"
       title="安全生产驾驶舱"

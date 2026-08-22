@@ -1,5 +1,5 @@
 <template>
-  <div class="smis-catalog-page art-full-height">
+  <div v-auth="'SmisCatalog:View'" class="smis-catalog-page art-full-height">
     <BusinessWorkspaceHeader
       :eyebrow="workspace.section"
       :title="workspace.title"
