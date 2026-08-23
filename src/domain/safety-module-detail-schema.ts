@@ -26,14 +26,17 @@ const equipmentLifecycle: SafetyDetailSchema = {
   description: '检验、维保、附件与处置记录随设备主档统一留存。',
   emptyText: '暂无生命周期记录',
   fields: [
-    field('type', '记录类型', 'select', [
-      '外部检验',
-      '内部检验',
-      '年度检验',
-      '定期检验',
-      '维保',
-      '附件'
-    ]),
+    {
+      ...field('type', '记录类型', 'select', [
+        '外部检验',
+        '内部检验',
+        '年度检验',
+        '定期检验',
+        '维保',
+        '附件'
+      ]),
+      required: true
+    },
     field('recordNo', '记录 / 报告编号'),
     field('occurredAt', '发生日期', 'date'),
     field('result', '结论', 'select', ['合格', '限期整改', '不合格', '不适用']),

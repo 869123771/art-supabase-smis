@@ -21,10 +21,32 @@ export interface SafetyCatalogRecord {
 export interface SafetyCatalogSearchParams {
   moduleCode: string
   moduleCodes?: string[]
+  recordId?: string
   keyword?: string
   status?: string
+  category?: string
+  storageLocation?: string
+  equipmentId?: string
   from?: number
   to?: number
+}
+
+export interface SmisEmployeeReference {
+  id: string
+  employeeNo: string
+  employeeName: string
+  organizationName?: string | null
+  jobTitle?: string | null
+  totalCount?: number
+}
+
+export interface SmisSupplierReference {
+  id: string
+  supplierCode: string
+  supplierName: string
+  contactName?: string | null
+  contactPhone?: string | null
+  totalCount?: number
 }
 
 export interface SafetyCatalogEvent {
@@ -81,7 +103,13 @@ export async function fetchSafetyCatalogRecords(
     ? query.in('module_code', params.moduleCodes)
     : query.eq('module_code', params.moduleCode)
 
+  if (params.recordId) query = query.eq('id', params.recordId)
   if (params.status) query = query.eq('status', params.status)
+  if (params.category) query = query.eq('payload->>category', params.category)
+  if (params.storageLocation) {
+    query = query.eq('payload->>storage_location', params.storageLocation)
+  }
+  if (params.equipmentId) query = query.eq('payload->>equipment_id', params.equipmentId)
   if (params.keyword?.trim()) {
     const keyword = params.keyword.trim().replaceAll(',', ' ')
     query = query.or(
@@ -93,6 +121,40 @@ export async function fetchSafetyCatalogRecords(
     ignoreCheck: true,
     showErrorMessage: true
   })
+}
+
+export async function fetchSmisEmployeeReferences(params: {
+  keyword?: string
+  from?: number
+  to?: number
+}) {
+  const { from = 0, to = 9 } = params
+  return await responseHandle<SmisEmployeeReference[]>(
+    () =>
+      supabase.rpc('smis_list_employee_reference_options', {
+        p_keyword: params.keyword?.trim() || null,
+        p_from: from,
+        p_to: to
+      }),
+    { ignoreCheck: true, showErrorMessage: true }
+  )
+}
+
+export async function fetchSmisSupplierReferences(params: {
+  keyword?: string
+  from?: number
+  to?: number
+}) {
+  const { from = 0, to = 9 } = params
+  return await responseHandle<SmisSupplierReference[]>(
+    () =>
+      supabase.rpc('smis_list_supplier_reference_options', {
+        p_keyword: params.keyword?.trim() || null,
+        p_from: from,
+        p_to: to
+      }),
+    { ignoreCheck: true, showErrorMessage: true }
+  )
 }
 
 export async function saveSafetyCatalogRecord(record: SafetyCatalogRecord) {

@@ -1,6 +1,16 @@
 import type { SafetyFieldDefinition, SafetyFieldOption } from './safety-module-catalog'
 
-type FieldOptions = Pick<SafetyFieldDefinition, 'required' | 'table' | 'placeholder'>
+type FieldOptions = Pick<
+  SafetyFieldDefinition,
+  | 'required'
+  | 'table'
+  | 'placeholder'
+  | 'readonly'
+  | 'dictCode'
+  | 'referenceModuleCode'
+  | 'section'
+  | 'visibleWhen'
+>
 
 const field = (
   key: string,
@@ -14,7 +24,12 @@ const field = (
   required: options.required,
   table: options.table,
   placeholder: options.placeholder,
-  options: options.choices
+  options: options.choices,
+  readonly: options.readonly,
+  dictCode: options.dictCode,
+  referenceModuleCode: options.referenceModuleCode,
+  section: options.section,
+  visibleWhen: options.visibleWhen
 })
 
 const required = { required: true } as const
@@ -33,10 +48,13 @@ const categoryFields = (
 ): SafetyFieldDefinition[] => [
   field('code', `${noun}编码`, 'text', requiredTable),
   field('name', `${noun}名称`, 'text', requiredTable),
-  field('parentName', `上级${noun}`, 'text', table),
+  field('parentName', `上级${noun}`, 'catalog-reference', {
+    table: true,
+    referenceModuleCode: noun === '设备分类' ? 'equipment-category' : undefined
+  }),
   ...(options.includeInspectionType
     ? [
-        field('inspectionType', '适用检验类别', 'select', {
+        field('inspectionType', '适用检验类别', 'multi-select', {
           choices: choice(['外部检验', '内部检验', '年度检验', '定期检验', '在线检验'])
         })
       ]
@@ -47,12 +65,28 @@ const categoryFields = (
 ]
 
 const equipmentInspectionFields = (inspectionName: string): SafetyFieldDefinition[] => [
-  field('recordNo', `${inspectionName}编号`, 'text', requiredTable),
-  field('equipmentName', '设备名称', 'text', requiredTable),
-  field('equipmentNo', '设备编号', 'text', requiredTable),
+  field('recordNo', `${inspectionName}编号`, 'text', {
+    table: true,
+    readonly: true,
+    placeholder: '保存后按编码规则自动生成'
+  }),
+  field('recordType', '记录类型', 'select', {
+    required: true,
+    dictCode: 'smisInspectionRecordType'
+  }),
+  field('equipmentName', '设备名称', 'equipment-reference', requiredTable),
+  field('equipmentNo', '设备编号', 'text', { ...requiredTable, readonly: true }),
   field('inspectionOrganization', '检验机构/部门', 'text', table),
   field('inspectionDate', '检验日期', 'date', required),
-  field('nextInspectionDate', '下次检验日期', 'date'),
+  field('needsNextInspection', '是否需要下次检验', 'select', {
+    choices: [
+      { label: '是', value: true },
+      { label: '否', value: false }
+    ]
+  }),
+  field('nextInspectionDate', '下次检验日期', 'date', {
+    visibleWhen: { key: 'needsNextInspection', value: true }
+  }),
   field('cycle', '检验周期', 'select', { choices: choice(['3个月', '6个月', '12个月']) }),
   field('result', '检验结论', 'select', { required: true, choices: resultChoices }),
   field('certificateNo', '检验报告/证书编号'),
@@ -165,16 +199,23 @@ export const safetyModuleFieldOverrides: Record<string, SafetyFieldDefinition[]>
   'storage-location': [
     field('code', '位置编码', 'text', requiredTable),
     field('name', '位置名称', 'text', requiredTable),
-    field('parentName', '上级位置', 'text', table),
+    field('parentName', '上级位置', 'catalog-reference', {
+      table: true,
+      referenceModuleCode: 'storage-location'
+    }),
     field('managerName', '位置负责人', 'employee', table),
     field('address', '详细位置', 'text'),
     field('status', '启用状态', 'select', { choices: choice(['启用', '停用']) }),
     field('remark', '说明', 'textarea')
   ],
   'equipment-depreciation': [
-    field('recordNo', '折旧单号', 'text', requiredTable),
-    field('equipmentName', '设备名称', 'text', requiredTable),
-    field('equipmentNo', '设备编号', 'text', requiredTable),
+    field('recordNo', '折旧单号', 'text', {
+      table: true,
+      readonly: true,
+      placeholder: '保存后按编码规则自动生成'
+    }),
+    field('equipmentName', '设备名称', 'equipment-reference', requiredTable),
+    field('equipmentNo', '设备编号', 'text', { ...requiredTable, readonly: true }),
     field('originalValue', '资产原值', 'number', required),
     field('residualRate', '预计净残值率（%）', 'number'),
     field('serviceLife', '预计使用年限', 'number', required),
@@ -188,26 +229,87 @@ export const safetyModuleFieldOverrides: Record<string, SafetyFieldDefinition[]>
     field('methodDescription', '折旧方法说明', 'textarea')
   ],
   'equipment-ledger': [
-    field('recordNo', '设备编号', 'text', requiredTable),
-    field('name', '设备名称', 'text', requiredTable),
-    field('category', '设备分类', 'text', requiredTable),
-    field('storageLocation', '存放位置', 'text', requiredTable),
-    field('model', '设备型号', 'text', table),
+    field('recordNo', '设备编号', 'text', { ...requiredTable, section: '基础信息' }),
+    field('name', '设备名称', 'text', { ...requiredTable, section: '基础信息' }),
+    field('shortName', '设备简称', 'text', { section: '基础信息' }),
+    field('category', '设备分类', 'catalog-reference', {
+      ...requiredTable,
+      section: '基础信息',
+      referenceModuleCode: 'equipment-category'
+    }),
+    field('storageLocation', '存放位置', 'catalog-reference', {
+      ...requiredTable,
+      section: '基础信息',
+      referenceModuleCode: 'storage-location'
+    }),
+    field('model', '规格型号', 'text', { ...table, section: '基础信息' }),
+    field('internalNo', '内部编号', 'text', { section: '基础信息' }),
+    field('registrationCode', '注册代码', 'text', { section: '基础信息' }),
+    field('licenseNo', '使用证号', 'text', { section: '基础信息' }),
+    field('equipmentLevel', '设备等级', 'text', { section: '基础信息' }),
+    field('equipmentType', '设备类型', 'text', { section: '基础信息' }),
+    field('measurementUnit', '计量单位', 'text', { section: '基础信息' }),
     field('operationStatus', '运行状态', 'select', {
-      choices: choice(['运行', '停用', '检修', '报废'])
+      choices: choice(['运行', '停用', '检修', '报废']),
+      section: '基础信息'
     }),
-    field('supplierName', '供应商', 'text'),
-    field('importanceLevel', '重要级别', 'select', { choices: choice(['一般', '重要', '关键']) }),
-    field('commissioningDate', '启用日期', 'date'),
+    field('importanceLevel', '重要级别', 'select', {
+      choices: choice(['一般', '重要', '关键']),
+      section: '基础信息'
+    }),
+    field('workshopLine', '车间产线', 'text', { section: '组织与位置' }),
+    field('processName', '工序', 'text', { section: '组织与位置' }),
+    field('equipmentPositionNo', '设备位号', 'text', { section: '组织与位置' }),
+    field('responsiblePerson', '设备责任人', 'employee', {
+      ...table,
+      section: '组织与位置'
+    }),
+    field('operationManager', '运行负责人', 'employee', { section: '组织与位置' }),
+    field('maintenanceManager', '检修负责人', 'employee', { section: '组织与位置' }),
+    field('usingDepartment', '使用部门', 'text', { section: '组织与位置' }),
+    field('managementDepartment', '管理部门', 'text', { section: '组织与位置' }),
+    field('workCenter', '工作中心', 'text', { section: '组织与位置' }),
+    field('teamName', '班组', 'text', { section: '组织与位置' }),
+    field('equipmentArea', '设备区域', 'text', { section: '组织与位置' }),
+    field('installationLocation', '安装位置', 'text', { section: '组织与位置' }),
+    field('supplierName', '供应商', 'supplier-reference', { section: '投产与资产' }),
+    field('supplierCode', '供应商编码', 'text', { readonly: true, section: '投产与资产' }),
+    field('manufacturer', '制造厂家', 'text', { section: '投产与资产' }),
+    field('factoryNo', '出厂编号', 'text', { section: '投产与资产' }),
+    field('productionDate', '生产日期', 'date', { section: '投产与资产' }),
+    field('factoryDate', '出厂日期', 'date', { section: '投产与资产' }),
+    field('entryDate', '进场日期', 'date', { section: '投产与资产' }),
+    field('installationDate', '安装日期', 'date', { section: '投产与资产' }),
+    field('commissioningDate', '投运日期', 'date', { section: '投产与资产' }),
+    field('acceptanceDate', '验收日期', 'date', { section: '投产与资产' }),
+    field('maintenanceUnit', '维护单位', 'text', { section: '投产与资产' }),
+    field('installationUnit', '安装单位', 'text', { section: '投产与资产' }),
     field('assetStatus', '资产状态', 'select', {
-      choices: choice(['在用', '闲置', '处置中', '已报废'])
+      choices: choice(['在用', '闲置', '处置中', '已报废']),
+      section: '投产与资产'
     }),
-    field('warrantyExpiryDate', '保固到期日', 'date'),
-    field('assetValue', '资产原值', 'number'),
-    field('responsiblePerson', '设备负责人', 'employee'),
-    field('qrCodeValue', '二维码内容', 'text'),
-    field('attachmentDescription', '设备图片/合格证说明', 'textarea'),
-    field('remark', '设备说明', 'textarea')
+    field('equipmentStatus', '设备状态', 'text', { section: '投产与资产' }),
+    field('usageStatus', '使用状态', 'text', { section: '投产与资产' }),
+    field('serviceLifeYears', '设备寿命/年', 'number', { section: '投产与资产' }),
+    field('usedYears', '已使用年限', 'number', { section: '投产与资产' }),
+    field('assetValue', '设备原值', 'number', { section: '投产与资产' }),
+    field('netValue', '净值', 'number', { section: '投产与资产' }),
+    field('fixedAssetNo', '固定资产编码', 'text', { section: '投产与资产' }),
+    field('erpNo', 'ERP编码', 'text', { section: '投产与资产' }),
+    field('mainParameters', '主要参数', 'textarea', { section: '设备参数' }),
+    field('totalWeight', '总质量', 'number', { section: '设备参数' }),
+    field('motorCount', '电机数量', 'number', { section: '设备参数' }),
+    field('appearanceQuality', '外形质量', 'text', { section: '设备参数' }),
+    field('motorPower', '电机功率', 'number', { section: '设备参数' }),
+    field('electronicTagCode', '电子标签码', 'text', { section: '设备参数' }),
+    field('smartThreeColorLight', '智能三色灯', 'text', { section: '设备参数' }),
+    field('pulseInterval', '脉冲间隔', 'number', { section: '设备参数' }),
+    field('andonBox', '安灯盒子', 'text', { section: '设备参数' }),
+    field('standardUtilizationRate', '标准利用率', 'number', { section: '设备参数' }),
+    field('ipAddress', 'IP地址', 'text', { section: '设备参数' }),
+    field('qrCodeValue', '二维码内容', 'text', { section: '设备参数' }),
+    field('equipmentImageUrl', '设备主体图片', 'image', { section: '设备参数' }),
+    field('remark', '设备说明', 'textarea', { section: '设备参数' })
   ],
   'equipment-attachment': [
     field('recordNo', '附件编号', 'text', requiredTable),
@@ -221,7 +323,13 @@ export const safetyModuleFieldOverrides: Record<string, SafetyFieldDefinition[]>
     field('attachmentUrl', '资源库文件地址', 'text', required),
     field('remark', '附件说明', 'textarea')
   ],
-  'external-inspection': equipmentInspectionFields('外部检验'),
+  'external-inspection': [
+    ...equipmentInspectionFields('外部检验'),
+    field('waterQualityPreviousInspectionDate', '水质上次检验日期', 'date'),
+    field('waterQualityNextInspectionDate', '水质下次检验日期', 'date', {
+      visibleWhen: { key: 'needsNextInspection', value: true }
+    })
+  ],
   'internal-inspection': equipmentInspectionFields('内部检验'),
   'annual-inspection': equipmentInspectionFields('年度检验'),
   'periodic-inspection': equipmentInspectionFields('定期检验'),

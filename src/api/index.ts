@@ -71,6 +71,8 @@ export {
   fetchHazardousWasteStock,
   fetchSafetyCatalogEvents,
   fetchSafetyCatalogRecords,
+  fetchSmisEmployeeReferences,
+  fetchSmisSupplierReferences,
   saveSafetyCatalogRecord,
   saveSafetyExamDraft,
   startSafetyExam,
@@ -81,5 +83,7 @@ export {
   type SafetyCatalogRecord,
   type SafetyCatalogSearchParams,
   type SafetyExamAttempt,
-  type SafetyWorkflowAction
+  type SafetyWorkflowAction,
+  type SmisEmployeeReference,
+  type SmisSupplierReference
 } from '@smis/api/modules/catalog'

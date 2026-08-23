@@ -3,7 +3,15 @@
     <div v-if="record && workspace" class="catalog-detail">
       <section class="catalog-detail__hero">
         <div class="catalog-detail__identity">
-          <span class="catalog-detail__icon"><ArtSvgIcon :icon="workspace.icon" /></span>
+          <img
+            v-if="equipmentImageUrl"
+            class="catalog-detail__image"
+            :src="equipmentImageUrl"
+            :alt="`${record.title}设备图片`"
+            width="96"
+            height="96"
+          />
+          <span v-else class="catalog-detail__icon"><ArtSvgIcon :icon="workspace.icon" /></span>
           <div>
             <div class="catalog-detail__tags">
               <ElTag :type="statusType(record.status)" effect="light">
@@ -13,6 +21,11 @@
             </div>
             <h2>{{ record.title }}</h2>
             <p>{{ record.recordNo }} · {{ workspace.description }}</p>
+            <div v-if="isEquipmentLedger" class="catalog-detail__summary">
+              <span>型号：{{ payloadText('model') }}</span>
+              <span>位置：{{ payloadText('storageLocation') }}</span>
+              <span>部门：{{ payloadText('usingDepartment') }}</span>
+            </div>
           </div>
         </div>
         <div v-if="workspace.capabilities.includes('qr-code')" class="catalog-detail__qr">
@@ -21,33 +34,70 @@
         </div>
       </section>
 
-      <ArtSectionTitle>业务信息</ArtSectionTitle>
-      <div class="catalog-detail__fields">
-        <article v-for="field in visibleFields" :key="field.key">
-          <span>{{ field.label }}</span>
-          <strong>{{ displayValue(field) }}</strong>
-        </article>
-      </div>
+      <ElTabs v-if="isEquipmentLedger" v-model="equipmentTab" class="catalog-detail__tabs">
+        <ElTabPane label="基础档案" name="profile">
+          <div class="catalog-detail__fields">
+            <article v-for="field in visibleFields" :key="field.key">
+              <span>{{ field.label }}</span>
+              <strong>{{ displayValue(field) }}</strong>
+            </article>
+          </div>
+        </ElTabPane>
+        <ElTabPane label="档案附件" name="attachments">
+          <SmisAttachmentEvidence :model-value="attachments" readonly />
+        </ElTabPane>
+        <ElTabPane :label="`检验与生命周期（${inspectionRows.length}）`" name="inspection">
+          <div v-loading="relatedInspectionState.loading" class="catalog-detail__inspection">
+            <ElTable v-if="inspectionRows.length" :data="inspectionRows" border>
+              <ElTableColumn type="index" label="序号" width="58" align="center" />
+              <ElTableColumn
+                v-for="field in detailSchema?.fields ?? []"
+                :key="field.key"
+                :prop="field.key"
+                :label="field.label"
+                :min-width="field.type === 'date' ? 130 : 118"
+                show-overflow-tooltip
+              />
+            </ElTable>
+            <ArtEmptyState
+              v-else-if="!relatedInspectionState.loading"
+              compact
+              title="暂无检验或生命周期记录"
+              description="编辑设备档案后，可通过“新增明细”归档检验、维保和处置过程。"
+            />
+          </div>
+        </ElTabPane>
+      </ElTabs>
 
-      <template v-if="detailSchema">
-        <ArtSectionTitle>{{ detailSchema.title }}</ArtSectionTitle>
-        <ElTable v-if="detailRows.length" :data="detailRows" border>
-          <ElTableColumn type="index" label="序号" width="58" align="center" />
-          <ElTableColumn
-            v-for="field in detailSchema.fields"
-            :key="field.key"
-            :prop="field.key"
-            :label="field.label"
-            :min-width="field.type === 'date' ? 130 : 118"
-            show-overflow-tooltip
+      <template v-else>
+        <ArtSectionTitle>业务信息</ArtSectionTitle>
+        <div class="catalog-detail__fields">
+          <article v-for="field in visibleFields" :key="field.key">
+            <span>{{ field.label }}</span>
+            <strong>{{ displayValue(field) }}</strong>
+          </article>
+        </div>
+
+        <template v-if="detailSchema">
+          <ArtSectionTitle>{{ detailSchema.title }}</ArtSectionTitle>
+          <ElTable v-if="detailRows.length" :data="detailRows" border>
+            <ElTableColumn type="index" label="序号" width="58" align="center" />
+            <ElTableColumn
+              v-for="field in detailSchema.fields"
+              :key="field.key"
+              :prop="field.key"
+              :label="field.label"
+              :min-width="field.type === 'date' ? 130 : 118"
+              show-overflow-tooltip
+            />
+          </ElTable>
+          <ArtEmptyState
+            v-else
+            compact
+            :title="detailSchema.emptyText"
+            description="编辑主档后可继续维护子表明细。"
           />
-        </ElTable>
-        <ArtEmptyState
-          v-else
-          compact
-          :title="detailSchema.emptyText"
-          description="编辑主档后可继续维护子表明细。"
-        />
+        </template>
       </template>
 
       <template v-if="workspace.experience === 'special-work'">
@@ -70,7 +120,7 @@
         </div>
       </template>
 
-      <template v-if="workspace.capabilities.includes('attachments')">
+      <template v-if="!isEquipmentLedger && workspace.capabilities.includes('attachments')">
         <ArtSectionTitle>附件与现场证据</ArtSectionTitle>
         <SmisAttachmentEvidence :model-value="attachments" readonly />
       </template>
@@ -180,6 +230,7 @@
   import { useArtFeedback } from '@/hooks/core/useArtFeedback'
   import {
     fetchSafetyCatalogEvents,
+    fetchSafetyCatalogRecords,
     transitionSafetyCatalogRecord,
     type SafetyCatalogEvent,
     type SafetyCatalogRecord,
@@ -209,6 +260,15 @@
   const record = shallowRef<SafetyCatalogRecord>()
   const eventState = reactive({ loading: false, rows: [] as SafetyCatalogEvent[] })
   const transitioning = ref(false)
+  const relatedInspectionState = reactive({
+    loading: false,
+    rows: [] as Record<string, unknown>[]
+  })
+  const equipmentTab = ref('profile')
+  const isEquipmentLedger = computed(() => workspace.value?.code === 'equipment-ledger')
+  const equipmentImageUrl = computed(() =>
+    isEquipmentLedger.value ? String(record.value?.payload?.equipmentImageUrl || '') : ''
+  )
 
   const visibleFields = computed(() =>
     (workspace.value?.fields ?? []).filter((field) => record.value?.payload?.[field.key] != null)
@@ -220,6 +280,7 @@
     const value = record.value?.payload?.detailRows
     return Array.isArray(value) ? (value as Record<string, unknown>[]) : []
   })
+  const inspectionRows = computed(() => [...relatedInspectionState.rows, ...detailRows.value])
   const qrValue = computed(() =>
     String(
       record.value?.payload?.qrCodeValue || `SMIS:${record.value?.id || record.value?.recordNo}`
@@ -307,17 +368,55 @@
     }
   }
 
+  const loadRelatedInspections = async (): Promise<void> => {
+    relatedInspectionState.rows = []
+    if (!isEquipmentLedger.value || !record.value?.id) return
+    relatedInspectionState.loading = true
+    try {
+      const result = await fetchSafetyCatalogRecords({
+        moduleCode: 'external-inspection',
+        moduleCodes: [
+          'external-inspection',
+          'internal-inspection',
+          'annual-inspection',
+          'periodic-inspection'
+        ],
+        equipmentId: record.value.id,
+        from: 0,
+        to: 999
+      })
+      const typeLabels: Record<string, string> = {
+        'external-inspection': '外部检验',
+        'internal-inspection': '内部检验',
+        'annual-inspection': '年度检验',
+        'periodic-inspection': '定期检验'
+      }
+      relatedInspectionState.rows = (result.data ?? []).map((item) => ({
+        type: typeLabels[item.moduleCode] ?? item.moduleCode,
+        recordNo: item.recordNo,
+        occurredAt: item.payload.inspectionDate ?? item.businessDate,
+        result: item.payload.result ?? statusLabel(item.status),
+        nextDate: item.payload.nextInspectionDate,
+        remark: item.payload.remark
+      }))
+    } finally {
+      relatedInspectionState.loading = false
+    }
+  }
+
   const handleOpen = async (data: OpenData): Promise<void> => {
     workspace.value = data.workspace
     record.value = data.record
+    equipmentTab.value = 'profile'
     eventState.rows = []
+    relatedInspectionState.rows = []
     await drawerRef.value?.handleOpen(data, {
       title: `${data.workspace.title}详情`,
       subtitle: `${data.record.recordNo} · 租户业务数据`,
       size: 'lg',
       showFullscreenButton: true
     })
-    await loadEvents()
+    await Promise.all([loadEvents(), loadRelatedInspections()])
   }
 
   const handlePrint = (): void => window.print()
@@ -367,11 +466,7 @@
       align-items: flex-start;
       justify-content: space-between;
       padding: 16px;
-      background: linear-gradient(
-        135deg,
-        var(--el-color-primary-light-9),
-        var(--art-main-bg-color)
-      );
+      background: var(--el-color-primary-light-9);
       border: 1px solid var(--el-border-color-lighter);
       border-radius: var(--custom-radius);
     }
@@ -400,6 +495,28 @@
       color: var(--el-color-primary);
       background: var(--el-color-primary-light-8);
       border-radius: var(--el-border-radius-base);
+    }
+
+    &__image {
+      flex: 0 0 96px;
+      width: 96px;
+      height: 96px;
+      object-fit: cover;
+      background: var(--el-fill-color-light);
+      border: 1px solid var(--el-border-color-lighter);
+      border-radius: var(--el-border-radius-base);
+    }
+
+    &__summary {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px 14px;
+      margin-top: 10px;
+
+      span {
+        font-size: 12px;
+        color: var(--el-text-color-regular);
+      }
     }
 
     &__tags {
@@ -484,6 +601,18 @@
         margin: 4px 0 0;
         color: var(--el-text-color-secondary);
       }
+    }
+
+    &__tabs {
+      min-width: 0;
+
+      :deep(.el-tab-pane) {
+        min-width: 0;
+      }
+    }
+
+    &__inspection {
+      min-height: 120px;
     }
   }
 

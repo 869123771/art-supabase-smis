@@ -115,7 +115,10 @@
       </article>
     </section>
 
-    <div class="catalog-content" :class="{ 'is-tree': workspace.experience === 'tree' }">
+    <div
+      class="catalog-content"
+      :class="{ 'is-tree': workspace.experience === 'tree' || isEquipmentLedger }"
+    >
       <aside v-if="workspace.experience === 'tree'" class="catalog-tree art-card-xs">
         <header
           ><span><ArtSvgIcon icon="ri:node-tree" /></span
@@ -124,12 +127,52 @@
           ></header
         >
         <ElTree
+          v-loading="catalogTreeState.loading"
           :data="treeNodes"
           node-key="id"
           default-expand-all
           highlight-current
           :empty-text="`暂无${workspace.recordNoun}`"
+          @node-click="handleCatalogTreeNode"
         />
+      </aside>
+
+      <aside v-else-if="isEquipmentLedger" class="catalog-tree art-card-xs">
+        <header>
+          <span><ArtSvgIcon icon="ri:node-tree" /></span>
+          <div><strong>设备档案导航</strong><small>按分类或存放位置筛选</small></div>
+        </header>
+        <ElTabs v-model="equipmentTreeType" stretch>
+          <ElTabPane label="设备分类" name="category">
+            <ElTree
+              v-loading="equipmentTreeState.loading"
+              :data="equipmentTreeState.categories"
+              node-key="id"
+              default-expand-all
+              highlight-current
+              empty-text="暂无设备分类"
+              @node-click="handleCategoryTreeNode"
+            />
+          </ElTabPane>
+          <ElTabPane label="存放位置" name="storageLocation">
+            <ElTree
+              v-loading="equipmentTreeState.loading"
+              :data="equipmentTreeState.locations"
+              node-key="id"
+              default-expand-all
+              highlight-current
+              empty-text="暂无存放位置"
+              @node-click="handleStorageLocationTreeNode"
+            />
+          </ElTabPane>
+        </ElTabs>
+        <ElButton
+          v-if="searchQuery.category || searchQuery.storageLocation"
+          class="catalog-tree__clear"
+          @click="clearEquipmentTreeFilter"
+        >
+          清除筛选
+        </ElButton>
       </aside>
 
       <ArtTableQuery
@@ -220,6 +263,8 @@
   const examRunnerRef = ref<{ handleOpen: (record: SafetyCatalogRecord) => Promise<void> }>()
   const overview = reactive({ total: 0, rows: [] as SafetyCatalogRecord[] })
   const stockState = reactive({ loading: false, rows: [] as HazardousWasteStock[] })
+  const catalogTreeState = reactive({ loading: false, rows: [] as SafetyCatalogRecord[] })
+  const equipmentTreeType = ref<'category' | 'storageLocation'>('category')
 
   const catalogCode = computed(() => {
     const metaCode = route.meta.catalogCode
@@ -227,6 +272,7 @@
     return route.path.split('/').filter(Boolean).at(-1)
   })
   const workspace = computed(() => getSafetyModuleDefinition(catalogCode.value))
+  const isEquipmentLedger = computed(() => workspace.value.code === 'equipment-ledger')
 
   const experienceLabel = computed(
     () =>
@@ -245,6 +291,9 @@
 
   const emptyDescription = computed(() => {
     if (workspace.value.experience === 'analytics') return '统计将在业务数据产生后自动生成。'
+    if (workspace.value.experience === 'tree' && !searchQuery.recordId) {
+      return `请先点击左侧${workspace.value.recordNoun}树节点，再查看对应数据。`
+    }
     if (workspace.value.experience === 'risk-map') return '先完成风险辨识与评价，再生成四色分布。'
     if (workspace.value.experience === 'inventory') return '请先维护危废名录，再登记入库或出库。'
     return `可新增第一条${workspace.value.recordNoun}，或调整筛选条件后重新查询。`
@@ -253,7 +302,10 @@
   const searchQuery = reactive<SafetyCatalogSearchParams>({
     moduleCode: workspace.value.code,
     keyword: '',
-    status: ''
+    status: '',
+    recordId: '',
+    category: '',
+    storageLocation: ''
   })
 
   const searchItems = computed<SearchFormItem[]>(() => [
@@ -379,8 +431,13 @@
     children?: TreeNode[]
   }
 
-  const treeNodes = computed<TreeNode[]>(() => {
-    const rows = overview.rows
+  const equipmentTreeState = reactive({
+    loading: false,
+    categories: [] as TreeNode[],
+    locations: [] as TreeNode[]
+  })
+
+  const buildTreeNodes = (rows: SafetyCatalogRecord[]): TreeNode[] => {
     const nodes = new Map<string, TreeNode>()
     rows.forEach((row) =>
       nodes.set(row.id || row.recordNo, { id: row.id || row.recordNo, label: row.title })
@@ -388,8 +445,11 @@
     const roots: TreeNode[] = []
     rows.forEach((row) => {
       const node = nodes.get(row.id || row.recordNo)!
+      const parentId = String(row.payload?.parentId || '')
       const parentName = String(row.payload?.parentName || '')
-      const parent = rows.find((candidate) => candidate.title === parentName)
+      const parent = parentId
+        ? rows.find((candidate) => candidate.id === parentId)
+        : rows.find((candidate) => candidate.title === parentName)
       if (parent) {
         const parentNode = nodes.get(parent.id || parent.recordNo)!
         parentNode.children ??= []
@@ -397,7 +457,78 @@
       } else roots.push(node)
     })
     return roots
-  })
+  }
+
+  const treeNodes = computed<TreeNode[]>(() => buildTreeNodes(catalogTreeState.rows))
+
+  const loadCatalogTree = async (): Promise<void> => {
+    if (workspace.value.experience !== 'tree') {
+      catalogTreeState.rows = []
+      return
+    }
+    catalogTreeState.loading = true
+    try {
+      const result = await fetchSafetyCatalogRecords({
+        moduleCode: workspace.value.code,
+        from: 0,
+        to: 999
+      })
+      catalogTreeState.rows = result.data ?? []
+    } finally {
+      catalogTreeState.loading = false
+    }
+  }
+
+  const handleCatalogTreeNode = (node: TreeNode): void => {
+    searchQuery.recordId = node.id
+    void tableQueryRef.value?.refreshData()
+  }
+
+  const loadEquipmentReferenceTrees = async (): Promise<void> => {
+    if (!isEquipmentLedger.value) {
+      equipmentTreeState.categories = []
+      equipmentTreeState.locations = []
+      return
+    }
+    equipmentTreeState.loading = true
+    try {
+      const [categoryResult, locationResult] = await Promise.all([
+        fetchSafetyCatalogRecords({
+          moduleCode: 'equipment-category',
+          status: 'active',
+          from: 0,
+          to: 999
+        }),
+        fetchSafetyCatalogRecords({
+          moduleCode: 'storage-location',
+          status: 'active',
+          from: 0,
+          to: 999
+        })
+      ])
+      equipmentTreeState.categories = buildTreeNodes(categoryResult.data ?? [])
+      equipmentTreeState.locations = buildTreeNodes(locationResult.data ?? [])
+    } finally {
+      equipmentTreeState.loading = false
+    }
+  }
+
+  const handleEquipmentTreeNode = (node: TreeNode, type: 'category' | 'storageLocation'): void => {
+    searchQuery.category = type === 'category' ? node.label : ''
+    searchQuery.storageLocation = type === 'storageLocation' ? node.label : ''
+    void tableQueryRef.value?.refreshData()
+  }
+
+  const handleCategoryTreeNode = (node: TreeNode): void => handleEquipmentTreeNode(node, 'category')
+
+  const handleStorageLocationTreeNode = (node: TreeNode): void =>
+    handleEquipmentTreeNode(node, 'storageLocation')
+
+  const clearEquipmentTreeFilter = (): void => {
+    searchQuery.category = ''
+    searchQuery.storageLocation = ''
+    void tableQueryRef.value?.refreshData()
+  }
 
   const headerActions = computed<ArtTableQueryHeaderAction[]>(() => {
     if (['analytics', 'risk-map'].includes(workspace.value.experience)) return []
@@ -431,6 +562,7 @@
 
   const fieldValue = (row: SafetyCatalogRecord, field: SafetyFieldDefinition): unknown => {
     const value = row.payload?.[field.key]
+    if (Array.isArray(value)) return value.map(String).join('、') || '--'
     if (field.type !== 'select') return value ?? '--'
     return field.options?.find((option) => option.value === value)?.label ?? value ?? '--'
   }
@@ -515,6 +647,9 @@
   ]
 
   const fetchTableData = (params: TableParams) => {
+    if (workspace.value.experience === 'tree' && !searchQuery.recordId) {
+      return Promise.resolve({ data: [] as SafetyCatalogRecord[], total: 0 })
+    }
     const { from, to } = pageInfoHandler({ current: params.current, size: params.size })
     const moduleCodes =
       workspace.value.experience === 'risk-map'
@@ -523,8 +658,11 @@
     return fetchSafetyCatalogRecords({
       moduleCode: workspace.value.code,
       moduleCodes,
+      recordId: searchQuery.recordId,
       keyword: params.keyword,
       status: params.status,
+      category: searchQuery.category,
+      storageLocation: searchQuery.storageLocation,
       from,
       to
     })
@@ -627,6 +765,7 @@
     if (type === 'edit') await tableQueryRef.value?.refreshUpdate()
     else await tableQueryRef.value?.refreshCreate()
     await loadStock()
+    await loadCatalogTree()
   }
 
   const handleExamCompleted = async (): Promise<void> => {
@@ -650,6 +789,7 @@
       await deleteSafetyCatalogRecord(row.id)
       await tableQueryRef.value?.refreshRemove()
       await loadStock()
+      await loadCatalogTree()
     } catch {
       // 用户取消删除时无需提示。
     }
@@ -661,9 +801,14 @@
       searchQuery.moduleCode = code
       searchQuery.keyword = ''
       searchQuery.status = ''
+      searchQuery.recordId = ''
+      searchQuery.category = ''
+      searchQuery.storageLocation = ''
       overview.total = 0
       overview.rows = []
       void loadStock()
+      void loadCatalogTree()
+      void loadEquipmentReferenceTrees()
       if (workspace.value.experience === 'analytics') void loadAnalyticsOverview()
       else void tableQueryRef.value?.refreshData()
     }
@@ -678,6 +823,8 @@
 
   onMounted(() => {
     void loadStock()
+    void loadCatalogTree()
+    void loadEquipmentReferenceTrees()
     void loadAnalyticsOverview()
   })
 </script>
@@ -741,6 +888,19 @@
         font-size: 11px;
         color: var(--el-text-color-secondary);
       }
+    }
+
+    :deep(.el-tabs) {
+      min-height: 0;
+    }
+
+    :deep(.el-tabs__content) {
+      overflow: visible;
+    }
+
+    &__clear {
+      width: 100%;
+      margin-top: auto;
     }
   }
 

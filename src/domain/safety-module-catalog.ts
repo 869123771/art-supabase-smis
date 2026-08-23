@@ -19,17 +19,34 @@ export type SafetyWorkspaceKind =
 
 export interface SafetyFieldOption {
   label: string
-  value: string
+  value: unknown
 }
 
 export interface SafetyFieldDefinition {
   key: string
   label: string
-  type: 'text' | 'textarea' | 'number' | 'date' | 'datetime' | 'select' | 'employee'
+  type:
+    | 'text'
+    | 'textarea'
+    | 'number'
+    | 'date'
+    | 'datetime'
+    | 'select'
+    | 'multi-select'
+    | 'employee'
+    | 'catalog-reference'
+    | 'equipment-reference'
+    | 'supplier-reference'
+    | 'image'
   required?: boolean
   options?: SafetyFieldOption[]
   placeholder?: string
   table?: boolean
+  readonly?: boolean
+  dictCode?: string
+  referenceModuleCode?: string
+  section?: string
+  visibleWhen?: { key: string; value: unknown }
 }
 
 export interface SafetyModuleDefinition extends SafetyModuleExperienceDefinition {
@@ -724,6 +741,12 @@ const recordNounByKind: Record<SafetyWorkspaceKind, string> = {
   dictionary: '条目'
 }
 
+const recordNounByCode: Record<string, string> = {
+  'storage-location': '位置',
+  'equipment-depreciation': '设备折旧',
+  'equipment-ledger': '设备档案'
+}
+
 export const safetyModuleCatalog: SafetyModuleDefinition[] = catalogSeeds.map(
   ([code, title, section, description, kind]) => {
     const moduleExperience = safetyModuleExperienceMap[code] ?? {
@@ -738,7 +761,7 @@ export const safetyModuleCatalog: SafetyModuleDefinition[] = catalogSeeds.map(
       description,
       kind,
       icon: iconBySection[section] ?? 'ri:shield-check-line',
-      recordNoun: recordNounByKind[kind],
+      recordNoun: recordNounByCode[code] ?? recordNounByKind[kind],
       fields: (safetyModuleFieldOverrides[code] ?? fieldsByKind[kind]).map((field) => ({
         ...field
       })),

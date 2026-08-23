@@ -17,6 +17,7 @@
       refreshable
       refresh-label="刷新安全驾驶舱数据"
       :refresh-loading="state.loading"
+      @metric-click="handleMetricClick"
       @refresh="loadDashboard"
     >
       <template #actions>
@@ -222,8 +223,15 @@
     inspectionTask: '/smis/dual-control/risk-control/inspection-task',
     hiddenDanger: '/smis/dual-control/risk-control/danger-governance',
     accident: '/smis/production/safety-accident/casualty-quick-report',
-    emergencyPlan: '/smis/production/emergency-rescue/emergency-plan'
+    emergencyPlan: '/smis/production/emergency-rescue/emergency-plan',
+    emergencyDrill: '/smis/production/emergency-rescue/emergency-drill-plan'
   } as const
+  const metricPaths: Record<string, string> = {
+    'risk-point': smisRoutes.riskPoint,
+    'hidden-danger': smisRoutes.hiddenDanger,
+    accident: smisRoutes.accident,
+    'emergency-drill': smisRoutes.emergencyDrill
+  }
   const state = reactive<{
     loading: boolean
     error: Error | null
@@ -231,31 +239,39 @@
   }>({ loading: false, error: null, data: null })
   const metrics = computed<BusinessWorkspaceMetric[]>(() => [
     {
+      key: 'risk-point',
       label: '风险点',
       value: state.data?.riskPointTotal ?? 0,
       description: `较大及以上 ${state.data?.majorRiskPointCount ?? 0}`,
-      icon: 'ri:radar-line'
+      icon: 'ri:radar-line',
+      interactive: true
     },
     {
+      key: 'hidden-danger',
       label: '开放隐患',
       value: state.data?.openDangerCount ?? 0,
       description: `已逾期 ${state.data?.overdueDangerCount ?? 0}`,
       icon: 'ri:alert-line',
-      tone: state.data?.overdueDangerCount ? 'danger' : 'warning'
+      tone: state.data?.overdueDangerCount ? 'danger' : 'warning',
+      interactive: true
     },
     {
+      key: 'accident',
       label: '未结事故',
       value: state.data?.openAccidentCount ?? 0,
       description: '调查、整改或待结案',
       icon: 'ri:first-aid-kit-line',
-      tone: state.data?.openAccidentCount ? 'danger' : 'success'
+      tone: state.data?.openAccidentCount ? 'danger' : 'success',
+      interactive: true
     },
     {
+      key: 'emergency-drill',
       label: '近期演练',
       value: state.data?.upcomingDrillCount ?? 0,
       description: '未来 30 天计划',
       icon: 'ri:team-line',
-      tone: 'success'
+      tone: 'success',
+      interactive: true
     }
   ])
   const maxDistribution = computed(() =>
@@ -267,6 +283,10 @@
     ({ low: '低风险', general: '一般风险', major: '较大风险', critical: '重大风险' })[level]
   const go = (path: string): void => {
     void router.push(path)
+  }
+  const handleMetricClick = (metric: BusinessWorkspaceMetric): void => {
+    const path = metricPaths[metric.key ?? '']
+    if (path) go(path)
   }
   const loadDashboard = async (): Promise<void> => {
     state.loading = true
