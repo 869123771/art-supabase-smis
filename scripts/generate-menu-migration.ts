@@ -58,7 +58,7 @@ topLevel.forEach(([key, title, icon], index) =>
     name: `Smis${key.replace(/(^|-)(\w)/g, (_, _dash, value: string) => value.toUpperCase())}`,
     title,
     path: key,
-    component: '/index/index',
+    component: '',
     icon,
     sort: (index + 1) * 10,
     type: 'folder'
@@ -86,7 +86,7 @@ folders.forEach(([key, parentKey, title, pathSegment], index) =>
     name: `SmisFolder${index + 1}`,
     title,
     path: pathSegment,
-    component: '/index/index',
+    component: '',
     sort: (index + 1) * 10,
     type: 'folder'
   })

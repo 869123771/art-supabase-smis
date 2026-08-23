@@ -11,6 +11,19 @@
       :show-reset="false"
       :show-submit="false"
     />
+    <SafetyDetailLinesEditor
+      v-if="detailSchema"
+      :model-value="detailRows"
+      :schema="detailSchema"
+      @update:model-value="handleDetailRowsChange"
+    />
+    <SmisAttachmentEvidence
+      v-if="currentWorkspace?.capabilities.includes('attachments')"
+      :model-value="attachments"
+      title="业务附件与现场证据"
+      description="支持文档截图中的证书、检验报告、现场照片和审批附件；文件进入平台统一资源库。"
+      @update:model-value="handleAttachmentsChange"
+    />
   </ArtDialog>
 </template>
 
@@ -28,6 +41,9 @@
     SafetyFieldDefinition,
     SafetyModuleDefinition
   } from '@smis/domain/safety-module-catalog'
+  import { getSafetyModuleDetailSchema } from '@smis/domain/safety-module-detail-schema'
+  import SmisAttachmentEvidence from '../../components/smis-attachment-evidence.vue'
+  import SafetyDetailLinesEditor from './safety-detail-lines-editor.vue'
 
   defineOptions({ name: 'SmisSafetyCatalogRecordDialog' })
 
@@ -48,6 +64,19 @@
   const editingRecord = shallowRef<SafetyCatalogRecord>()
   const employeeOptions = ref<FormItemOption[]>([])
   const formData = reactive<Record<string, unknown>>({})
+  type Attachment = Api.Smis.InspectionControl.AttachmentRef
+  const attachments = computed<Attachment[]>(() => {
+    const value = formData.attachments
+    return Array.isArray(value) ? (value as Attachment[]) : []
+  })
+  type DetailRow = Record<string, unknown> & { _key: string }
+  const detailSchema = computed(() =>
+    currentWorkspace.value ? getSafetyModuleDetailSchema(currentWorkspace.value.code) : undefined
+  )
+  const detailRows = computed<DetailRow[]>(() => {
+    const value = formData.detailRows
+    return Array.isArray(value) ? (value as DetailRow[]) : []
+  })
 
   const formRules = computed<FormRules>(() =>
     Object.fromEntries(
@@ -137,13 +166,43 @@
   const createInitialForm = (
     workspace: SafetyModuleDefinition,
     record?: SafetyCatalogRecord
-  ): Record<string, unknown> =>
-    Object.fromEntries(
-      workspace.fields.map((item) => [
-        item.key,
-        record?.payload?.[item.key] ?? (item.key === 'status' ? '有效' : undefined)
-      ])
+  ): Record<string, unknown> => {
+    const rawDetailRows = record?.payload?.detailRows
+    const initialDetailRows = Array.isArray(rawDetailRows)
+      ? structuredClone(rawDetailRows).map((row: Record<string, unknown>, index: number) => ({
+          ...row,
+          _key: String(row._key || `${Date.now()}-${index}`)
+        }))
+      : []
+
+    return Object.assign(
+      Object.fromEntries(
+        workspace.fields.map((item) => [
+          item.key,
+          record?.payload?.[item.key] ??
+            (item.key === 'status'
+              ? workspace.code === 'exam-management'
+                ? '未开始'
+                : workspace.capabilities.includes('approval')
+                  ? '草稿'
+                  : '有效'
+              : undefined)
+        ])
+      ),
+      workspace.capabilities.includes('attachments')
+        ? { attachments: structuredClone(record?.payload?.attachments ?? []) }
+        : {},
+      getSafetyModuleDetailSchema(workspace.code) ? { detailRows: initialDetailRows } : {}
     )
+  }
+
+  const handleAttachmentsChange = (value: Attachment[]): void => {
+    formData.attachments = value
+  }
+
+  const handleDetailRowsChange = (value: DetailRow[]): void => {
+    formData.detailRows = value
+  }
 
   const loadEmployeeOptions = async (): Promise<void> => {
     if (!currentWorkspace.value?.fields.some((item) => item.type === 'employee')) return
@@ -166,23 +225,37 @@
     return fallback
   }
 
-  const normalizeRecordStatus = (value: string): string =>
-    ({
+  const normalizeRecordStatus = (value: string): string => {
+    const explicit = {
       草稿: 'draft',
+      未开始: 'draft',
       待审核: 'pending',
+      待审批: 'pending',
       审批中: 'pending',
       有效: 'active',
       启用: 'active',
       合格: 'active',
       已批准: 'active',
+      进行中: 'active',
+      已发布: 'active',
       已完成: 'completed',
       已关闭: 'completed',
+      已结束: 'completed',
+      已发布成绩: 'completed',
       停用: 'disabled',
       已停用: 'disabled',
       已作废: 'disabled',
+      已下架: 'disabled',
       不合格: 'pending',
       限期整改: 'pending'
-    })[value] ?? value
+    }[value]
+    if (explicit) return explicit
+    if (/草稿|未开始/.test(value)) return 'draft'
+    if (/待|审批|处理中|整改中|核实中/.test(value)) return 'pending'
+    if (/完成|关闭|结束|办结|归还|成绩/.test(value)) return 'completed'
+    if (/停|作废|下架|无效|取消/.test(value)) return 'disabled'
+    return 'active'
+  }
 
   const handleSubmit = async (): Promise<boolean> => {
     try {
@@ -191,6 +264,15 @@
       if (!workspace) return false
       const generatedNo = `${workspace.code.toUpperCase()}-${Date.now().toString().slice(-8)}`
       const type = editingRecord.value?.id ? 'edit' : 'add'
+      const normalizedPayload = structuredClone(toRaw(formData))
+      if (Array.isArray(normalizedPayload.detailRows)) {
+        normalizedPayload.detailRows = normalizedPayload.detailRows.map((row) => {
+          if (!row || typeof row !== 'object') return row
+          return Object.fromEntries(
+            Object.entries(row as Record<string, unknown>).filter(([key]) => key !== '_key')
+          )
+        })
+      }
       await saveSafetyCatalogRecord({
         id: editingRecord.value?.id,
         moduleCode: workspace.code,
@@ -202,7 +284,9 @@
           ['name', 'subjectName', 'employeeName', 'title', 'reportPeriod'],
           workspace.title
         ),
-        status: normalizeRecordStatus(firstValue(['status', 'result'], 'active')),
+        status:
+          editingRecord.value?.status ??
+          normalizeRecordStatus(firstValue(['status', 'result'], 'active')),
         ownerName: firstValue(
           ['responsiblePerson', 'ownerName', 'employeeName', 'applicantName'],
           ''
@@ -211,7 +295,7 @@
           ['businessDate', 'effectiveDate', 'inspectionDate', 'occurredAt', 'startDate'],
           ''
         ),
-        payload: structuredClone(toRaw(formData))
+        payload: normalizedPayload
       })
       emit('success', type)
       return true

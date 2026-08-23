@@ -1,4 +1,9 @@
 import { safetyModuleFieldOverrides } from './safety-module-fields'
+import {
+  inferExperienceFromKind,
+  safetyModuleExperienceMap,
+  type SafetyModuleExperienceDefinition
+} from './safety-module-experience'
 
 export type SafetyWorkspaceKind =
   | 'tree'
@@ -27,7 +32,7 @@ export interface SafetyFieldDefinition {
   table?: boolean
 }
 
-export interface SafetyModuleDefinition {
+export interface SafetyModuleDefinition extends SafetyModuleExperienceDefinition {
   code: string
   title: string
   section: string
@@ -720,16 +725,26 @@ const recordNounByKind: Record<SafetyWorkspaceKind, string> = {
 }
 
 export const safetyModuleCatalog: SafetyModuleDefinition[] = catalogSeeds.map(
-  ([code, title, section, description, kind]) => ({
-    code,
-    title,
-    section,
-    description,
-    kind,
-    icon: iconBySection[section] ?? 'ri:shield-check-line',
-    recordNoun: recordNounByKind[kind],
-    fields: (safetyModuleFieldOverrides[code] ?? fieldsByKind[kind]).map((field) => ({ ...field }))
-  })
+  ([code, title, section, description, kind]) => {
+    const moduleExperience = safetyModuleExperienceMap[code] ?? {
+      experience: inferExperienceFromKind(kind),
+      documentPages: [],
+      capabilities: []
+    }
+    return {
+      code,
+      title,
+      section,
+      description,
+      kind,
+      icon: iconBySection[section] ?? 'ri:shield-check-line',
+      recordNoun: recordNounByKind[kind],
+      fields: (safetyModuleFieldOverrides[code] ?? fieldsByKind[kind]).map((field) => ({
+        ...field
+      })),
+      ...moduleExperience
+    }
+  }
 )
 
 const catalogMap = new Map(safetyModuleCatalog.map((definition) => [definition.code, definition]))

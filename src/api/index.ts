@@ -68,8 +68,18 @@ export { analyzeSmisSafetyByAi, fetchSmisSafetyDashboard } from '@smis/api/modul
 
 export {
   deleteSafetyCatalogRecord,
+  fetchHazardousWasteStock,
+  fetchSafetyCatalogEvents,
   fetchSafetyCatalogRecords,
   saveSafetyCatalogRecord,
+  saveSafetyExamDraft,
+  startSafetyExam,
+  submitSafetyExam,
+  transitionSafetyCatalogRecord,
+  type HazardousWasteStock,
+  type SafetyCatalogEvent,
   type SafetyCatalogRecord,
-  type SafetyCatalogSearchParams
+  type SafetyCatalogSearchParams,
+  type SafetyExamAttempt,
+  type SafetyWorkflowAction
 } from '@smis/api/modules/catalog'
