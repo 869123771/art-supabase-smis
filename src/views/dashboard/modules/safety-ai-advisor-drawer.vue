@@ -98,7 +98,7 @@
 <style scoped lang="scss">
   .safety-ai-advisor {
     display: grid;
-    gap: 14px;
+    gap: 12px;
     min-width: 0;
   }
 
@@ -107,7 +107,7 @@
     grid-template-columns: auto minmax(0, 1fr) auto;
     gap: 14px;
     align-items: center;
-    padding: 20px;
+    padding: 18px;
     background: linear-gradient(
       135deg,
       color-mix(in srgb, var(--theme-color) 10%, var(--el-bg-color)),
@@ -121,14 +121,14 @@
     width: 46px;
     height: 46px;
     font-size: 23px;
-    color: #fff;
+    color: var(--el-color-white);
     background: var(--theme-color);
-    border-radius: 13px;
+    border-radius: var(--custom-radius);
   }
 
   .safety-ai-advisor__hero small,
   .safety-ai-advisor footer {
-    color: var(--art-text-gray-600);
+    color: var(--el-text-color-secondary);
   }
 
   .safety-ai-advisor__hero h3 {
@@ -153,7 +153,7 @@
   }
 
   .safety-ai-advisor__section {
-    padding: 18px;
+    padding: 16px;
   }
 
   .safety-ai-advisor__signals {
@@ -178,7 +178,7 @@
     height: 34px;
     font-weight: 700;
     background: var(--el-fill-color-light);
-    border-radius: 9px;
+    border-radius: var(--el-border-radius-base);
   }
 
   .safety-ai-advisor__signals .is-warning {
@@ -199,9 +199,9 @@
 
   .safety-ai-advisor__limitations {
     padding: 16px;
-    color: var(--art-text-gray-700);
+    color: var(--el-text-color-regular);
     background: var(--el-fill-color-light);
-    border-radius: 10px;
+    border-radius: var(--el-border-radius-base);
   }
 
   .safety-ai-advisor__limitations p {

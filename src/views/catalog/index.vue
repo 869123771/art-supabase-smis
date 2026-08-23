@@ -1,5 +1,8 @@
 <template>
-  <div v-auth="'SmisCatalog:View'" class="smis-catalog-page art-full-height">
+  <div
+    v-auth="'SmisCatalog:View'"
+    class="smis-catalog-page art-full-height business-workspace-page"
+  >
     <BusinessWorkspaceHeader
       :eyebrow="workspace.section"
       :title="workspace.title"
@@ -8,9 +11,10 @@
       :tags="[
         { label: '租户数据隔离', type: 'primary' },
         { label: experienceLabel, type: 'success' },
-        { label: `文档 P${workspace.documentPages.join(' / ')}`, type: 'info' }
+        { label: '过程留痕', type: 'info' }
       ]"
       :metrics="workspaceMetrics"
+      density="compact"
     >
       <template #actions>
         <BusinessTableWorkspaceActions
@@ -21,10 +25,13 @@
     </BusinessWorkspaceHeader>
 
     <section v-if="workspace.experience === 'analytics'" class="catalog-analytics art-card-xs">
-      <header>
+      <header class="catalog-section-heading">
+        <span class="catalog-section-heading__icon"
+          ><ArtSvgIcon icon="ri:bar-chart-box-line"
+        /></span>
         <div
           ><strong>{{ workspace.title }}趋势分析</strong
-          ><p>统计结果由当前租户真实业务记录即时汇总，不创建“报表记录”。</p></div
+          ><p>按当前租户真实业务记录即时汇总。</p></div
         >
         <ElTag effect="plain">{{ overview.total }} 条业务样本</ElTag>
       </header>
@@ -39,11 +46,11 @@
     </section>
 
     <section v-else-if="workspace.experience === 'risk-map'" class="catalog-risk-map art-card-xs">
-      <header>
-        <div
-          ><strong>风险四色空间图</strong
-          ><p>按文档要求以红、橙、黄、蓝标识重大、较大、一般和低风险区域。</p></div
-        >
+      <header class="catalog-section-heading">
+        <span class="catalog-section-heading__icon is-danger"
+          ><ArtSvgIcon icon="ri:map-2-line"
+        /></span>
+        <div><strong>风险四色空间图</strong><p>按风险等级聚合当前租户的管控区域。</p></div>
         <ElTag type="danger" effect="plain">支持区域风险维护</ElTag>
       </header>
       <div class="catalog-risk-map__canvas">
@@ -69,11 +76,11 @@
     </section>
 
     <section v-else-if="workspace.experience === 'inventory'" class="catalog-stock art-card-xs">
-      <header>
-        <div
-          ><strong>危废库存总览</strong
-          ><p>入库与出库统一折算为千克，服务端事务禁止超库存出库。</p></div
-        >
+      <header class="catalog-section-heading">
+        <span class="catalog-section-heading__icon is-success"
+          ><ArtSvgIcon icon="ri:recycle-line"
+        /></span>
+        <div><strong>危废库存总览</strong><p>入出库统一折算，库存余额实时核算。</p></div>
         <ElTag type="success" effect="plain">库存实时核算</ElTag>
       </header>
       <div class="catalog-stock__grid">
@@ -85,12 +92,13 @@
             {{ stock.outboundQuantity }}</small
           >
         </article>
-        <ArtEmptyState
-          v-if="!stockState.loading && !stockState.rows.length"
-          compact
-          title="暂无危废库存"
-          description="先维护危废名录并登记第一笔入库单。"
-        />
+        <div v-if="!stockState.loading && !stockState.rows.length" class="catalog-stock__empty">
+          <span><ArtSvgIcon icon="ri:inbox-archive-line" /></span>
+          <div
+            ><strong>暂无库存流水</strong
+            ><small>维护危废名录并登记首笔入库后，这里会展示可用余额。</small></div
+          >
+        </div>
       </div>
     </section>
 
@@ -110,7 +118,10 @@
     <div class="catalog-content" :class="{ 'is-tree': workspace.experience === 'tree' }">
       <aside v-if="workspace.experience === 'tree'" class="catalog-tree art-card-xs">
         <header
-          ><strong>{{ workspace.title }}层级</strong><small>父子结构实时同步</small></header
+          ><span><ArtSvgIcon icon="ri:node-tree" /></span
+          ><div
+            ><strong>{{ workspace.title }}层级</strong><small>父子结构实时同步</small></div
+          ></header
         >
         <ElTree
           :data="treeNodes"
@@ -160,7 +171,6 @@
   import BusinessWorkspaceHeader, {
     type BusinessWorkspaceMetric
   } from '@/components/business/business-workspace-header/index.vue'
-  import ArtEmptyState from '@/components/core/layouts/art-empty-state/index.vue'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
   import { useArtFeedback } from '@/hooks/core/useArtFeedback'
   import type { ColumnOption } from '@/types'
@@ -295,10 +305,10 @@
   const analyticsBars = computed(() => {
     const total = Math.max(overview.rows.length, 1)
     const items = [
-      { label: '有效 / 已批准', statuses: ['active'], color: '#22c55e' },
-      { label: '待处理', statuses: ['draft', 'pending'], color: '#f59e0b' },
-      { label: '已完成', statuses: ['completed'], color: '#6366f1' },
-      { label: '停用 / 作废', statuses: ['disabled'], color: '#94a3b8' }
+      { label: '有效 / 已批准', statuses: ['active'], color: 'var(--el-color-success)' },
+      { label: '待处理', statuses: ['draft', 'pending'], color: 'var(--el-color-warning)' },
+      { label: '已完成', statuses: ['completed'], color: 'var(--el-color-primary)' },
+      { label: '停用 / 作废', statuses: ['disabled'], color: 'var(--el-color-info)' }
     ]
     return items.map((item) => {
       const value = overview.rows.filter((row) => item.statuses.includes(row.status)).length
@@ -692,23 +702,44 @@
   }
 
   .catalog-tree {
-    display: grid;
+    display: flex;
     flex: 0 0 238px;
+    flex-direction: column;
     gap: 12px;
     min-height: 0;
-    padding: 16px;
+    padding: 14px;
     overflow: auto;
 
     header {
-      display: grid;
-      gap: 3px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--el-border-color-lighter);
+
+      > span {
+        display: grid;
+        flex: 0 0 32px;
+        place-items: center;
+        width: 32px;
+        height: 32px;
+        color: var(--el-color-primary);
+        background: var(--el-color-primary-light-9);
+        border-radius: var(--el-border-radius-base);
+      }
+
+      > div {
+        display: grid;
+        min-width: 0;
+      }
 
       strong {
-        font-size: 15px;
+        font-size: 14px;
       }
 
       small {
-        color: var(--art-text-gray-600);
+        font-size: 11px;
+        color: var(--el-text-color-secondary);
       }
     }
   }
@@ -720,25 +751,52 @@
   .catalog-permit-guide {
     flex: 0 0 auto;
     min-width: 0;
-    padding: 16px 18px;
+    padding: 14px 16px;
   }
 
-  .catalog-analytics > header,
-  .catalog-risk-map > header,
-  .catalog-stock > header {
+  .catalog-section-heading {
     display: flex;
-    gap: 16px;
-    align-items: flex-start;
-    justify-content: space-between;
+    gap: 10px;
+    align-items: center;
+
+    &__icon {
+      display: grid;
+      flex: 0 0 34px;
+      place-items: center;
+      width: 34px;
+      height: 34px;
+      color: var(--el-color-primary);
+      background: var(--el-color-primary-light-9);
+      border-radius: var(--el-border-radius-base);
+
+      &.is-danger {
+        color: var(--el-color-danger);
+        background: var(--el-color-danger-light-9);
+      }
+
+      &.is-success {
+        color: var(--el-color-success);
+        background: var(--el-color-success-light-9);
+      }
+    }
+
+    > div {
+      flex: 1;
+      min-width: 0;
+    }
 
     strong {
-      font-size: 15px;
+      font-size: 14px;
+      color: var(--el-text-color-primary);
     }
 
     p {
-      margin: 4px 0 0;
-      font-size: 12px;
-      color: var(--art-text-gray-600);
+      margin: 2px 0 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-size: 11px;
+      color: var(--el-text-color-secondary);
+      white-space: nowrap;
     }
   }
 
@@ -746,17 +804,17 @@
   .catalog-stock__grid {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 10px;
-    margin-top: 14px;
+    gap: 8px;
+    margin-top: 12px;
 
     article {
       display: grid;
-      gap: 6px;
+      gap: 4px;
       min-width: 0;
-      padding: 12px;
-      background: var(--art-main-bg-color);
-      border: 1px solid var(--art-card-border);
-      border-radius: 9px;
+      padding: 10px 12px;
+      background: var(--el-fill-color-lighter);
+      border: 1px solid var(--el-border-color-lighter);
+      border-radius: var(--el-border-radius-base);
     }
 
     span,
@@ -764,12 +822,14 @@
       overflow: hidden;
       text-overflow: ellipsis;
       font-size: 12px;
-      color: var(--art-text-gray-600);
+      color: var(--el-text-color-secondary);
       white-space: nowrap;
     }
 
     strong {
-      font-size: 18px;
+      font-size: 17px;
+      font-variant-numeric: tabular-nums;
+      color: var(--el-text-color-primary);
     }
   }
 
@@ -791,14 +851,52 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
+  .catalog-stock__empty {
+    display: flex;
+    grid-column: 1 / -1;
+    gap: 10px;
+    align-items: center;
+    min-height: 58px;
+    padding: 10px 12px;
+    background: var(--el-fill-color-lighter);
+    border: 1px dashed var(--el-border-color);
+    border-radius: var(--el-border-radius-base);
+
+    > span {
+      display: grid;
+      flex: 0 0 32px;
+      place-items: center;
+      width: 32px;
+      height: 32px;
+      color: var(--el-color-success);
+      background: var(--el-color-success-light-9);
+      border-radius: var(--el-border-radius-base);
+    }
+
+    > div {
+      display: grid;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    strong {
+      font-size: 13px;
+    }
+
+    small {
+      font-size: 11px;
+      color: var(--el-text-color-secondary);
+    }
+  }
+
   .catalog-risk-map__canvas {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 8px;
-    min-height: 218px;
-    padding: 14px;
-    margin-top: 14px;
-    background-color: var(--art-main-bg-color);
+    gap: 7px;
+    min-height: 142px;
+    padding: 10px;
+    margin-top: 12px;
+    background-color: var(--el-fill-color-lighter);
     background-image:
       linear-gradient(var(--art-card-border) 1px, transparent 1px),
       linear-gradient(90deg, var(--art-card-border) 1px, transparent 1px);
@@ -809,17 +907,16 @@
     article {
       display: grid;
       align-content: end;
-      min-height: 86px;
-      padding: 14px;
-      color: #fff;
-      border: 2px solid rgb(255 255 255 / 72%);
-      border-radius: 8px;
-      box-shadow: 0 8px 20px rgb(15 23 42 / 12%);
+      min-height: 56px;
+      padding: 10px 12px;
+      color: var(--el-color-white);
+      border: 1px solid color-mix(in srgb, var(--el-color-white) 70%, transparent);
+      border-radius: var(--el-border-radius-base);
     }
 
     strong {
       margin: 4px 0;
-      font-size: 24px;
+      font-size: 20px;
     }
 
     small {
@@ -827,43 +924,43 @@
     }
 
     .is-critical {
-      background: #dc2626;
+      background: var(--el-color-danger-dark-2);
     }
 
     .is-major {
-      background: #ea580c;
+      background: color-mix(in srgb, var(--el-color-danger) 62%, var(--el-color-warning));
     }
 
     .is-general {
-      color: #422006;
-      background: #facc15;
+      color: var(--el-text-color-primary);
+      background: var(--el-color-warning);
     }
 
     .is-low {
-      background: #2563eb;
+      background: var(--el-color-primary);
     }
   }
 
   .catalog-risk-map__legend {
     margin: 10px 0 0;
     font-size: 12px;
-    color: var(--art-text-gray-600);
+    color: var(--el-text-color-secondary);
   }
 
   .catalog-exam-flow,
   .catalog-permit-guide {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 10px;
+    gap: 8px;
 
     article {
       display: flex;
-      gap: 10px;
+      gap: 9px;
       min-width: 0;
-      padding: 12px;
-      background: var(--art-main-bg-color);
-      border: 1px solid var(--art-card-border);
-      border-radius: 9px;
+      padding: 10px;
+      background: var(--el-fill-color-lighter);
+      border: 1px solid var(--el-border-color-lighter);
+      border-radius: var(--el-border-radius-base);
     }
 
     article > span {
@@ -875,7 +972,7 @@
       font-weight: 700;
       color: var(--el-color-primary);
       background: var(--el-color-primary-light-9);
-      border-radius: 8px;
+      border-radius: var(--el-border-radius-base);
     }
 
     strong {
@@ -886,7 +983,7 @@
       margin: 4px 0 0;
       font-size: 12px;
       line-height: 1.5;
-      color: var(--art-text-gray-600);
+      color: var(--el-text-color-secondary);
     }
   }
 
@@ -918,6 +1015,14 @@
     .catalog-permit-guide,
     .catalog-risk-map__canvas {
       grid-template-columns: 1fr;
+    }
+
+    .catalog-section-heading {
+      flex-wrap: wrap;
+
+      .el-tag {
+        margin-left: 44px;
+      }
     }
   }
 </style>

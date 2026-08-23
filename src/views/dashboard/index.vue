@@ -1,5 +1,8 @@
 <template>
-  <div v-auth="'SmisSafetyDashboard:View'" class="smis-safety-dashboard art-full-height">
+  <div
+    v-auth="'SmisSafetyDashboard:View'"
+    class="smis-safety-dashboard art-full-height business-workspace-page"
+  >
     <BusinessWorkspaceHeader
       eyebrow="SAFETY OPERATIONS CENTER"
       title="安全生产驾驶舱"
@@ -10,6 +13,7 @@
         { label: 'AI只读研判', type: 'success' }
       ]"
       :metrics="metrics"
+      density="compact"
       refreshable
       refresh-label="刷新安全驾驶舱数据"
       :refresh-loading="state.loading"
@@ -55,22 +59,22 @@
               ><div><strong>闭环健康脉冲</strong><p>逾期事项和应急准备的即时信号。</p></div></header
             >
             <div class="smis-safety-dashboard__pulse-grid">
-              <button type="button" @click="go('/smis/inspection-control/hidden-danger')"
+              <button type="button" @click="go(smisRoutes.hiddenDanger)"
                 ><span class="is-danger"><ArtSvgIcon icon="ri:alarm-warning-line" /></span
                 ><strong>{{ state.data.overdueDangerCount }}</strong
                 ><small>逾期隐患</small></button
               >
-              <button type="button" @click="go('/smis/inspection-control/hidden-danger')"
+              <button type="button" @click="go(smisRoutes.inspectionTask)"
                 ><span class="is-warning"><ArtSvgIcon icon="ri:task-line" /></span
                 ><strong>{{ state.data.pendingInspectionCount }}</strong
                 ><small>待办检查</small></button
               >
-              <button type="button" @click="go('/smis/accident-emergency')"
+              <button type="button" @click="go(smisRoutes.accident)"
                 ><span class="is-danger"><ArtSvgIcon icon="ri:first-aid-kit-line" /></span
                 ><strong>{{ state.data.openAccidentCount }}</strong
                 ><small>未结事故</small></button
               >
-              <button type="button" @click="go('/smis/accident-emergency')"
+              <button type="button" @click="go(smisRoutes.emergencyPlan)"
                 ><span class="is-success"><ArtSvgIcon icon="ri:file-shield-2-line" /></span
                 ><strong>{{ state.data.activeEmergencyPlanCount }}</strong
                 ><small>生效预案</small></button
@@ -84,7 +88,7 @@
           <article class="smis-safety-dashboard__hotspots art-card-xs">
             <header
               ><div><strong>重点风险点</strong><p>按逾期隐患和开放隐患排序。</p></div
-              ><ElButton text type="primary" @click="go('/smis/risk-control/risk-point')"
+              ><ElButton text type="primary" @click="go(smisRoutes.riskPoint)"
                 >查看全部</ElButton
               ></header
             >
@@ -93,7 +97,7 @@
                 v-for="(item, index) in state.data.hotspots"
                 :key="item.id"
                 type="button"
-                @click="go('/smis/risk-control/risk-point')"
+                @click="go(smisRoutes.riskPoint)"
               >
                 <span>{{ String(index + 1).padStart(2, '0') }}</span>
                 <div
@@ -124,7 +128,7 @@
           <article class="art-card-xs">
             <header
               ><div><strong>最新开放隐患</strong><p>优先关注重大、较大和已逾期记录。</p></div
-              ><ElButton text type="primary" @click="go('/smis/inspection-control/hidden-danger')"
+              ><ElButton text type="primary" @click="go(smisRoutes.hiddenDanger)"
                 >进入治理台账</ElButton
               ></header
             >
@@ -133,7 +137,7 @@
                 v-for="item in state.data.recentDangers"
                 :key="item.id"
                 type="button"
-                @click="go('/smis/inspection-control/hidden-danger')"
+                @click="go(smisRoutes.hiddenDanger)"
                 ><span :class="`is-${item.dangerLevel}`"><ArtSvgIcon icon="ri:alert-line" /></span
                 ><div
                   ><strong>{{ item.dangerTitle }}</strong
@@ -157,7 +161,7 @@
           <article class="art-card-xs">
             <header
               ><div><strong>最新未结事故事件</strong><p>跟踪原因调查、整改措施和结案进度。</p></div
-              ><ElButton text type="primary" @click="go('/smis/accident-emergency')"
+              ><ElButton text type="primary" @click="go(smisRoutes.accident)"
                 >进入事故台账</ElButton
               ></header
             >
@@ -169,7 +173,7 @@
                 v-for="item in state.data.recentAccidents"
                 :key="item.id"
                 type="button"
-                @click="go('/smis/accident-emergency')"
+                @click="go(smisRoutes.accident)"
                 ><span :class="`is-${item.severity}`"
                   ><ArtSvgIcon icon="ri:first-aid-kit-line" /></span
                 ><div
@@ -213,6 +217,13 @@
   defineOptions({ name: 'SmisSafetyDashboard' })
   const router = useRouter()
   const aiAdvisorRef = ref<{ handleOpen: () => Promise<void> }>()
+  const smisRoutes = {
+    riskPoint: '/smis/dual-control/risk-control/risk-identification',
+    inspectionTask: '/smis/dual-control/risk-control/inspection-task',
+    hiddenDanger: '/smis/dual-control/risk-control/danger-governance',
+    accident: '/smis/production/safety-accident/casualty-quick-report',
+    emergencyPlan: '/smis/production/emergency-rescue/emergency-plan'
+  } as const
   const state = reactive<{
     loading: boolean
     error: Error | null
@@ -292,7 +303,7 @@
 
   .smis-safety-dashboard article {
     min-width: 0;
-    padding: 18px;
+    padding: 16px;
   }
 
   .smis-safety-dashboard article > header {
@@ -303,19 +314,20 @@
   }
 
   .smis-safety-dashboard article > header strong {
-    font-size: 16px;
+    font-size: 15px;
+    color: var(--el-text-color-primary);
   }
 
   .smis-safety-dashboard article > header p {
     margin: 4px 0 0;
-    font-size: 13px;
-    color: var(--art-text-gray-600);
+    font-size: 12px;
+    color: var(--el-text-color-secondary);
   }
 
   .smis-safety-dashboard__bars {
     display: grid;
-    gap: 14px;
-    margin-top: 20px;
+    gap: 12px;
+    margin-top: 16px;
   }
 
   .smis-safety-dashboard__bars > div {
@@ -326,7 +338,7 @@
   }
 
   .smis-safety-dashboard__bars > div > div {
-    height: 9px;
+    height: 8px;
     overflow: hidden;
     background: var(--el-fill-color-light);
     border-radius: 99px;
@@ -335,43 +347,57 @@
   .smis-safety-dashboard__bars i {
     display: block;
     height: 100%;
-    background: #22c55e;
+    background: var(--el-color-success);
     border-radius: inherit;
   }
 
   .smis-safety-dashboard__bars i.is-general {
-    background: #f59e0b;
+    background: var(--el-color-warning);
   }
 
   .smis-safety-dashboard__bars i.is-major {
-    background: #f97316;
+    background: color-mix(in srgb, var(--el-color-danger) 62%, var(--el-color-warning));
   }
 
   .smis-safety-dashboard__bars i.is-critical {
-    background: #ef4444;
+    background: var(--el-color-danger);
   }
 
   .smis-safety-dashboard__pulse-grid {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 10px;
-    margin-top: 18px;
+    gap: 8px;
+    margin-top: 14px;
   }
 
   .smis-safety-dashboard__pulse-grid button {
     display: grid;
     gap: 5px;
     place-items: center;
-    padding: 14px 8px;
+    padding: 11px 8px;
     color: inherit;
     cursor: pointer;
-    background: var(--art-main-bg-color);
-    border: 1px solid var(--art-card-border);
-    border-radius: 10px;
+    background: var(--el-fill-color-lighter);
+    border: 1px solid var(--el-border-color-lighter);
+    border-radius: var(--el-border-radius-base);
+    transition:
+      color 0.18s ease,
+      background-color 0.18s ease,
+      border-color 0.18s ease;
   }
 
-  .smis-safety-dashboard__pulse-grid button:hover {
+  .smis-safety-dashboard__pulse-grid button:hover,
+  .smis-safety-dashboard__pulse-grid button:focus-visible {
+    color: var(--theme-color);
+    background: color-mix(in srgb, var(--theme-color) 6%, var(--default-box-color));
     border-color: var(--theme-color);
+  }
+
+  .smis-safety-dashboard__pulse-grid button:focus-visible,
+  .smis-safety-dashboard__hotspot-list button:focus-visible,
+  .smis-safety-dashboard__recent-list button:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--theme-color) 52%, transparent);
+    outline-offset: 2px;
   }
 
   .smis-safety-dashboard__pulse-grid span {
@@ -381,7 +407,7 @@
     height: 34px;
     color: var(--el-color-primary);
     background: var(--el-color-primary-light-9);
-    border-radius: 9px;
+    border-radius: var(--el-border-radius-base);
   }
 
   .smis-safety-dashboard__pulse-grid span.is-danger {
@@ -404,7 +430,7 @@
   }
 
   .smis-safety-dashboard__pulse-grid small {
-    color: var(--art-text-gray-600);
+    color: var(--el-text-color-secondary);
   }
 
   .smis-safety-dashboard__main-grid {
@@ -427,18 +453,23 @@
     align-items: center;
     width: 100%;
     min-width: 0;
-    padding: 10px;
+    padding: 9px 10px;
     color: inherit;
     text-align: left;
     cursor: pointer;
     background: transparent;
     border: 0;
-    border-radius: 9px;
+    border: 1px solid transparent;
+    border-radius: var(--el-border-radius-base);
+    transition:
+      background-color 0.18s ease,
+      border-color 0.18s ease;
   }
 
   .smis-safety-dashboard__hotspot-list button:hover,
   .smis-safety-dashboard__recent-list button:hover {
-    background: var(--el-fill-color-light);
+    background: var(--el-fill-color-lighter);
+    border-color: var(--el-border-color-lighter);
   }
 
   .smis-safety-dashboard__hotspot-list button > span,
@@ -450,7 +481,7 @@
     height: 34px;
     color: var(--theme-color);
     background: color-mix(in srgb, var(--theme-color) 10%, var(--el-bg-color));
-    border-radius: 9px;
+    border-radius: var(--el-border-radius-base);
   }
 
   .smis-safety-dashboard__hotspot-list button > div:not(.smis-safety-dashboard__hotspot-tags),
@@ -465,7 +496,7 @@
   .smis-safety-dashboard__recent-list small {
     overflow: hidden;
     text-overflow: ellipsis;
-    color: var(--art-text-gray-600);
+    color: var(--el-text-color-secondary);
     white-space: nowrap;
   }
 

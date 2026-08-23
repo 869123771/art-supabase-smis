@@ -1,5 +1,5 @@
 <template>
-  <div class="smis-risk-point-page art-full-height">
+  <div class="smis-risk-point-page art-full-height business-workspace-page">
     <BusinessWorkspaceHeader
       eyebrow="RISK CONTROL REGISTER"
       title="风险点管理"
@@ -10,6 +10,7 @@
         { label: '租户隔离', type: 'info' }
       ]"
       :metrics="workspaceMetrics"
+      density="compact"
     >
       <template #actions>
         <div class="smis-risk-point-page__actions">

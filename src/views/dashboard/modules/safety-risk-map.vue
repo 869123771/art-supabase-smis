@@ -108,9 +108,9 @@
 <style scoped lang="scss">
   .safety-risk-map {
     display: grid;
-    gap: 14px;
+    gap: 12px;
     min-width: 0;
-    padding: 18px;
+    padding: 16px;
   }
 
   .safety-risk-map header {
@@ -121,20 +121,21 @@
   }
 
   .safety-risk-map header strong {
-    font-size: 16px;
+    font-size: 15px;
   }
 
   .safety-risk-map header p {
     margin: 4px 0 0;
-    font-size: 13px;
-    color: var(--art-text-gray-600);
+    font-size: 12px;
+    color: var(--el-text-color-secondary);
   }
 
   .safety-risk-map__canvas {
     width: 100%;
     height: 390px;
     overflow: hidden;
-    border-radius: 10px;
+    border: 1px solid var(--el-border-color-lighter);
+    border-radius: var(--el-border-radius-base);
   }
 
   :global(.smis-risk-marker) {
@@ -143,9 +144,9 @@
     align-items: center;
     max-width: 180px;
     padding: 5px 9px 5px 5px;
-    color: #fff;
-    background: #6b7280;
-    border: 2px solid #fff;
+    color: var(--el-color-white);
+    background: var(--el-color-info-dark-2);
+    border: 2px solid var(--el-color-white);
     border-radius: 999px;
     box-shadow: 0 5px 14px rgb(15 23 42 / 20%);
   }
@@ -168,19 +169,19 @@
   }
 
   :global(.smis-risk-marker.is-low) {
-    background: #16a34a;
+    background: var(--el-color-success-dark-2);
   }
 
   :global(.smis-risk-marker.is-general) {
-    background: #d97706;
+    background: var(--el-color-warning-dark-2);
   }
 
   :global(.smis-risk-marker.is-major) {
-    background: #ea580c;
+    background: color-mix(in srgb, var(--el-color-danger) 62%, var(--el-color-warning));
   }
 
   :global(.smis-risk-marker.is-critical) {
-    background: #dc2626;
+    background: var(--el-color-danger-dark-2);
   }
 
   @media (width <= 760px) {

@@ -21,7 +21,7 @@
       v-if="currentWorkspace?.capabilities.includes('attachments')"
       :model-value="attachments"
       title="业务附件与现场证据"
-      description="支持文档截图中的证书、检验报告、现场照片和审批附件；文件进入平台统一资源库。"
+      description="集中归档证书、检验报告、现场照片和审批附件，文件进入平台统一资源库。"
       @update:model-value="handleAttachmentsChange"
     />
   </ArtDialog>

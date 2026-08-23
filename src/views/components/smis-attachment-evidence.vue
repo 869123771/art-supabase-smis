@@ -156,9 +156,9 @@
         align-items: center;
         min-width: 0;
         padding: 10px 12px;
-        background: var(--art-main-bg-color);
-        border: 1px solid var(--art-card-border);
-        border-radius: 8px;
+        background: var(--el-fill-color-lighter);
+        border: 1px solid var(--el-border-color-lighter);
+        border-radius: var(--el-border-radius-base);
       }
 
       article > div {

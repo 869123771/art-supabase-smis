@@ -9,7 +9,7 @@
               <ElTag :type="statusType(record.status)" effect="light">
                 {{ statusLabel(record.status) }}
               </ElTag>
-              <ElTag effect="plain">文档第 {{ workspace.documentPages.join('、') }} 页</ElTag>
+              <ElTag effect="plain">租户业务档案</ElTag>
             </div>
             <h2>{{ record.title }}</h2>
             <p>{{ record.recordNo }} · {{ workspace.description }}</p>
@@ -82,7 +82,7 @@
             <ElTimelineItem
               v-for="event in eventState.rows"
               :key="event.id"
-              :timestamp="formatWithDayjs(event.createTime)"
+              :timestamp="formatWithDayjs(event.createTime) ?? '--'"
               placement="top"
               :type="eventType(event.action)"
             >
@@ -353,7 +353,7 @@
 <style scoped lang="scss">
   .catalog-detail {
     display: grid;
-    gap: 18px;
+    gap: 16px;
 
     &__hero,
     &__identity,
@@ -366,14 +366,14 @@
       gap: 20px;
       align-items: flex-start;
       justify-content: space-between;
-      padding: 18px;
+      padding: 16px;
       background: linear-gradient(
         135deg,
         var(--el-color-primary-light-9),
         var(--art-main-bg-color)
       );
-      border: 1px solid var(--art-card-border);
-      border-radius: 12px;
+      border: 1px solid var(--el-border-color-lighter);
+      border-radius: var(--custom-radius);
     }
 
     &__identity {
@@ -387,7 +387,7 @@
 
       p {
         margin: 0;
-        color: var(--art-text-gray-600);
+        color: var(--el-text-color-secondary);
       }
     }
 
@@ -399,7 +399,7 @@
       height: 44px;
       color: var(--el-color-primary);
       background: var(--el-color-primary-light-8);
-      border-radius: 10px;
+      border-radius: var(--el-border-radius-base);
     }
 
     &__tags {
@@ -413,9 +413,9 @@
       justify-items: center;
       padding: 8px;
       font-size: 12px;
-      color: var(--art-text-gray-600);
+      color: var(--el-text-color-secondary);
       background: #fff;
-      border-radius: 8px;
+      border-radius: var(--el-border-radius-base);
     }
 
     &__fields {
@@ -450,8 +450,8 @@
 
       article {
         flex: 1;
-        border: 1px solid var(--art-card-border);
-        border-radius: 8px;
+        border: 1px solid var(--el-border-color-lighter);
+        border-radius: var(--el-border-radius-base);
       }
     }
 
@@ -467,7 +467,7 @@
         padding: 10px 12px;
         background: var(--el-color-success-light-9);
         border: 1px solid var(--el-color-success-light-7);
-        border-radius: 8px;
+        border-radius: var(--el-border-radius-base);
       }
 
       svg {
@@ -482,7 +482,7 @@
       p,
       small {
         margin: 4px 0 0;
-        color: var(--art-text-gray-600);
+        color: var(--el-text-color-secondary);
       }
     }
   }

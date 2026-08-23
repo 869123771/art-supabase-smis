@@ -288,7 +288,7 @@
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
       border: 1px solid var(--art-card-border);
-      border-radius: 10px;
+      border-radius: var(--el-border-radius-base);
 
       div {
         display: grid;
@@ -316,8 +316,8 @@
       flex-wrap: wrap;
       gap: 8px;
       padding: 12px;
-      background: var(--art-main-bg-color);
-      border-radius: 9px;
+      background: var(--el-fill-color-lighter);
+      border-radius: var(--el-border-radius-base);
 
       button {
         display: grid;
@@ -325,11 +325,11 @@
         width: 34px;
         height: 34px;
         font: inherit;
-        color: var(--art-gray-700);
+        color: var(--el-text-color-regular);
         cursor: pointer;
         background: var(--default-box-color);
         border: 1px solid var(--art-card-border);
-        border-radius: 7px;
+        border-radius: var(--el-border-radius-base);
       }
 
       button.is-answered {
@@ -338,7 +338,7 @@
       }
 
       button.is-active {
-        color: #fff;
+        color: var(--el-color-white);
         background: var(--el-color-primary);
         border-color: var(--el-color-primary);
       }
@@ -350,7 +350,7 @@
       min-height: 290px;
       padding: 18px;
       border: 1px solid var(--art-card-border);
-      border-radius: 10px;
+      border-radius: var(--el-border-radius-base);
 
       header {
         display: grid;

@@ -1,5 +1,5 @@
 <template>
-  <div class="smis-accident-emergency art-full-height">
+  <div class="smis-accident-emergency art-full-height business-workspace-page">
     <BusinessWorkspaceHeader
       eyebrow="INCIDENT & EMERGENCY"
       title="事故与应急管理"
@@ -10,12 +10,28 @@
         { label: '普通用户只读', type: 'info' }
       ]"
       :metrics="metrics"
+      density="compact"
       ><template #actions><BusinessTableWorkspaceActions :table="activeTableRef" /></template
     ></BusinessWorkspaceHeader>
 
-    <section class="smis-accident-emergency__workspace art-card">
-      <ElTabs v-model="activeTab">
-        <ElTabPane name="accident" label="事故事件">
+    <section class="smis-accident-emergency__workspace art-card-xs">
+      <header class="smis-accident-emergency__workspace-header">
+        <div>
+          <ArtSectionTitle :show-line="false">事故应急协同工作区</ArtSectionTitle>
+          <p>{{ activeWorkspaceDescription }}</p>
+        </div>
+        <ElTag :type="activeTab === 'accident' ? 'warning' : 'success'" effect="plain" round>
+          {{ activeWorkspaceTag }}
+        </ElTag>
+      </header>
+      <ElTabs v-model="activeTab" class="smis-accident-emergency__tabs">
+        <ElTabPane name="accident">
+          <template #label>
+            <span class="smis-accident-emergency__tab-label">
+              <ArtSvgIcon icon="ri:alarm-warning-line" />事故事件
+              <ElBadge :value="counts.accident" :max="99" />
+            </span>
+          </template>
           <ArtTableQuery
             ref="accidentTableRef"
             v-model="accidentSearch"
@@ -35,7 +51,13 @@
             focusable
           />
         </ElTabPane>
-        <ElTabPane name="plan" label="应急预案">
+        <ElTabPane name="plan">
+          <template #label>
+            <span class="smis-accident-emergency__tab-label">
+              <ArtSvgIcon icon="ri:file-shield-2-line" />应急预案
+              <ElBadge :value="counts.plan" :max="99" />
+            </span>
+          </template>
           <ArtTableQuery
             ref="planTableRef"
             v-model="emptySearch"
@@ -49,7 +71,13 @@
             focusable
           />
         </ElTabPane>
-        <ElTabPane name="drill" label="应急演练">
+        <ElTabPane name="drill">
+          <template #label>
+            <span class="smis-accident-emergency__tab-label">
+              <ArtSvgIcon icon="ri:team-line" />应急演练
+              <ElBadge :value="counts.drill" :max="99" />
+            </span>
+          </template>
           <ArtTableQuery
             ref="drillTableRef"
             v-model="emptySearch"
@@ -82,6 +110,7 @@
   } from '@/components/core/tables/art-table-query/index.vue'
   import type { ColumnOption } from '@/types'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
+  import ArtSectionTitle from '@/components/core/forms/art-section-title/index.vue'
   import BusinessWorkspaceHeader, {
     type BusinessWorkspaceMetric
   } from '@/components/business/business-workspace-header/index.vue'
@@ -109,6 +138,7 @@
   type Drill = Api.Smis.AccidentEmergency.EmergencyDrillRecord
   type Tab = 'accident' | 'plan' | 'drill'
   const { confirmAction } = useArtFeedback()
+  const route = useRoute()
   const activeTab = ref<Tab>('accident')
   const accidentTableRef = ref<ArtTableQueryExpose>()
   const planTableRef = ref<ArtTableQueryExpose>()
@@ -130,6 +160,17 @@
       ]
   )
   const counts = reactive({ accident: 0, plan: 0, drill: 0, open: 0 })
+  const activeWorkspaceDescription = computed(
+    () =>
+      ({
+        accident: '跟踪事件上报、调查、整改和结案，关键过程信息持续留痕。',
+        plan: '集中维护应急预案版本、适用范围和责任人，确保预案持续有效。',
+        drill: '从计划到复盘记录演练过程，把发现的问题转为可跟踪改进项。'
+      })[activeTab.value]
+  )
+  const activeWorkspaceTag = computed(
+    () => ({ accident: '事件闭环', plan: '预案有效性', drill: '演练改进' })[activeTab.value]
+  )
   const accidentListFieldAccess = ref<Api.Smis.AccidentEmergency.AccidentCaseFieldAccessMap>({})
   const metrics = computed<BusinessWorkspaceMetric[]>(() => [
     {
@@ -445,6 +486,16 @@
       /* cancelled */
     }
   }
+
+  watch(
+    () => route.path,
+    (path) => {
+      if (path.includes('/emergency-drill-')) activeTab.value = 'drill'
+      else if (path.endsWith('/emergency-plan')) activeTab.value = 'plan'
+      else activeTab.value = 'accident'
+    },
+    { immediate: true }
+  )
 </script>
 
 <style scoped lang="scss">
@@ -455,13 +506,55 @@
 
   .smis-accident-emergency__workspace {
     min-width: 0;
-    padding: 0 16px 16px;
+    padding: 14px 16px 16px;
     overflow: hidden;
+  }
+
+  .smis-accident-emergency__workspace-header {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding-bottom: 10px;
+
+    p {
+      margin: 3px 0 0;
+      font-size: 12px;
+      line-height: 1.5;
+      color: var(--el-text-color-secondary);
+    }
+  }
+
+  .smis-accident-emergency__tab-label {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+    padding-inline: 4px;
+  }
+
+  .smis-accident-emergency__tabs {
+    :deep(.el-tabs__header) {
+      margin-bottom: 12px;
+    }
+
+    :deep(.el-badge__content) {
+      position: static;
+      min-width: 18px;
+      height: 18px;
+      padding-inline: 5px;
+      line-height: 16px;
+      transform: none;
+    }
   }
 
   @media (width <= 900px) {
     .smis-accident-emergency__workspace {
       padding-inline: 10px;
+    }
+
+    .smis-accident-emergency__workspace-header {
+      flex-direction: column;
+      gap: 8px;
     }
   }
 </style>

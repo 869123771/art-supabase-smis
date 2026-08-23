@@ -1,5 +1,5 @@
 <template>
-  <div class="smis-hidden-danger-page art-full-height">
+  <div class="smis-hidden-danger-page art-full-height business-workspace-page">
     <BusinessWorkspaceHeader
       eyebrow="INSPECTION & RECTIFICATION"
       title="隐患排查治理"
@@ -10,6 +10,7 @@
         { label: '普通用户只读', type: 'info' }
       ]"
       :metrics="workspaceMetrics"
+      density="compact"
     >
       <template #actions>
         <BusinessTableWorkspaceActions
@@ -18,9 +19,24 @@
       </template>
     </BusinessWorkspaceHeader>
 
-    <section class="smis-hidden-danger-page__workspace art-card">
-      <ElTabs v-model="activeTab">
-        <ElTabPane name="danger" label="隐患治理台账">
+    <section class="smis-hidden-danger-page__workspace art-card-xs">
+      <header class="smis-hidden-danger-page__workspace-header">
+        <div>
+          <ArtSectionTitle :show-line="false">双控闭环工作区</ArtSectionTitle>
+          <p>{{ activeWorkspaceDescription }}</p>
+        </div>
+        <ElTag :type="activeTab === 'danger' ? 'warning' : 'primary'" effect="plain" round>
+          {{ activeTab === 'danger' ? '整改责任闭环' : '检查任务执行' }}
+        </ElTag>
+      </header>
+      <ElTabs v-model="activeTab" class="smis-hidden-danger-page__tabs">
+        <ElTabPane name="danger">
+          <template #label>
+            <span class="smis-hidden-danger-page__tab-label">
+              <ArtSvgIcon icon="ri:alarm-warning-line" />隐患治理
+              <ElBadge :value="overview.dangerTotal" :max="99" />
+            </span>
+          </template>
           <ArtTableQuery
             ref="dangerTableRef"
             v-model="dangerTable.searchQuery"
@@ -41,7 +57,13 @@
           />
         </ElTabPane>
 
-        <ElTabPane name="task" label="检查任务">
+        <ElTabPane name="task">
+          <template #label>
+            <span class="smis-hidden-danger-page__tab-label">
+              <ArtSvgIcon icon="ri:task-line" />检查任务
+              <ElBadge :value="overview.taskTotal" :max="99" />
+            </span>
+          </template>
           <ArtTableQuery
             ref="taskTableRef"
             v-model="taskTable.searchQuery"
@@ -77,6 +99,7 @@
   import type { ComputedRef } from 'vue'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import ArtDictDisplay from '@/components/core/base/art-dict-display/index.vue'
+  import ArtSectionTitle from '@/components/core/forms/art-section-title/index.vue'
   import type { SearchFormItem } from '@/components/core/forms/art-search-bar/index.vue'
   import type {
     ArtTableQueryExpose,
@@ -139,6 +162,7 @@
   }
 
   const { confirmAction } = useArtFeedback()
+  const route = useRoute()
   const activeTab = ref<'danger' | 'task'>('danger')
   const dangerTableRef = ref<ArtTableQueryExpose>()
   const taskTableRef = ref<ArtTableQueryExpose>()
@@ -159,6 +183,11 @@
     taskTotal: 0,
     tasks: []
   })
+  const activeWorkspaceDescription = computed(() =>
+    activeTab.value === 'danger'
+      ? '聚焦隐患上报、责任指派、整改复查与销号，逾期事项优先处置。'
+      : '维护检查计划的执行进度，并把现场发现的问题直接转入隐患治理。'
+  )
 
   const isOverdue = (row: Danger): boolean =>
     Boolean(
@@ -548,6 +577,14 @@
     await Promise.all([refreshDangers(), refreshTasks()])
   }
 
+  watch(
+    () => route.path,
+    (path) => {
+      activeTab.value = path.endsWith('/inspection-task') ? 'task' : 'danger'
+    },
+    { immediate: true }
+  )
+
   onMounted(async () => {
     const response = await fetchSmisRiskPointOptions()
     riskPointOptions.value = (response.data ?? []).map((item) => ({
@@ -564,8 +601,45 @@
 
     &__workspace {
       min-width: 0;
-      padding: 0 16px 16px;
+      padding: 14px 16px 16px;
       overflow: hidden;
+    }
+
+    &__workspace-header {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      justify-content: space-between;
+      padding-bottom: 10px;
+
+      p {
+        margin: 3px 0 0;
+        font-size: 12px;
+        line-height: 1.5;
+        color: var(--el-text-color-secondary);
+      }
+    }
+
+    &__tab-label {
+      display: inline-flex;
+      gap: 6px;
+      align-items: center;
+      padding-inline: 4px;
+    }
+
+    &__tabs {
+      :deep(.el-tabs__header) {
+        margin-bottom: 12px;
+      }
+
+      :deep(.el-badge__content) {
+        position: static;
+        min-width: 18px;
+        height: 18px;
+        padding-inline: 5px;
+        line-height: 16px;
+        transform: none;
+      }
     }
   }
 
@@ -577,6 +651,11 @@
   @media (width <= 900px) {
     .smis-hidden-danger-page__workspace {
       padding-inline: 10px;
+    }
+
+    .smis-hidden-danger-page__workspace-header {
+      flex-direction: column;
+      gap: 8px;
     }
   }
 </style>

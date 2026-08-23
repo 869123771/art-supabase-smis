@@ -129,7 +129,8 @@
     {
       label: '备注',
       key: 'remark',
-      type: 'input',
+      type: 'textarea',
+      span: 24,
       props: { maxlength: 500 }
     }
   ])
