@@ -1,1 +1,0 @@
-import{lr as e}from"./user-BankSshE.js";function t(){if(!arguments.length)return[];var t=arguments[0];return e(t)?t:[t]}var n=(...e)=>t=>{e.forEach(e=>{e.value=t})};export{t as n,n as t};
