@@ -1,5 +1,42 @@
 begin;
 
+create or replace function app_private.smis_supported_module_codes()
+returns text[]
+language sql
+immutable
+set search_path = ''
+as $$
+  select array[
+    'equipment-category', 'storage-location', 'equipment-depreciation',
+    'equipment-ledger', 'equipment-attachment', 'external-inspection',
+    'internal-inspection', 'annual-inspection', 'periodic-inspection',
+    'special-equipment-personnel', 'special-equipment-operator',
+    'special-operation-category', 'special-operation-certificate',
+    'safety-manager-certificate', 'registered-safety-engineer',
+    'qualification-analysis', 'training-plan', 'training-record',
+    'training-analysis', 'course-management', 'exam-management', 'question-bank',
+    'major-hazard-ledger', 'emergency-plan', 'emergency-drill-plan',
+    'emergency-drill-record', 'emergency-drill-analysis', 'casualty-quick-report',
+    'work-injury-declaration', 'accident-analysis', 'work-injury-document',
+    'historical-accident-case', 'safety-accident-statistics', 'ppe-category',
+    'ppe-issue-standard', 'ppe-personal-standard', 'ppe-issue-record',
+    'ppe-personal-claim', 'tool-category', 'tool-issue-standard',
+    'tool-personal-standard', 'tool-issue-record', 'tool-personal-claim',
+    'tool-return', 'violation-education', 'violation-category',
+    'anti-violation-standard', 'violation-record', 'safety-knowledge',
+    'safety-regulation', 'hazard-factor-category', 'risk-level-control',
+    'risk-inspection-task', 'risk-assessment-standard', 'risk-four-color-map',
+    'quantitative-risk-control', 'inspection-plan', 'inspection-task',
+    'danger-governance', 'inspection-form', 'safety-inspection',
+    'inspection-rectification', 'inspection-type', 'snapshot-report',
+    'public-danger-report', 'danger-statistics', 'special-work-management',
+    'hot-work', 'work-at-height', 'lifting-work', 'confined-space-work',
+    'temporary-electricity', 'road-breaking-work', 'blind-plate-work',
+    'hazardous-work', 'hazardous-waste-inbound', 'hazardous-waste-outbound',
+    'hazardous-waste-catalog'
+  ]::text[]
+$$;
+
 create table if not exists public.smis_business_record (
   id uuid primary key default gen_random_uuid(),
   tenant_id uuid not null references public.sys_tenant(id) on delete restrict,
@@ -14,7 +51,13 @@ create table if not exists public.smis_business_record (
   create_time timestamptz not null default now(),
   update_time timestamptz not null default now(),
   constraint smis_business_record_module_code_chk
-    check (module_code ~ '^[a-z][a-z0-9-]*$'),
+    check (module_code = any(app_private.smis_supported_module_codes())),
+  constraint smis_business_record_record_no_chk
+    check (btrim(record_no) <> '' and length(record_no) <= 100),
+  constraint smis_business_record_title_chk
+    check (btrim(title) <> '' and length(title) <= 200),
+  constraint smis_business_record_status_chk
+    check (status = any(array['draft', 'pending', 'active', 'completed', 'disabled']::text[])),
   constraint smis_business_record_payload_object_chk
     check (jsonb_typeof(payload) = 'object'),
   constraint smis_business_record_tenant_module_no_uk
@@ -107,10 +150,19 @@ declare
   v_user_id uuid := app_private.smis_current_user_id();
   v_tenant_id uuid := app_private.smis_current_tenant_id();
   v_record_id uuid := nullif(p_payload->>'id', '')::uuid;
+  v_module_code text := nullif(btrim(p_payload->>'module_code'), '');
   v_result public.smis_business_record;
 begin
   if v_user_id is null or v_tenant_id is null then
     raise exception 'Authentication and an active tenant are required';
+  end if;
+
+  if p_payload is null or jsonb_typeof(p_payload) <> 'object' then
+    raise exception 'SMIS business payload must be a JSON object';
+  end if;
+
+  if not (v_module_code = any(app_private.smis_supported_module_codes())) then
+    raise exception 'Unsupported SMIS module code: %', coalesce(v_module_code, '<empty>');
   end if;
 
   if v_record_id is null then
@@ -124,7 +176,7 @@ begin
     )
     values (
       v_tenant_id,
-      nullif(btrim(p_payload->>'module_code'), ''),
+      v_module_code,
       nullif(btrim(p_payload->>'record_no'), ''),
       nullif(btrim(p_payload->>'title'), ''),
       coalesce(nullif(btrim(p_payload->>'status'), ''), 'draft'),
@@ -140,7 +192,7 @@ begin
     end if;
 
     update public.smis_business_record target
-    set module_code = nullif(btrim(p_payload->>'module_code'), ''),
+    set module_code = v_module_code,
         record_no = nullif(btrim(p_payload->>'record_no'), ''),
         title = nullif(btrim(p_payload->>'title'), ''),
         status = coalesce(nullif(btrim(p_payload->>'status'), ''), target.status),

@@ -34,106 +34,11 @@
       :on-success="handleTableSuccess"
       focusable
     />
-
-    <ElDialog
-      v-model="dialogVisible"
-      :title="`${editingRecord?.id ? '编辑' : '新增'}${workspace.recordNoun}`"
-      width="760px"
-      destroy-on-close
-      align-center
-      @closed="resetDialog"
-    >
-      <ElAlert
-        class="smis-catalog-page__dialog-note"
-        :title="workspace.description"
-        type="info"
-        :closable="false"
-        show-icon
-      />
-      <ElForm ref="formRef" :model="formData" :rules="formRules" label-width="108px">
-        <ElRow :gutter="16">
-          <ElCol
-            v-for="field in workspace.fields"
-            :key="field.key"
-            :xs="24"
-            :md="field.type === 'textarea' ? 24 : 12"
-          >
-            <ElFormItem :label="field.label" :prop="field.key">
-              <ElInput
-                v-if="field.type === 'text' || field.type === 'textarea'"
-                v-model="formData[field.key]"
-                :type="field.type === 'textarea' ? 'textarea' : 'text'"
-                :rows="field.type === 'textarea' ? 4 : undefined"
-                :placeholder="field.placeholder || `请输入${field.label}`"
-                clearable
-              />
-              <ElInputNumber
-                v-else-if="field.type === 'number'"
-                :model-value="numberFieldValue(field.key)"
-                :min="0"
-                :precision="0"
-                class="!w-full"
-                @update:model-value="formData[field.key] = $event ?? undefined"
-              />
-              <ElDatePicker
-                v-else-if="field.type === 'date' || field.type === 'datetime'"
-                v-model="formData[field.key]"
-                :type="field.type === 'datetime' ? 'datetime' : 'date'"
-                :value-format="field.type === 'datetime' ? 'YYYY-MM-DD HH:mm:ss' : 'YYYY-MM-DD'"
-                :placeholder="`请选择${field.label}`"
-                class="!w-full"
-              />
-              <ElSelect
-                v-else-if="field.type === 'employee'"
-                v-model="formData[field.key]"
-                filterable
-                remote
-                clearable
-                :remote-method="loadEmployeeOptions"
-                :loading="employeeLoading"
-                :placeholder="`搜索并选择${field.label}`"
-                class="!w-full"
-              >
-                <ElOption
-                  v-for="employee in employeeOptions"
-                  :key="employee.value"
-                  :label="employee.label"
-                  :value="employee.label"
-                >
-                  <div class="smis-catalog-page__employee-option">
-                    <span>{{ employee.label }}</span>
-                    <small>{{ employee.description }}</small>
-                  </div>
-                </ElOption>
-              </ElSelect>
-              <ElSelect
-                v-else
-                v-model="formData[field.key]"
-                clearable
-                :placeholder="`请选择${field.label}`"
-                class="!w-full"
-              >
-                <ElOption
-                  v-for="option in field.options ?? []"
-                  :key="option.value"
-                  :label="option.label"
-                  :value="option.value"
-                />
-              </ElSelect>
-            </ElFormItem>
-          </ElCol>
-        </ElRow>
-      </ElForm>
-      <template #footer>
-        <ElButton @click="dialogVisible = false">取消</ElButton>
-        <ElButton type="primary" :loading="saving" @click="handleSave">保存</ElButton>
-      </template>
-    </ElDialog>
+    <SafetyCatalogRecordDialog ref="recordDialogRef" @success="handleSaveSuccess" />
   </div>
 </template>
 
 <script setup lang="tsx">
-  import type { FormInstance, FormRules } from 'element-plus'
   import { ElTag } from 'element-plus'
   import type { SearchFormItem } from '@/components/core/forms/art-search-bar/index.vue'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
@@ -147,14 +52,12 @@
     type BusinessWorkspaceMetric
   } from '@/components/business/business-workspace-header/index.vue'
   import { useArtFeedback } from '@/hooks/core/useArtFeedback'
-  import { fetchEmployeeSelectorList } from '@/api/integration/employees'
   import type { ColumnOption } from '@/types'
   import { pageInfoHandler } from '@/utils/table/tableUtils'
   import { formatWithDayjs } from '@/utils/time'
   import {
     deleteSafetyCatalogRecord,
     fetchSafetyCatalogRecords,
-    saveSafetyCatalogRecord,
     type SafetyCatalogRecord,
     type SafetyCatalogSearchParams
   } from '@smis/api'
@@ -162,13 +65,15 @@
     getSafetyModuleDefinition,
     type SafetyFieldDefinition
   } from '@smis/domain/safety-module-catalog'
+  import SafetyCatalogRecordDialog from './modules/safety-catalog-record-dialog.vue'
 
   defineOptions({ name: 'SmisCatalogWorkspace' })
 
-  interface EmployeeOption {
-    label: string
-    value: string
-    description: string
+  interface RecordDialogExpose {
+    handleOpen: (data: {
+      workspace: ReturnType<typeof getSafetyModuleDefinition>
+      record?: SafetyCatalogRecord
+    }) => Promise<void>
   }
 
   type TableParams = SafetyCatalogSearchParams &
@@ -177,13 +82,7 @@
   const route = useRoute()
   const { confirmAction } = useArtFeedback()
   const tableQueryRef = ref<ArtTableQueryExpose>()
-  const formRef = ref<FormInstance>()
-  const dialogVisible = ref(false)
-  const saving = ref(false)
-  const editingRecord = ref<SafetyCatalogRecord | null>(null)
-  const formData = reactive<Record<string, string | number | undefined>>({})
-  const employeeOptions = ref<EmployeeOption[]>([])
-  const employeeLoading = ref(false)
+  const recordDialogRef = ref<RecordDialogExpose>()
   const overview = reactive({ total: 0, rows: [] as SafetyCatalogRecord[] })
 
   const catalogCode = computed(() => {
@@ -250,20 +149,9 @@
       type: 'add',
       label: `新增${workspace.value.recordNoun}`,
       permission: 'SmisCatalog:Add',
-      onClick: () => openDialog()
+      onClick: () => void openDialog()
     }
   ])
-
-  const formRules = computed<FormRules>(() =>
-    Object.fromEntries(
-      workspace.value.fields
-        .filter((field) => field.required)
-        .map((field) => [
-          field.key,
-          [{ required: true, message: `请填写${field.label}`, trigger: 'blur' }]
-        ])
-    )
-  )
 
   const statusLabel = (status: string): string =>
     ({
@@ -325,7 +213,7 @@
           <ArtButtonTable
             type="edit"
             permission="SmisCatalog:Edit"
-            onClick={() => openDialog(row)}
+            onClick={() => void openDialog(row)}
           />
           <ArtButtonTable
             type="delete"
@@ -353,69 +241,12 @@
     overview.total = response.total ?? rows.length
   }
 
-  const resetDialog = (): void => {
-    editingRecord.value = null
-    Object.keys(formData).forEach((key) => delete formData[key])
-    formRef.value?.clearValidate()
-  }
+  const openDialog = (record?: SafetyCatalogRecord): Promise<void> =>
+    recordDialogRef.value?.handleOpen({ workspace: workspace.value, record }) ?? Promise.resolve()
 
-  const openDialog = (record?: SafetyCatalogRecord): void => {
-    resetDialog()
-    editingRecord.value = record ?? null
-    for (const field of workspace.value.fields) {
-      formData[field.key] =
-        (record?.payload?.[field.key] as string | number | undefined) ??
-        (field.key === 'status' ? 'active' : undefined)
-    }
-    dialogVisible.value = true
-  }
-
-  const firstValue = (keys: string[], fallback: string): string => {
-    for (const key of keys) {
-      const value = formData[key]
-      if (typeof value === 'string' && value.trim()) return value.trim()
-      if (typeof value === 'number') return String(value)
-    }
-    return fallback
-  }
-
-  const numberFieldValue = (key: string): number | undefined => {
-    const value = formData[key]
-    return typeof value === 'number' ? value : undefined
-  }
-
-  const handleSave = async (): Promise<void> => {
-    if (!(await formRef.value?.validate().catch(() => false))) return
-    saving.value = true
-    try {
-      const generatedNo = `${workspace.value.code.toUpperCase()}-${Date.now().toString().slice(-8)}`
-      await saveSafetyCatalogRecord({
-        id: editingRecord.value?.id,
-        moduleCode: workspace.value.code,
-        recordNo: firstValue(
-          ['recordNo', 'certificateNo', 'standardNo', 'applicationNo', 'code'],
-          generatedNo
-        ),
-        title: firstValue(
-          ['name', 'subjectName', 'employeeName', 'title', 'reportPeriod'],
-          workspace.value.title
-        ),
-        status: firstValue(['status', 'result'], 'active'),
-        ownerName: firstValue(
-          ['responsiblePerson', 'ownerName', 'employeeName', 'applicantName'],
-          ''
-        ),
-        businessDate: firstValue(
-          ['businessDate', 'effectiveDate', 'inspectionDate', 'occurredAt', 'startDate'],
-          ''
-        ),
-        payload: { ...formData }
-      })
-      dialogVisible.value = false
-      await tableQueryRef.value?.refreshUpdate()
-    } finally {
-      saving.value = false
-    }
+  const handleSaveSuccess = async (type: 'add' | 'edit'): Promise<void> => {
+    if (type === 'edit') await tableQueryRef.value?.refreshUpdate()
+    else await tableQueryRef.value?.refreshCreate()
   }
 
   const handleDelete = async (row: SafetyCatalogRecord): Promise<void> => {
@@ -434,29 +265,6 @@
     }
   }
 
-  const loadEmployeeOptions = async (keyword = ''): Promise<void> => {
-    employeeLoading.value = true
-    try {
-      const result = await fetchEmployeeSelectorList({ keyword, from: 0, to: 49 })
-      const rows = (result.data ?? []) as Array<{
-        id: string
-        employeeNo: string
-        employeeName: string
-        jobTitle?: string | null
-        organization?: { organizationName?: string | null } | null
-      }>
-      employeeOptions.value = rows.map((employee) => ({
-        label: `${employee.employeeName}（${employee.employeeNo}）`,
-        value: employee.id,
-        description: [employee.organization?.organizationName, employee.jobTitle]
-          .filter(Boolean)
-          .join(' / ')
-      }))
-    } finally {
-      employeeLoading.value = false
-    }
-  }
-
   watch(
     () => workspace.value.code,
     (code) => {
@@ -468,42 +276,11 @@
       void tableQueryRef.value?.refreshData()
     }
   )
-
-  onMounted(() => {
-    if (workspace.value.fields.some((field) => field.type === 'employee')) {
-      void loadEmployeeOptions()
-    }
-  })
 </script>
 
 <style scoped lang="scss">
   .smis-catalog-page {
     gap: 12px;
     min-width: 0;
-
-    &__dialog-note {
-      margin-bottom: 18px;
-    }
-
-    &__employee-option {
-      display: flex;
-      gap: 16px;
-      align-items: center;
-      justify-content: space-between;
-
-      small {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        color: var(--art-text-gray-500);
-        white-space: nowrap;
-      }
-    }
-  }
-
-  @media (width <= 768px) {
-    .smis-catalog-page :deep(.el-dialog) {
-      width: calc(100vw - 24px) !important;
-      margin: 12px;
-    }
   }
 </style>

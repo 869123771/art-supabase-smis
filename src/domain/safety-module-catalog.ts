@@ -1,3 +1,5 @@
+import { safetyModuleFieldOverrides } from './safety-module-fields'
+
 export type SafetyWorkspaceKind =
   | 'tree'
   | 'ledger'
@@ -726,7 +728,7 @@ export const safetyModuleCatalog: SafetyModuleDefinition[] = catalogSeeds.map(
     kind,
     icon: iconBySection[section] ?? 'ri:shield-check-line',
     recordNoun: recordNounByKind[kind],
-    fields: fieldsByKind[kind].map((field) => ({ ...field }))
+    fields: (safetyModuleFieldOverrides[code] ?? fieldsByKind[kind]).map((field) => ({ ...field }))
   })
 )
 
