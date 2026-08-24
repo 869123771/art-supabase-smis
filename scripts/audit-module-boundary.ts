@@ -6,7 +6,6 @@ const sourceRoot = path.join(repositoryRoot, 'src')
 const allowedSourceRoots = new Set(['api', 'domain', 'types', 'views'])
 const allowedRootFiles = new Set(['index.ts', 'main.ts'])
 const sourceExtensions = new Set(['.ts', '.tsx', '.vue'])
-const allowedFunctionSharedFiles = new Set(['smis-safety-rules.ts'])
 const violations: string[] = []
 
 for (const entry of readdirSync(sourceRoot, { withFileTypes: true })) {
@@ -18,15 +17,9 @@ for (const entry of readdirSync(sourceRoot, { withFileTypes: true })) {
   }
 }
 
-for (const requiredPath of [
-  'src/index.ts',
-  'src/main.ts',
-  'src/api/index.ts',
-  'src/views/dashboard/index.vue',
-  'src/views/catalog/index.vue'
-]) {
+for (const requiredPath of ['src/index.ts', 'src/main.ts', 'src/views/README.md']) {
   if (!existsSync(path.join(repositoryRoot, requiredPath))) {
-    violations.push(`缺少 SMIS 业务入口: ${requiredPath}`)
+    violations.push(`缺少 SMIS 空壳入口: ${requiredPath}`)
   }
 }
 
@@ -49,17 +42,9 @@ for (const filePath of collectSourceFiles(sourceRoot)) {
   }
 }
 
-const functionSharedRoot = path.join(repositoryRoot, 'supabase/functions/_shared')
-for (const filePath of collectSourceFiles(functionSharedRoot)) {
-  const fileName = path.basename(filePath)
-  if (!allowedFunctionSharedFiles.has(fileName)) {
-    violations.push(`Edge Function 包含平台公共实现: supabase/functions/_shared/${fileName}`)
-  }
-}
-
 if (violations.length > 0) {
   console.error(['SMIS 模块边界审计失败：', ...violations.map((item) => `- ${item}`)].join('\n'))
   process.exitCode = 1
 } else {
-  console.log('SMIS business-only boundary audit passed.')
+  console.log('SMIS empty-shell boundary audit passed.')
 }
