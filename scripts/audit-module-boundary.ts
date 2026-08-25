@@ -17,9 +17,19 @@ for (const entry of readdirSync(sourceRoot, { withFileTypes: true })) {
   }
 }
 
-for (const requiredPath of ['src/index.ts', 'src/main.ts', 'src/views/README.md']) {
+const requiredPaths = [
+  'src/index.ts',
+  'src/main.ts',
+  'src/views/README.md',
+  'src/views/components/smis-page-placeholder.vue',
+  'src/views/basic-data',
+  'src/views/equipment-ledger',
+  'src/views/safety-production/emergency-rescue'
+]
+
+for (const requiredPath of requiredPaths) {
   if (!existsSync(path.join(repositoryRoot, requiredPath))) {
-    violations.push(`缺少 SMIS 空壳入口: ${requiredPath}`)
+    violations.push(`缺少 SMIS 业务入口: ${requiredPath}`)
   }
 }
 
@@ -46,5 +56,5 @@ if (violations.length > 0) {
   console.error(['SMIS 模块边界审计失败：', ...violations.map((item) => `- ${item}`)].join('\n'))
   process.exitCode = 1
 } else {
-  console.log('SMIS empty-shell boundary audit passed.')
+  console.log('SMIS business-only boundary audit passed.')
 }

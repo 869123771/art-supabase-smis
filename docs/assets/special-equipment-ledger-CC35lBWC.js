@@ -1,0 +1,1 @@
+import{Bt as e,In as t,Zt as n}from"./style-Cv8iiPWe.js";import{t as r}from"./smis-page-placeholder-ER_qBEzw.js";var i=n({name:`SmisSpecialEquipmentLedger`,__name:`index`,setup(n){return(n,i)=>(t(),e(r,{section:`设备台账`,title:`特种设备管理台账`}))}});export{i as default};

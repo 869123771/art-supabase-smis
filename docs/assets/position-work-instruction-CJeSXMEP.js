@@ -1,0 +1,1 @@
+import{Bt as e,In as t,Zt as n}from"./style-Cv8iiPWe.js";import{t as r}from"./smis-page-placeholder-ER_qBEzw.js";var i=n({name:`SmisPositionWorkInstruction`,__name:`index`,setup(n){return(n,i)=>(t(),e(r,{section:`基础数据`,title:`岗位作业指导书`}))}});export{i as default};
