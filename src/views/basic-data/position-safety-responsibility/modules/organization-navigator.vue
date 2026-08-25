@@ -277,7 +277,7 @@
         color: var(--el-text-color-secondary);
       }
 
-      > span:last-child {
+      > span:nth-child(2) {
         display: grid;
         min-width: 0;
       }

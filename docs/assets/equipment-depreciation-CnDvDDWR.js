@@ -1,0 +1,1 @@
+import{Hn as e,Kt as t,rn as n}from"./style-14HI13Uy.js";import{t as r}from"./smis-page-placeholder-CuMWSoBI.js";var i=n({name:`SmisEquipmentDepreciation`,__name:`index`,setup(n){return(n,i)=>(e(),t(r,{section:`设备台账`,title:`设备折旧`}))}});export{i as default};

@@ -1,9 +1,624 @@
 <template>
-  <SmisPagePlaceholder section="基础数据" title="岗位作业指导书" />
+  <div
+    v-auth="'SmisPositionWorkInstruction:View'"
+    class="work-instruction-page business-workspace-page art-full-height"
+  >
+    <BusinessWorkspaceHeader
+      class="work-instruction-page__overview"
+      eyebrow="POSITION WORK INSTRUCTION"
+      title="岗位作业指导书"
+      description="统一维护岗位作业指导文件及版本信息，一份指导书可关联多个组织岗位。"
+      icon="ri:file-list-3-line"
+      density="compact"
+      :tags="workspaceTags"
+      :metrics="workspaceMetrics"
+    >
+      <template #actions><BusinessTableWorkspaceActions :table="tableQueryRef" /></template>
+    </BusinessWorkspaceHeader>
+
+    <div class="work-instruction-page__workspace">
+      <aside class="work-instruction-page__tree-panel">
+        <PositionTreeNavigator
+          :data="treeState.nodes"
+          :loading="treeState.loading"
+          :error="treeState.error"
+          :selected-key="treeState.selectedKey"
+          @select="handleTreeSelect"
+          @refresh="loadPositionTree"
+        />
+      </aside>
+
+      <main class="work-instruction-page__main">
+        <div class="work-instruction-page__scope-bar">
+          <div class="work-instruction-page__scope-identity">
+            <span aria-hidden="true"><ArtSvgIcon :icon="selectedScopeIcon" /></span>
+            <span
+              ><small>当前查看范围</small><strong>{{ selectedScopeLabel }}</strong></span
+            >
+          </div>
+          <div class="work-instruction-page__scope-hint">
+            <ArtSvgIcon icon="ri:git-merge-line" />
+            组织节点查看本部门全部指导书，岗位节点查看精准适用文件
+          </div>
+        </div>
+
+        <ArtTableQuery
+          ref="tableQueryRef"
+          v-model="tableState.searchQuery"
+          class="work-instruction-page__table"
+          :search-items="searchItems"
+          :api-fn="fetchTableData"
+          :columns-factory="columnsFactory"
+          :header-actions="headerActions"
+          header-actions-placement="workspace"
+          :search-bar-props="{ span: 8, labelWidth: 76, showExpand: false }"
+          :table-props="{
+            rowKey: 'id',
+            tableLayout: 'fixed',
+            emptyText: '暂无岗位作业指导书',
+            emptyDescription: '可新增指导书并关联一个或多个组织岗位。',
+            showOverflowTooltip: true
+          }"
+          :on-success="handleTableSuccess"
+          focusable
+          focus-scope-selector=".work-instruction-page__main"
+        />
+      </main>
+    </div>
+
+    <WorkInstructionDialog ref="dialogRef" @success="handleSaveSuccess" />
+  </div>
 </template>
 
-<script setup lang="ts">
-  import SmisPagePlaceholder from '@smis/views/components/smis-page-placeholder.vue'
+<script setup lang="tsx">
+  import dayjs from 'dayjs'
+  import { computed, onMounted, reactive, ref } from 'vue'
+  import { storeToRefs } from 'pinia'
+  import { ElTag, ElTooltip } from 'element-plus'
+  import ArtAttachmentLink from '@/components/core/media/art-file-viewer/attachment-link.vue'
+  import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
+  import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
+  import BusinessTableWorkspaceActions from '@/components/business/business-table-workspace-actions/index.vue'
+  import BusinessWorkspaceHeader, {
+    type BusinessWorkspaceMetric,
+    type BusinessWorkspaceTag
+  } from '@/components/business/business-workspace-header/index.vue'
+  import type { SearchFormItem } from '@/components/core/forms/art-search-bar/index.vue'
+  import type {
+    ArtTableQueryExpose,
+    ArtTableQueryHeaderAction,
+    ArtTableQueryHeaderActionContext,
+    ArtTableQueryProps
+  } from '@/components/core/tables/art-table-query/index.vue'
+  import type { ColumnOption } from '@/types'
+  import { useArtFeedback } from '@/hooks/core/useArtFeedback'
+  import { useUserStore } from '@/store/modules/user'
+  import { pageInfoHandler } from '@/utils/table/tableUtils'
+  import { getFriendlySupabaseErrorMessage } from '@/utils/supabase/error'
+  import {
+    deletePositionWorkInstructions,
+    fetchPositionWorkInstructionList,
+    fetchWorkInstructionPositionTree,
+    type PositionWorkInstruction,
+    type PositionWorkInstructionSearchParams
+  } from '@smis/api'
+  import PositionTreeNavigator from './modules/position-tree-navigator.vue'
+  import WorkInstructionDialog, {
+    type WorkInstructionDialogOpenData
+  } from './modules/work-instruction-dialog.vue'
+  import {
+    buildWorkInstructionTree,
+    flattenWorkInstructionTree,
+    type WorkInstructionTreeNode
+  } from './modules/types'
 
   defineOptions({ name: 'SmisPositionWorkInstruction' })
+
+  type TableSearchModel = Pick<PositionWorkInstructionSearchParams, 'keyword' | 'fileType'>
+  type TableParams = TableSearchModel & Pick<Api.Common.PaginationParams, 'current' | 'size'>
+  interface DialogExpose {
+    handleOpen: (data: WorkInstructionDialogOpenData) => Promise<void>
+  }
+
+  const { confirmAction } = useArtFeedback()
+  const userStore = useUserStore()
+  const { getDictMap } = storeToRefs(userStore)
+  const tableQueryRef = ref<ArtTableQueryExpose>()
+  const dialogRef = ref<DialogExpose>()
+  const treeState = reactive({
+    nodes: [] as WorkInstructionTreeNode[],
+    loading: false,
+    error: null as string | null,
+    selectedKey: 'all'
+  })
+  const tableState = reactive({
+    searchQuery: { keyword: '', fileType: '' } as TableSearchModel,
+    total: 0,
+    rows: [] as PositionWorkInstruction[]
+  })
+
+  const flatTreeNodes = computed(() => flattenWorkInstructionTree(treeState.nodes))
+  const positionNodes = computed(() =>
+    flatTreeNodes.value.filter((node) => node.nodeType === 'position')
+  )
+  const selectedTreeNode = computed(() =>
+    flatTreeNodes.value.find((node) => node.key === treeState.selectedKey)
+  )
+  const selectedScopeLabel = computed(() => selectedTreeNode.value?.label || '全部岗位')
+  const selectedScopeIcon = computed(() =>
+    selectedTreeNode.value?.nodeType === 'position'
+      ? 'ri:briefcase-4-line'
+      : 'ri:organization-chart'
+  )
+  const attachedCount = computed(() => tableState.rows.filter((row) => row.fileUrl).length)
+  const latestUploadDate = computed(() => {
+    const dates = tableState.rows
+      .map((row) => row.uploadDate)
+      .filter((value): value is string => Boolean(value))
+      .sort()
+    return dates.at(-1) || '-'
+  })
+  const workspaceTags: BusinessWorkspaceTag[] = [
+    { label: '组织岗位树', type: 'primary', effect: 'plain' },
+    { label: '支持多岗位适用', type: 'success', effect: 'light' },
+    { label: '文件版本留痕', type: 'info', effect: 'plain' }
+  ]
+  const workspaceMetrics = computed<BusinessWorkspaceMetric[]>(() => [
+    {
+      label: '当前范围',
+      value: selectedScopeLabel.value,
+      description: selectedTreeNode.value?.description || '全部组织岗位',
+      icon: selectedScopeIcon.value
+    },
+    {
+      label: '可用岗位',
+      value: positionNodes.value.length,
+      description: '来自 HR 岗位与组织任职关系',
+      icon: 'ri:briefcase-4-line',
+      tone: 'info'
+    },
+    {
+      label: '指导书',
+      value: tableState.total,
+      description: '当前筛选范围内的有效记录',
+      icon: 'ri:file-list-3-line',
+      tone: 'success'
+    },
+    {
+      label: '最近上传',
+      value: latestUploadDate.value,
+      description: `${attachedCount.value} 条当前页记录已关联文件`,
+      icon: 'ri:upload-cloud-2-line',
+      tone: 'warning'
+    }
+  ])
+
+  const fileTypeOptions = computed(() =>
+    (getDictMap.value.FILE_EXTENSION_LABEL_MAP ?? []).map((item) => ({
+      label: item.label || item.name,
+      value: item.value
+    }))
+  )
+  const searchItems = computed<SearchFormItem[]>(() => [
+    {
+      label: '关键字',
+      key: 'keyword',
+      type: 'input',
+      props: { clearable: true, placeholder: '指导名称、文件编号或版本号' }
+    },
+    {
+      label: '文件类型',
+      key: 'fileType',
+      type: 'select',
+      props: {
+        options: fileTypeOptions.value,
+        clearable: true,
+        filterable: true,
+        placeholder: '全部文件类型'
+      }
+    }
+  ])
+  const columnsFactory = (): ColumnOption<PositionWorkInstruction>[] => [
+    { type: 'selection', width: 50, reserveSelection: true },
+    { type: 'globalIndex', label: '序号', width: 68 },
+    {
+      prop: 'instructionName',
+      label: '作业指导书',
+      minWidth: 250,
+      formatter: (row) => (
+        <div class="work-instruction-page__document">
+          <span aria-hidden="true">
+            <ArtSvgIcon icon="ri:file-text-line" />
+          </span>
+          <span>
+            <strong title={row.instructionName}>{row.instructionName}</strong>
+            <small translate="no">{row.fileNumber || '未填写文件编号'}</small>
+          </span>
+        </div>
+      )
+    },
+    {
+      prop: 'scopes',
+      label: '适用组织岗位',
+      minWidth: 280,
+      formatter: (row) => {
+        const scopes = row.scopes ?? []
+        const remainder = Math.max(scopes.length - 2, 0)
+        return (
+          <div class="work-instruction-page__scopes">
+            {scopes.slice(0, 2).map((scope) => (
+              <ElTag key={scope.scopeKey} effect="plain" type="primary">
+                {scope.organizationName} / {scope.positionName}
+              </ElTag>
+            ))}
+            {remainder ? (
+              <ElTooltip
+                content={scopes
+                  .slice(2)
+                  .map((scope) => `${scope.organizationName} / ${scope.positionName}`)
+                  .join('、')}
+                placement="top"
+              >
+                <ElTag effect="light" type="info">
+                  +{remainder}
+                </ElTag>
+              </ElTooltip>
+            ) : null}
+          </div>
+        )
+      }
+    },
+    {
+      prop: 'fileType',
+      label: '文件类型',
+      width: 138,
+      dict: { code: 'FILE_EXTENSION_LABEL_MAP', display: 'text' }
+    },
+    {
+      prop: 'uploadDate',
+      label: '上传日期',
+      width: 112,
+      formatter: (row) => row.uploadDate || <span class="work-instruction-page__muted">-</span>
+    },
+    {
+      prop: 'versionNo',
+      label: '版本号',
+      width: 92,
+      formatter: (row) => row.versionNo || <span class="work-instruction-page__muted">-</span>
+    },
+    {
+      prop: 'fileUrl',
+      label: '文件地址',
+      minWidth: 160,
+      formatter: (row) =>
+        row.fileUrl ? (
+          <ArtAttachmentLink
+            file={{
+              name: row.originalFileName || row.fileNumber || row.instructionName,
+              url: row.fileUrl,
+              fileType: row.fileType || undefined
+            }}
+          />
+        ) : (
+          <span class="work-instruction-page__muted">未关联文件</span>
+        )
+    },
+    {
+      prop: 'updateTime',
+      label: '更新时间',
+      width: 156,
+      formatter: (row) => (row.updateTime ? dayjs(row.updateTime).format('YYYY-MM-DD HH:mm') : '-')
+    },
+    {
+      prop: 'operation',
+      label: '操作',
+      width: 112,
+      fixed: 'right',
+      formatter: (row) => (
+        <div class="work-instruction-page__row-actions">
+          <ArtButtonTable
+            type="edit"
+            permission="SmisPositionWorkInstruction:Edit"
+            onClick={() => openDialog(row)}
+          />
+          <ArtButtonTable
+            type="delete"
+            permission="SmisPositionWorkInstruction:Delete"
+            onClick={() => handleDeleteRows([row])}
+          />
+        </div>
+      )
+    }
+  ]
+  const headerActions = computed<ArtTableQueryHeaderAction[]>(() => [
+    {
+      type: 'add',
+      label: '新增指导书',
+      permission: 'SmisPositionWorkInstruction:Add',
+      disabled: !positionNodes.value.length,
+      onClick: () => openDialog()
+    },
+    {
+      type: 'delete',
+      label: '删除',
+      permission: 'SmisPositionWorkInstruction:Delete',
+      content: (context: ArtTableQueryHeaderActionContext) =>
+        `确定删除选中的 ${context.selectedCount} 份岗位作业指导书吗？`,
+      onClick: async ({ selectedRows, api }) => {
+        const ids = (selectedRows as PositionWorkInstruction[])
+          .map((row) => row.id)
+          .filter((id): id is string => Boolean(id))
+        if (!ids.length) return
+        await deletePositionWorkInstructions(ids)
+        await api.refreshRemove()
+        await loadPositionTree(true)
+      }
+    }
+  ])
+
+  const fetchTableData = (params: TableParams) => {
+    const selected = selectedTreeNode.value
+    const { from, to } = pageInfoHandler({ current: params.current, size: params.size })
+    return fetchPositionWorkInstructionList({
+      ...params,
+      from,
+      to,
+      organizationId: selected?.organizationId,
+      positionId: selected?.positionId
+    })
+  }
+  const handleTableSuccess: NonNullable<ArtTableQueryProps['onSuccess']> = (rows, response) => {
+    tableState.rows = rows as PositionWorkInstruction[]
+    tableState.total = response.total ?? 0
+  }
+  const loadPositionTree = async (preserveSelection = false): Promise<void> => {
+    treeState.loading = true
+    treeState.error = null
+    try {
+      const response = await fetchWorkInstructionPositionTree()
+      treeState.nodes = buildWorkInstructionTree(response.data)
+      if (
+        !preserveSelection ||
+        (treeState.selectedKey !== 'all' &&
+          !flatTreeNodes.value.some((node) => node.key === treeState.selectedKey))
+      )
+        treeState.selectedKey = 'all'
+      await tableQueryRef.value?.getData()
+    } catch (error) {
+      treeState.nodes = []
+      treeState.error = getFriendlySupabaseErrorMessage(error, '组织岗位树加载失败，请稍后重试')
+    } finally {
+      treeState.loading = false
+    }
+  }
+  const handleTreeSelect = async (key: string): Promise<void> => {
+    if (treeState.selectedKey === key) return
+    treeState.selectedKey = key
+    tableState.total = 0
+    await tableQueryRef.value?.getData()
+  }
+  const openDialog = (row?: PositionWorkInstruction): void => {
+    void dialogRef.value?.handleOpen({ treeData: treeState.nodes, row })
+  }
+  const handleSaveSuccess = async (type: 'add' | 'edit'): Promise<void> => {
+    await (type === 'add'
+      ? tableQueryRef.value?.refreshCreate()
+      : tableQueryRef.value?.refreshUpdate())
+    await loadPositionTree(true)
+  }
+  const handleDeleteRows = async (rows: PositionWorkInstruction[]): Promise<void> => {
+    const ids = rows.map((row) => row.id).filter((id): id is string => Boolean(id))
+    if (!ids.length) return
+    try {
+      await confirmAction('确定删除这份岗位作业指导书吗？删除后无法恢复。', '删除确认', {
+        confirmButtonText: '删除',
+        cancelButtonText: '取消',
+        type: 'warning',
+        confirmButtonClass: 'el-button--danger'
+      })
+      await deletePositionWorkInstructions(ids)
+      await tableQueryRef.value?.refreshRemove()
+      await loadPositionTree(true)
+    } catch {
+      /* 用户取消或服务端拒绝时不追加重复提示。 */
+    }
+  }
+
+  onMounted(() => {
+    void Promise.all([userStore.ensureDictLoaded('FILE_EXTENSION_LABEL_MAP'), loadPositionTree()])
+  })
 </script>
+
+<style scoped lang="scss">
+  .work-instruction-page {
+    gap: 12px;
+    min-width: 0;
+
+    &__overview {
+      min-width: 0;
+      overflow: hidden;
+    }
+
+    &__workspace {
+      display: grid;
+      flex: 1 1 auto;
+      grid-template-columns: 296px minmax(0, 1fr);
+      gap: 10px;
+      min-width: 0;
+      min-height: 0;
+    }
+
+    &__tree-panel,
+    &__main,
+    &__table {
+      min-width: 0;
+      min-height: 0;
+    }
+
+    &__tree-panel {
+      overflow: hidden;
+    }
+
+    &__main {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    &__table {
+      flex: 1 1 auto;
+    }
+
+    &__scope-bar {
+      display: flex;
+      flex: 0 0 auto;
+      gap: 16px;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 56px;
+      padding: 8px 14px 8px 12px;
+      background: var(--art-gray-100);
+      border-left: 3px solid var(--theme-color);
+      border-radius: var(--el-border-radius-base);
+    }
+
+    &__scope-identity {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      min-width: 0;
+    }
+
+    &__scope-identity > span:first-child {
+      display: inline-flex;
+      flex: 0 0 32px;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      color: var(--theme-color);
+      background: color-mix(in srgb, var(--theme-color) 10%, var(--default-box-color));
+      border-radius: var(--el-border-radius-base);
+    }
+
+    &__scope-identity > span:last-child {
+      display: grid;
+      min-width: 0;
+    }
+
+    &__scope-identity small {
+      font-size: 11px;
+      color: var(--el-text-color-secondary);
+    }
+
+    &__scope-identity strong {
+      margin-top: 2px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: var(--el-text-color-primary);
+      white-space: nowrap;
+    }
+
+    &__scope-hint {
+      display: inline-flex;
+      flex: none;
+      gap: 6px;
+      align-items: center;
+      font-size: 12px;
+      color: var(--el-text-color-secondary);
+    }
+
+    &__scope-hint :deep(svg) {
+      color: var(--theme-color);
+    }
+
+    &__document {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      min-width: 0;
+    }
+
+    &__document > span:first-child {
+      display: inline-flex;
+      flex: 0 0 30px;
+      align-items: center;
+      justify-content: center;
+      width: 30px;
+      height: 30px;
+      color: var(--theme-color);
+      background: color-mix(in srgb, var(--theme-color) 8%, var(--default-box-color));
+      border-radius: var(--el-border-radius-base);
+    }
+
+    &__document > span:last-child {
+      display: grid;
+      min-width: 0;
+    }
+
+    &__document strong,
+    &__document small {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    &__document small {
+      margin-top: 2px;
+      font-size: 11px;
+      color: var(--el-text-color-secondary);
+    }
+
+    &__scopes {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      min-width: 0;
+      overflow: hidden;
+    }
+
+    &__scopes :deep(.el-tag) {
+      max-width: 180px;
+    }
+
+    &__scopes :deep(.el-tag__content) {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    &__muted {
+      color: var(--el-text-color-secondary);
+    }
+
+    &__row-actions {
+      display: flex;
+      align-items: center;
+    }
+
+    @media (width <= 1080px) {
+      &__workspace {
+        grid-template-columns: 252px minmax(0, 1fr);
+      }
+
+      &__scope-hint {
+        display: none;
+      }
+    }
+
+    @media (width <= 820px) {
+      &__workspace {
+        display: flex;
+        flex-direction: column;
+      }
+
+      &__tree-panel {
+        flex: 0 0 320px;
+      }
+
+      &__main {
+        flex: 0 0 720px;
+      }
+    }
+  }
+</style>

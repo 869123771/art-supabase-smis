@@ -1,1 +1,0 @@
-import{Bt as e,In as t,Zt as n}from"./style-Cv8iiPWe.js";import{t as r}from"./smis-page-placeholder-ER_qBEzw.js";var i=n({name:`SmisSite`,__name:`index`,setup(n){return(n,i)=>(t(),e(r,{section:`基础数据`,title:`场所维护`}))}});export{i as default};

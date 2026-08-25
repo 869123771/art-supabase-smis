@@ -340,6 +340,14 @@
       value: item.value
     }))
 
+  const loadRequiredDictionaries = async (): Promise<void> => {
+    const missingCode = DICTIONARY_CODES.some((code) => !(getDictMap.value[code]?.length ?? 0))
+    const secondaryItems = getDictMap.value.smisSecondaryHazardCategory ?? []
+    const missingCategoryMetadata = secondaryItems.some((item) => !item.remark)
+
+    if (missingCode || missingCategoryMetadata) await userStore.fetchDictList()
+  }
+
   const searchItems = computed<SearchFormItem[]>(() => [
     {
       label: '一级隐患类别',
@@ -733,10 +741,7 @@
   }
 
   onMounted(async () => {
-    await Promise.all([
-      loadOrganizations(),
-      ...DICTIONARY_CODES.map((code) => userStore.ensureDictLoaded(code))
-    ])
+    await Promise.all([loadOrganizations(), loadRequiredDictionaries()])
     await loadPositions()
   })
 </script>

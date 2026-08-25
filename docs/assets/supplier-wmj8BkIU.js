@@ -1,0 +1,1 @@
+import{Hn as e,Kt as t,rn as n}from"./style-14HI13Uy.js";import{t as r}from"./smis-page-placeholder-CuMWSoBI.js";var i=n({name:`SmisSupplier`,__name:`index`,setup(n){return(n,i)=>(e(),t(r,{section:`基础数据`,title:`供应商`}))}});export{i as default};
