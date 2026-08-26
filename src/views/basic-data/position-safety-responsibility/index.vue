@@ -190,6 +190,11 @@
   import { getFriendlySupabaseErrorMessage } from '@/utils/supabase/error'
   import TreeUtils from '@/utils/tree'
   import {
+    findDictionaryItem,
+    getChildDictionaryItems,
+    hasDictionaryParentReference
+  } from '@smis/domain/hazard-dictionary'
+  import {
     deletePositionSafetyResponsibilities,
     fetchPositionSafetyResponsibilityList,
     fetchSmisPositionList,
@@ -210,6 +215,7 @@
   const DICTIONARY_CODES = [
     'smisPrimaryHazardCategory',
     'smisSecondaryHazardCategory',
+    'smisHazardContent',
     'smisHazardLevel',
     'smisFrequencyUnit',
     'smisInspectionFrequency',
@@ -343,9 +349,17 @@
   const loadRequiredDictionaries = async (): Promise<void> => {
     const missingCode = DICTIONARY_CODES.some((code) => !(getDictMap.value[code]?.length ?? 0))
     const secondaryItems = getDictMap.value.smisSecondaryHazardCategory ?? []
-    const missingCategoryMetadata = secondaryItems.some((item) => !item.remark)
+    const hazardContentItems = getDictMap.value.smisHazardContent ?? []
+    const missingCategoryMetadata = secondaryItems.some(
+      (item) => !hasDictionaryParentReference(item, true)
+    )
+    const missingContentMetadata = hazardContentItems.some(
+      (item) => !hasDictionaryParentReference(item)
+    )
 
-    if (missingCode || missingCategoryMetadata) await userStore.fetchDictList()
+    if (missingCode || missingCategoryMetadata || missingContentMetadata) {
+      await userStore.fetchDictList()
+    }
   }
 
   const searchItems = computed<SearchFormItem[]>(() => [
@@ -407,7 +421,8 @@
       prop: 'hazardContent',
       label: '隐患内容',
       minWidth: 220,
-      showOverflowTooltip: true
+      showOverflowTooltip: true,
+      formatter: (row) => row.hazardContent || '—'
     },
     {
       prop: 'hazardLevel',
@@ -471,7 +486,7 @@
   const importColumns: ArtTableQueryExcelColumn[] = [
     { key: 'primaryHazardCategory', title: '一级隐患类别', required: true, width: 16 },
     { key: 'secondaryHazardCategory', title: '二级隐患类别', required: true, width: 22 },
-    { key: 'hazardContent', title: '隐患内容', required: true, width: 32 },
+    { key: 'hazardContent', title: '隐患内容', width: 32 },
     { key: 'hazardLevel', title: '隐患级别', required: true, width: 16 },
     { key: 'riskLevel', title: '隐患风险等级', required: true, width: 22 },
     { key: 'inspectionFrequency', title: '排查频次', required: true, width: 12 },
@@ -481,16 +496,38 @@
     { key: 'revisionDate', title: '修订日期', width: 14 }
   ]
 
-  const resolveDictionaryValue = (code: string, rawValue: unknown, rowNumber: number): string => {
-    const normalized = String(rawValue ?? '').trim()
-    const item = (getDictMap.value[code] ?? []).find(
-      (candidate) =>
-        candidate.value === normalized ||
-        candidate.label === normalized ||
-        candidate.name === normalized
-    )
-    if (!item) throw new Error(`第 ${rowNumber} 行存在无法识别的字典值：${normalized || '空值'}`)
-    return item.value
+  const resolveDictionaryItem = (
+    code: string,
+    fieldLabel: string,
+    rawValue: unknown,
+    rowNumber: number,
+    candidates = getDictMap.value[code] ?? []
+  ): Api.DataCenter.DictListItem => {
+    const item = findDictionaryItem(candidates, rawValue)
+    if (!item) {
+      throw new Error(
+        `第 ${rowNumber} 行的${fieldLabel}无法识别：${String(rawValue ?? '').trim() || '空值'}`
+      )
+    }
+    return item
+  }
+
+  const resolveDictionaryValue = (
+    code: string,
+    fieldLabel: string,
+    rawValue: unknown,
+    rowNumber: number
+  ): string => resolveDictionaryItem(code, fieldLabel, rawValue, rowNumber).value
+
+  const resolveChildDictionaryItem = (
+    code: string,
+    fieldLabel: string,
+    rawValue: unknown,
+    rowNumber: number,
+    parent: Api.DataCenter.DictListItem
+  ): Api.DataCenter.DictListItem => {
+    const candidates = getChildDictionaryItems(getDictMap.value[code] ?? [], parent)
+    return resolveDictionaryItem(code, fieldLabel, rawValue, rowNumber, candidates)
   }
 
   const transformImportRows = (
@@ -502,16 +539,29 @@
 
     return rows.map((row, index) => {
       const rowNumber = index + 2
-      const primaryHazardCategory = resolveDictionaryValue(
+      const primaryHazardCategoryItem = resolveDictionaryItem(
         'smisPrimaryHazardCategory',
+        '一级隐患类别',
         row.primaryHazardCategory,
         rowNumber
       )
-      const secondaryHazardCategory = resolveDictionaryValue(
+      const secondaryHazardCategoryItem = resolveChildDictionaryItem(
         'smisSecondaryHazardCategory',
+        '二级隐患类别',
         row.secondaryHazardCategory,
-        rowNumber
+        rowNumber,
+        primaryHazardCategoryItem
       )
+      const rawHazardContent = String(row.hazardContent ?? '').trim()
+      const hazardContentItem = rawHazardContent
+        ? resolveChildDictionaryItem(
+            'smisHazardContent',
+            '隐患内容',
+            rawHazardContent,
+            rowNumber,
+            secondaryHazardCategoryItem
+          )
+        : null
       const revisionDate = String(row.revisionDate ?? '').trim()
       if (revisionDate && !/^\d{4}-\d{2}-\d{2}$/.test(revisionDate)) {
         throw new Error(`第 ${rowNumber} 行修订日期应为 YYYY-MM-DD 格式`)
@@ -520,15 +570,35 @@
       return {
         organizationId,
         positionId,
-        primaryHazardCategory,
-        secondaryHazardCategory,
-        hazardContent: String(row.hazardContent ?? '').trim(),
-        hazardLevel: resolveDictionaryValue('smisHazardLevel', row.hazardLevel, rowNumber),
-        riskLevel: resolveDictionaryValue('smisRiskLevel', row.riskLevel, rowNumber),
-        inspectionFrequency: Number(
-          resolveDictionaryValue('smisInspectionFrequency', row.inspectionFrequency, rowNumber)
+        primaryHazardCategory: primaryHazardCategoryItem.value,
+        secondaryHazardCategory: secondaryHazardCategoryItem.value,
+        hazardContent: hazardContentItem?.value ?? null,
+        hazardLevel: resolveDictionaryValue(
+          'smisHazardLevel',
+          '隐患级别',
+          row.hazardLevel,
+          rowNumber
         ),
-        frequencyUnit: resolveDictionaryValue('smisFrequencyUnit', row.frequencyUnit, rowNumber),
+        riskLevel: resolveDictionaryValue(
+          'smisRiskLevel',
+          '隐患风险等级',
+          row.riskLevel,
+          rowNumber
+        ),
+        inspectionFrequency: Number(
+          resolveDictionaryValue(
+            'smisInspectionFrequency',
+            '排查频次',
+            row.inspectionFrequency,
+            rowNumber
+          )
+        ),
+        frequencyUnit: resolveDictionaryValue(
+          'smisFrequencyUnit',
+          '频次单位',
+          row.frequencyUnit,
+          rowNumber
+        ),
         inspectionItem: String(row.inspectionItem ?? '').trim(),
         inspectionStandard: String(row.inspectionStandard ?? '').trim(),
         revisionDate: revisionDate || formatWithDayjs(new Date(), 'YYYY-MM-DD') || ''

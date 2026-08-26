@@ -1,0 +1,1 @@
+import{Xn as e,dn as t,en as n}from"./style-2Tp69H0t.js";import{t as r}from"./smis-page-placeholder-B6icVIQW.js";var i=t({name:`SmisInspectionCategory`,__name:`index`,setup(t){return(t,i)=>(e(),n(r,{section:`基础数据`,title:`检验类别`}))}});export{i as default};

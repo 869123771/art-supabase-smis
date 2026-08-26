@@ -22,7 +22,7 @@ export interface PositionSafetyResponsibility {
   positionId: string
   primaryHazardCategory: string
   secondaryHazardCategory: string
-  hazardContent: string
+  hazardContent: string | null
   hazardLevel: string
   riskLevel: string
   inspectionItem: string
@@ -235,4 +235,93 @@ export interface LeaveInformationSavePayload {
   reason: string
   isProxy: boolean
   proxyEmployeeId?: string | null
+}
+
+export interface SmisOrganizationSummary {
+  id: string
+  organizationCode: string
+  organizationName: string
+  organizationType?: string
+  parentOrganizationName?: string | null
+}
+
+export interface StatutoryHoliday {
+  id?: string
+  organizationId: string
+  holidayType: string
+  startDate: string
+  endDate: string
+  remark?: string | null
+  organization: SmisOrganizationSummary
+  createTime?: string
+  updateTime?: string
+}
+
+export interface StatutoryHolidaySearchParams {
+  organizationId?: string
+  holidayType?: string
+  year?: number
+  from?: number
+  to?: number
+}
+
+export interface StatutoryHolidaySavePayload {
+  id?: string
+  organizationId: string
+  holidayType: string
+  startDate: string
+  endDate: string
+  remark?: string
+}
+
+export interface SiteResponsibleEmployee {
+  id: string
+  employeeNo: string
+  employeeName: string
+  phone: string
+  jobTitle?: string | null
+}
+
+export interface SmisSite {
+  id?: string
+  parentId?: string | null
+  organizationId: string
+  siteName: string
+  categoryCode: string
+  sort: number
+  responsibleEmployeeId?: string | null
+  addressDetail?: string | null
+  longitude?: number | string | null
+  latitude?: number | string | null
+  coordinateSystem: string
+  imageUrls: string[]
+  remark?: string | null
+  parentSiteName?: string | null
+  organization: SmisOrganizationSummary
+  responsible?: SiteResponsibleEmployee | null
+  children?: SmisSite[]
+  createTime?: string
+  updateTime?: string
+}
+
+export interface SmisSiteSearchParams {
+  keyword?: string
+  organizationId?: string
+  categoryCode?: string
+}
+
+export interface SmisSiteSavePayload {
+  id?: string
+  parentId?: string | null
+  organizationId: string
+  siteName: string
+  categoryCode: string
+  sort: number
+  responsibleEmployeeId?: string | null
+  addressDetail?: string
+  longitude?: number | string | null
+  latitude?: number | string | null
+  coordinateSystem?: string
+  imageUrls: string[]
+  remark?: string
 }

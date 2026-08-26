@@ -53,6 +53,7 @@
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
   import { useUserStore } from '@/store/modules/user'
   import { formatWithDayjs } from '@/utils/time'
+  import { findDictionaryItem, getChildDictionaryItems } from '@smis/domain/hazard-dictionary'
   import {
     addPositionSafetyResponsibility,
     editPositionSafetyResponsibility,
@@ -63,6 +64,7 @@
   const DICTIONARY_CODES = [
     'smisPrimaryHazardCategory',
     'smisSecondaryHazardCategory',
+    'smisHazardContent',
     'smisHazardLevel',
     'smisFrequencyUnit',
     'smisInspectionFrequency',
@@ -124,15 +126,29 @@
 
   const primaryCategoryItems = computed(() => getDictMap.value.smisPrimaryHazardCategory ?? [])
   const secondaryCategoryItems = computed(() => getDictMap.value.smisSecondaryHazardCategory ?? [])
+  const hazardContentItems = computed(() => getDictMap.value.smisHazardContent ?? [])
+  const selectedPrimaryCategory = computed(() =>
+    findDictionaryItem(primaryCategoryItems.value, form.primaryHazardCategory)
+  )
+  const selectedSecondaryCategory = computed(() =>
+    findDictionaryItem(secondaryCategoryItems.value, form.secondaryHazardCategory)
+  )
   const secondaryCategoryOptions = computed<FormItemOption[]>(() => {
-    const selectedPrimary = primaryCategoryItems.value.find(
-      (item) => item.value === form.primaryHazardCategory
+    return getChildDictionaryItems(secondaryCategoryItems.value, selectedPrimaryCategory.value).map(
+      (item) => ({ label: item.label || item.name, value: item.value })
     )
-    const primaryLabel = selectedPrimary?.label || selectedPrimary?.name
-    const filtered = primaryLabel
-      ? secondaryCategoryItems.value.filter((item) => item.remark === primaryLabel)
-      : secondaryCategoryItems.value
-    return filtered.map((item) => ({ label: item.label || item.name, value: item.value }))
+  })
+  const hazardContentOptions = computed<FormItemOption[]>(() => {
+    const options = getChildDictionaryItems(
+      hazardContentItems.value,
+      selectedSecondaryCategory.value
+    ).map((item) => ({ label: item.label || item.name, value: item.value }))
+    const currentValue = form.hazardContent?.trim() ?? ''
+
+    if (currentValue && !options.some((item) => item.value === currentValue)) {
+      options.unshift({ label: `${currentValue}（历史值）`, value: currentValue })
+    }
+    return options
   })
   const frequencyOptions = computed<FormItemOption[]>(() =>
     (getDictMap.value.smisInspectionFrequency ?? []).map((item) => ({
@@ -144,10 +160,7 @@
   const formRules = computed<FormRules<PositionSafetyResponsibility>>(() => ({
     primaryHazardCategory: [{ required: true, message: '请选择一级隐患类别', trigger: 'change' }],
     secondaryHazardCategory: [{ required: true, message: '请选择二级隐患类别', trigger: 'change' }],
-    hazardContent: [
-      { required: true, message: '请输入隐患内容', trigger: 'blur' },
-      { max: 500, message: '隐患内容不能超过 500 个字符', trigger: 'blur' }
-    ],
+    hazardContent: [{ max: 500, message: '隐患内容不能超过 500 个字符', trigger: 'change' }],
     hazardLevel: [{ required: true, message: '请选择隐患级别', trigger: 'change' }],
     riskLevel: [{ required: true, message: '请选择隐患风险等级', trigger: 'change' }],
     inspectionItem: [
@@ -174,10 +187,8 @@
       props: {
         placeholder: '请选择一级隐患类别',
         onChange: () => {
-          const validValues = secondaryCategoryOptions.value.map((item) => item.value)
-          if (!validValues.includes(form.secondaryHazardCategory)) {
-            form.secondaryHazardCategory = String(validValues[0] ?? '')
-          }
+          form.secondaryHazardCategory = ''
+          form.hazardContent = ''
         }
       }
     },
@@ -186,19 +197,25 @@
       key: 'secondaryHazardCategory',
       type: 'select',
       options: secondaryCategoryOptions.value,
-      props: { placeholder: '请选择二级隐患类别' }
+      props: {
+        disabled: !form.primaryHazardCategory,
+        placeholder: form.primaryHazardCategory ? '请选择二级隐患类别' : '请先选择一级类别',
+        onChange: () => {
+          form.hazardContent = ''
+        }
+      }
     },
     {
       label: '隐患内容',
       key: 'hazardContent',
-      type: 'input',
+      type: 'select',
       span: 24,
+      options: hazardContentOptions.value,
       props: {
-        type: 'textarea',
-        rows: 3,
-        maxlength: 500,
-        showWordLimit: true,
-        placeholder: '概括需要排查的隐患内容'
+        clearable: true,
+        filterable: true,
+        disabled: !form.secondaryHazardCategory,
+        placeholder: form.secondaryHazardCategory ? '请选择隐患内容（可选）' : '请先选择二级类别'
       }
     },
     {
@@ -276,7 +293,7 @@
     positionId: form.positionId,
     primaryHazardCategory: form.primaryHazardCategory,
     secondaryHazardCategory: form.secondaryHazardCategory,
-    hazardContent: form.hazardContent.trim(),
+    hazardContent: form.hazardContent?.trim() || null,
     hazardLevel: form.hazardLevel,
     riskLevel: form.riskLevel,
     inspectionItem: form.inspectionItem.trim(),
@@ -316,7 +333,7 @@
     await dialogRef.value?.handleOpen(data, {
       title: data.row ? '编辑隐患排查标准' : '新增隐患排查标准',
       subtitle: `${data.organizationName} · ${data.positionName}`,
-      confirmText: data.row ? '保存更改' : '新增标准',
+      confirmText: '保存',
       contentMaxHeight: 'calc(100vh - 184px)',
       onOpen: async (_openData, api) => {
         const missingCodes = DICTIONARY_CODES.filter(

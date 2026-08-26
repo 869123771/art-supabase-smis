@@ -1,0 +1,1 @@
+import{g as e}from"./hasIn-BhLwKX56.js";import{n as t}from"./_getPrototype-DMgNvgrs.js";var n=Object.prototype.hasOwnProperty;function r(r,i,a){var o=r[i];(!(n.call(r,i)&&e(o,a))||a===void 0&&!(i in r))&&t(r,i,a)}export{r as t};

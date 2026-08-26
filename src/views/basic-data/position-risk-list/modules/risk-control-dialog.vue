@@ -43,6 +43,7 @@
   } from '@/components/core/forms/art-form/index.vue'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
   import { useUserStore } from '@/store/modules/user'
+  import { findDictionaryItem, getChildDictionaryItems } from '@smis/domain/hazard-dictionary'
   import {
     addPositionRiskControl,
     editPositionRiskControl,
@@ -102,14 +103,13 @@
     }))
   const primaryCategoryItems = computed(() => getDictMap.value.smisPrimaryHazardCategory ?? [])
   const secondaryCategoryItems = computed(() => getDictMap.value.smisSecondaryHazardCategory ?? [])
+  const selectedPrimaryCategory = computed(() =>
+    findDictionaryItem(primaryCategoryItems.value, form.primaryHazardCategory)
+  )
   const secondaryCategoryOptions = computed<FormItemOption[]>(() => {
-    const primary = primaryCategoryItems.value.find(
-      (item) => item.value === form.primaryHazardCategory
+    return getChildDictionaryItems(secondaryCategoryItems.value, selectedPrimaryCategory.value).map(
+      (item) => ({ label: item.label || item.name, value: item.value })
     )
-    const primaryLabel = primary?.label || primary?.name
-    return secondaryCategoryItems.value
-      .filter((item) => !primaryLabel || item.remark === primaryLabel)
-      .map((item) => ({ label: item.label || item.name, value: item.value }))
   })
 
   const requiredTextRule = (label: string, max: number) => [
@@ -207,9 +207,7 @@
       props: {
         placeholder: '请选择一级隐患类别',
         onChange: () => {
-          const values = secondaryCategoryOptions.value.map((item) => item.value)
-          if (!values.includes(form.secondaryHazardCategory))
-            form.secondaryHazardCategory = String(values[0] ?? '')
+          form.secondaryHazardCategory = ''
         }
       }
     },
@@ -218,7 +216,10 @@
       key: 'secondaryHazardCategory',
       type: 'select',
       options: secondaryCategoryOptions.value,
-      props: { placeholder: '请选择二级隐患类别' }
+      props: {
+        disabled: !form.primaryHazardCategory,
+        placeholder: form.primaryHazardCategory ? '请选择二级隐患类别' : '请先选择一级类别'
+      }
     },
     {
       label: '隐患级别',

@@ -32,6 +32,19 @@ export {
   saveLeaveInformation
 } from '@smis/api/modules/leave-information'
 
+export {
+  deleteStatutoryHolidays,
+  fetchStatutoryHolidayList,
+  saveStatutoryHoliday
+} from '@smis/api/modules/statutory-holiday'
+
+export {
+  deleteSites,
+  fetchSiteEmployeeOptions,
+  fetchSiteList,
+  saveSite
+} from '@smis/api/modules/site'
+
 export type {
   PositionSafetyResponsibility,
   PositionSafetyResponsibilitySavePayload,
@@ -53,5 +66,13 @@ export type {
   WorkInstructionOrganization,
   WorkInstructionPosition,
   WorkInstructionPositionTree,
-  WorkInstructionScope
+  WorkInstructionScope,
+  StatutoryHoliday,
+  StatutoryHolidaySavePayload,
+  StatutoryHolidaySearchParams,
+  SmisOrganizationSummary,
+  SmisSite,
+  SmisSiteSavePayload,
+  SmisSiteSearchParams,
+  SiteResponsibleEmployee
 } from '@smis/api/types'
