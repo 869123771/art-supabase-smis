@@ -21,10 +21,15 @@
             node-key="id"
             value-key="id"
             check-strictly
+            :multiple="!isEditing"
+            :show-checkbox="!isEditing"
+            collapse-tags
+            collapse-tags-tooltip
+            :max-collapse-tags="3"
             filterable
             clearable
             default-expand-all
-            placeholder="请选择所属部门"
+            :placeholder="isEditing ? '请选择所属部门' : '请选择一个或多个所属部门'"
           />
         </template>
 
@@ -101,6 +106,7 @@
   import {
     fetchSiteEmployeeOptions,
     saveSite,
+    saveSites,
     type SmisSite,
     type SmisSiteSavePayload
   } from '@smis/api'
@@ -112,9 +118,11 @@
     sites: SmisSite[]
     row?: SmisSite
     parent?: SmisSite
+    initialOrganizationId?: string
   }
 
-  interface SiteForm extends Omit<SmisSiteSavePayload, 'responsibleEmployeeId'> {
+  interface SiteForm extends Omit<SmisSiteSavePayload, 'organizationId' | 'responsibleEmployeeId'> {
+    organizationId: string | string[]
     responsibleEmployeeId?: string
     addressPicker?: undefined
   }
@@ -129,6 +137,7 @@
   const { getDictMap, getUserInfo } = storeToRefs(userStore)
   const dialogRef = ref<ArtDialogExpose<SiteDialogOpenData>>()
   const formRef = ref<FormExpose>()
+  const isEditing = ref(false)
   const organizationTree = shallowRef<Organization[]>([])
   const siteTree = shallowRef<SmisSite[]>([])
   const responsibleSelection = shallowRef<EmployeeIntegrationItem[]>([])
@@ -136,7 +145,7 @@
   const siteTreeProps = { children: 'children', label: 'siteName', value: 'id' }
 
   const initialForm = (): SiteForm => ({
-    organizationId: '',
+    organizationId: isEditing.value ? '' : [],
     parentId: null,
     siteName: '',
     categoryCode: '',
@@ -165,7 +174,11 @@
     model: initialForm(),
     items: computed(() => [
       { label: '层级与归属', key: 'hierarchySection', type: 'divider', span: 24 },
-      { label: '所属部门', key: 'organizationId', type: 'text' },
+      {
+        label: isEditing.value ? '所属部门' : '所属部门（可多选）',
+        key: 'organizationId',
+        type: 'text'
+      },
       { label: '上级场所', key: 'parentId', type: 'text' },
       {
         label: '场所名称',
@@ -206,7 +219,19 @@
       }
     ]),
     rules: {
-      organizationId: [{ required: true, message: '请选择所属部门', trigger: 'change' }],
+      organizationId: [
+        {
+          validator: (_rule, value, callback) => {
+            const organizationIds = Array.isArray(value) ? value : value ? [value] : []
+            if (organizationIds.length === 0) {
+              callback(new Error('请选择所属部门'))
+              return
+            }
+            callback()
+          },
+          trigger: 'change'
+        }
+      ],
       siteName: [
         { required: true, message: '请输入场所名称', trigger: 'blur' },
         { max: 120, message: '场所名称不能超过 120 个字符', trigger: 'blur' }
@@ -248,12 +273,18 @@
   const handleSubmit = async (): Promise<boolean> => {
     try {
       await formRef.value?.validate()
-      await saveSite({
-        ...toRaw(form.model),
+      const { organizationId, ...rawModel } = toRaw(form.model)
+      const sharedPayload = {
+        ...rawModel,
         siteName: form.model.siteName.trim(),
         addressDetail: form.model.addressDetail?.trim(),
         remark: form.model.remark?.trim()
-      })
+      }
+      if (Array.isArray(organizationId)) {
+        await saveSites({ ...sharedPayload, organizationIds: organizationId })
+      } else {
+        await saveSite({ ...sharedPayload, organizationId })
+      }
       emit('success', form.model.id ? 'edit' : 'add')
       return true
     } catch {
@@ -262,6 +293,7 @@
   }
 
   const handleOpen = async (data: SiteDialogOpenData): Promise<void> => {
+    isEditing.value = Boolean(data.row)
     await resetForm()
     organizationTree.value = data.organizations
     siteTree.value = data.sites
@@ -284,13 +316,17 @@
       responsibleSelection.value = toEmployeeSelection(data.row)
     } else if (data.parent) {
       form.model.parentId = data.parent.id || null
-      form.model.organizationId = data.parent.organizationId
+      form.model.organizationId = [data.parent.organizationId]
+    } else if (data.initialOrganizationId) {
+      form.model.organizationId = [data.initialOrganizationId]
     }
 
     await dialogRef.value?.handleOpen(data, {
       title: data.row ? '编辑场所' : data.parent ? '新增下级场所' : '新增场所',
-      subtitle: '维护组织归属、场所层级、责任人及地图位置',
-      confirmText: '保存场所',
+      subtitle: data.row
+        ? '维护组织归属、场所层级、责任人及地图位置'
+        : '可选择多个所属部门，系统将为每个部门新增一条场所记录',
+      confirmText: '保存',
       contentMaxHeight: 'calc(100vh - 176px)',
       onOpen: async (_openData, api) => {
         api.setLoading(true)

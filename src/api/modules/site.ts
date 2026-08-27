@@ -4,7 +4,7 @@ import type {
   EmployeeIntegrationItem,
   EmployeeSelectorContractParams
 } from '@/api/integration/employees'
-import type { SmisSite, SmisSiteSavePayload } from '@smis/api/types'
+import type { SmisSite, SmisSiteBatchCreatePayload, SmisSiteSavePayload } from '@smis/api/types'
 
 interface SiteEmployeeListResult {
   records?: EmployeeIntegrationItem[]
@@ -49,6 +49,22 @@ export async function saveSite(params: SmisSiteSavePayload) {
       showMessage: true,
       breakReturn: true,
       message: params.id ? '场所信息已更新' : '场所信息已新增'
+    }
+  )
+}
+
+export async function saveSites(params: SmisSiteBatchCreatePayload) {
+  const organizationIds = [...new Set(params.organizationIds)]
+  return await responseHandle<string[]>(
+    () =>
+      supabase.rpc('smis_save_sites_secure', {
+        p_organization_ids: organizationIds,
+        p_payload: keysToSnakeDeep(omit(params, ['organizationIds', 'id']))
+      }),
+    {
+      showMessage: true,
+      breakReturn: true,
+      message: `已为 ${organizationIds.length} 个部门新增场所`
     }
   )
 }

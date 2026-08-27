@@ -12,7 +12,10 @@
       :metrics="workspaceMetrics"
     >
       <template #actions>
-        <BusinessTableWorkspaceActions :table="tableQueryRef" />
+        <BusinessTableWorkspaceActions
+          :table="tableQueryRef"
+          :show-display-controls="viewMode === 'list'"
+        />
       </template>
     </BusinessWorkspaceHeader>
 
@@ -73,50 +76,52 @@
         />
       </div>
 
-      <ElCalendar v-model="calendarDate" class="holiday-page__calendar">
-        <template #header="{ date }">
-          <div class="holiday-page__calendar-header">
-            <ElButton text aria-label="上个月" @click="shiftMonth(-1)"
-              ><ArtSvgIcon icon="ri:arrow-left-s-line"
-            /></ElButton>
-            <strong>{{ date }}</strong>
-            <ElButton text aria-label="下个月" @click="shiftMonth(1)"
-              ><ArtSvgIcon icon="ri:arrow-right-s-line"
-            /></ElButton>
-          </div>
-        </template>
-        <template #date-cell="{ data }">
-          <div
-            class="holiday-page__day"
-            :class="{ 'is-other-month': data.type !== 'current-month' }"
-          >
-            <span class="holiday-page__day-heading">
-              <span>{{ dayjs(data.day).date() }}</span>
-              <button
-                type="button"
-                :aria-label="`${data.day}，新增节假日安排`"
-                title="新增当天安排"
-                @click="openDialog(undefined, data.day)"
-                ><ArtSvgIcon icon="ri:add-line"
-              /></button>
-            </span>
-            <span class="holiday-page__events">
-              <button
-                v-for="holiday in getDayHolidays(data.day).slice(0, 3)"
-                :key="holiday.id"
-                type="button"
-                class="holiday-page__event"
-                :title="`${resolveHolidayType(holiday.holidayType)} · ${holiday.organization.organizationName}`"
-                @click.stop="openDialog(holiday)"
-                >{{ resolveHolidayType(holiday.holidayType) }}</button
-              >
-              <small v-if="getDayHolidays(data.day).length > 3"
-                >+{{ getDayHolidays(data.day).length - 3 }}</small
-              >
-            </span>
-          </div>
-        </template>
-      </ElCalendar>
+      <ElScrollbar class="holiday-page__calendar-scrollbar">
+        <ElCalendar v-model="calendarDate" class="holiday-page__calendar">
+          <template #header="{ date }">
+            <div class="holiday-page__calendar-header">
+              <ElButton text aria-label="上个月" @click="shiftMonth(-1)"
+                ><ArtSvgIcon icon="ri:arrow-left-s-line"
+              /></ElButton>
+              <strong>{{ date }}</strong>
+              <ElButton text aria-label="下个月" @click="shiftMonth(1)"
+                ><ArtSvgIcon icon="ri:arrow-right-s-line"
+              /></ElButton>
+            </div>
+          </template>
+          <template #date-cell="{ data }">
+            <div
+              class="holiday-page__day"
+              :class="{ 'is-other-month': data.type !== 'current-month' }"
+            >
+              <span class="holiday-page__day-heading">
+                <span>{{ dayjs(data.day).date() }}</span>
+                <button
+                  type="button"
+                  :aria-label="`${data.day}，新增节假日安排`"
+                  title="新增当天安排"
+                  @click="openDialog(undefined, data.day)"
+                  ><ArtSvgIcon icon="ri:add-line"
+                /></button>
+              </span>
+              <span class="holiday-page__events">
+                <button
+                  v-for="holiday in getDayHolidays(data.day).slice(0, 3)"
+                  :key="holiday.id"
+                  type="button"
+                  class="holiday-page__event"
+                  :title="`${resolveHolidayType(holiday.holidayType)} · ${holiday.organization.organizationName}`"
+                  @click.stop="openDialog(holiday)"
+                  >{{ resolveHolidayType(holiday.holidayType) }}</button
+                >
+                <small v-if="getDayHolidays(data.day).length > 3"
+                  >+{{ getDayHolidays(data.day).length - 3 }}</small
+                >
+              </span>
+            </div>
+          </template>
+        </ElCalendar>
+      </ElScrollbar>
     </ArtSectionCard>
 
     <ArtTableQuery
@@ -408,7 +413,7 @@
     {
       prop: 'operation',
       label: '操作',
-      width: 96,
+      width: 112,
       fixed: 'right',
       formatter: (row) => (
         <div class="holiday-page__actions">
@@ -531,30 +536,31 @@
       border-radius: var(--el-border-radius-base);
     }
 
-    &__viewbar > div,
-    &__organization,
-    &__period {
+    &__viewbar > div {
       display: grid;
       min-width: 0;
     }
 
-    &__viewbar span,
-    &__organization small,
-    &__period small {
+    &__viewbar span {
       margin-top: 2px;
       font-size: 11px;
       color: var(--el-text-color-secondary);
     }
 
     &__calendar-card {
+      display: flex;
       flex: 1;
+      flex-direction: column;
       min-height: 0;
       overflow: hidden;
     }
 
     &__calendar-card :deep(.art-section-card__body) {
+      display: flex;
+      flex: 1;
+      flex-direction: column;
       min-height: 0;
-      overflow: auto;
+      overflow: hidden;
     }
 
     &__calendar-filters {
@@ -570,6 +576,11 @@
 
     &__calendar {
       border-top: 1px solid var(--el-border-color-lighter);
+    }
+
+    &__calendar-scrollbar {
+      flex: 1;
+      min-height: 0;
     }
 
     &__calendar :deep(.el-calendar__header) {
@@ -655,17 +666,31 @@
       border-radius: var(--el-border-radius-small);
     }
 
-    &__organization strong,
-    &__organization small,
-    &__period strong,
-    &__period small {
+    :deep(.holiday-page__organization),
+    :deep(.holiday-page__period) {
+      display: grid;
+      min-width: 0;
+    }
+
+    :deep(.holiday-page__organization small),
+    :deep(.holiday-page__period small) {
+      margin-top: 2px;
+      font-size: 11px;
+      color: var(--el-text-color-secondary);
+    }
+
+    :deep(.holiday-page__organization strong),
+    :deep(.holiday-page__organization small),
+    :deep(.holiday-page__period strong),
+    :deep(.holiday-page__period small) {
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
 
-    &__actions {
+    :deep(.holiday-page__actions) {
       display: flex;
+      align-items: center;
     }
 
     @media (width <= 760px) {

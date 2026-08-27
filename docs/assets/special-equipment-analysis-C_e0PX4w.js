@@ -1,1 +1,0 @@
-import{Xn as e,dn as t,en as n}from"./style-2Tp69H0t.js";import{t as r}from"./smis-page-placeholder-B6icVIQW.js";var i=t({name:`SmisSpecialEquipmentAnalysis`,__name:`index`,setup(t){return(t,i)=>(e(),n(r,{section:`设备台账`,title:`特种设备统计分析`}))}});export{i as default};

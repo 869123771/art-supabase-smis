@@ -17,50 +17,60 @@
     </BusinessWorkspaceHeader>
 
     <div class="leave-information-page__workspace">
-      <aside class="leave-information-page__tree-panel">
-        <OrganizationNavigator
-          :data="organizationState.tree"
-          :loading="organizationState.loading"
-          :error="organizationState.error"
-          :selected-key="organizationState.selectedKey"
-          @select="handleOrganizationSelect"
-          @refresh="loadOrganizations"
-        />
-      </aside>
+      <ArtWorkspaceSplitter
+        primary-size="288px"
+        primary-min="244px"
+        primary-max="380px"
+        :breakpoint="820"
+        stacked-primary-size="320px"
+      >
+        <template #primary>
+          <aside class="leave-information-page__tree-panel">
+            <OrganizationNavigator
+              :data="organizationState.tree"
+              :loading="organizationState.loading"
+              :error="organizationState.error"
+              :selected-key="organizationState.selectedKey"
+              @select="handleOrganizationSelect"
+              @refresh="loadOrganizations"
+            />
+          </aside>
+        </template>
 
-      <main class="leave-information-page__main">
-        <div class="leave-information-page__scope-bar">
-          <div class="leave-information-page__scope-identity">
-            <span aria-hidden="true"><ArtSvgIcon :icon="selectedOrganizationIcon" /></span>
-            <span
-              ><small>当前查看范围</small><strong>{{ selectedOrganizationLabel }}</strong></span
-            >
+        <main class="leave-information-page__main">
+          <div class="leave-information-page__scope-bar">
+            <div class="leave-information-page__scope-identity">
+              <span aria-hidden="true"><ArtSvgIcon :icon="selectedOrganizationIcon" /></span>
+              <span
+                ><small>当前查看范围</small><strong>{{ selectedOrganizationLabel }}</strong></span
+              >
+            </div>
+            <p><ArtSvgIcon icon="ri:git-merge-line" />选择组织节点时自动包含其下级部门</p>
           </div>
-          <p><ArtSvgIcon icon="ri:git-merge-line" />选择组织节点时自动包含其下级部门</p>
-        </div>
 
-        <ArtTableQuery
-          ref="tableQueryRef"
-          v-model="tableState.searchQuery"
-          class="leave-information-page__table"
-          :search-items="searchItems"
-          :api-fn="fetchTableData"
-          :columns-factory="columnsFactory"
-          :header-actions="headerActions"
-          header-actions-placement="workspace"
-          :search-bar-props="{ span: 8, labelWidth: 82, showExpand: false }"
-          :table-props="{
-            rowKey: 'id',
-            tableLayout: 'fixed',
-            emptyText: '暂无请假信息',
-            emptyDescription: '可新增请假信息，申请人与代理人均从员工花名册选择。',
-            showOverflowTooltip: true
-          }"
-          :on-success="handleTableSuccess"
-          focusable
-          focus-scope-selector=".leave-information-page__main"
-        />
-      </main>
+          <ArtTableQuery
+            ref="tableQueryRef"
+            v-model="tableState.searchQuery"
+            class="leave-information-page__table"
+            :search-items="searchItems"
+            :api-fn="fetchTableData"
+            :columns-factory="columnsFactory"
+            :header-actions="headerActions"
+            header-actions-placement="workspace"
+            :search-bar-props="{ span: 8, labelWidth: 82, showExpand: false }"
+            :table-props="{
+              rowKey: 'id',
+              tableLayout: 'fixed',
+              emptyText: '暂无请假信息',
+              emptyDescription: '可新增请假信息，申请人与代理人均从员工花名册选择。',
+              showOverflowTooltip: true
+            }"
+            :on-success="handleTableSuccess"
+            focusable
+            focus-scope-selector=".leave-information-page__workspace"
+          />
+        </main>
+      </ArtWorkspaceSplitter>
     </div>
 
     <LeaveInformationDialog ref="dialogRef" @success="handleSaveSuccess" />
@@ -80,6 +90,7 @@
     type BusinessWorkspaceMetric,
     type BusinessWorkspaceTag
   } from '@/components/business/business-workspace-header/index.vue'
+  import ArtWorkspaceSplitter from '@/components/core/layouts/art-workspace-splitter/index.vue'
   import type { SearchFormItem } from '@/components/core/forms/art-search-bar/index.vue'
   import type {
     ArtTableQueryExpose,
@@ -546,10 +557,8 @@
     }
 
     &__workspace {
-      display: grid;
       flex: 1 1 auto;
-      grid-template-columns: 288px minmax(0, 1fr);
-      gap: 12px;
+      width: 100%;
       min-width: 0;
       min-height: 0;
     }
@@ -638,86 +647,79 @@
       }
     }
 
-    &__identity {
+    :deep(.leave-information-page__identity) {
       display: grid;
-      grid-template-columns: 32px minmax(0, 1fr);
-      gap: 9px;
+      grid-template-columns: 34px minmax(0, 1fr);
+      gap: 10px;
       align-items: center;
       min-width: 0;
-
-      > span:first-child {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 32px;
-        height: 32px;
-        color: var(--theme-color);
-        background: color-mix(in srgb, var(--theme-color) 8%, var(--default-box-color));
-        border-radius: var(--el-border-radius-base);
-      }
-
-      > span:last-child,
-      strong,
-      small {
-        min-width: 0;
-      }
-
-      > span:last-child {
-        display: grid;
-      }
-
-      strong,
-      small {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-
-      small {
-        margin-top: 2px;
-        font-size: 11px;
-        color: var(--el-text-color-secondary);
-      }
     }
 
-    &__organization,
-    &__period {
+    :deep(.leave-information-page__identity > span:first-child) {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 34px;
+      height: 34px;
+      color: var(--theme-color);
+      background: color-mix(in srgb, var(--theme-color) 8%, var(--default-box-color));
+      border-radius: var(--el-border-radius-base);
+    }
+
+    :deep(.leave-information-page__identity > span:last-child),
+    :deep(.leave-information-page__organization),
+    :deep(.leave-information-page__period) {
       display: grid;
+      align-content: center;
       min-width: 0;
-
-      strong,
-      small {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-
-      small {
-        margin-top: 2px;
-        font-size: 11px;
-        color: var(--el-text-color-secondary);
-      }
     }
 
-    &__proxy {
+    :deep(.leave-information-page__identity strong),
+    :deep(.leave-information-page__identity small),
+    :deep(.leave-information-page__organization strong),
+    :deep(.leave-information-page__organization small),
+    :deep(.leave-information-page__period strong),
+    :deep(.leave-information-page__period small) {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    :deep(.leave-information-page__identity strong),
+    :deep(.leave-information-page__organization strong),
+    :deep(.leave-information-page__period strong) {
+      line-height: 20px;
+    }
+
+    :deep(.leave-information-page__identity small),
+    :deep(.leave-information-page__organization small),
+    :deep(.leave-information-page__period small) {
+      margin-top: 2px;
+      font-size: 11px;
+      line-height: 16px;
+      color: var(--el-text-color-secondary);
+    }
+
+    :deep(.leave-information-page__proxy) {
       display: flex;
       gap: 7px;
       align-items: center;
       min-width: 0;
-
-      span:last-child {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
     }
 
-    &__muted,
-    &__locked {
+    :deep(.leave-information-page__proxy span:last-child) {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    :deep(.leave-information-page__muted),
+    :deep(.leave-information-page__locked) {
       color: var(--el-text-color-secondary);
     }
 
-    &__locked {
+    :deep(.leave-information-page__locked) {
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -725,31 +727,27 @@
       height: 28px;
     }
 
-    &__row-actions {
+    :deep(.leave-information-page__row-actions) {
       display: flex;
+      gap: 6px;
       align-items: center;
+      justify-content: center;
+      min-width: 0;
+      white-space: nowrap;
+    }
+
+    :deep(.leave-information-page__row-actions .art-button-table) {
+      flex: 0 0 32px;
+      margin-right: 0;
     }
 
     @media (width <= 1080px) {
-      &__workspace {
-        grid-template-columns: 244px minmax(0, 1fr);
-      }
-
       &__scope-bar > p {
         display: none;
       }
     }
 
     @media (width <= 820px) {
-      &__workspace {
-        display: flex;
-        flex-direction: column;
-      }
-
-      &__tree-panel {
-        flex: 0 0 320px;
-      }
-
       &__main {
         flex: 0 0 760px;
       }

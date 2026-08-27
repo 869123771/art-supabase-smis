@@ -284,7 +284,7 @@
     await dialogRef.value?.handleOpen(data, {
       title: data.row ? '编辑隐患控制措施' : '新增隐患控制措施',
       subtitle: `${data.organizationName} · ${data.positionName}`,
-      confirmText: data.row ? '保存更改' : '新增措施',
+      confirmText: '保存',
       contentMaxHeight: 'calc(100vh - 184px)',
       onOpen: async (_data, api) => {
         const missingCodes = DICTIONARY_CODES.filter(

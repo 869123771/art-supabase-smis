@@ -1,9 +1,499 @@
 <template>
-  <SmisPagePlaceholder section="安全生产 · 应急救援" title="应急救援预案" />
+  <div
+    v-auth="'SmisEmergencyRescuePlan:View'"
+    class="emergency-plan-page business-workspace-page art-full-height"
+  >
+    <BusinessWorkspaceHeader
+      eyebrow="EMERGENCY PREPAREDNESS"
+      title="应急救援预案"
+      description="统一管理预案适用范围、演练频次、有效状态和下推演练计划。"
+      icon="ri:file-shield-2-line"
+      :tags="[
+        { label: '组织级别联动', type: 'primary', effect: 'plain' },
+        { label: '有效性控制', type: 'success', effect: 'light' },
+        { label: '下推演练计划', type: 'warning', effect: 'plain' }
+      ]"
+      :metrics="metrics"
+    >
+      <template #actions><BusinessTableWorkspaceActions :table="tableRef" /></template>
+    </BusinessWorkspaceHeader>
+    <ArtTableQuery
+      ref="tableRef"
+      v-model="searchQuery"
+      class="emergency-plan-page__table"
+      :api-fn="fetchTableData"
+      :search-items="searchItems"
+      :columns-factory="columnsFactory"
+      :header-actions="headerActions"
+      header-actions-placement="workspace"
+      :search-bar-props="{ span: 6, labelWidth: 82, showExpand: false }"
+      :table-props="{
+        rowKey: 'id',
+        tableLayout: 'fixed',
+        emptyText: '暂无应急救援预案',
+        emptyDescription: '可新增预案并提交，随后下推形成演练计划草稿。'
+      }"
+      focusable
+      focus-scope-selector=".emergency-plan-page"
+    />
+    <EmergencyPlanDialog ref="dialogRef" @success="handleSaveSuccess" />
+  </div>
 </template>
 
-<script setup lang="ts">
-  import SmisPagePlaceholder from '@smis/views/components/smis-page-placeholder.vue'
+<script setup lang="tsx">
+  import dayjs from 'dayjs'
+  import { ElTag } from 'element-plus'
+  import type { SearchFormItem } from '@/components/core/forms/art-search-bar/index.vue'
+  import type {
+    ArtTableQueryExpose,
+    ArtTableQueryHeaderAction,
+    ArtTableQueryHeaderActionContext
+  } from '@/components/core/tables/art-table-query/index.vue'
+  import type { ColumnOption } from '@/types'
+  import { pageInfoHandler } from '@/utils/table/tableUtils'
+  import { useUserStore } from '@/store/modules/user'
+  import { useArtFeedback } from '@/hooks/core/useArtFeedback'
+  import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
+  import ArtButtonMore, {
+    type ButtonMoreItem
+  } from '@/components/core/forms/art-button-more/index.vue'
+  import ArtDictDisplay from '@/components/core/base/art-dict-display/index.vue'
+  import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
+  import BusinessWorkspaceHeader, {
+    type BusinessWorkspaceMetric
+  } from '@/components/business/business-workspace-header/index.vue'
+  import BusinessTableWorkspaceActions from '@/components/business/business-table-workspace-actions/index.vue'
+  import {
+    deleteEmergencyRescuePlans,
+    fetchEmergencyRescuePlanList,
+    pushEmergencyRescuePlan,
+    setEmergencyRescuePlanValidity,
+    type SmisEmergencyPosition,
+    type SmisEmergencyRescuePlan,
+    type SmisEmergencyRescuePlanSearchParams,
+    type SmisTreeOrganization
+  } from '@smis/api'
+  import EmergencyPlanDialog, {
+    type EmergencyPlanDialogOpenData
+  } from './modules/emergency-plan-dialog.vue'
 
   defineOptions({ name: 'SmisEmergencyRescuePlan' })
+  type TableParams = SmisEmergencyRescuePlanSearchParams &
+    Pick<Api.Common.PaginationParams, 'current' | 'size'>
+  interface DialogExpose {
+    handleOpen: (data: EmergencyPlanDialogOpenData) => Promise<void>
+  }
+
+  const userStore = useUserStore()
+  const { getDictMap } = storeToRefs(userStore)
+  const { confirm, confirmDelete } = useArtFeedback()
+  const tableRef = ref<ArtTableQueryExpose>()
+  const dialogRef = ref<DialogExpose>()
+  const searchQuery = ref<SmisEmergencyRescuePlanSearchParams>({})
+  const organizations = shallowRef<SmisTreeOrganization[]>([])
+  const positions = shallowRef<SmisEmergencyPosition[]>([])
+  const overview = reactive({ total: 0, valid: 0, warning: 0, submitted: 0 })
+  const dictOptions = (code: string) =>
+    (getDictMap.value[code] ?? []).map((item) => ({
+      label: item.label || item.name,
+      value: item.value
+    }))
+  const metrics = computed<BusinessWorkspaceMetric[]>(() => [
+    {
+      label: '预案总数',
+      value: overview.total,
+      description: '当前租户预案',
+      icon: 'ri:file-list-3-line'
+    },
+    {
+      label: '有效预案',
+      value: overview.valid,
+      description: '下游业务可选择',
+      icon: 'ri:shield-check-line',
+      tone: 'success'
+    },
+    {
+      label: '已提交',
+      value: overview.submitted,
+      description: '进入正式预案库',
+      icon: 'ri:checkbox-circle-line'
+    },
+    {
+      label: '预警中',
+      value: overview.warning,
+      description: '需及时关注',
+      icon: 'ri:alarm-warning-line',
+      tone: 'danger'
+    }
+  ])
+  const searchItems = computed<SearchFormItem[]>(() => [
+    {
+      label: '关键字',
+      key: 'keyword',
+      type: 'input',
+      props: { clearable: true, placeholder: '预案编码或名称' }
+    },
+    {
+      label: '预案类别',
+      key: 'planCategory',
+      type: 'select',
+      props: {
+        options: dictOptions('smisEmergencyPlanCategory'),
+        clearable: true,
+        placeholder: '全部类别'
+      }
+    },
+    {
+      label: '是否有效',
+      key: 'isValid',
+      type: 'select',
+      props: {
+        options: dictOptions('commonBoolean').map((item) => ({
+          ...item,
+          value: item.value === 'true'
+        })),
+        clearable: true,
+        placeholder: '全部状态'
+      }
+    },
+    {
+      label: '预警状态',
+      key: 'warningStatus',
+      type: 'select',
+      props: {
+        options: dictOptions('smisEmergencyPlanWarningStatus'),
+        clearable: true,
+        placeholder: '全部状态'
+      }
+    }
+  ])
+  const openDialog = (row?: SmisEmergencyRescuePlan): void => {
+    void dialogRef.value?.handleOpen({
+      row,
+      organizations: organizations.value,
+      positions: positions.value
+    })
+  }
+  const handleMoreAction = (item: ButtonMoreItem, row: SmisEmergencyRescuePlan): void => {
+    if (item.key === 'push') void handlePush(row)
+    if (item.key === 'void') void handleValidity([row.id], false, row.planName)
+    if (item.key === 'activate') void handleValidity([row.id], true, row.planName)
+    if (item.key === 'delete') void handleDelete(row)
+  }
+  const rowActions = (row: SmisEmergencyRescuePlan): ButtonMoreItem[] => [
+    {
+      auth: 'SmisEmergencyRescuePlan:Push',
+      key: 'push',
+      label: '下推演练计划',
+      icon: 'ri:git-branch-line',
+      disabled: row.recordStatus !== 'submitted' || !row.isValid
+    },
+    ...(row.isValid
+      ? [
+          {
+            auth: 'SmisEmergencyRescuePlan:Void',
+            key: 'void',
+            label: '置废',
+            icon: 'ri:forbid-2-line',
+            color: 'var(--el-color-warning)'
+          }
+        ]
+      : [
+          {
+            auth: 'SmisEmergencyRescuePlan:Activate',
+            key: 'activate',
+            label: '有效',
+            icon: 'ri:checkbox-circle-line',
+            color: 'var(--el-color-success)'
+          }
+        ]),
+    {
+      auth: 'SmisEmergencyRescuePlan:Delete',
+      key: 'delete',
+      label: '删除',
+      icon: 'ri:delete-bin-line',
+      color: 'var(--el-color-danger)',
+      disabled: row.recordStatus !== 'draft'
+    }
+  ]
+  const columnsFactory = (): ColumnOption<SmisEmergencyRescuePlan>[] => [
+    { type: 'selection', width: 48 },
+    { type: 'globalIndex', label: '序号', width: 68 },
+    {
+      prop: 'planName',
+      label: '应急救援预案',
+      minWidth: 250,
+      fixed: 'left',
+      formatter: (row) => (
+        <div class="emergency-plan-page__identity">
+          <span>
+            <ArtSvgIcon
+              icon={
+                row.warningStatus === 'warning' ? 'ri:alarm-warning-line' : 'ri:file-shield-2-line'
+              }
+            />
+          </span>
+          <span>
+            <strong title={row.planName}>{row.planName}</strong>
+            <small>{row.planNo}</small>
+          </span>
+        </div>
+      )
+    },
+    {
+      prop: 'planCategory',
+      label: '预案类别',
+      width: 138,
+      formatter: (row) => (
+        <ArtDictDisplay
+          dictCode="smisEmergencyPlanCategory"
+          value={row.planCategory}
+          display="tag"
+        />
+      )
+    },
+    {
+      prop: 'applicableOrganizationName',
+      label: '适用单位',
+      minWidth: 170,
+      showOverflowTooltip: true
+    },
+    {
+      prop: 'planLevel',
+      label: '预案级别',
+      width: 106,
+      formatter: (row) => (
+        <ArtDictDisplay dictCode="smisEmergencyPlanLevel" value={row.planLevel} display="tag" />
+      )
+    },
+    {
+      prop: 'applicablePositionName',
+      label: '适用岗位',
+      minWidth: 140,
+      formatter: (row) => row.applicablePositionName || '全部岗位'
+    },
+    {
+      prop: 'frequency',
+      label: '周期频次',
+      width: 114,
+      formatter: (row) => (
+        <ArtDictDisplay dictCode="smisEmergencyPlanFrequency" value={row.frequency} />
+      )
+    },
+    {
+      prop: 'isSpecialEquipmentDrill',
+      label: '特种设备演练',
+      width: 118,
+      align: 'center',
+      formatter: (row) => (
+        <ElTag type={row.isSpecialEquipmentDrill ? 'warning' : 'info'} effect="plain">
+          {row.isSpecialEquipmentDrill ? '是' : '否'}
+        </ElTag>
+      )
+    },
+    {
+      prop: 'warningStatus',
+      label: '预警状态',
+      width: 102,
+      formatter: (row) => (
+        <ArtDictDisplay
+          dictCode="smisEmergencyPlanWarningStatus"
+          value={row.warningStatus}
+          display="tag"
+        />
+      )
+    },
+    {
+      prop: 'isValid',
+      label: '是否有效',
+      width: 98,
+      align: 'center',
+      formatter: (row) => (
+        <ElTag type={row.isValid ? 'success' : 'info'} effect="light">
+          {row.isValid ? '有效' : '已置废'}
+        </ElTag>
+      )
+    },
+    {
+      prop: 'recordStatus',
+      label: '记录状态',
+      width: 98,
+      formatter: (row) => (
+        <ArtDictDisplay
+          dictCode="smisEmergencyPlanRecordStatus"
+          value={row.recordStatus}
+          display="tag"
+        />
+      )
+    },
+    {
+      prop: 'updateTime',
+      label: '更新时间',
+      width: 164,
+      formatter: (row) => (row.updateTime ? dayjs(row.updateTime).format('YYYY-MM-DD HH:mm') : '—')
+    },
+    {
+      prop: 'operation',
+      label: '操作',
+      width: 120,
+      fixed: 'right',
+      formatter: (row) => (
+        <div>
+          <ArtButtonTable
+            type="edit"
+            permission="SmisEmergencyRescuePlan:Edit"
+            onClick={() => openDialog(row)}
+          />
+          <ArtButtonMore
+            list={rowActions(row)}
+            onClick={(item: ButtonMoreItem) => handleMoreAction(item, row)}
+          />
+        </div>
+      )
+    }
+  ]
+  const headerActions = computed<ArtTableQueryHeaderAction[]>(() => [
+    {
+      permission: 'SmisEmergencyRescuePlan:Add',
+      type: 'add',
+      label: '新增应急预案',
+      onClick: () => openDialog()
+    },
+    {
+      permission: 'SmisEmergencyRescuePlan:Activate',
+      key: 'activate',
+      label: '有效',
+      icon: 'ri:checkbox-circle-line',
+      selectionRequired: true,
+      onClick: async ({ selectedRows, api }) => {
+        await setEmergencyRescuePlanValidity(
+          selectedRows.map((row) => row.id as string),
+          true
+        )
+        await api.refreshUpdate()
+      }
+    },
+    {
+      permission: 'SmisEmergencyRescuePlan:Void',
+      key: 'void',
+      label: '置废',
+      icon: 'ri:forbid-2-line',
+      selectionRequired: true,
+      onClick: async ({ selectedRows, api }) => {
+        await setEmergencyRescuePlanValidity(
+          selectedRows.map((row) => row.id as string),
+          false
+        )
+        await api.refreshUpdate()
+      }
+    },
+    {
+      permission: 'SmisEmergencyRescuePlan:Delete',
+      type: 'delete',
+      content: ({ selectedCount }: ArtTableQueryHeaderActionContext) =>
+        `确定删除选中的 ${selectedCount} 条草稿预案吗？`,
+      onClick: async ({ selectedRows, api }) => {
+        await deleteEmergencyRescuePlans(selectedRows.map((row) => row.id as string))
+        await api.refreshRemove()
+      }
+    }
+  ])
+  const fetchTableData = async (params: TableParams) => {
+    const { from, to } = pageInfoHandler({ current: params.current, size: params.size })
+    const response = await fetchEmergencyRescuePlanList({ ...params, from, to })
+    Object.assign(overview, response.overview)
+    organizations.value = response.organizations
+    positions.value = response.positions
+    return response
+  }
+  const handleValidity = async (ids: string[], isValid: boolean, name: string): Promise<void> => {
+    try {
+      await confirm(
+        isValid
+          ? `确定将预案“${name}”恢复为有效吗？`
+          : `确定置废预案“${name}”吗？置废后下游业务将无法选择。`
+      )
+      await setEmergencyRescuePlanValidity(ids, isValid)
+      await tableRef.value?.refreshUpdate()
+    } catch {
+      /* 用户取消 */
+    }
+  }
+  const handlePush = async (row: SmisEmergencyRescuePlan): Promise<void> => {
+    try {
+      await confirm(`确定将预案“${row.planName}”下推为演练计划草稿吗？`)
+      await pushEmergencyRescuePlan(row.id)
+      await tableRef.value?.refreshUpdate()
+    } catch {
+      /* 用户取消或业务校验失败 */
+    }
+  }
+  const handleDelete = async (row: SmisEmergencyRescuePlan): Promise<void> => {
+    try {
+      await confirmDelete(`确定删除草稿预案“${row.planName}”吗？`)
+      await deleteEmergencyRescuePlans([row.id])
+      await tableRef.value?.refreshRemove()
+    } catch {
+      /* 用户取消 */
+    }
+  }
+  const handleSaveSuccess = (type: 'add' | 'edit'): void => {
+    void (type === 'add' ? tableRef.value?.refreshCreate() : tableRef.value?.refreshUpdate())
+  }
+  onMounted(async () => {
+    await Promise.all(
+      [
+        'commonBoolean',
+        'smisEmergencyPlanCategory',
+        'smisEmergencyPlanFrequency',
+        'smisEmergencyPlanLevel',
+        'smisEmergencyPlanWarningStatus',
+        'smisEmergencyPlanRecordStatus'
+      ].map((code) => userStore.ensureDictLoaded(code))
+    )
+  })
 </script>
+
+<style scoped lang="scss">
+  .emergency-plan-page {
+    gap: 12px;
+    min-width: 0;
+  }
+  .emergency-plan-page__table {
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
+  }
+  :deep(.emergency-plan-page__identity) {
+    display: grid;
+    grid-template-columns: 36px minmax(0, 1fr);
+    gap: 10px;
+    align-items: center;
+    min-width: 0;
+  }
+  :deep(.emergency-plan-page__identity > span:first-child) {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    color: var(--theme-color);
+    background: color-mix(in srgb, var(--theme-color) 9%, var(--el-bg-color));
+    border-radius: var(--el-border-radius-base);
+  }
+  :deep(.emergency-plan-page__identity > span:last-child) {
+    display: grid;
+    min-width: 0;
+  }
+  :deep(.emergency-plan-page__identity strong),
+  :deep(.emergency-plan-page__identity small) {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  :deep(.emergency-plan-page__identity small) {
+    margin-top: 2px;
+    font-family: var(--art-font-family-mono, Consolas, monospace);
+    font-size: 11px;
+    color: var(--el-text-color-secondary);
+  }
+</style>

@@ -1,10 +1,12 @@
 <template>
   <div class="site-page business-workspace-page art-full-height">
     <BusinessWorkspaceHeader
+      class="site-page__overview"
       eyebrow="SITE MASTER DATA"
       title="场所维护"
       description="以树形层级维护部门场所、责任人员、现场图片与地图坐标，为安全业务提供统一位置底座。"
       icon="ri:map-pin-2-line"
+      density="compact"
       :tags="[
         { label: '树形场所层级', type: 'primary', effect: 'plain' },
         { label: '员工花名册联动', type: 'success', effect: 'light' },
@@ -17,19 +19,57 @@
       </template>
     </BusinessWorkspaceHeader>
 
-    <ArtTableQuery
-      ref="tableQueryRef"
-      v-model="searchQuery"
-      :api-params="{ current: 1, size: 1000 }"
-      :api-fn="fetchTableData"
-      :search-items="searchItems"
-      :columns-factory="columnsFactory"
-      :header-actions="headerActions"
-      header-actions-placement="workspace"
-      :search-bar-props="{ span: 8, labelWidth: 86, showExpand: false }"
-      :table-props="tableProps"
-      focusable
-    />
+    <div class="site-page__workspace">
+      <ArtWorkspaceSplitter
+        primary-size="288px"
+        primary-min="244px"
+        primary-max="380px"
+        :breakpoint="820"
+        stacked-primary-size="320px"
+      >
+        <template #primary>
+          <aside class="site-page__department-panel">
+            <DepartmentNavigator
+              :data="organizationState.tree"
+              :loading="organizationState.loading"
+              :error="organizationState.error"
+              :selected-key="organizationState.selectedKey"
+              @select="handleOrganizationSelect"
+              @refresh="handleOrganizationRefresh"
+            />
+          </aside>
+        </template>
+
+        <main class="site-page__main">
+          <div class="site-page__scope-bar">
+            <div class="site-page__scope-identity">
+              <span aria-hidden="true"><ArtSvgIcon :icon="selectedOrganizationIcon" /></span>
+              <span>
+                <small>当前部门范围</small>
+                <strong>{{ selectedOrganizationLabel }}</strong>
+              </span>
+            </div>
+            <p><ArtSvgIcon icon="ri:git-merge-line" />选择部门节点时自动包含其下级部门</p>
+          </div>
+
+          <ArtTableQuery
+            ref="tableQueryRef"
+            v-model="searchQuery"
+            class="site-page__table"
+            :api-params="{ current: 1, size: 1000 }"
+            :api-fn="fetchTableData"
+            :search-items="searchItems"
+            :columns-factory="columnsFactory"
+            :header-actions="headerActions"
+            header-actions-placement="workspace"
+            :search-bar-props="{ span: 8, labelWidth: 86, showExpand: false }"
+            :table-props="tableProps"
+            focusable
+            focus-scope-selector=".site-page__workspace"
+          />
+        </main>
+      </ArtWorkspaceSplitter>
+    </div>
 
     <SiteDialog ref="dialogRef" @success="handleSaveSuccess" />
   </div>
@@ -48,7 +88,10 @@
   import type { ColumnOption } from '@/types'
   import { useArtFeedback } from '@/hooks/core/useArtFeedback'
   import { useUserStore } from '@/store/modules/user'
+  import { useTenantScopeStore } from '@/store/modules/tenantScope'
   import { fetchGetOrganizationTree } from '@/api/system-manage'
+  import { getFriendlySupabaseErrorMessage } from '@/utils/supabase/error'
+  import TreeUtils from '@/utils/tree'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import ArtButtonMore, {
     type ButtonMoreItem
@@ -59,6 +102,7 @@
   import BusinessWorkspaceHeader, {
     type BusinessWorkspaceMetric
   } from '@/components/business/business-workspace-header/index.vue'
+  import ArtWorkspaceSplitter from '@/components/core/layouts/art-workspace-splitter/index.vue'
   import {
     deleteSites,
     fetchSiteEmployeeOptions,
@@ -67,6 +111,7 @@
     type SmisSite,
     type SmisSiteSearchParams
   } from '@smis/api'
+  import DepartmentNavigator from './modules/department-navigator.vue'
   import SiteDialog, { type SiteDialogOpenData } from './modules/site-dialog.vue'
 
   defineOptions({ name: 'SmisSite' })
@@ -88,24 +133,59 @@
     remark?: string
   }
 
+  const ALL_ORGANIZATIONS_KEY = 'all'
   const { confirmAction } = useArtFeedback()
   const userStore = useUserStore()
   const { getDictMap } = storeToRefs(userStore)
+  const { effectiveTenantId } = storeToRefs(useTenantScopeStore())
+  const organizationTreeUtils = new TreeUtils({
+    idKey: 'id',
+    parentKey: 'parentId',
+    childrenKey: 'children'
+  })
+  const siteTreeUtils = new TreeUtils({
+    idKey: 'id',
+    parentKey: 'parentId',
+    childrenKey: 'children'
+  })
   const tableQueryRef = ref<ArtTableQueryExpose>()
   const dialogRef = ref<DialogExpose>()
-  const organizationTree = shallowRef<Organization[]>([])
+  const organizationState = reactive({
+    tree: [] as Organization[],
+    loading: false,
+    error: null as string | null,
+    selectedKey: ALL_ORGANIZATIONS_KEY
+  })
   const allSites = shallowRef<SmisSite[]>([])
   const displaySites = shallowRef<SmisSite[]>([])
-  const expandRowKeys = ref<string[]>([])
   const searchQuery = ref<SmisSiteSearchParams>({
     keyword: '',
-    organizationId: undefined,
     categoryCode: undefined
   })
 
-  const flattenOrganizations = (nodes: Organization[]): Organization[] =>
-    nodes.flatMap((node) => [node, ...flattenOrganizations(node.children ?? [])])
-  const flatOrganizations = computed(() => flattenOrganizations(organizationTree.value))
+  const flatOrganizations = computed(() => organizationTreeUtils.treeToList(organizationState.tree))
+  const selectedOrganization = computed(() =>
+    organizationState.selectedKey === ALL_ORGANIZATIONS_KEY
+      ? undefined
+      : organizationTreeUtils.findNode(organizationState.tree, organizationState.selectedKey)
+  )
+  const selectedOrganizationLabel = computed(
+    () => selectedOrganization.value?.organizationName || '全部部门'
+  )
+  const selectedOrganizationIcon = computed(() =>
+    selectedOrganization.value?.organizationType === 'company'
+      ? 'ri:building-4-line'
+      : selectedOrganization.value
+        ? 'ri:team-line'
+        : 'ri:organization-chart'
+  )
+  const selectedOrganizationIds = computed(() => {
+    if (!selectedOrganization.value?.id) return []
+    return organizationTreeUtils
+      .getDescendants(organizationState.tree, selectedOrganization.value.id, true)
+      .map((organization) => organization.id)
+      .filter((id): id is string => Boolean(id))
+  })
   const categoryOptions = computed(() =>
     (getDictMap.value.smisSiteCategory ?? []).map((item) => ({
       label: item.label || item.name,
@@ -147,23 +227,7 @@
       label: '关键字',
       key: 'keyword',
       type: 'input',
-      props: { clearable: true, placeholder: '场所名称、部门、责任人或手机号' }
-    },
-    {
-      label: '所属部门',
-      key: 'organizationId',
-      type: 'treeSelect',
-      props: {
-        data: organizationTree.value,
-        props: { children: 'children', label: 'organizationName', value: 'id' },
-        nodeKey: 'id',
-        valueKey: 'id',
-        checkStrictly: true,
-        filterable: true,
-        clearable: true,
-        defaultExpandAll: true,
-        placeholder: '全部部门'
-      }
+      props: { clearable: true, placeholder: '场所名称、责任人、手机号或地址' }
     },
     {
       label: '属性类别',
@@ -187,24 +251,18 @@
   ]
 
   const buildTree = (rows: SmisSite[]): SmisSite[] => {
-    const map = new Map(rows.map((row) => [row.id, { ...row, children: [] as SmisSite[] }]))
-    const roots: SmisSite[] = []
-    map.forEach((row) => {
-      const parent = row.parentId ? map.get(row.parentId) : undefined
-      if (parent) parent.children?.push(row)
-      else roots.push(row)
+    const validRows = rows.filter(
+      (row): row is SmisSite & { id: string } => typeof row.id === 'string'
+    )
+    return siteTreeUtils.listToTree(validRows, (left, right) => {
+      return left.sort - right.sort || left.siteName.localeCompare(right.siteName, 'zh-CN')
     })
-    const sortTree = (nodes: SmisSite[]): void => {
-      nodes.sort((a, b) => a.sort - b.sort || a.siteName.localeCompare(b.siteName, 'zh-CN'))
-      nodes.forEach((node) => sortTree(node.children ?? []))
-    }
-    sortTree(roots)
-    return roots
   }
   const filterRows = (rows: SmisSite[], params: SmisSiteSearchParams): SmisSite[] => {
     const keyword = params.keyword?.trim().toLocaleLowerCase('zh-CN')
     const map = new Map(rows.map((row) => [row.id, row]))
     const included = new Set<string>()
+    const organizationIds = new Set(selectedOrganizationIds.value)
     rows.forEach((row) => {
       const matchesKeyword =
         !keyword ||
@@ -221,7 +279,7 @@
         )
       if (
         matchesKeyword &&
-        (!params.organizationId || row.organizationId === params.organizationId) &&
+        (!organizationIds.size || organizationIds.has(row.organizationId)) &&
         (!params.categoryCode || row.categoryCode === params.categoryCode)
       ) {
         let current: SmisSite | undefined = row
@@ -238,18 +296,17 @@
     allSites.value = response.data ?? []
     const filtered = filterRows(allSites.value, params)
     displaySites.value = buildTree(filtered)
-    if (!expandRowKeys.value.length)
-      expandRowKeys.value = filtered.map((row) => row.id).filter((id): id is string => Boolean(id))
     return { data: displaySites.value, total: filtered.length, error: response.error }
   }
   const tableProps = computed<ArtTableQueryTableProps>(() => ({
     rowKey: 'id',
     treeProps: { children: 'children' },
-    expandRowKeys: expandRowKeys.value,
     indent: 20,
     tableLayout: 'fixed',
-    emptyText: '暂无场所数据',
-    emptyDescription: '可新增一级场所，再逐级维护下级区域与位置。',
+    emptyText: selectedOrganization.value ? '当前部门暂无场所' : '暂无场所数据',
+    emptyDescription: selectedOrganization.value
+      ? '可新增当前部门的一级场所，再逐级维护下级区域与位置。'
+      : '可新增一级场所，再逐级维护下级区域与位置。',
     paginationOptions: { hideOnSinglePage: true },
     rowClassName: ({ row }) => (row.parentId ? 'site-tree-row is-child' : 'site-tree-row is-root')
   }))
@@ -258,24 +315,18 @@
     const excluded = row?.id ? new Set(collectDescendantIds(row.id)) : new Set<string>()
     if (row?.id) excluded.add(row.id)
     void dialogRef.value?.handleOpen({
-      organizations: organizationTree.value,
+      organizations: organizationState.tree,
       sites: buildTree(allSites.value.filter((item) => !item.id || !excluded.has(item.id))),
       row,
-      parent
+      parent,
+      initialOrganizationId: selectedOrganization.value?.id
     })
   }
   const collectDescendantIds = (id: string): string[] => {
-    const result: string[] = []
-    const visit = (parentId: string): void => {
-      allSites.value
-        .filter((row) => row.parentId === parentId && row.id)
-        .forEach((row) => {
-          result.push(row.id!)
-          visit(row.id!)
-        })
-    }
-    visit(id)
-    return result
+    return siteTreeUtils
+      .getDescendants(buildTree(allSites.value), id)
+      .map((site) => site.id)
+      .filter((siteId): siteId is string => Boolean(siteId))
   }
   const handleMoreAction = (item: ButtonMoreItem, row: SmisSite): void => {
     if (item.key === 'addChild') openDialog(undefined, row)
@@ -452,26 +503,6 @@
     }
   }
   const headerActions = computed<ArtTableQueryHeaderAction[]>(() => [
-    {
-      key: 'expand',
-      label: '全部展开',
-      icon: 'ri:folder-open-line',
-      selectionRequired: false,
-      onClick: () => {
-        expandRowKeys.value = allSites.value
-          .map((row) => row.id)
-          .filter((id): id is string => Boolean(id))
-      }
-    },
-    {
-      key: 'collapse',
-      label: '全部折叠',
-      icon: 'ri:folder-reduce-line',
-      selectionRequired: false,
-      onClick: () => {
-        expandRowKeys.value = []
-      }
-    },
     { permission: 'SmisSite:Add', type: 'add', label: '新增场所', onClick: () => openDialog() },
     {
       permission: 'SmisSite:Import',
@@ -519,7 +550,39 @@
     }
   ])
   const loadOrganizations = async (): Promise<void> => {
-    organizationTree.value = (await fetchGetOrganizationTree({ status: '1' })).data ?? []
+    organizationState.loading = true
+    organizationState.error = null
+    try {
+      organizationState.tree =
+        (
+          await fetchGetOrganizationTree({
+            status: '1',
+            tenantId: effectiveTenantId.value ?? undefined
+          })
+        ).data ?? []
+      if (
+        organizationState.selectedKey !== ALL_ORGANIZATIONS_KEY &&
+        !organizationTreeUtils.findNode(organizationState.tree, organizationState.selectedKey)
+      ) {
+        organizationState.selectedKey = ALL_ORGANIZATIONS_KEY
+      }
+    } catch (error) {
+      organizationState.error = getFriendlySupabaseErrorMessage(
+        error,
+        '部门结构加载失败，请稍后重试'
+      )
+    } finally {
+      organizationState.loading = false
+    }
+  }
+  const handleOrganizationSelect = async (key: string): Promise<void> => {
+    if (organizationState.selectedKey === key) return
+    organizationState.selectedKey = key
+    await tableQueryRef.value?.getData()
+  }
+  const handleOrganizationRefresh = async (): Promise<void> => {
+    await loadOrganizations()
+    await tableQueryRef.value?.getData()
   }
   const handleSaveSuccess = (type: 'add' | 'edit'): void => {
     void (type === 'add'
@@ -555,6 +618,103 @@
     gap: 12px;
     min-width: 0;
 
+    &__overview {
+      flex: 0 0 auto;
+      min-width: 0;
+      overflow: hidden;
+    }
+
+    &__workspace {
+      flex: 1 1 auto;
+      width: 100%;
+      min-width: 0;
+      min-height: 0;
+    }
+
+    &__department-panel,
+    &__main,
+    &__table {
+      min-width: 0;
+      min-height: 0;
+    }
+
+    &__department-panel {
+      overflow: hidden;
+    }
+
+    &__main {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    &__table {
+      flex: 1 1 auto;
+    }
+
+    &__scope-bar {
+      display: flex;
+      flex: 0 0 auto;
+      gap: 16px;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 56px;
+      padding: 8px 14px 8px 12px;
+      background: var(--art-gray-100);
+      border-left: 3px solid var(--theme-color);
+      border-radius: var(--el-border-radius-base);
+
+      > p {
+        display: inline-flex;
+        gap: 6px;
+        align-items: center;
+        margin: 0;
+        font-size: 12px;
+        color: var(--el-text-color-secondary);
+
+        :deep(svg) {
+          color: var(--theme-color);
+        }
+      }
+    }
+
+    &__scope-identity {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      min-width: 0;
+
+      > span:first-child {
+        display: inline-flex;
+        flex: 0 0 32px;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        color: var(--theme-color);
+        background: color-mix(in srgb, var(--theme-color) 10%, var(--default-box-color));
+        border-radius: var(--el-border-radius-base);
+      }
+
+      > span:last-child {
+        display: grid;
+        min-width: 0;
+      }
+
+      small {
+        font-size: 11px;
+        color: var(--el-text-color-secondary);
+      }
+
+      strong {
+        margin-top: 2px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        color: var(--el-text-color-primary);
+        white-space: nowrap;
+      }
+    }
+
     :deep(.site-tree-row.is-root > td) {
       background: color-mix(in srgb, var(--theme-color) 3%, var(--el-bg-color));
     }
@@ -575,7 +735,7 @@
       border-radius: var(--el-border-radius-small);
     }
 
-    &__identity {
+    :deep(.site-page__identity) {
       display: grid;
       grid-template-columns: 34px minmax(0, 1fr);
       gap: 10px;
@@ -583,7 +743,7 @@
       min-width: 0;
     }
 
-    &__identity > span:first-child {
+    :deep(.site-page__identity > span:first-child) {
       display: grid;
       place-items: center;
       width: 34px;
@@ -593,42 +753,70 @@
       border-radius: var(--el-border-radius-base);
     }
 
-    &__identity > span:last-child,
-    &__stack {
+    :deep(.site-page__identity > span:last-child),
+    :deep(.site-page__stack) {
       display: grid;
+      align-content: center;
       min-width: 0;
     }
 
-    &__identity strong,
-    &__identity small,
-    &__stack strong,
-    &__stack small {
+    :deep(.site-page__identity strong),
+    :deep(.site-page__identity small),
+    :deep(.site-page__stack strong),
+    :deep(.site-page__stack small) {
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
 
-    &__identity small,
-    &__stack small {
+    :deep(.site-page__identity strong),
+    :deep(.site-page__stack strong) {
+      line-height: 20px;
+    }
+
+    :deep(.site-page__identity small),
+    :deep(.site-page__stack small) {
       margin-top: 2px;
       font-size: 11px;
+      line-height: 16px;
       color: var(--el-text-color-secondary);
     }
 
-    &__muted {
+    :deep(.site-page__muted) {
       font-size: 12px;
       color: var(--el-text-color-placeholder);
     }
 
-    &__thumb {
+    :deep(.site-page__thumb) {
       width: 52px;
       height: 38px;
       border-radius: var(--el-border-radius-small);
     }
 
-    &__actions {
+    :deep(.site-page__actions) {
       display: flex;
+      gap: 4px;
       align-items: center;
+      justify-content: center;
+      min-width: 0;
+      white-space: nowrap;
+    }
+
+    :deep(.site-page__actions .art-button-table) {
+      flex: 0 0 32px;
+      margin-right: 0;
+    }
+
+    @media (width <= 1080px) {
+      &__scope-bar > p {
+        display: none;
+      }
+    }
+
+    @media (width <= 820px) {
+      &__main {
+        flex: 0 0 760px;
+      }
     }
   }
 </style>

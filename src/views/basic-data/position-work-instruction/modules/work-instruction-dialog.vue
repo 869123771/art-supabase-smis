@@ -254,7 +254,7 @@
     const suffix = resource.suffix?.trim().replace(/^\./, '')
     if (suffix) return suffix.toLocaleLowerCase('en-US')
     const fileName = resource.originName?.trim() || resource.url?.trim() || ''
-    const extension = fileName.split(/[?#]/, 1)[0]?.match(/\.([^.\/\\]+)$/)?.[1]
+    const extension = fileName.split(/[?#]/, 1)[0]?.match(/\.([^./\\]+)$/)?.[1]
     return extension?.toLocaleLowerCase('en-US') || ''
   }
   const buildPayload = (): PositionWorkInstructionSavePayload => ({
@@ -308,7 +308,7 @@
     await dialogRef.value?.handleOpen(data, {
       title: data.row ? '编辑岗位作业指导书' : '新增岗位作业指导书',
       subtitle: '维护指导书文件信息，并选择一个或多个适用组织岗位',
-      confirmText: data.row ? '保存更改' : '新增指导书',
+      confirmText: '保存',
       contentMaxHeight: 'calc(100vh - 176px)',
       onOpen: async (_data, api) => {
         if (getDictMap.value.FILE_EXTENSION_LABEL_MAP?.length) return

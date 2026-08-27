@@ -17,53 +17,63 @@
     </BusinessWorkspaceHeader>
 
     <div class="work-instruction-page__workspace">
-      <aside class="work-instruction-page__tree-panel">
-        <PositionTreeNavigator
-          :data="treeState.nodes"
-          :loading="treeState.loading"
-          :error="treeState.error"
-          :selected-key="treeState.selectedKey"
-          @select="handleTreeSelect"
-          @refresh="loadPositionTree"
-        />
-      </aside>
+      <ArtWorkspaceSplitter
+        primary-size="296px"
+        primary-min="252px"
+        primary-max="400px"
+        :breakpoint="820"
+        stacked-primary-size="320px"
+      >
+        <template #primary>
+          <aside class="work-instruction-page__tree-panel">
+            <PositionTreeNavigator
+              :data="treeState.nodes"
+              :loading="treeState.loading"
+              :error="treeState.error"
+              :selected-key="treeState.selectedKey"
+              @select="handleTreeSelect"
+              @refresh="loadPositionTree"
+            />
+          </aside>
+        </template>
 
-      <main class="work-instruction-page__main">
-        <div class="work-instruction-page__scope-bar">
-          <div class="work-instruction-page__scope-identity">
-            <span aria-hidden="true"><ArtSvgIcon :icon="selectedScopeIcon" /></span>
-            <span
-              ><small>当前查看范围</small><strong>{{ selectedScopeLabel }}</strong></span
-            >
+        <main class="work-instruction-page__main">
+          <div class="work-instruction-page__scope-bar">
+            <div class="work-instruction-page__scope-identity">
+              <span aria-hidden="true"><ArtSvgIcon :icon="selectedScopeIcon" /></span>
+              <span
+                ><small>当前查看范围</small><strong>{{ selectedScopeLabel }}</strong></span
+              >
+            </div>
+            <div class="work-instruction-page__scope-hint">
+              <ArtSvgIcon icon="ri:git-merge-line" />
+              组织节点查看本部门全部指导书，岗位节点查看精准适用文件
+            </div>
           </div>
-          <div class="work-instruction-page__scope-hint">
-            <ArtSvgIcon icon="ri:git-merge-line" />
-            组织节点查看本部门全部指导书，岗位节点查看精准适用文件
-          </div>
-        </div>
 
-        <ArtTableQuery
-          ref="tableQueryRef"
-          v-model="tableState.searchQuery"
-          class="work-instruction-page__table"
-          :search-items="searchItems"
-          :api-fn="fetchTableData"
-          :columns-factory="columnsFactory"
-          :header-actions="headerActions"
-          header-actions-placement="workspace"
-          :search-bar-props="{ span: 8, labelWidth: 76, showExpand: false }"
-          :table-props="{
-            rowKey: 'id',
-            tableLayout: 'fixed',
-            emptyText: '暂无岗位作业指导书',
-            emptyDescription: '可新增指导书并关联一个或多个组织岗位。',
-            showOverflowTooltip: true
-          }"
-          :on-success="handleTableSuccess"
-          focusable
-          focus-scope-selector=".work-instruction-page__main"
-        />
-      </main>
+          <ArtTableQuery
+            ref="tableQueryRef"
+            v-model="tableState.searchQuery"
+            class="work-instruction-page__table"
+            :search-items="searchItems"
+            :api-fn="fetchTableData"
+            :columns-factory="columnsFactory"
+            :header-actions="headerActions"
+            header-actions-placement="workspace"
+            :search-bar-props="{ span: 8, labelWidth: 76, showExpand: false }"
+            :table-props="{
+              rowKey: 'id',
+              tableLayout: 'fixed',
+              emptyText: '暂无岗位作业指导书',
+              emptyDescription: '可新增指导书并关联一个或多个组织岗位。',
+              showOverflowTooltip: true
+            }"
+            :on-success="handleTableSuccess"
+            focusable
+            focus-scope-selector=".work-instruction-page__workspace"
+          />
+        </main>
+      </ArtWorkspaceSplitter>
     </div>
 
     <WorkInstructionDialog ref="dialogRef" @success="handleSaveSuccess" />
@@ -83,6 +93,7 @@
     type BusinessWorkspaceMetric,
     type BusinessWorkspaceTag
   } from '@/components/business/business-workspace-header/index.vue'
+  import ArtWorkspaceSplitter from '@/components/core/layouts/art-workspace-splitter/index.vue'
   import type { SearchFormItem } from '@/components/core/forms/art-search-bar/index.vue'
   import type {
     ArtTableQueryExpose,
@@ -440,10 +451,8 @@
     }
 
     &__workspace {
-      display: grid;
       flex: 1 1 auto;
-      grid-template-columns: 296px minmax(0, 1fr);
-      gap: 10px;
+      width: 100%;
       min-width: 0;
       min-height: 0;
     }
@@ -532,44 +541,50 @@
       color: var(--theme-color);
     }
 
-    &__document {
-      display: flex;
-      gap: 8px;
+    :deep(.work-instruction-page__document) {
+      display: grid;
+      grid-template-columns: 34px minmax(0, 1fr);
+      gap: 10px;
       align-items: center;
       min-width: 0;
     }
 
-    &__document > span:first-child {
+    :deep(.work-instruction-page__document > span:first-child) {
       display: inline-flex;
-      flex: 0 0 30px;
       align-items: center;
       justify-content: center;
-      width: 30px;
-      height: 30px;
+      width: 34px;
+      height: 34px;
       color: var(--theme-color);
       background: color-mix(in srgb, var(--theme-color) 8%, var(--default-box-color));
       border-radius: var(--el-border-radius-base);
     }
 
-    &__document > span:last-child {
+    :deep(.work-instruction-page__document > span:last-child) {
       display: grid;
+      align-content: center;
       min-width: 0;
     }
 
-    &__document strong,
-    &__document small {
+    :deep(.work-instruction-page__document strong),
+    :deep(.work-instruction-page__document small) {
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
 
-    &__document small {
+    :deep(.work-instruction-page__document strong) {
+      line-height: 20px;
+    }
+
+    :deep(.work-instruction-page__document small) {
       margin-top: 2px;
       font-size: 11px;
+      line-height: 16px;
       color: var(--el-text-color-secondary);
     }
 
-    &__scopes {
+    :deep(.work-instruction-page__scopes) {
       display: flex;
       gap: 6px;
       align-items: center;
@@ -577,45 +592,41 @@
       overflow: hidden;
     }
 
-    &__scopes :deep(.el-tag) {
+    :deep(.work-instruction-page__scopes .el-tag) {
       max-width: 180px;
     }
 
-    &__scopes :deep(.el-tag__content) {
+    :deep(.work-instruction-page__scopes .el-tag__content) {
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
 
-    &__muted {
+    :deep(.work-instruction-page__muted) {
       color: var(--el-text-color-secondary);
     }
 
-    &__row-actions {
+    :deep(.work-instruction-page__row-actions) {
       display: flex;
+      gap: 6px;
       align-items: center;
+      justify-content: center;
+      min-width: 0;
+      white-space: nowrap;
+    }
+
+    :deep(.work-instruction-page__row-actions .art-button-table) {
+      flex: 0 0 32px;
+      margin-right: 0;
     }
 
     @media (width <= 1080px) {
-      &__workspace {
-        grid-template-columns: 252px minmax(0, 1fr);
-      }
-
       &__scope-hint {
         display: none;
       }
     }
 
     @media (width <= 820px) {
-      &__workspace {
-        display: flex;
-        flex-direction: column;
-      }
-
-      &__tree-panel {
-        flex: 0 0 320px;
-      }
-
       &__main {
         flex: 0 0 720px;
       }
