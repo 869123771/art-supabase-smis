@@ -24,7 +24,7 @@
           <ArtEmployeeSelect
             v-model="form.model.responsibleEmployeeId"
             v-model:selected-data="responsibleSelection"
-            :tenant-id="getUserInfo.tenantId"
+            :tenant-id="targetTenantId"
             title="选择位置负责人"
             subtitle="数据来自当前租户员工花名册，可按姓名、工号、组织或岗位检索"
             placeholder="点击从员工花名册选择"
@@ -47,6 +47,7 @@
   } from '@/components/core/forms/art-form/index.vue'
   import ArtEmployeeSelect from '@/components/business/art-employee-select/index.vue'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
+  import { useTenantScopeFormPolicy } from '@/hooks/core/useTenantScopeFormPolicy'
   import { useUserStore } from '@/store/modules/user'
   import TreeUtils from '@/utils/tree'
   import {
@@ -64,6 +65,8 @@
 
   export interface StorageLocationDialogOpenData {
     row?: SmisStorageLocation
+    tenantId: string
+    allTenants: boolean
     tree: SmisStorageLocation[]
     presetParentId?: string
   }
@@ -90,8 +93,10 @@
   const emit = defineEmits<{ success: [type: 'add' | 'edit'] }>()
   const userStore = useUserStore()
   const { getDictMap, getUserInfo } = storeToRefs(userStore)
+  const { effectiveTenantId } = useTenantScopeFormPolicy()
   const dialogRef = ref<ArtDialogExpose<StorageLocationDialogOpenData>>()
   const formRef = ref<FormExpose>()
+  const targetTenantId = ref(getUserInfo.value.tenantId || '')
   const responsibleSelection = shallowRef<EmployeeIntegrationItem[]>([])
   const treeUtils = new TreeUtils({ idKey: 'id', parentKey: 'parentId', childrenKey: 'children' })
   const source = reactive<{ tree: SmisStorageLocation[] }>({ tree: [] })
@@ -164,16 +169,20 @@
         label: '上级位置',
         key: 'parentId',
         type: 'treeSelect',
-        options: parentOptions.value,
-        labelField: 'locationLabel',
-        valueField: 'id',
-        childrenField: 'children',
         props: {
+          data: parentOptions.value,
           clearable: true,
           checkStrictly: true,
           defaultExpandAll: true,
           renderAfterExpand: false,
-          placeholder: '不选择表示一级位置'
+          nodeKey: 'id',
+          placeholder: '不选择表示一级位置',
+          props: {
+            label: 'locationLabel',
+            value: 'id',
+            children: 'children',
+            disabled: 'disabled'
+          }
         }
       },
       {
@@ -182,7 +191,7 @@
         type: 'treeSelect',
         api: fetchGetEnableOrganizationTree,
         immediate: false,
-        beforeFetch: () => ({ tenantId: getUserInfo.value.tenantId }),
+        beforeFetch: () => ({ tenantId: targetTenantId.value }),
         resultField: 'data',
         labelField: 'organizationName',
         valueField: 'id',
@@ -258,7 +267,7 @@
     return [
       {
         id: row.responsible.id,
-        tenantId: getUserInfo.value.tenantId || '',
+        tenantId: targetTenantId.value,
         organizationId: row.responsible.organizationId,
         employeeNo: row.responsible.employeeNo,
         employeeName: row.responsible.employeeName,
@@ -278,6 +287,7 @@
 
   const resetForm = async (): Promise<void> => {
     Object.assign(form.model, initialForm())
+    targetTenantId.value = effectiveTenantId.value || getUserInfo.value.tenantId || ''
     source.tree = []
     responsibleSelection.value = []
     await nextTick()
@@ -310,7 +320,15 @@
 
   const handleOpen = async (data: StorageLocationDialogOpenData): Promise<void> => {
     await resetForm()
-    source.tree = data.tree
+    targetTenantId.value =
+      data.row?.tenantId ||
+      data.tenantId ||
+      effectiveTenantId.value ||
+      getUserInfo.value.tenantId ||
+      ''
+    source.tree = data.allTenants
+      ? data.tree.filter((location) => location.tenantId === targetTenantId.value)
+      : data.tree
     if (data.row) {
       Object.assign(form.model, {
         id: data.row.id,

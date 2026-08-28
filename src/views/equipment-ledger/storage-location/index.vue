@@ -31,6 +31,7 @@
             :loading="tree.loading"
             :error="tree.error"
             :selected-key="tree.selectedKey"
+            :global-scope="isAllTenants"
             @select="handleTreeSelect"
             @refresh="handleTreeRefresh"
           />
@@ -77,6 +78,7 @@
   import { pageInfoHandler } from '@/utils/table/tableUtils'
   import { useArtFeedback } from '@/hooks/core/useArtFeedback'
   import { useUserStore } from '@/store/modules/user'
+  import { useTenantScopeStore } from '@/store/modules/tenantScope'
   import TreeUtils from '@/utils/tree'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import ArtDictDisplay from '@/components/core/base/art-dict-display/index.vue'
@@ -123,7 +125,8 @@
 
   const { confirmDelete } = useArtFeedback()
   const userStore = useUserStore()
-  const { getDictMap } = storeToRefs(userStore)
+  const { getDictMap, getUserInfo } = storeToRefs(userStore)
+  const { effectiveTenantId, isAllTenants, scopeLabel } = storeToRefs(useTenantScopeStore())
   const treeUtils = new TreeUtils({ idKey: 'id', parentKey: 'parentId', childrenKey: 'children' })
   const tableQueryRef = ref<ArtTableQueryExpose>()
   const dialogRef = ref<DialogExpose>()
@@ -155,7 +158,7 @@
     {
       label: '位置总数',
       value: overview.total,
-      description: '当前租户位置节点',
+      description: `${scopeLabel.value}位置节点`,
       icon: 'ri:map-pin-range-line'
     },
     {
@@ -181,10 +184,16 @@
   ])
 
   const openDialog = (row?: SmisStorageLocation): void => {
+    const selected = selectedLocation.value
+    const targetTenantId =
+      row?.tenantId || effectiveTenantId.value || getUserInfo.value.tenantId || ''
+    const presetParentId = !row && selected?.tenantId === targetTenantId ? selected?.id : undefined
     void dialogRef.value?.handleOpen({
       row,
+      tenantId: targetTenantId,
+      allTenants: isAllTenants.value,
       tree: tree.data,
-      presetParentId: row ? undefined : selectedLocation.value?.id
+      presetParentId
     })
   }
 
@@ -233,6 +242,17 @@
   const columnsFactory = (): ColumnOption<SmisStorageLocation>[] => [
     { type: 'selection', width: 48 },
     { type: 'globalIndex', label: '序号', width: 72 },
+    ...(isAllTenants.value
+      ? [
+          {
+            prop: 'tenant.tenantName',
+            label: '所属租户',
+            minWidth: 170,
+            showOverflowTooltip: true,
+            formatter: (row: SmisStorageLocation) => row.tenant?.tenantName || '—'
+          } as ColumnOption<SmisStorageLocation>
+        ]
+      : []),
     {
       prop: 'locationName',
       label: '存放位置',

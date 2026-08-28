@@ -1,5 +1,5 @@
 <template>
-  <ArtDialog ref="dialogRef" size="xl" :show-footer="false">
+  <ArtDialog ref="dialogRef" size="xl">
     <div class="plan-dialog">
       <div class="plan-dialog__context">
         <span><ArtSvgIcon icon="ri:file-shield-2-line" /></span>
@@ -68,8 +68,11 @@
           </div>
         </template>
       </ArtForm>
+    </div>
+
+    <template #footer="{ api }">
       <div class="plan-dialog__footer">
-        <ElButton @click="dialogRef?.handleClose()">关闭</ElButton>
+        <ElButton @click="api.handleClose()">关闭</ElButton>
         <ElButton :loading="submitting" @click="handleSave(false)">保存</ElButton>
         <ElButton
           v-auth="'SmisEmergencyRescuePlan:Submit'"
@@ -79,7 +82,7 @@
           >保存并提交</ElButton
         >
       </div>
-    </div>
+    </template>
   </ArtDialog>
 </template>
 
@@ -329,52 +332,56 @@
 </script>
 
 <style scoped lang="scss">
-  .plan-dialog__context {
-    display: grid;
-    grid-template-columns: 44px minmax(0, 1fr);
-    gap: 12px;
-    align-items: center;
-    padding: 14px 16px;
-    margin-bottom: 18px;
-    background: color-mix(in srgb, var(--theme-color) 7%, var(--default-box-color));
-    border-left: 3px solid var(--theme-color);
-    border-radius: var(--el-border-radius-base);
-  }
-  .plan-dialog__context > span {
-    display: grid;
-    place-items: center;
-    width: 44px;
-    height: 44px;
-    color: var(--theme-color);
-    background: var(--default-box-color);
-    border-radius: var(--el-border-radius-base);
-  }
-  .plan-dialog__context p {
-    margin: 3px 0 0;
-    font-size: 12px;
-    color: var(--el-text-color-secondary);
-  }
-  .plan-dialog__control {
-    width: 100%;
-  }
-  .plan-dialog__derived {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    min-height: 32px;
-  }
-  .plan-dialog__derived small {
-    color: var(--el-text-color-secondary);
-  }
-  .plan-dialog__footer {
-    position: sticky;
-    bottom: 0;
-    display: flex;
-    gap: 10px;
-    justify-content: flex-end;
-    padding: 16px 0 2px;
-    margin-top: 16px;
-    background: var(--default-box-color);
-    border-top: 1px solid var(--el-border-color-lighter);
+  .plan-dialog {
+    &__context {
+      display: grid;
+      grid-template-columns: 44px minmax(0, 1fr);
+      gap: 12px;
+      align-items: center;
+      padding: 14px 16px;
+      margin-bottom: 18px;
+      background: color-mix(in srgb, var(--theme-color) 7%, var(--default-box-color));
+      border-left: 3px solid var(--theme-color);
+      border-radius: var(--el-border-radius-base);
+
+      > span {
+        display: grid;
+        place-items: center;
+        width: 44px;
+        height: 44px;
+        color: var(--theme-color);
+        background: var(--default-box-color);
+        border-radius: var(--el-border-radius-base);
+      }
+
+      p {
+        margin: 3px 0 0;
+        font-size: 12px;
+        color: var(--el-text-color-secondary);
+      }
+    }
+
+    &__control {
+      width: 100%;
+    }
+
+    &__derived {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      min-height: 32px;
+
+      small {
+        color: var(--el-text-color-secondary);
+      }
+    }
+
+    &__footer {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      justify-content: flex-end;
+      width: 100%;
+    }
   }
 </style>

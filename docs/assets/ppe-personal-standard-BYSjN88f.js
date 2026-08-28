@@ -1,0 +1,1 @@
+import{$n as e,mn as t,rn as n}from"./style-C1L0GNpN.js";import{t as r}from"./smis-page-placeholder-CU6ksoZa.js";var i=t({name:`SmisPpePersonalStandard`,__name:`index`,setup(t){return(t,i)=>(e(),n(r,{section:`安全生产 / 防护用品管理`,title:`防护用品个人标准`}))}});export{i as default};

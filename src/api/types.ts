@@ -1,6 +1,6 @@
 export interface SmisPositionOption {
   id: string
-  tenantId: string
+  tenantId?: string
   positionCode: string
   positionName: string
   positionKind: 'standard' | 'driver'
@@ -380,6 +380,7 @@ export type SmisEquipmentCategoryStatus = 'enabled' | 'disabled'
 
 export interface SmisEquipmentInspectionCategory {
   id: string
+  tenantId?: string
   categoryCode: string
   categoryName: string
   status: SmisInspectionCategoryStatus
@@ -387,6 +388,7 @@ export interface SmisEquipmentInspectionCategory {
 
 export interface SmisEquipmentCategory {
   id?: string
+  tenantId?: string
   parentId?: string | null
   parentCategoryName?: string | null
   categoryCode: string
@@ -394,6 +396,7 @@ export interface SmisEquipmentCategory {
   categoryShortName?: string | null
   remark?: string | null
   status: SmisEquipmentCategoryStatus
+  sort: number
   childCount: number
   inspectionCategories: SmisEquipmentInspectionCategory[]
   children?: SmisEquipmentCategory[]
@@ -427,6 +430,7 @@ export interface SmisEquipmentCategorySavePayload {
   inspectionCategoryIds: string[]
   remark?: string
   status: SmisEquipmentCategoryStatus
+  sort: number
 }
 
 export type SmisStorageLocationStatus = 'enabled' | 'disabled'
@@ -444,6 +448,11 @@ export interface SmisStorageLocationResponsible {
 
 export interface SmisStorageLocation {
   id?: string
+  tenantId: string
+  tenant?: {
+    id: string
+    tenantName: string
+  }
   parentId?: string | null
   organizationId: string
   responsibleEmployeeId?: string | null
@@ -1051,4 +1060,237 @@ export interface SmisEmergencyRescuePlanSavePayload {
   isSpecialEquipmentDrill: boolean
   warningStatus: SmisEmergencyPlanWarningStatus
   description?: string
+}
+
+export type SmisEmergencyDrillForm = 'onsite' | 'desktop'
+export type SmisEmergencyDrillPlanStatus = 'draft' | 'planned' | 'completed' | 'cancelled'
+export type SmisEmergencyDrillRecordStatus = 'draft' | 'submitted'
+
+export interface SmisEmergencyEmployeeSnapshot {
+  id: string
+  tenantId: string
+  organizationId?: string | null
+  employeeNo: string
+  employeeName: string
+  jobTitle?: string | null
+  phone?: string | null
+  employmentStatus: string
+  organization?: { id?: string; organizationCode?: string; organizationName?: string } | null
+}
+
+export interface SmisEmergencyDrillPlan {
+  id: string
+  planNo: string
+  drillName: string
+  sourcePlanId: string
+  sourcePlanNo: string
+  sourcePlanName: string
+  compilationOrganizationId: string
+  compilationOrganizationName: string
+  applicableOrganizationId: string
+  applicableOrganizationName: string
+  drillForm: SmisEmergencyDrillForm
+  planCategory: SmisEmergencyPlanCategory
+  responsibleEmployeeId?: string | null
+  responsibleEmployeeNo?: string | null
+  responsibleEmployeeName?: string | null
+  planStartDate?: string | null
+  planEndDate?: string | null
+  drillLocation?: string | null
+  drillSubject?: string | null
+  drillPurpose?: string | null
+  planLevel: SmisEmergencyPlanLevel
+  isSpecialEquipmentDrill: boolean
+  attachmentUrls: string[]
+  remark?: string | null
+  status: SmisEmergencyDrillPlanStatus
+  warningStatus: SmisEmergencyPlanWarningStatus
+  recordId?: string | null
+  recordStatus?: SmisEmergencyDrillRecordStatus | null
+  actualStartDate?: string | null
+  trainees: SmisEmergencyEmployeeSnapshot[]
+  createTime?: string
+  updateTime?: string
+}
+
+export interface SmisEmergencyDrillPlanSearchParams {
+  keyword?: string
+  status?: SmisEmergencyDrillPlanStatus
+  drillForm?: SmisEmergencyDrillForm
+  planCategory?: SmisEmergencyPlanCategory
+  organizationId?: string
+  warningStatus?: SmisEmergencyPlanWarningStatus
+  from?: number
+  to?: number
+}
+
+export interface SmisEmergencyDrillPlanOverview {
+  total: number
+  planned: number
+  completed: number
+  warning: number
+}
+
+export interface SmisEmergencyDrillPlanListResult {
+  records: SmisEmergencyDrillPlan[]
+  total: number
+  overview: SmisEmergencyDrillPlanOverview
+  organizations: SmisTreeOrganization[]
+}
+
+export interface SmisEmergencyDrillPlanSavePayload {
+  id?: string
+  planNo?: string
+  drillName: string
+  sourcePlanId: string
+  compilationOrganizationId: string
+  applicableOrganizationId: string
+  drillForm: SmisEmergencyDrillForm
+  planCategory: SmisEmergencyPlanCategory
+  responsibleEmployeeId?: string | null
+  planStartDate?: string
+  planEndDate?: string
+  drillLocation?: string
+  drillSubject?: string
+  drillPurpose?: string
+  isSpecialEquipmentDrill: boolean
+  attachmentUrls: string[]
+  traineeIds: string[]
+  remark?: string
+}
+
+export interface SmisEmergencyDrillPlanOption {
+  id: string
+  planNo: string
+  drillName: string
+  sourcePlanName: string
+  drillForm: SmisEmergencyDrillForm
+  planCategory: SmisEmergencyPlanCategory
+  planLevel: SmisEmergencyPlanLevel
+  applicableOrganizationId: string
+  applicableOrganizationName: string
+  responsibleEmployeeName?: string | null
+  planStartDate?: string | null
+  planEndDate?: string | null
+  drillLocation?: string | null
+  drillSubject?: string | null
+  drillPurpose?: string | null
+}
+
+export interface SmisEmergencyDrillRecord {
+  id: string
+  drillPlanId: string
+  planNo: string
+  drillName: string
+  sourcePlanName: string
+  drillForm: SmisEmergencyDrillForm
+  planCategory: SmisEmergencyPlanCategory
+  planLevel: SmisEmergencyPlanLevel
+  applicableOrganizationId: string
+  applicableOrganizationName: string
+  responsibleEmployeeName?: string | null
+  planStartDate?: string | null
+  planEndDate?: string | null
+  actualStartDate?: string | null
+  actualEndDate?: string | null
+  drillLocation?: string | null
+  drillSubject?: string | null
+  drillPurpose?: string | null
+  drillProcess?: string | null
+  drillSummary?: string | null
+  drillEvaluation?: string | null
+  drillTeam?: string | null
+  equipmentMaterials?: string | null
+  imageUrls: string[]
+  attachmentUrls: string[]
+  status: SmisEmergencyDrillRecordStatus
+  remark?: string | null
+  participants: SmisEmergencyEmployeeSnapshot[]
+  createTime?: string
+  updateTime?: string
+}
+
+export interface SmisEmergencyDrillRecordSearchParams {
+  keyword?: string
+  status?: SmisEmergencyDrillRecordStatus
+  startDate?: string
+  endDate?: string
+  organizationId?: string
+  from?: number
+  to?: number
+}
+
+export interface SmisEmergencyDrillRecordOverview {
+  total: number
+  draft: number
+  submitted: number
+  late: number
+}
+
+export interface SmisEmergencyDrillRecordListResult {
+  records: SmisEmergencyDrillRecord[]
+  total: number
+  overview: SmisEmergencyDrillRecordOverview
+  planOptions: SmisEmergencyDrillPlanOption[]
+  organizations: SmisTreeOrganization[]
+}
+
+export interface SmisEmergencyDrillRecordSavePayload {
+  id?: string
+  drillPlanId: string
+  actualStartDate?: string
+  actualEndDate?: string
+  drillLocation?: string
+  drillSubject?: string
+  drillPurpose?: string
+  drillProcess?: string
+  drillSummary?: string
+  drillEvaluation?: string
+  drillTeam?: string
+  equipmentMaterials?: string
+  imageUrls: string[]
+  attachmentUrls: string[]
+  participantIds: string[]
+  remark?: string
+}
+
+export interface SmisEmergencyDrillReportSearchParams {
+  startDate?: string
+  endDate?: string
+  organizationId?: string
+}
+
+export interface SmisEmergencyDrillReportOverview {
+  planCount: number
+  completedCount: number
+  outstandingCount: number
+  warningCount: number
+  lateCount: number
+}
+
+export interface SmisEmergencyDrillReportRow {
+  organizationId: string
+  organizationName: string
+  planCategory: SmisEmergencyPlanCategory
+  planLevel: SmisEmergencyPlanLevel
+  drillCount: number
+  lateCount: number
+  averageIntervalDays?: number | null
+}
+
+export interface SmisEmergencyOutstandingPlan {
+  id: string
+  planNo: string
+  drillName: string
+  organizationName: string
+  planCategory: SmisEmergencyPlanCategory
+  planLevel: SmisEmergencyPlanLevel
+  planEndDate?: string | null
+  warningStatus: SmisEmergencyPlanWarningStatus
+}
+
+export interface SmisEmergencyDrillReportResult {
+  overview: SmisEmergencyDrillReportOverview
+  rows: SmisEmergencyDrillReportRow[]
+  outstanding: SmisEmergencyOutstandingPlan[]
 }

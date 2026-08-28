@@ -338,7 +338,7 @@
       width: 120,
       fixed: 'right',
       formatter: (row) => (
-        <div>
+        <div class="flex">
           <ArtButtonTable
             type="edit"
             permission="SmisEmergencyRescuePlan:Edit"

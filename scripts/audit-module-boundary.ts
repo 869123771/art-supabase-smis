@@ -24,7 +24,13 @@ const requiredPaths = [
   'src/views/components/smis-page-placeholder.vue',
   'src/views/basic-data',
   'src/views/equipment-ledger',
-  'src/views/safety-production/emergency-rescue'
+  'src/views/safety-production/emergency-rescue',
+  'src/views/safety-production/safety-accident',
+  'src/views/safety-production/protective-equipment-management',
+  'src/views/safety-production/tool-requisition',
+  'src/views/safety-production/anti-violation-management',
+  'src/views/safety-production/document-center',
+  'src/views/qualification-training'
 ]
 
 for (const requiredPath of requiredPaths) {

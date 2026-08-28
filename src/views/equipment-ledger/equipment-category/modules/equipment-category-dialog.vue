@@ -33,6 +33,7 @@
     type FormItemOption
   } from '@/components/core/forms/art-form/index.vue'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
+  import { useTenantScopeFormPolicy } from '@/hooks/core/useTenantScopeFormPolicy'
   import { useUserStore } from '@/store/modules/user'
   import TreeUtils from '@/utils/tree'
   import {
@@ -51,6 +52,8 @@
 
   export interface EquipmentCategoryDialogOpenData {
     row?: SmisEquipmentCategory
+    tenantId: string
+    allTenants: boolean
     tree: SmisEquipmentCategory[]
     inspectionOptions: SmisEquipmentInspectionCategory[]
     presetParentId?: string
@@ -65,6 +68,7 @@
     inspectionCategoryIds: string[]
     remark: string
     status: SmisEquipmentCategoryStatus
+    sort: number
   }
 
   interface FormExpose {
@@ -75,6 +79,7 @@
   const emit = defineEmits<{ success: [type: 'add' | 'edit'] }>()
   const userStore = useUserStore()
   const { getDictMap } = storeToRefs(userStore)
+  const { effectiveTenantId } = useTenantScopeFormPolicy()
   const dialogRef = ref<ArtDialogExpose<EquipmentCategoryDialogOpenData>>()
   const formRef = ref<FormExpose>()
   const treeUtils = new TreeUtils({
@@ -87,6 +92,7 @@
     tree: SmisEquipmentCategory[]
     inspectionOptions: SmisEquipmentInspectionCategory[]
   }>({ tree: [], inspectionOptions: [] })
+  const targetTenantId = ref(effectiveTenantId.value || '')
 
   const initialForm = (): EquipmentCategoryForm => ({
     id: undefined,
@@ -96,7 +102,8 @@
     categoryShortName: '',
     inspectionCategoryIds: [],
     remark: '',
-    status: 'enabled'
+    status: 'enabled',
+    sort: 10
   })
   const formModel = reactive<EquipmentCategoryForm>(initialForm())
 
@@ -179,6 +186,19 @@
         props: { clearable: false, placeholder: '请选择启用状态' }
       },
       {
+        label: '排序',
+        key: 'sort',
+        type: 'inputNumber',
+        props: {
+          min: 0,
+          max: 999999,
+          step: 1,
+          precision: 0,
+          controlsPosition: 'right',
+          class: '!w-full'
+        }
+      },
+      {
         label: '备注',
         key: 'remark',
         type: 'input',
@@ -209,6 +229,7 @@
       ],
       categoryShortName: [{ max: 40, message: '设备分类简称不能超过 40 个字符', trigger: 'blur' }],
       status: [{ required: true, message: '请选择启用状态', trigger: 'change' }],
+      sort: [{ required: true, message: '请输入排序', trigger: 'change' }],
       remark: [{ max: 500, message: '备注不能超过 500 个字符', trigger: 'blur' }]
     }
   })
@@ -251,6 +272,7 @@
 
   const resetForm = async (): Promise<void> => {
     Object.assign(form.model, initialForm())
+    targetTenantId.value = effectiveTenantId.value || ''
     Object.assign(source, { tree: [], inspectionOptions: [] })
     await nextTick()
     formRef.value?.clearValidate()
@@ -267,7 +289,8 @@
         categoryShortName: form.model.categoryShortName.trim(),
         inspectionCategoryIds: [...form.model.inspectionCategoryIds],
         remark: form.model.remark.trim(),
-        status: form.model.status
+        status: form.model.status,
+        sort: Number(form.model.sort || 0)
       }
       await saveEquipmentCategory(payload)
       emit('success', form.model.id ? 'edit' : 'add')
@@ -279,9 +302,16 @@
 
   const handleOpen = async (data: EquipmentCategoryDialogOpenData): Promise<void> => {
     await resetForm()
+    targetTenantId.value = data.row?.tenantId || data.tenantId || effectiveTenantId.value || ''
     Object.assign(source, {
-      tree: data.tree,
-      inspectionOptions: data.inspectionOptions
+      tree: data.allTenants
+        ? data.tree.filter((item) => !item.tenantId || item.tenantId === targetTenantId.value)
+        : data.tree,
+      inspectionOptions: data.allTenants
+        ? data.inspectionOptions.filter(
+            (item) => !item.tenantId || item.tenantId === targetTenantId.value
+          )
+        : data.inspectionOptions
     })
 
     if (data.row) {
@@ -293,10 +323,15 @@
         categoryShortName: data.row.categoryShortName || '',
         inspectionCategoryIds: data.row.inspectionCategories.map((item) => item.id),
         remark: data.row.remark || '',
-        status: data.row.status
+        status: data.row.status,
+        sort: data.row.sort ?? 0
       })
-    } else if (data.presetParentId) {
+    } else {
       form.model.parentId = data.presetParentId
+      const siblings = treeUtils
+        .treeToList(source.tree)
+        .filter((item) => (item.parentId || undefined) === data.presetParentId)
+      form.model.sort = Math.max(0, ...siblings.map((item) => Number(item.sort || 0))) + 10
     }
 
     await dialogRef.value?.handleOpen(data, {

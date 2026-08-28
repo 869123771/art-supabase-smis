@@ -1,0 +1,1 @@
+import{$n as e,mn as t,rn as n}from"./style-C1L0GNpN.js";import{t as r}from"./smis-page-placeholder-CU6ksoZa.js";var i=t({name:`SmisWorkCategory`,__name:`index`,setup(t){return(t,i)=>(e(),n(r,{section:`资质培训 / 安全资质管理`,title:`作业类别`}))}});export{i as default};

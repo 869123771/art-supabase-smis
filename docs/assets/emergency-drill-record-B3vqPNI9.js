@@ -1,1 +1,0 @@
-import{$n as e,mn as t,rn as n}from"./style-C1L0GNpN.js";import{t as r}from"./smis-page-placeholder-xYUMC8Ir.js";var i=t({name:`SmisEmergencyDrillRecord`,__name:`index`,setup(t){return(t,i)=>(e(),n(r,{section:`安全生产 · 应急救援`,title:`应急演练记录`}))}});export{i as default};

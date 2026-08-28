@@ -54,8 +54,10 @@ export async function fetchEquipmentCategoryList(params: SmisEquipmentCategorySe
   return {
     data: result.data?.records ?? [],
     total: result.data?.total ?? 0,
-    tree: treeUtils.listToTree(flatTree, (a, b) =>
-      a.categoryName.localeCompare(b.categoryName, 'zh-CN')
+    tree: treeUtils.listToTree(
+      flatTree,
+      (a, b) =>
+        (a.sort ?? 0) - (b.sort ?? 0) || a.categoryName.localeCompare(b.categoryName, 'zh-CN')
     ),
     inspectionOptions: result.data?.inspectionOptions ?? [],
     overview: result.data?.overview ?? emptyOverview(),

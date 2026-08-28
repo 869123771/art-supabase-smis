@@ -77,6 +77,7 @@
   import { pageInfoHandler } from '@/utils/table/tableUtils'
   import { useArtFeedback } from '@/hooks/core/useArtFeedback'
   import { useUserStore } from '@/store/modules/user'
+  import { useTenantScopeStore } from '@/store/modules/tenantScope'
   import TreeUtils from '@/utils/tree'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import ArtDictDisplay from '@/components/core/base/art-dict-display/index.vue'
@@ -125,7 +126,8 @@
 
   const { confirmDelete } = useArtFeedback()
   const userStore = useUserStore()
-  const { getDictMap } = storeToRefs(userStore)
+  const { getDictMap, getUserInfo } = storeToRefs(userStore)
+  const { effectiveTenantId, isAllTenants } = storeToRefs(useTenantScopeStore())
   const treeUtils = new TreeUtils({ idKey: 'id', parentKey: 'parentId', childrenKey: 'children' })
   const tableQueryRef = ref<ArtTableQueryExpose>()
   const dialogRef = ref<DialogExpose>()
@@ -184,11 +186,18 @@
   ])
 
   const openDialog = (row?: SmisEquipmentCategory): void => {
+    const targetTenantId =
+      row?.tenantId || effectiveTenantId.value || getUserInfo.value.tenantId || ''
     void dialogRef.value?.handleOpen({
       row,
+      tenantId: targetTenantId,
+      allTenants: isAllTenants.value,
       tree: tree.data,
       inspectionOptions: tree.inspectionOptions,
-      presetParentId: row ? undefined : selectedCategory.value?.id
+      presetParentId:
+        !row && selectedCategory.value?.tenantId === targetTenantId
+          ? selectedCategory.value.id
+          : undefined
     })
   }
 
@@ -263,7 +272,8 @@
     {
       prop: 'categoryCode',
       label: '设备分类编码',
-      minWidth: 170,
+      minWidth: 180,
+      sortable: true,
       formatter: (row) => (
         <span class="equipment-category-page__code" title={row.categoryCode}>
           {row.categoryCode}

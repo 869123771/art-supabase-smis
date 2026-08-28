@@ -1,0 +1,1 @@
+import{t as e}from"./_baseFlatten-BNZnsfXu.js";function t(t){return t!=null&&t.length?e(t,1):[]}export{t};

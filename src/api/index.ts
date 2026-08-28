@@ -106,11 +106,23 @@ export {
 
 export {
   deleteEmergencyRescuePlans,
+  fetchActiveEmergencyRescuePlanOptions,
   fetchEmergencyRescuePlanList,
   pushEmergencyRescuePlan,
   saveEmergencyRescuePlan,
   setEmergencyRescuePlanValidity
 } from '@smis/api/modules/emergency-rescue-plan'
+
+export {
+  deleteEmergencyDrillPlans,
+  deleteEmergencyDrillRecords,
+  fetchEmergencyDrillPlanList,
+  fetchEmergencyDrillRecordList,
+  fetchEmergencyDrillReport,
+  pushEmergencyDrillPlanToRecord,
+  saveEmergencyDrillPlan,
+  saveEmergencyDrillRecord
+} from '@smis/api/modules/emergency-drill'
 
 export type {
   PositionSafetyResponsibility,
@@ -221,5 +233,25 @@ export type {
   SmisEmergencyRescuePlanSearchParams,
   SmisEmergencyRescuePlanOverview,
   SmisEmergencyRescuePlanListResult,
-  SmisEmergencyRescuePlanSavePayload
+  SmisEmergencyRescuePlanSavePayload,
+  SmisEmergencyDrillForm,
+  SmisEmergencyDrillPlanStatus,
+  SmisEmergencyDrillRecordStatus,
+  SmisEmergencyEmployeeSnapshot,
+  SmisEmergencyDrillPlan,
+  SmisEmergencyDrillPlanSearchParams,
+  SmisEmergencyDrillPlanOverview,
+  SmisEmergencyDrillPlanListResult,
+  SmisEmergencyDrillPlanSavePayload,
+  SmisEmergencyDrillPlanOption,
+  SmisEmergencyDrillRecord,
+  SmisEmergencyDrillRecordSearchParams,
+  SmisEmergencyDrillRecordOverview,
+  SmisEmergencyDrillRecordListResult,
+  SmisEmergencyDrillRecordSavePayload,
+  SmisEmergencyDrillReportSearchParams,
+  SmisEmergencyDrillReportOverview,
+  SmisEmergencyDrillReportRow,
+  SmisEmergencyOutstandingPlan,
+  SmisEmergencyDrillReportResult
 } from '@smis/api/types'

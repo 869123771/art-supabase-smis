@@ -39,7 +39,7 @@
         <span aria-hidden="true"><ArtSvgIcon icon="ri:road-map-line" /></span>
         <span>
           <strong>全部位置</strong>
-          <small>查看当前租户全部存放位置</small>
+          <small>{{ globalScope ? '查看全部租户存放位置' : '查看当前租户全部存放位置' }}</small>
         </span>
         <ArtSvgIcon v-if="selectedKey === ALL_KEY" icon="ri:check-line" aria-hidden="true" />
       </button>
@@ -73,6 +73,9 @@
               <span>
                 <strong :title="node.locationName">{{ node.locationName }}</strong>
                 <small :title="node.locationCode">
+                  <template v-if="globalScope && node.tenant?.tenantName">
+                    {{ node.tenant.tenantName }} ·
+                  </template>
                   {{ node.locationCode }}
                   <template v-if="node.status === 'disabled'"> · 已停用</template>
                 </small>
@@ -105,6 +108,7 @@
     loading: boolean
     error: string | null
     selectedKey: string
+    globalScope: boolean
   }>()
   const emit = defineEmits<{ select: [key: string]; refresh: [] }>()
   const treeUtils = new TreeUtils({ idKey: 'id', parentKey: 'parentId', childrenKey: 'children' })

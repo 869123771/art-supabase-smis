@@ -1,12 +1,25 @@
 import { omit } from 'lodash-es'
 import { useSupabase } from '@/hooks'
+import TreeUtils from '@/utils/tree'
 import type {
   SmisEmergencyRescuePlanListResult,
   SmisEmergencyRescuePlanSavePayload,
-  SmisEmergencyRescuePlanSearchParams
+  SmisEmergencyRescuePlanSearchParams,
+  SmisTreeOrganization
 } from '@smis/api/types'
 
 const { supabase, keysToSnakeDeep, responseHandle } = useSupabase()
+const organizationTreeUtils = new TreeUtils({
+  idKey: 'id',
+  parentKey: 'parentId',
+  childrenKey: 'children'
+})
+
+const toOrganizationTree = (organizations: SmisTreeOrganization[]) =>
+  organizationTreeUtils.listToTree(organizations, (a, b) => {
+    const sortDiff = (a.sort ?? 0) - (b.sort ?? 0)
+    return sortDiff || a.organizationName.localeCompare(b.organizationName, 'zh-CN')
+  })
 
 export async function fetchEmergencyRescuePlanList(
   params: SmisEmergencyRescuePlanSearchParams = {}
@@ -29,7 +42,7 @@ export async function fetchEmergencyRescuePlanList(
     data: result.data?.records ?? [],
     total: result.data?.total ?? 0,
     overview: result.data?.overview ?? { total: 0, valid: 0, warning: 0, submitted: 0 },
-    organizations: result.data?.organizations ?? [],
+    organizations: toOrganizationTree(result.data?.organizations ?? []),
     positions: result.data?.positions ?? [],
     error: result.error
   }
@@ -81,4 +94,19 @@ export async function pushEmergencyRescuePlan(planId: string) {
     () => supabase.rpc('smis_push_emergency_rescue_plan_to_drill_secure', { p_plan_id: planId }),
     { showMessage: true, breakReturn: true, message: '已下推演练计划草稿' }
   )
+}
+
+export async function fetchActiveEmergencyRescuePlanOptions() {
+  const result = await responseHandle<
+    Array<{
+      id: string
+      planNo: string
+      planName: string
+      planCategory: string
+      applicableOrganizationId: string
+    }>
+  >(() => supabase.rpc('smis_list_active_emergency_rescue_plan_options_secure'), {
+    showErrorMessage: true
+  })
+  return result.data ?? []
 }
