@@ -51,56 +51,24 @@
         </template>
 
         <template #images>
-          <div class="inspection-dialog__images">
-            <button
-              v-for="image in form.images"
-              :key="image.attachmentId"
-              type="button"
-              class="inspection-dialog__image"
-              :aria-label="`预览检验图片 ${image.originName}`"
-              @click="previewImage(image.url)"
-            >
-              <img :src="image.url" :alt="image.originName" width="144" height="104" />
-              <span :title="image.originName">{{ image.originName }}</span>
-              <ElButton
-                text
-                type="danger"
-                aria-label="移除检验图片"
-                @click.stop="removeImage(image.attachmentId)"
-              >
-                <ArtSvgIcon icon="ri:close-line" />
-              </ElButton>
-            </button>
-            <button
-              v-if="form.images.length < 9"
-              type="button"
-              class="inspection-dialog__upload"
-              @click="resourcePickerVisible = true"
-            >
-              <ArtSvgIcon icon="ri:image-add-line" />
-              <strong>上传检验图片</strong>
-              <small>{{ form.images.length }}/9 张</small>
-            </button>
-          </div>
+          <ArtUploadImage
+            v-model="imageUrls"
+            title="上传检验图片"
+            :size="88"
+            :limit="9"
+            multiple
+            @resource-change="handleImageResourceChange"
+          />
+          <p class="inspection-dialog__upload-help">支持直接上传或从资源库选择，最多 9 张。</p>
         </template>
       </ArtForm>
     </div>
   </ArtDialog>
-
-  <ArtResourcePicker
-    v-model:visible="resourcePickerVisible"
-    title="选择检验图片"
-    default-file-type="image"
-    multiple
-    :limit="9"
-    @confirm="handleResourceConfirm"
-  />
 </template>
 
 <script setup lang="ts">
   import dayjs from 'dayjs'
   import type { FormRules } from 'element-plus'
-  import type { Resource } from '@/components/core/forms/art-resource-picker/type'
   import type {
     DataSelectColumn,
     DataSelectFetchParams,
@@ -110,10 +78,9 @@
   import type { ArtDialogExpose } from '@/components/core/dialogs/art-dialog/types'
   import ArtForm, { type FormItem } from '@/components/core/forms/art-form/index.vue'
   import ArtTableSingleSelect from '@/components/core/forms/art-data-select/table-single.vue'
-  import ArtResourcePicker from '@/components/core/forms/art-resource-picker/index.vue'
+  import ArtUploadImage from '@/components/core/forms/art-upload-image/index.vue'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
   import { useDocumentNumberRule } from '@/hooks/core/useDocumentNumberRule'
-  import { useImageViewer } from '@/hooks/core/useImageViewer'
   import { useUserStore } from '@/store/modules/user'
   import {
     fetchEquipmentLedgerList,
@@ -160,7 +127,6 @@
   const formRef = ref<FormExpose>()
   const equipmentSelection = shallowRef<DataSelectRecord[]>([])
   const institutionSelection = shallowRef<DataSelectRecord[]>([])
-  const resourcePickerVisible = ref(false)
   const numberRule = useDocumentNumberRule('smis.equipment_inspection')
 
   const initialForm = (): InspectionForm => ({
@@ -180,6 +146,7 @@
   })
   const formModel = reactive<InspectionForm>(initialForm())
   const images = shallowRef<SmisEquipmentInspectionImage[]>([])
+  const imageUrls = ref<string[]>([])
 
   const dictOptions = (code: string) =>
     (getDictMap.value[code] ?? []).map((item) => ({
@@ -332,6 +299,18 @@
 
   watch(images, (value) => {
     form.images = value
+    const nextUrls = value.map((image) => image.url)
+    if (
+      nextUrls.length !== imageUrls.value.length ||
+      nextUrls.some((url, index) => url !== imageUrls.value[index])
+    ) {
+      imageUrls.value = nextUrls
+    }
+  })
+  watch(imageUrls, (value) => {
+    const visibleUrls = new Set(value)
+    const nextImages = images.value.filter((image) => visibleUrls.has(image.url))
+    if (nextImages.length !== images.value.length) images.value = nextImages
   })
   watch(
     () => form.model.needsExtension,
@@ -379,7 +358,9 @@
     return { data: result.data as DataSelectRecord[], total: result.total }
   }
 
-  const handleResourceConfirm = (resources: Resource[]): void => {
+  const handleImageResourceChange = (
+    resources: Api.DataCenter.Resources.ResourceListItem[]
+  ): void => {
     const known = new Set(images.value.map((item) => item.attachmentId))
     const additions = resources
       .filter((resource) => resource.id != null && resource.url && !known.has(String(resource.id)))
@@ -393,18 +374,12 @@
         sizeInfo: resource.sizeInfo
       }))
     images.value = [...images.value, ...additions].slice(0, 9)
-    resourcePickerVisible.value = false
-  }
-  const removeImage = (attachmentId: string): void => {
-    images.value = images.value.filter((item) => item.attachmentId !== attachmentId)
-  }
-  const previewImage = (url: string): void => {
-    useImageViewer([url])
   }
 
   const resetForm = async (): Promise<void> => {
     Object.assign(form.model, initialForm())
     images.value = []
+    imageUrls.value = []
     equipmentSelection.value = []
     institutionSelection.value = []
     await nextTick()
@@ -540,83 +515,11 @@
       }
     }
 
-    &__images {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
-      gap: 12px;
-      width: 100%;
-    }
-
-    &__image,
-    &__upload {
-      position: relative;
-      min-height: 132px;
-      padding: 0;
-      overflow: hidden;
-      color: var(--el-text-color-regular);
-      cursor: pointer;
-      background: var(--art-gray-100);
-      border: 1px solid var(--el-border-color-lighter);
-      border-radius: var(--el-border-radius-base);
-      transition:
-        border-color var(--el-transition-duration-fast),
-        background-color var(--el-transition-duration-fast);
-    }
-
-    &__image:focus-visible,
-    &__upload:focus-visible {
-      outline: 2px solid var(--theme-color);
-      outline-offset: 2px;
-    }
-
-    &__image {
-      display: grid;
-      grid-template-rows: 104px auto;
-
-      img {
-        width: 100%;
-        height: 104px;
-        object-fit: cover;
-      }
-
-      > span {
-        padding: 8px 34px 8px 10px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        font-size: 12px;
-        text-align: left;
-        white-space: nowrap;
-      }
-
-      :deep(.el-button) {
-        position: absolute;
-        right: 3px;
-        bottom: 2px;
-        width: 30px;
-        height: 30px;
-      }
-    }
-
-    &__upload {
-      display: grid;
-      gap: 4px;
-      place-content: center;
-      min-height: 132px;
-
-      svg {
-        margin: 0 auto 4px;
-        font-size: 25px;
-        color: var(--theme-color);
-      }
-
-      small {
-        color: var(--el-text-color-secondary);
-      }
-
-      &:hover {
-        background: color-mix(in srgb, var(--theme-color) 6%, var(--art-gray-100));
-        border-color: color-mix(in srgb, var(--theme-color) 40%, var(--el-border-color));
-      }
+    &__upload-help {
+      margin: 7px 0 0;
+      font-size: 12px;
+      line-height: 18px;
+      color: var(--el-text-color-secondary);
     }
   }
 </style>

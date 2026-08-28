@@ -124,6 +124,20 @@ export {
   saveEmergencyDrillRecord
 } from '@smis/api/modules/emergency-drill'
 
+export {
+  deleteAccidentAnalyses,
+  deleteAccidentReports,
+  deleteWorkInjuryDeclarations,
+  fetchAccidentAnalysisList,
+  fetchAccidentEmployeeCandidates,
+  fetchAccidentReportList,
+  fetchAccidentReportOptions,
+  fetchWorkInjuryDeclarationList,
+  saveAccidentAnalysis,
+  saveAccidentReport,
+  saveWorkInjuryDeclaration
+} from '@smis/api/modules/accident'
+
 export type {
   PositionSafetyResponsibility,
   PositionSafetyResponsibilitySavePayload,
@@ -253,5 +267,27 @@ export type {
   SmisEmergencyDrillReportOverview,
   SmisEmergencyDrillReportRow,
   SmisEmergencyOutstandingPlan,
-  SmisEmergencyDrillReportResult
+  SmisEmergencyDrillReportResult,
+  SmisAccidentAnalysis,
+  SmisAccidentAnalysisListResult,
+  SmisAccidentAnalysisOverview,
+  SmisAccidentAnalysisSavePayload,
+  SmisAccidentAnalysisSearchParams,
+  SmisAccidentCategory,
+  SmisAccidentEmployee,
+  SmisAccidentLevel,
+  SmisAccidentOption,
+  SmisAccidentPerson,
+  SmisAccidentPreventionMeasure,
+  SmisAccidentReport,
+  SmisAccidentReportListResult,
+  SmisAccidentReportOverview,
+  SmisAccidentReportSavePayload,
+  SmisAccidentReportSearchParams,
+  SmisWorkInjuryDeclaration,
+  SmisWorkInjuryListResult,
+  SmisWorkInjuryOverview,
+  SmisWorkInjurySavePayload,
+  SmisWorkInjurySearchParams,
+  SmisWorkInjuryType
 } from '@smis/api/types'

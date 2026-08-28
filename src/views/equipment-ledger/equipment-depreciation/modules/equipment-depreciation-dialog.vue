@@ -30,6 +30,7 @@
             label-key="equipmentName"
             description-key="equipmentCode"
             placeholder="点击选择设备"
+            empty-text="当前租户暂无设备台账"
             show-pagination
             @change="handleEquipmentChange"
           />
@@ -385,6 +386,7 @@
       border-left: 3px solid #10b981;
       border-radius: 10px;
     }
+
     &__context > span {
       display: grid;
       place-items: center;
@@ -394,16 +396,19 @@
       background: var(--default-box-color);
       border-radius: 10px;
     }
+
     &__context p {
       margin: 3px 0 0;
       font-size: 12px;
       color: var(--el-text-color-secondary);
     }
+
     &__methods {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
       width: 100%;
     }
+
     &__methods :deep(.el-radio) {
       align-items: flex-start;
       height: auto;
@@ -413,25 +418,42 @@
       white-space: normal;
       border-radius: 10px;
     }
+
     &__methods :deep(.el-radio:last-child) {
       margin-right: 0;
     }
+
+    &__methods :deep(.el-radio__input) {
+      flex: none;
+      margin-top: 2px;
+    }
+
+    &__methods :deep(.el-radio__label) {
+      min-width: 0;
+      padding-left: 8px;
+    }
+
     &__methods span {
       display: grid;
       gap: 5px;
     }
+
     &__methods strong {
+      line-height: 20px;
       color: var(--el-text-color-primary);
     }
+
     &__methods small {
       line-height: 1.55;
       color: var(--el-text-color-secondary);
     }
-    @media (max-width: 760px) {
+
+    @media (width <= 760px) {
       &__methods {
         grid-template-columns: 1fr;
         gap: 8px;
       }
+
       &__methods :deep(.el-radio) {
         margin-right: 0;
       }

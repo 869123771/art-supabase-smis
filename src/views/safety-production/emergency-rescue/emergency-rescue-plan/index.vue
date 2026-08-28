@@ -34,7 +34,6 @@
         emptyDescription: '可新增预案并提交，随后下推形成演练计划草稿。'
       }"
       focusable
-      focus-scope-selector=".emergency-plan-page"
     />
     <EmergencyPlanDialog ref="dialogRef" @success="handleSaveSuccess" />
   </div>
@@ -459,11 +458,13 @@
     gap: 12px;
     min-width: 0;
   }
+
   .emergency-plan-page__table {
     flex: 1;
     min-width: 0;
     min-height: 0;
   }
+
   :deep(.emergency-plan-page__identity) {
     display: grid;
     grid-template-columns: 36px minmax(0, 1fr);
@@ -471,6 +472,7 @@
     align-items: center;
     min-width: 0;
   }
+
   :deep(.emergency-plan-page__identity > span:first-child) {
     display: grid;
     place-items: center;
@@ -480,16 +482,19 @@
     background: color-mix(in srgb, var(--theme-color) 9%, var(--el-bg-color));
     border-radius: var(--el-border-radius-base);
   }
+
   :deep(.emergency-plan-page__identity > span:last-child) {
     display: grid;
     min-width: 0;
   }
+
   :deep(.emergency-plan-page__identity strong),
   :deep(.emergency-plan-page__identity small) {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
+
   :deep(.emergency-plan-page__identity small) {
     margin-top: 2px;
     font-family: var(--art-font-family-mono, Consolas, monospace);

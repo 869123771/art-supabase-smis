@@ -788,43 +788,62 @@
       min-height: 0;
     }
 
-    &__identity {
+    :deep(.equipment-ledger-page__identity) {
       display: grid;
-      grid-template-columns: 40px minmax(0, 1fr);
+      grid-template-columns: 36px minmax(0, 1fr);
       gap: 10px;
       align-items: center;
+      min-width: 0;
+
+      > span:first-child {
+        display: grid;
+        place-items: center;
+        width: 36px;
+        height: 36px;
+        color: var(--theme-color);
+        background: color-mix(in srgb, var(--theme-color) 9%, var(--el-bg-color));
+        border-radius: var(--el-border-radius-base);
+      }
+
+      > span:last-child {
+        display: grid;
+        min-width: 0;
+      }
+
+      strong,
+      small {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      strong {
+        color: var(--el-text-color-primary);
+      }
+
+      small {
+        margin-top: 2px;
+        font-size: 11px;
+        color: var(--el-text-color-secondary);
+      }
     }
 
-    &__identity > span:first-child {
-      display: grid;
-      place-items: center;
-      width: 40px;
-      height: 40px;
-      color: var(--theme-color);
-      background: color-mix(in srgb, var(--theme-color) 9%, var(--default-box-color));
-      border-radius: 10px;
-    }
-
-    &__identity > span:last-child,
-    &__stack {
+    :deep(.equipment-ledger-page__stack) {
       display: grid;
       min-width: 0;
-    }
 
-    &__identity strong,
-    &__identity small,
-    &__stack span,
-    &__stack small {
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
+      span,
+      small {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
 
-    &__identity small,
-    &__stack small {
-      margin-top: 3px;
-      font-size: 11px;
-      color: var(--el-text-color-secondary);
+      small {
+        margin-top: 3px;
+        font-size: 11px;
+        color: var(--el-text-color-secondary);
+      }
     }
 
     &__actions {

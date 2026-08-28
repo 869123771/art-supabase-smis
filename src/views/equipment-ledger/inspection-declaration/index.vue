@@ -216,7 +216,7 @@
       minWidth: 225,
       formatter: (row) => (
         <div class="inspection-page__equipment">
-          <span>
+          <span aria-hidden="true">
             <ArtSvgIcon icon="ri:archive-line" />
           </span>
           <span>
@@ -278,7 +278,7 @@
     {
       prop: 'images',
       label: '检验图片',
-      width: 116,
+      width: 108,
       formatter: (row) =>
         row.images.length ? (
           <button
@@ -290,8 +290,8 @@
             <img
               src={row.images[0].url}
               alt={`${row.equipment.equipmentName}检验图片`}
-              width="46"
-              height="34"
+              width="44"
+              height="32"
             />
             <span>{row.images.length} 张</span>
           </button>
@@ -376,19 +376,20 @@
       color: var(--theme-color);
     }
 
-    &__equipment {
+    :deep(.inspection-page__equipment) {
       display: grid;
-      grid-template-columns: 40px minmax(0, 1fr);
+      grid-template-columns: 36px minmax(0, 1fr);
       gap: 10px;
       align-items: center;
+      min-width: 0;
 
       > span:first-child {
         display: grid;
         place-items: center;
-        width: 40px;
-        height: 40px;
+        width: 36px;
+        height: 36px;
         color: var(--theme-color);
-        background: color-mix(in srgb, var(--theme-color) 9%, var(--default-box-color));
+        background: color-mix(in srgb, var(--theme-color) 9%, var(--el-bg-color));
         border-radius: var(--el-border-radius-base);
       }
 
@@ -404,38 +405,56 @@
         white-space: nowrap;
       }
 
+      strong {
+        color: var(--el-text-color-primary);
+      }
+
       small {
-        margin-top: 3px;
+        margin-top: 2px;
         font-size: 11px;
         color: var(--el-text-color-secondary);
       }
     }
 
-    &__preview {
-      display: inline-grid;
-      grid-template-columns: 46px auto;
+    :deep(.inspection-page__preview) {
+      display: inline-flex;
       gap: 7px;
       align-items: center;
-      min-height: 38px;
+      justify-content: center;
+      min-width: 82px;
+      height: 38px;
       padding: 2px 8px 2px 2px;
+      overflow: hidden;
       font-size: 12px;
+      font-weight: 500;
+      line-height: 18px;
       color: var(--theme-color);
       cursor: pointer;
-      background: var(--art-gray-100);
-      border: 1px solid var(--el-border-color-lighter);
+      background: color-mix(in srgb, var(--theme-color) 4%, var(--el-bg-color));
+      border: 1px solid color-mix(in srgb, var(--theme-color) 14%, var(--el-border-color));
       border-radius: var(--el-border-radius-small);
+      transition:
+        color var(--el-transition-duration-fast),
+        background-color var(--el-transition-duration-fast),
+        border-color var(--el-transition-duration-fast);
 
-      img {
-        width: 46px;
-        height: 34px;
-        object-fit: cover;
-        border-radius: var(--el-border-radius-small);
+      &:hover {
+        background: color-mix(in srgb, var(--theme-color) 8%, var(--el-bg-color));
+        border-color: color-mix(in srgb, var(--theme-color) 34%, var(--el-border-color));
       }
 
       &:focus-visible {
         outline: 2px solid var(--theme-color);
         outline-offset: 2px;
       }
+    }
+
+    :deep(.inspection-page__preview img) {
+      display: block;
+      width: 44px;
+      height: 32px;
+      object-fit: cover;
+      border-radius: calc(var(--el-border-radius-small) - 1px);
     }
 
     &__actions {

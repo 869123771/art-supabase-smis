@@ -224,14 +224,14 @@
       fixed: 'left',
       formatter: (row) => (
         <div class="special-equipment-page__identity">
-          <span>
+          <span aria-hidden="true">
             <ArtSvgIcon
               icon={row.equipmentKind === 'boiler' ? 'ri:fire-line' : 'ri:shield-star-line'}
             />
           </span>
           <span>
-            <strong>{row.equipmentName}</strong>
-            <small>{row.equipmentCode}</small>
+            <strong title={row.equipmentName}>{row.equipmentName}</strong>
+            <small title={row.equipmentCode}>{row.equipmentCode}</small>
           </span>
         </div>
       )
@@ -441,39 +441,44 @@
       color: var(--el-text-color-secondary);
     }
 
-    &__identity {
+    :deep(.special-equipment-page__identity) {
       display: grid;
-      grid-template-columns: 40px 1fr;
+      grid-template-columns: 36px minmax(0, 1fr);
       gap: 10px;
       align-items: center;
-    }
-
-    &__identity > span:first-child {
-      display: grid;
-      place-items: center;
-      width: 40px;
-      height: 40px;
-      color: #d97706;
-      background: color-mix(in srgb, #f59e0b 9%, var(--default-box-color));
-      border-radius: 10px;
-    }
-
-    &__identity > span:last-child {
-      display: grid;
       min-width: 0;
-    }
 
-    &__identity strong,
-    &__identity small {
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
+      > span:first-child {
+        display: grid;
+        place-items: center;
+        width: 36px;
+        height: 36px;
+        color: var(--theme-color);
+        background: color-mix(in srgb, var(--theme-color) 9%, var(--el-bg-color));
+        border-radius: var(--el-border-radius-base);
+      }
 
-    &__identity small {
-      margin-top: 3px;
-      font-size: 11px;
-      color: var(--el-text-color-secondary);
+      > span:last-child {
+        display: grid;
+        min-width: 0;
+      }
+
+      strong,
+      small {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      strong {
+        color: var(--el-text-color-primary);
+      }
+
+      small {
+        margin-top: 2px;
+        font-size: 11px;
+        color: var(--el-text-color-secondary);
+      }
     }
 
     &__flags,

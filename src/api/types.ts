@@ -1294,3 +1294,290 @@ export interface SmisEmergencyDrillReportResult {
   rows: SmisEmergencyDrillReportRow[]
   outstanding: SmisEmergencyOutstandingPlan[]
 }
+
+export type SmisAccidentLevel =
+  'near_miss' | 'minor_injury' | 'general' | 'major' | 'severe' | 'catastrophic'
+
+export type SmisAccidentCategory =
+  | 'object_strike'
+  | 'other_injury'
+  | 'mechanical_injury'
+  | 'lifting_injury'
+  | 'electric_shock'
+  | 'drowning'
+  | 'burn'
+  | 'fire'
+  | 'fall_from_height'
+  | 'collapse'
+  | 'roof_fall'
+  | 'water_inrush'
+  | 'blasting'
+  | 'explosive_material'
+  | 'gas_explosion'
+  | 'boiler_explosion'
+  | 'vessel_explosion'
+  | 'other_explosion'
+  | 'poisoning_asphyxiation'
+
+export interface SmisAccidentEmployee {
+  id: string
+  tenantId: string
+  organizationId?: string | null
+  employeeNo: string
+  employeeName: string
+  avatarUrl?: string | null
+  jobTitle?: string | null
+  employmentStatus: string
+  gender?: string | null
+  birthDate?: string | null
+  idCardNo?: string | null
+  age?: number | null
+  phone?: string | null
+  hireDate?: string | null
+  workYears?: number | string | null
+  educationLevel?: string | null
+  homeAddress?: string | null
+  companyName?: string | null
+  operationDepartmentName?: string | null
+  operationAreaName?: string | null
+  teamName?: string | null
+  organization?: {
+    id: string
+    organizationCode: string
+    organizationName: string
+  } | null
+}
+
+export interface SmisAccidentPreventionMeasure {
+  id?: string
+  plannedMeasure: string
+  plannedImplementationDate?: string | null
+  responsibleEmployeeId?: string | null
+  responsibleEmployee?: SmisAccidentEmployee | null
+  sort: number
+}
+
+export interface SmisAccidentPerson {
+  id?: string
+  employeeId: string
+  companyName?: string | null
+  operationDepartmentName?: string | null
+  operationAreaName?: string | null
+  teamName?: string | null
+  employeeNo: string
+  employeeName: string
+  gender?: string | null
+  idCardNo?: string | null
+  age?: number | null
+  phone?: string | null
+  jobTitle?: string | null
+  workYears?: number | string | null
+  jobYears?: number | string | null
+  safetyEducationLevel?: string | null
+  victimNature?: string | null
+  injuryPart?: string | null
+  injuryDegree?: string | null
+  educationLevel?: string | null
+  homeAddress?: string | null
+  remark?: string | null
+  sort: number
+}
+
+export interface SmisAccidentReport {
+  id: string
+  accidentNo: string
+  accidentName: string
+  reporterEmployeeId: string
+  reporterEmployee: SmisAccidentEmployee
+  accidentTime: string
+  accidentLocation: string
+  accidentCategories: SmisAccidentCategory[]
+  operationAreaOrganizationId?: string | null
+  operationAreaOrganizationName?: string | null
+  accidentLevel: SmisAccidentLevel
+  indirectEconomicLoss: number | string
+  causeAnalysis?: string | null
+  resultDetermination?: string | null
+  imageUrls: string[]
+  measures: SmisAccidentPreventionMeasure[]
+  people: SmisAccidentPerson[]
+  createBy?: string | null
+  createTime?: string
+  updateBy?: string | null
+  updateTime?: string
+}
+
+export interface SmisAccidentReportSearchParams {
+  keyword?: string
+  accidentLevel?: SmisAccidentLevel
+  accidentCategory?: SmisAccidentCategory
+  organizationId?: string
+  startTime?: string
+  endTime?: string
+  ids?: string[]
+  from?: number
+  to?: number
+}
+
+export interface SmisAccidentReportOverview {
+  total: number
+  currentMonth: number
+  highSeverity: number
+  affectedPeople: number
+}
+
+export interface SmisAccidentReportListResult {
+  records: SmisAccidentReport[]
+  total: number
+  overview: SmisAccidentReportOverview
+  organizations: SmisTreeOrganization[]
+  currentEmployee?: SmisAccidentEmployee | null
+}
+
+export interface SmisAccidentReportSavePayload {
+  id?: string
+  accidentName: string
+  reporterEmployeeId: string
+  accidentTime: string
+  accidentLocation: string
+  accidentCategories: SmisAccidentCategory[]
+  operationAreaOrganizationId?: string | null
+  accidentLevel: SmisAccidentLevel
+  indirectEconomicLoss: number
+  causeAnalysis?: string
+  resultDetermination?: string
+  imageUrls: string[]
+  measures: Array<
+    Pick<
+      SmisAccidentPreventionMeasure,
+      'id' | 'plannedMeasure' | 'plannedImplementationDate' | 'responsibleEmployeeId' | 'sort'
+    >
+  >
+  people: Array<
+    Pick<
+      SmisAccidentPerson,
+      | 'id'
+      | 'employeeId'
+      | 'jobYears'
+      | 'safetyEducationLevel'
+      | 'victimNature'
+      | 'injuryPart'
+      | 'injuryDegree'
+      | 'remark'
+      | 'sort'
+    >
+  >
+}
+
+export interface SmisAccidentOption {
+  id: string
+  accidentNo: string
+  accidentName: string
+  accidentTime: string
+  accidentLocation: string
+  accidentLevel: SmisAccidentLevel
+}
+
+export interface SmisAccidentAnalysis {
+  id: string
+  accidentReportId: string
+  accident: SmisAccidentOption
+  hostEmployeeId?: string | null
+  hostEmployee?: SmisAccidentEmployee | null
+  recorderEmployeeId?: string | null
+  recorderEmployee?: SmisAccidentEmployee | null
+  rectificationResponsibleEmployeeId?: string | null
+  rectificationResponsibleEmployee?: SmisAccidentEmployee | null
+  participants: SmisAccidentEmployee[]
+  participantCount: number
+  accidentLevel: SmisAccidentLevel
+  isComplete: boolean
+  createBy?: string | null
+  createTime?: string
+  updateBy?: string | null
+  updateTime?: string
+}
+
+export interface SmisAccidentAnalysisSearchParams {
+  keyword?: string
+  accidentLevel?: SmisAccidentLevel
+  ids?: string[]
+  from?: number
+  to?: number
+}
+
+export interface SmisAccidentAnalysisOverview {
+  total: number
+  complete: number
+  pending: number
+  participantCount: number
+}
+
+export interface SmisAccidentAnalysisListResult {
+  records: SmisAccidentAnalysis[]
+  total: number
+  overview: SmisAccidentAnalysisOverview
+}
+
+export interface SmisAccidentAnalysisSavePayload {
+  id?: string
+  accidentReportId: string
+  hostEmployeeId?: string | null
+  recorderEmployeeId?: string | null
+  rectificationResponsibleEmployeeId?: string | null
+  participantEmployeeIds: string[]
+  accidentLevel: SmisAccidentLevel
+}
+
+export type SmisWorkInjuryType = 'slight' | 'minor' | 'serious' | 'fatal'
+
+export interface SmisWorkInjuryDeclaration {
+  id: string
+  declarationNo: string
+  declarationDate: string
+  accidentReportId: string
+  accident: SmisAccidentOption
+  declarantEmployeeId: string
+  declarantEmployeeNoSnapshot: string
+  declarantNameSnapshot: string
+  departmentNameSnapshot?: string | null
+  declarantEmployee: SmisAccidentEmployee
+  injuryType: SmisWorkInjuryType
+  createBy?: string | null
+  createTime?: string
+  updateBy?: string | null
+  updateTime?: string
+}
+
+export interface SmisWorkInjurySearchParams {
+  keyword?: string
+  injuryType?: SmisWorkInjuryType
+  startDate?: string
+  endDate?: string
+  ids?: string[]
+  from?: number
+  to?: number
+}
+
+export interface SmisWorkInjuryOverview {
+  total: number
+  slight: number
+  minor: number
+  serious: number
+  fatal: number
+}
+
+export interface SmisWorkInjuryListResult {
+  records: SmisWorkInjuryDeclaration[]
+  total: number
+  overview: SmisWorkInjuryOverview
+  currentEmployee?: SmisAccidentEmployee | null
+}
+
+export interface SmisWorkInjurySavePayload {
+  id?: string
+  declarationDate: string
+  accidentReportId: string
+  declarantEmployeeId: string
+  injuryType: SmisWorkInjuryType
+}

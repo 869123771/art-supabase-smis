@@ -33,7 +33,6 @@
         emptyDescription: '可从演练计划下推，或新增记录后选择计划编号。'
       }"
       focusable
-      focus-scope-selector=".drill-record-page"
     />
     <DrillRecordDialog ref="dialogRef" @success="handleSaveSuccess" />
   </div>

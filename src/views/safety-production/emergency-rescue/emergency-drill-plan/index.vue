@@ -34,7 +34,6 @@
         emptyDescription: '可新增计划，或从应急救援预案下推生成草稿。'
       }"
       focusable
-      focus-scope-selector=".drill-plan-page"
     />
     <DrillPlanDialog ref="dialogRef" @success="handleSaveSuccess" />
   </div>

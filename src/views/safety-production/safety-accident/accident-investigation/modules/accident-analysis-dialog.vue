@@ -1,0 +1,296 @@
+<template>
+  <ArtDialog ref="dialogRef" size="xl">
+    <div class="analysis-dialog">
+      <div class="analysis-dialog__context" role="note">
+        <span><ArtSvgIcon icon="ri:team-line" /></span>
+        <div>
+          <strong>围绕事故快报组织分析与责任闭环</strong>
+          <p>关联事故后自动带入事故单号和级别，会议角色及参加人员统一从员工花名册选择。</p>
+        </div>
+      </div>
+
+      <ArtForm
+        ref="formRef"
+        v-model="form"
+        :items="items"
+        :rules="rules"
+        :span="12"
+        :gutter="24"
+        label-position="top"
+        :show-reset="false"
+        :show-submit="false"
+      >
+        <template #accidentReportId>
+          <AccidentReportSelect
+            v-model="form.accidentReportId"
+            v-model:selected-data="accidentSelection"
+          />
+        </template>
+        <template #hostEmployeeId>
+          <ArtEmployeeSelect
+            v-model="form.hostEmployeeId"
+            v-model:selected-data="hostSelection"
+            :api-fn="fetchAccidentEmployeeCandidates"
+            title="选择主持人"
+            subtitle="从当前租户员工花名册选择事故分析主持人"
+            placeholder="点击选择主持人"
+          />
+        </template>
+        <template #participantEmployeeIds>
+          <AccidentEmployeeMultipleSelect
+            v-model="form.participantEmployeeIds"
+            v-model:selected-data="participantSelection"
+            title="选择参加人员"
+            subtitle="支持从员工花名册多选，已选人员可再次打开弹窗调整"
+            placeholder="点击选择参加人员"
+          />
+        </template>
+        <template #recorderEmployeeId>
+          <ArtEmployeeSelect
+            v-model="form.recorderEmployeeId"
+            v-model:selected-data="recorderSelection"
+            :api-fn="fetchAccidentEmployeeCandidates"
+            title="选择记录人"
+            subtitle="从当前租户员工花名册选择事故分析记录人"
+            placeholder="点击选择记录人"
+          />
+        </template>
+        <template #rectificationResponsibleEmployeeId>
+          <ArtEmployeeSelect
+            v-model="form.rectificationResponsibleEmployeeId"
+            v-model:selected-data="responsibleSelection"
+            :api-fn="fetchAccidentEmployeeCandidates"
+            title="选择整改责任人"
+            subtitle="从当前租户员工花名册选择整改事项负责人"
+            placeholder="点击选择整改责任人"
+          />
+        </template>
+      </ArtForm>
+    </div>
+  </ArtDialog>
+</template>
+
+<script setup lang="ts">
+  import type { FormRules } from 'element-plus'
+  import type { EmployeeIntegrationItem } from '@/api/integration/employees'
+  import ArtDialog from '@/components/core/dialogs/art-dialog/index.vue'
+  import type { ArtDialogExpose } from '@/components/core/dialogs/art-dialog/types'
+  import ArtForm, { type FormItem } from '@/components/core/forms/art-form/index.vue'
+  import ArtEmployeeSelect from '@/components/business/art-employee-select/index.vue'
+  import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
+  import { useUserStore } from '@/store/modules/user'
+  import {
+    fetchAccidentEmployeeCandidates,
+    saveAccidentAnalysis,
+    type SmisAccidentAnalysis,
+    type SmisAccidentEmployee,
+    type SmisAccidentLevel,
+    type SmisAccidentOption
+  } from '@smis/api'
+  import AccidentEmployeeMultipleSelect from '../../shared/accident-employee-multiple-select.vue'
+  import AccidentReportSelect from '../../shared/accident-report-select.vue'
+
+  export interface AccidentAnalysisDialogOpenData {
+    row?: SmisAccidentAnalysis
+  }
+  interface AccidentAnalysisForm {
+    id?: string
+    accidentReportId: string
+    accidentNo: string
+    hostEmployeeId: string
+    participantEmployeeIds: string[]
+    recorderEmployeeId: string
+    rectificationResponsibleEmployeeId: string
+    accidentLevel: SmisAccidentLevel | ''
+  }
+  interface FormExpose {
+    validate: () => Promise<boolean>
+    clearValidate: () => void
+  }
+
+  const emit = defineEmits<{ success: [] }>()
+  const userStore = useUserStore()
+  const { getDictMap } = storeToRefs(userStore)
+  const dialogRef = ref<ArtDialogExpose<AccidentAnalysisDialogOpenData>>()
+  const formRef = ref<FormExpose>()
+  const accidentSelection = shallowRef<SmisAccidentOption[]>([])
+  const hostSelection = shallowRef<EmployeeIntegrationItem[]>([])
+  const recorderSelection = shallowRef<EmployeeIntegrationItem[]>([])
+  const responsibleSelection = shallowRef<EmployeeIntegrationItem[]>([])
+  const participantSelection = shallowRef<SmisAccidentEmployee[]>([])
+  const initialForm = (): AccidentAnalysisForm => ({
+    accidentReportId: '',
+    accidentNo: '',
+    hostEmployeeId: '',
+    participantEmployeeIds: [],
+    recorderEmployeeId: '',
+    rectificationResponsibleEmployeeId: '',
+    accidentLevel: ''
+  })
+  const form = reactive<AccidentAnalysisForm>(initialForm())
+  const dictOptions = (code: string) =>
+    (getDictMap.value[code] ?? []).map((item) => ({
+      label: item.label || item.name,
+      value: item.value
+    }))
+  const items = computed<FormItem[]>(() => [
+    {
+      label: '关联事故名称',
+      key: 'accidentReportId',
+      type: 'text',
+      span: 16,
+      description: '数据来源：事故快报'
+    },
+    {
+      label: '关联事故单号',
+      key: 'accidentNo',
+      type: 'input',
+      span: 8,
+      props: { readonly: true, placeholder: '选择事故后自动带入' }
+    },
+    { label: '主持人', key: 'hostEmployeeId', type: 'text', span: 12 },
+    { label: '记录人', key: 'recorderEmployeeId', type: 'text', span: 12 },
+    {
+      label: '参加人员',
+      key: 'participantEmployeeIds',
+      type: 'text',
+      span: 24,
+      description: '支持多选，可按姓名、工号、组织或岗位检索'
+    },
+    {
+      label: '整改责任人',
+      key: 'rectificationResponsibleEmployeeId',
+      type: 'text',
+      span: 12
+    },
+    {
+      label: '事故级别',
+      key: 'accidentLevel',
+      type: 'select',
+      span: 12,
+      props: {
+        options: dictOptions('smisAccidentLevel'),
+        clearable: false,
+        placeholder: '请选择事故级别'
+      }
+    }
+  ])
+  const rules: FormRules<AccidentAnalysisForm> = {
+    accidentReportId: [{ required: true, message: '请选择关联事故名称', trigger: 'change' }],
+    accidentLevel: [{ required: true, message: '请选择事故级别', trigger: 'change' }]
+  }
+
+  watch(
+    accidentSelection,
+    (rows) => {
+      const selected = rows[0]
+      form.accidentNo = selected?.accidentNo || ''
+      if (selected) form.accidentLevel = selected.accidentLevel
+    },
+    { deep: true }
+  )
+  const employeeRows = (employee?: SmisAccidentEmployee | null): EmployeeIntegrationItem[] =>
+    employee ? [employee as EmployeeIntegrationItem] : []
+  const resetSelections = (): void => {
+    accidentSelection.value = []
+    hostSelection.value = []
+    recorderSelection.value = []
+    responsibleSelection.value = []
+    participantSelection.value = []
+  }
+  const handleSubmit = async (): Promise<boolean> => {
+    try {
+      await formRef.value?.validate()
+      await saveAccidentAnalysis({
+        id: form.id,
+        accidentReportId: form.accidentReportId,
+        hostEmployeeId: form.hostEmployeeId || null,
+        recorderEmployeeId: form.recorderEmployeeId || null,
+        rectificationResponsibleEmployeeId: form.rectificationResponsibleEmployeeId || null,
+        participantEmployeeIds: form.participantEmployeeIds,
+        accidentLevel: form.accidentLevel as SmisAccidentLevel
+      })
+      emit('success')
+      return true
+    } catch {
+      return false
+    }
+  }
+  const handleOpen = async (data: AccidentAnalysisDialogOpenData): Promise<void> => {
+    Object.assign(form, initialForm())
+    resetSelections()
+    if (data.row) {
+      Object.assign(form, {
+        id: data.row.id,
+        accidentReportId: data.row.accidentReportId,
+        accidentNo: data.row.accident.accidentNo,
+        hostEmployeeId: data.row.hostEmployeeId || '',
+        participantEmployeeIds: data.row.participants.map((employee) => employee.id),
+        recorderEmployeeId: data.row.recorderEmployeeId || '',
+        rectificationResponsibleEmployeeId: data.row.rectificationResponsibleEmployeeId || '',
+        accidentLevel: data.row.accidentLevel
+      })
+      accidentSelection.value = [data.row.accident]
+      hostSelection.value = employeeRows(data.row.hostEmployee)
+      recorderSelection.value = employeeRows(data.row.recorderEmployee)
+      responsibleSelection.value = employeeRows(data.row.rectificationResponsibleEmployee)
+      participantSelection.value = data.row.participants
+    }
+    await nextTick()
+    formRef.value?.clearValidate()
+    await dialogRef.value?.handleOpen(data, {
+      title: data.row ? '事故分析' : '新增事故分析',
+      subtitle: data.row ? data.row.accident.accidentName : '选择事故快报并组织事故分析会议',
+      confirmText: data.row ? '保存分析结果' : '创建事故分析',
+      loading: true,
+      onOpen: async (_openData, api) => {
+        try {
+          await userStore.ensureDictLoaded('smisAccidentLevel')
+        } finally {
+          api.setLoading(false)
+        }
+      },
+      onConfirm: handleSubmit,
+      onReset: () => {
+        Object.assign(form, initialForm())
+        resetSelections()
+      }
+    })
+  }
+  onDeactivated(() => dialogRef.value?.handleClose())
+  defineExpose({ handleOpen })
+</script>
+
+<style scoped lang="scss">
+  .analysis-dialog {
+    min-width: 0;
+
+    &__context {
+      display: grid;
+      grid-template-columns: 44px minmax(0, 1fr);
+      gap: 12px;
+      align-items: center;
+      padding: 14px 16px;
+      margin-bottom: 18px;
+      background: color-mix(in srgb, var(--el-color-primary) 6%, var(--el-bg-color));
+      border-left: 3px solid var(--el-color-primary);
+      border-radius: var(--el-border-radius-base);
+
+      > span {
+        display: grid;
+        place-items: center;
+        width: 44px;
+        height: 44px;
+        color: var(--el-color-primary);
+        background: var(--el-bg-color);
+        border-radius: var(--el-border-radius-base);
+      }
+
+      p {
+        margin: 3px 0 0;
+        font-size: 12px;
+        color: var(--el-text-color-secondary);
+      }
+    }
+  }
+</style>
