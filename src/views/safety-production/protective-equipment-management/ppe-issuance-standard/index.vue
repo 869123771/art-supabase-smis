@@ -1,9 +1,318 @@
 <template>
-  <SmisPagePlaceholder section="安全生产 / 防护用品管理" title="防护用品发放标准" />
+  <ArtPermissionGuard permission="SmisPpeIssuanceStandard:View">
+    <div class="issuance-page business-workspace-page art-full-height">
+      <BusinessWorkspaceHeader
+        eyebrow="PROTECTIVE EQUIPMENT ENTITLEMENT"
+        title="防护用品发放标准"
+        description="按岗位与组织统一配置防护用品定额、周期和频次，为个人标准生成提供唯一业务口径。"
+        icon="ri:shield-check-line"
+        :tags="[
+          { label: '3 位流水编号', type: 'primary', effect: 'plain' },
+          { label: '岗位与组织多选', type: 'success', effect: 'light' },
+          { label: '物料明细联动', type: 'info', effect: 'plain' }
+        ]"
+        :metrics="metrics"
+      >
+        <template #actions><BusinessTableWorkspaceActions :table="tableQueryRef" /></template>
+      </BusinessWorkspaceHeader>
+      <ArtTableQuery
+        ref="tableQueryRef"
+        v-model="searchQuery"
+        :api-fn="fetchTableData"
+        :search-items="searchItems"
+        :columns-factory="columnsFactory"
+        :header-actions="headerActions"
+        header-actions-placement="workspace"
+        :search-bar-props="{ span: 8, labelWidth: 72, showExpand: false }"
+        :table-props="{
+          rowKey: 'id',
+          tableLayout: 'fixed',
+          emptyText: '暂无发放标准',
+          emptyDescription: '点击新增标准，建立第一套防护用品发放口径。'
+        }"
+        focusable
+      />
+      <IssuanceStandardDialog ref="dialogRef" @success="refresh" />
+    </div>
+  </ArtPermissionGuard>
 </template>
 
-<script setup lang="ts">
-  import SmisPagePlaceholder from '@smis/views/components/smis-page-placeholder.vue'
+<script setup lang="tsx">
+  import dayjs from 'dayjs'
+  import type { SearchFormItem } from '@/components/core/forms/art-search-bar/index.vue'
+  import type {
+    ArtTableQueryExpose,
+    ArtTableQueryHeaderAction,
+    ArtTableQueryHeaderActionContext
+  } from '@/components/core/tables/art-table-query/index.vue'
+  import type { ColumnOption } from '@/types'
+  import { pageInfoHandler } from '@/utils/table/tableUtils'
+  import { useArtFeedback } from '@/hooks/core/useArtFeedback'
+  import { useUserStore } from '@/store/modules/user'
+  import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
+  import ArtDictDisplay from '@/components/core/base/art-dict-display/index.vue'
+  import BusinessTableWorkspaceActions from '@/components/business/business-table-workspace-actions/index.vue'
+  import BusinessWorkspaceHeader, {
+    type BusinessWorkspaceMetric
+  } from '@/components/business/business-workspace-header/index.vue'
+  import {
+    deletePpeIssuanceStandards,
+    fetchPpeIssuanceStandardList,
+    type SmisPpeIssuanceStandard,
+    type SmisPpeIssuanceStandardOverview,
+    type SmisPpeIssuanceStandardSearchParams
+  } from '@smis/api'
+  import IssuanceStandardDialog, {
+    type IssuanceStandardDialogOpenData
+  } from './modules/issuance-standard-dialog.vue'
 
   defineOptions({ name: 'SmisPpeIssuanceStandard' })
+  type TableParams = SmisPpeIssuanceStandardSearchParams &
+    Pick<Api.Common.PaginationParams, 'current' | 'size'>
+  interface DialogExpose {
+    handleOpen: (data: IssuanceStandardDialogOpenData) => Promise<void>
+  }
+  const userStore = useUserStore()
+  const { confirmDelete } = useArtFeedback()
+  const tableQueryRef = ref<ArtTableQueryExpose>()
+  const dialogRef = ref<DialogExpose>()
+  const searchQuery = reactive<SmisPpeIssuanceStandardSearchParams>({})
+  const overview = reactive<SmisPpeIssuanceStandardOverview>({
+    total: 0,
+    enabled: 0,
+    disabled: 0,
+    detailTotal: 0
+  })
+  const metrics = computed<BusinessWorkspaceMetric[]>(() => [
+    {
+      label: '标准总数',
+      value: overview.total,
+      description: '当前租户统一口径',
+      icon: 'ri:file-list-3-line'
+    },
+    {
+      label: '启用中',
+      value: overview.enabled,
+      description: '参与个人标准生成',
+      icon: 'ri:checkbox-circle-line',
+      tone: 'success'
+    },
+    {
+      label: '防护用品明细',
+      value: overview.detailTotal,
+      description: '标准内物料配置',
+      icon: 'ri:archive-stack-line'
+    },
+    {
+      label: '已停用',
+      value: overview.disabled,
+      description: '保留历史不再生成',
+      icon: 'ri:pause-circle-line',
+      tone: 'warning'
+    }
+  ])
+  const statusOptions = computed(() =>
+    (userStore.getDictMap.smisMaterialEnableStatus ?? []).map((item) => ({
+      label: item.label || item.name,
+      value: item.value
+    }))
+  )
+  const searchItems = computed<SearchFormItem[]>(() => [
+    {
+      label: '标准信息',
+      key: 'keyword',
+      type: 'input',
+      props: { clearable: true, placeholder: '搜索标准编号或名称' }
+    },
+    {
+      label: '启用状态',
+      key: 'status',
+      type: 'select',
+      options: statusOptions.value,
+      props: { clearable: true, placeholder: '全部状态' }
+    }
+  ])
+  const openDialog = (row?: SmisPpeIssuanceStandard) => void dialogRef.value?.handleOpen({ row })
+  const refresh = async () => {
+    await tableQueryRef.value?.getData()
+  }
+  const headerActions = computed<ArtTableQueryHeaderAction[]>(() => [
+    {
+      permission: 'SmisPpeIssuanceStandard:Add',
+      type: 'add',
+      label: '新增标准',
+      onClick: () => openDialog()
+    },
+    {
+      permission: 'SmisPpeIssuanceStandard:Edit',
+      label: '编辑',
+      icon: 'ri:edit-line',
+      selectionRequired: true,
+      disabled: ({ selectedCount }) => selectedCount !== 1,
+      onClick: ({ selectedRows }) => openDialog(selectedRows[0] as SmisPpeIssuanceStandard)
+    },
+    {
+      permission: 'SmisPpeIssuanceStandard:Export',
+      type: 'export',
+      label: '导出',
+      exportFilename: '防护用品发放标准',
+      exportSheetName: '发放标准',
+      exportColumns: [
+        { key: 'standardNo', title: '标准编号' },
+        { key: 'standardName', title: '发放标准名称' },
+        { key: 'positions', title: '适用岗位' },
+        { key: 'organizations', title: '适用公司/部门' },
+        { key: 'ratedQuantity', title: '额定数量' },
+        { key: 'issuanceCycle', title: '发放周期' },
+        { key: 'issuanceFrequency', title: '发放频次' },
+        { key: 'status', title: '状态' }
+      ],
+      exportApi: async ({ maxRows }) => {
+        const result = await fetchPpeIssuanceStandardList({
+          ...searchQuery,
+          purpose: 'export',
+          from: 0,
+          to: maxRows - 1
+        })
+        return {
+          data: result.data.map((row) => ({
+            ...row,
+            positions: row.positions.map((item) => item.name).join('、'),
+            organizations: row.organizations.map((item) => item.name).join('、')
+          }))
+        }
+      }
+    },
+    {
+      permission: 'SmisPpeIssuanceStandard:Delete',
+      type: 'delete',
+      content: ({ selectedCount }: ArtTableQueryHeaderActionContext) =>
+        `确定删除选中的 ${selectedCount} 条发放标准吗？`,
+      onClick: async ({ selectedRows, api }) => {
+        await deletePpeIssuanceStandards(selectedRows.map((row) => String(row.id)))
+        await api.refreshRemove()
+      }
+    }
+  ])
+  const columnsFactory = (): ColumnOption<SmisPpeIssuanceStandard>[] => [
+    { type: 'selection', width: 48 },
+    {
+      prop: 'standardNo',
+      label: '标准编号',
+      width: 150,
+      fixed: 'left',
+      formatter: (row) => <strong class="standard-no">{row.standardNo}</strong>
+    },
+    { prop: 'standardName', label: '发放标准名称', minWidth: 210, showOverflowTooltip: true },
+    {
+      prop: 'positions',
+      label: '适用岗位',
+      minWidth: 190,
+      showOverflowTooltip: true,
+      formatter: (row) => row.positions.map((item) => item.name).join('、') || '全部岗位'
+    },
+    {
+      prop: 'organizations',
+      label: '适用公司 / 部门',
+      minWidth: 190,
+      showOverflowTooltip: true,
+      formatter: (row) => row.organizations.map((item) => item.name).join('、') || '全部组织'
+    },
+    {
+      prop: 'details',
+      label: '用品明细',
+      width: 100,
+      align: 'center',
+      formatter: (row) => `${row.details.length} 项`
+    },
+    { prop: 'ratedQuantity', label: '额定数量', width: 100, align: 'right' },
+    {
+      prop: 'issuanceCycle',
+      label: '发放周期',
+      width: 110,
+      align: 'center',
+      formatter: (row) => (
+        <ArtDictDisplay dictCode="smisPpeIssuanceCycle" value={row.issuanceCycle} display="tag" />
+      )
+    },
+    {
+      prop: 'issuanceFrequency',
+      label: '频次',
+      width: 90,
+      align: 'center',
+      formatter: (row) => `${row.issuanceFrequency} 次`
+    },
+    {
+      prop: 'status',
+      label: '状态',
+      width: 100,
+      align: 'center',
+      formatter: (row) => (
+        <ArtDictDisplay dictCode="smisMaterialEnableStatus" value={row.status} display="tag" />
+      )
+    },
+    {
+      prop: 'updateTime',
+      label: '更新时间',
+      width: 165,
+      formatter: (row) => (row.updateTime ? dayjs(row.updateTime).format('YYYY-MM-DD HH:mm') : '—')
+    },
+    {
+      prop: 'operation',
+      label: '操作',
+      width: 154,
+      fixed: 'right',
+      formatter: (row) => (
+        <div class="row-actions">
+          <ArtButtonTable
+            permission="SmisPpeIssuanceStandard:Edit"
+            type="edit"
+            onClick={() => openDialog(row)}
+          />
+          <ArtButtonTable
+            permission="SmisPpeIssuanceStandard:Delete"
+            type="delete"
+            onClick={async () => {
+              await confirmDelete(`确定删除发放标准“${row.standardName}”吗？`)
+              await deletePpeIssuanceStandards([row.id])
+              await refresh()
+            }}
+          />
+        </div>
+      )
+    }
+  ]
+  const fetchTableData = async (params: TableParams) => {
+    const result = await fetchPpeIssuanceStandardList({ ...pageInfoHandler(params), ...params })
+    Object.assign(overview, result.overview)
+    return { records: result.data, total: result.total }
+  }
+  onMounted(
+    () =>
+      void Promise.all(
+        ['smisPpeIssuanceCycle', 'smisMaterialEnableStatus', 'smisMaterialUnit'].map((code) =>
+          userStore.ensureDictLoaded(code)
+        )
+      )
+  )
 </script>
+
+<style scoped lang="scss">
+  .issuance-page {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-height: 0;
+  }
+
+  :deep(.standard-no) {
+    font-variant-numeric: tabular-nums;
+    color: var(--theme-color);
+  }
+
+  .row-actions {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+  }
+</style>
