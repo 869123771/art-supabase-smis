@@ -68,9 +68,15 @@
             :size="104"
             title="上传演练照片"
         /></template>
-        <template #attachmentUrls
-          ><EmergencyAttachmentUpload v-model="form.attachmentUrls"
-        /></template>
+        <template #attachmentUrls>
+          <ArtUploadFile
+            v-model="form.attachmentUrls"
+            multiple
+            :limit="8"
+            accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar,image/*"
+            tip="支持文档、压缩包和图片，单个文件不超过 20 MB"
+          />
+        </template>
       </ArtForm>
     </div>
 
@@ -96,6 +102,7 @@
   import ArtDialog from '@/components/core/dialogs/art-dialog/index.vue'
   import type { ArtDialogExpose } from '@/components/core/dialogs/art-dialog/types'
   import ArtForm, { type FormItem } from '@/components/core/forms/art-form/index.vue'
+  import ArtUploadFile from '@/components/core/forms/art-upload-file/index.vue'
   import ArtUploadImage from '@/components/core/forms/art-upload-image/index.vue'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
   import {
@@ -104,7 +111,6 @@
     type SmisEmergencyDrillRecord
   } from '@smis/api'
   import EmergencyEmployeeMultipleSelect from '../../shared/emergency-employee-multiple-select.vue'
-  import EmergencyAttachmentUpload from '../../shared/emergency-attachment-upload.vue'
 
   export interface DrillRecordDialogOpenData {
     row?: SmisEmergencyDrillRecord

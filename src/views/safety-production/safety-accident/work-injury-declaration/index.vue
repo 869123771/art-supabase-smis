@@ -1,60 +1,59 @@
 <template>
-  <div
-    v-auth="'SmisWorkInjuryDeclaration:View'"
-    class="injury-page business-workspace-page art-full-height"
-  >
-    <BusinessWorkspaceHeader
-      eyebrow="INJURY DECLARATION"
-      title="工伤申报"
-      description="从事故快报发起工伤申报，统一管理申报人、所属部门与伤害类型。"
-      icon="ri:first-aid-kit-line"
-      :tags="[
-        { label: '事故单据联动', type: 'primary', effect: 'plain' },
-        { label: '人员组织自动带入', type: 'success', effect: 'light' },
-        { label: '类型快速筛选', type: 'warning', effect: 'plain' }
-      ]"
-      :metrics="metrics"
-    >
-      <template #actions><BusinessTableWorkspaceActions :table="tableRef" /></template>
-    </BusinessWorkspaceHeader>
-
-    <nav class="injury-page__filters" aria-label="按工伤类型筛选">
-      <button
-        v-for="item in quickFilters"
-        :key="item.value || 'all'"
-        type="button"
-        :class="{ 'is-active': searchQuery.injuryType === item.value }"
-        :aria-pressed="searchQuery.injuryType === item.value"
-        @click="setInjuryType(item.value)"
+  <ArtPermissionGuard permission="SmisWorkInjuryDeclaration:View">
+    <div class="injury-page business-workspace-page art-full-height">
+      <BusinessWorkspaceHeader
+        eyebrow="INJURY DECLARATION"
+        title="工伤申报"
+        description="从事故快报发起工伤申报，统一管理申报人、所属部门与伤害类型。"
+        icon="ri:first-aid-kit-line"
+        :tags="[
+          { label: '事故单据联动', type: 'primary', effect: 'plain' },
+          { label: '人员组织自动带入', type: 'success', effect: 'light' },
+          { label: '类型快速筛选', type: 'warning', effect: 'plain' }
+        ]"
+        :metrics="metrics"
       >
-        <span :class="item.tone"><ArtSvgIcon :icon="item.icon" /></span>
-        <span
-          ><strong>{{ item.label }}</strong
-          ><small>{{ item.count }} 条</small></span
-        >
-      </button>
-    </nav>
+        <template #actions><BusinessTableWorkspaceActions :table="tableRef" /></template>
+      </BusinessWorkspaceHeader>
 
-    <ArtTableQuery
-      ref="tableRef"
-      v-model="searchQuery"
-      class="injury-page__table"
-      :api-fn="fetchTableData"
-      :search-items="searchItems"
-      :columns-factory="columnsFactory"
-      :header-actions="headerActions"
-      header-actions-placement="workspace"
-      :search-bar-props="{ span: 8, labelWidth: 76, showExpand: false }"
-      :table-props="{
-        rowKey: 'id',
-        tableLayout: 'fixed',
-        emptyText: '暂无工伤申报',
-        emptyDescription: '可点击新增，从事故快报关联创建工伤申报。'
-      }"
-      focusable
-    />
-    <WorkInjuryDialog ref="dialogRef" @success="handleSaveSuccess" />
-  </div>
+      <nav class="injury-page__filters" aria-label="按工伤类型筛选">
+        <button
+          v-for="item in quickFilters"
+          :key="item.value || 'all'"
+          type="button"
+          :class="{ 'is-active': searchQuery.injuryType === item.value }"
+          :aria-pressed="searchQuery.injuryType === item.value"
+          @click="setInjuryType(item.value)"
+        >
+          <span :class="item.tone"><ArtSvgIcon :icon="item.icon" /></span>
+          <span
+            ><strong>{{ item.label }}</strong
+            ><small>{{ item.count }} 条</small></span
+          >
+        </button>
+      </nav>
+
+      <ArtTableQuery
+        ref="tableRef"
+        v-model="searchQuery"
+        class="injury-page__table"
+        :api-fn="fetchTableData"
+        :search-items="searchItems"
+        :columns-factory="columnsFactory"
+        :header-actions="headerActions"
+        header-actions-placement="workspace"
+        :search-bar-props="{ span: 8, labelWidth: 76, showExpand: false }"
+        :table-props="{
+          rowKey: 'id',
+          tableLayout: 'fixed',
+          emptyText: '暂无工伤申报',
+          emptyDescription: '可点击新增，从事故快报关联创建工伤申报。'
+        }"
+        focusable
+      />
+      <WorkInjuryDialog ref="dialogRef" @success="handleSaveSuccess" />
+    </div>
+  </ArtPermissionGuard>
 </template>
 
 <script setup lang="tsx">
@@ -191,8 +190,9 @@
     {
       label: '申报时间',
       key: 'declarationDateRange',
-      type: 'daterange',
+      type: 'date',
       props: {
+        type: 'daterange',
         valueFormat: 'YYYY-MM-DD',
         startPlaceholder: '开始日期',
         endPlaceholder: '结束日期',

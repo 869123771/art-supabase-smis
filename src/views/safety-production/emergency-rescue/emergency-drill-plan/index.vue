@@ -1,42 +1,41 @@
 <template>
-  <div
-    v-auth="'SmisEmergencyDrillPlan:View'"
-    class="drill-plan-page business-workspace-page art-full-height"
-  >
-    <BusinessWorkspaceHeader
-      eyebrow="DRILL READINESS"
-      title="应急演练计划"
-      description="将有效应急预案转化为有负责人、有期限、可兑现的演练任务。"
-      icon="ri:calendar-check-line"
-      :tags="[
-        { label: '预案一对多', type: 'primary', effect: 'plain' },
-        { label: '到期前 3 天预警', type: 'warning', effect: 'light' },
-        { label: '下推演练记录', type: 'success', effect: 'plain' }
-      ]"
-      :metrics="metrics"
-    >
-      <template #actions><BusinessTableWorkspaceActions :table="tableRef" /></template>
-    </BusinessWorkspaceHeader>
-    <ArtTableQuery
-      ref="tableRef"
-      v-model="searchQuery"
-      class="drill-plan-page__table"
-      :api-fn="fetchTableData"
-      :search-items="searchItems"
-      :columns-factory="columnsFactory"
-      :header-actions="headerActions"
-      header-actions-placement="workspace"
-      :search-bar-props="{ span: 6, labelWidth: 82, showExpand: false }"
-      :table-props="{
-        rowKey: 'id',
-        tableLayout: 'fixed',
-        emptyText: '暂无应急演练计划',
-        emptyDescription: '可新增计划，或从应急救援预案下推生成草稿。'
-      }"
-      focusable
-    />
-    <DrillPlanDialog ref="dialogRef" @success="handleSaveSuccess" />
-  </div>
+  <ArtPermissionGuard permission="SmisEmergencyDrillPlan:View">
+    <div class="drill-plan-page business-workspace-page art-full-height">
+      <BusinessWorkspaceHeader
+        eyebrow="DRILL READINESS"
+        title="应急演练计划"
+        description="将有效应急预案转化为有负责人、有期限、可兑现的演练任务。"
+        icon="ri:calendar-check-line"
+        :tags="[
+          { label: '预案一对多', type: 'primary', effect: 'plain' },
+          { label: '到期前 3 天预警', type: 'warning', effect: 'light' },
+          { label: '下推演练记录', type: 'success', effect: 'plain' }
+        ]"
+        :metrics="metrics"
+      >
+        <template #actions><BusinessTableWorkspaceActions :table="tableRef" /></template>
+      </BusinessWorkspaceHeader>
+      <ArtTableQuery
+        ref="tableRef"
+        v-model="searchQuery"
+        class="drill-plan-page__table"
+        :api-fn="fetchTableData"
+        :search-items="searchItems"
+        :columns-factory="columnsFactory"
+        :header-actions="headerActions"
+        header-actions-placement="workspace"
+        :search-bar-props="{ span: 6, labelWidth: 82, showExpand: false }"
+        :table-props="{
+          rowKey: 'id',
+          tableLayout: 'fixed',
+          emptyText: '暂无应急演练计划',
+          emptyDescription: '可新增计划，或从应急救援预案下推生成草稿。'
+        }"
+        focusable
+      />
+      <DrillPlanDialog ref="dialogRef" @success="handleSaveSuccess" />
+    </div>
+  </ArtPermissionGuard>
 </template>
 
 <script setup lang="tsx">

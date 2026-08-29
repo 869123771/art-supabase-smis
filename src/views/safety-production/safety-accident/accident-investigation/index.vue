@@ -1,43 +1,42 @@
 <template>
-  <div
-    v-auth="'SmisAccidentInvestigation:View'"
-    class="analysis-page business-workspace-page art-full-height"
-  >
-    <BusinessWorkspaceHeader
-      eyebrow="ACCIDENT ANALYSIS"
-      title="事故调查处理"
-      description="事故快报保存后自动生成分析单，统一记录主持、参会、记录与整改责任人员。"
-      icon="ri:mind-map"
-      :tags="[
-        { label: '事故快报自动生成', type: 'primary', effect: 'plain' },
-        { label: '员工花名册联动', type: 'success', effect: 'light' },
-        { label: '分析责任闭环', type: 'warning', effect: 'plain' }
-      ]"
-      :metrics="metrics"
-    >
-      <template #actions><BusinessTableWorkspaceActions :table="tableRef" /></template>
-    </BusinessWorkspaceHeader>
+  <ArtPermissionGuard permission="SmisAccidentInvestigation:View">
+    <div class="analysis-page business-workspace-page art-full-height">
+      <BusinessWorkspaceHeader
+        eyebrow="ACCIDENT ANALYSIS"
+        title="事故调查处理"
+        description="事故快报保存后自动生成分析单，统一记录主持、参会、记录与整改责任人员。"
+        icon="ri:mind-map"
+        :tags="[
+          { label: '事故快报自动生成', type: 'primary', effect: 'plain' },
+          { label: '员工花名册联动', type: 'success', effect: 'light' },
+          { label: '分析责任闭环', type: 'warning', effect: 'plain' }
+        ]"
+        :metrics="metrics"
+      >
+        <template #actions><BusinessTableWorkspaceActions :table="tableRef" /></template>
+      </BusinessWorkspaceHeader>
 
-    <ArtTableQuery
-      ref="tableRef"
-      v-model="searchQuery"
-      class="analysis-page__table"
-      :api-fn="fetchTableData"
-      :search-items="searchItems"
-      :columns-factory="columnsFactory"
-      :header-actions="headerActions"
-      header-actions-placement="workspace"
-      :search-bar-props="{ span: 8, labelWidth: 76, showExpand: false }"
-      :table-props="{
-        rowKey: 'id',
-        tableLayout: 'fixed',
-        emptyText: '暂无事故分析单',
-        emptyDescription: '事故快报保存后会自动生成，也可点击事故分析选择已有事故。'
-      }"
-      focusable
-    />
-    <AccidentAnalysisDialog ref="dialogRef" @success="handleSaveSuccess" />
-  </div>
+      <ArtTableQuery
+        ref="tableRef"
+        v-model="searchQuery"
+        class="analysis-page__table"
+        :api-fn="fetchTableData"
+        :search-items="searchItems"
+        :columns-factory="columnsFactory"
+        :header-actions="headerActions"
+        header-actions-placement="workspace"
+        :search-bar-props="{ span: 8, labelWidth: 76, showExpand: false }"
+        :table-props="{
+          rowKey: 'id',
+          tableLayout: 'fixed',
+          emptyText: '暂无事故分析单',
+          emptyDescription: '事故快报保存后会自动生成，也可点击事故分析选择已有事故。'
+        }"
+        focusable
+      />
+      <AccidentAnalysisDialog ref="dialogRef" @success="handleSaveSuccess" />
+    </div>
+  </ArtPermissionGuard>
 </template>
 
 <script setup lang="tsx">

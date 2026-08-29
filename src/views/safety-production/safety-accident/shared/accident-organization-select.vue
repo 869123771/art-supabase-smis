@@ -3,9 +3,9 @@
     :model-value="modelValue"
     :data="selectData"
     :selected-data="selectedData"
-    title="选择事故发生作业区"
-    subtitle="数据来自系统组织管理；可按组织名称或编码检索"
-    placeholder="点击选择组织"
+    :title="title"
+    :subtitle="subtitle"
+    :placeholder="placeholder"
     search-placeholder="搜索组织名称或编码"
     row-key="id"
     label-key="organizationName"
@@ -28,8 +28,20 @@
 
   defineOptions({ name: 'SmisAccidentOrganizationSelect' })
   const props = withDefaults(
-    defineProps<{ modelValue?: string; organizations?: SmisTreeOrganization[] }>(),
-    { modelValue: undefined, organizations: () => [] }
+    defineProps<{
+      modelValue?: string
+      organizations?: SmisTreeOrganization[]
+      title?: string
+      subtitle?: string
+      placeholder?: string
+    }>(),
+    {
+      modelValue: undefined,
+      organizations: () => [],
+      title: '选择事故发生作业区',
+      subtitle: '数据来自系统组织管理；可按组织名称或编码检索',
+      placeholder: '点击选择组织'
+    }
   )
   const emit = defineEmits<{ 'update:modelValue': [value: string | undefined] }>()
   const tree = new TreeUtils({ idKey: 'id', parentKey: 'parentId', childrenKey: 'children' })

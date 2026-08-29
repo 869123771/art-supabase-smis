@@ -532,8 +532,9 @@
       {
         label: '启用日期',
         key: 'enableDateRange',
-        type: 'daterange',
+        type: 'date',
         props: {
+          type: 'daterange',
           valueFormat: 'YYYY-MM-DD',
           startPlaceholder: '开始日期',
           endPlaceholder: '结束日期',

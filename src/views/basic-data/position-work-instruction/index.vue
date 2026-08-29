@@ -1,83 +1,82 @@
 <template>
-  <div
-    v-auth="'SmisPositionWorkInstruction:View'"
-    class="work-instruction-page business-workspace-page art-full-height"
-  >
-    <BusinessWorkspaceHeader
-      class="work-instruction-page__overview"
-      eyebrow="POSITION WORK INSTRUCTION"
-      title="岗位作业指导书"
-      description="统一维护岗位作业指导文件及版本信息，一份指导书可关联多个组织岗位。"
-      icon="ri:file-list-3-line"
-      density="compact"
-      :tags="workspaceTags"
-      :metrics="workspaceMetrics"
-    >
-      <template #actions><BusinessTableWorkspaceActions :table="tableQueryRef" /></template>
-    </BusinessWorkspaceHeader>
-
-    <div class="work-instruction-page__workspace">
-      <ArtWorkspaceSplitter
-        primary-size="296px"
-        primary-min="252px"
-        primary-max="400px"
-        :breakpoint="820"
-        stacked-primary-size="320px"
+  <ArtPermissionGuard permission="SmisPositionWorkInstruction:View">
+    <div class="work-instruction-page business-workspace-page art-full-height">
+      <BusinessWorkspaceHeader
+        class="work-instruction-page__overview"
+        eyebrow="POSITION WORK INSTRUCTION"
+        title="岗位作业指导书"
+        description="统一维护岗位作业指导文件及版本信息，一份指导书可关联多个组织岗位。"
+        icon="ri:file-list-3-line"
+        density="compact"
+        :tags="workspaceTags"
+        :metrics="workspaceMetrics"
       >
-        <template #primary>
-          <aside class="work-instruction-page__tree-panel">
-            <PositionTreeNavigator
-              :data="treeState.nodes"
-              :loading="treeState.loading"
-              :error="treeState.error"
-              :selected-key="treeState.selectedKey"
-              @select="handleTreeSelect"
-              @refresh="loadPositionTree"
+        <template #actions><BusinessTableWorkspaceActions :table="tableQueryRef" /></template>
+      </BusinessWorkspaceHeader>
+
+      <div class="work-instruction-page__workspace">
+        <ArtWorkspaceSplitter
+          primary-size="296px"
+          primary-min="252px"
+          primary-max="400px"
+          :breakpoint="820"
+          stacked-primary-size="320px"
+        >
+          <template #primary>
+            <aside class="work-instruction-page__tree-panel">
+              <PositionTreeNavigator
+                :data="treeState.nodes"
+                :loading="treeState.loading"
+                :error="treeState.error"
+                :selected-key="treeState.selectedKey"
+                @select="handleTreeSelect"
+                @refresh="loadPositionTree"
+              />
+            </aside>
+          </template>
+
+          <main class="work-instruction-page__main">
+            <div class="work-instruction-page__scope-bar">
+              <div class="work-instruction-page__scope-identity">
+                <span aria-hidden="true"><ArtSvgIcon :icon="selectedScopeIcon" /></span>
+                <span
+                  ><small>当前查看范围</small><strong>{{ selectedScopeLabel }}</strong></span
+                >
+              </div>
+              <div class="work-instruction-page__scope-hint">
+                <ArtSvgIcon icon="ri:git-merge-line" />
+                组织节点查看本部门全部指导书，岗位节点查看精准适用文件
+              </div>
+            </div>
+
+            <ArtTableQuery
+              ref="tableQueryRef"
+              v-model="tableState.searchQuery"
+              class="work-instruction-page__table"
+              :search-items="searchItems"
+              :api-fn="fetchTableData"
+              :columns-factory="columnsFactory"
+              :header-actions="headerActions"
+              header-actions-placement="workspace"
+              :search-bar-props="{ span: 8, labelWidth: 76, showExpand: false }"
+              :table-props="{
+                rowKey: 'id',
+                tableLayout: 'fixed',
+                emptyText: '暂无岗位作业指导书',
+                emptyDescription: '可新增指导书并关联一个或多个组织岗位。',
+                showOverflowTooltip: true
+              }"
+              :on-success="handleTableSuccess"
+              focusable
+              focus-scope-selector=".work-instruction-page__workspace"
             />
-          </aside>
-        </template>
+          </main>
+        </ArtWorkspaceSplitter>
+      </div>
 
-        <main class="work-instruction-page__main">
-          <div class="work-instruction-page__scope-bar">
-            <div class="work-instruction-page__scope-identity">
-              <span aria-hidden="true"><ArtSvgIcon :icon="selectedScopeIcon" /></span>
-              <span
-                ><small>当前查看范围</small><strong>{{ selectedScopeLabel }}</strong></span
-              >
-            </div>
-            <div class="work-instruction-page__scope-hint">
-              <ArtSvgIcon icon="ri:git-merge-line" />
-              组织节点查看本部门全部指导书，岗位节点查看精准适用文件
-            </div>
-          </div>
-
-          <ArtTableQuery
-            ref="tableQueryRef"
-            v-model="tableState.searchQuery"
-            class="work-instruction-page__table"
-            :search-items="searchItems"
-            :api-fn="fetchTableData"
-            :columns-factory="columnsFactory"
-            :header-actions="headerActions"
-            header-actions-placement="workspace"
-            :search-bar-props="{ span: 8, labelWidth: 76, showExpand: false }"
-            :table-props="{
-              rowKey: 'id',
-              tableLayout: 'fixed',
-              emptyText: '暂无岗位作业指导书',
-              emptyDescription: '可新增指导书并关联一个或多个组织岗位。',
-              showOverflowTooltip: true
-            }"
-            :on-success="handleTableSuccess"
-            focusable
-            focus-scope-selector=".work-instruction-page__workspace"
-          />
-        </main>
-      </ArtWorkspaceSplitter>
+      <WorkInstructionDialog ref="dialogRef" @success="handleSaveSuccess" />
     </div>
-
-    <WorkInstructionDialog ref="dialogRef" @success="handleSaveSuccess" />
-  </div>
+  </ArtPermissionGuard>
 </template>
 
 <script setup lang="tsx">

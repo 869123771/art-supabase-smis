@@ -1,172 +1,171 @@
 <template>
-  <div
-    v-auth="'SmisPositionSafetyResponsibility:View'"
-    class="position-safety-page business-workspace-page art-full-height"
-  >
-    <BusinessWorkspaceHeader
-      class="position-safety-page__overview"
-      eyebrow="POSITION SAFETY"
-      title="岗位安全责任制"
-      description="按组织和 HR 岗位维护隐患排查标准，统一隐患分类、风险等级与排查频次口径。"
-      icon="ri:shield-user-line"
-      density="compact"
-      :tags="workspaceTags"
-      :metrics="workspaceMetrics"
-    >
-      <template #actions>
-        <BusinessTableWorkspaceActions :table="tableQueryRef" />
-      </template>
-    </BusinessWorkspaceHeader>
-
-    <div class="position-safety-page__workspace">
-      <ArtWorkspaceSplitter
-        primary-size="276px"
-        primary-min="244px"
-        primary-max="380px"
-        :breakpoint="820"
-        stacked-primary-size="280px"
+  <ArtPermissionGuard permission="SmisPositionSafetyResponsibility:View">
+    <div class="position-safety-page business-workspace-page art-full-height">
+      <BusinessWorkspaceHeader
+        class="position-safety-page__overview"
+        eyebrow="POSITION SAFETY"
+        title="岗位安全责任制"
+        description="按组织和 HR 岗位维护隐患排查标准，统一隐患分类、风险等级与排查频次口径。"
+        icon="ri:shield-user-line"
+        density="compact"
+        :tags="workspaceTags"
+        :metrics="workspaceMetrics"
       >
-        <template #primary>
-          <aside class="position-safety-page__organization-panel">
-            <OrganizationNavigator
-              :data="organizationState.tree"
-              :loading="organizationState.loading"
-              :error="organizationState.error"
-              :selected-key="organizationState.selectedKey"
-              :all-key="ALL_ORGANIZATIONS_KEY"
-              @select="handleOrganizationSelect"
-              @refresh="loadOrganizations"
-            />
-          </aside>
+        <template #actions>
+          <BusinessTableWorkspaceActions :table="tableQueryRef" />
         </template>
+      </BusinessWorkspaceHeader>
 
-        <main class="position-safety-page__main">
-          <ArtSectionCard
-            class="position-safety-page__positions"
-            title="岗位选择"
-            :subtitle="positionSectionSubtitle"
-            :loading="positionState.loading"
-            :error="positionState.error"
-            :empty="!positionState.loading && !positionState.error && !positionState.rows.length"
-            empty-title="当前范围暂无岗位"
-            empty-description="岗位来自 HR 岗位管理，并按岗位编制、员工任职和已维护标准关联到当前组织。"
-            :min-height="164"
-            @retry="loadPositions"
-          >
-            <template #actions>
-              <ElInput
-                v-model="positionState.keyword"
-                class="position-safety-page__position-search"
-                clearable
-                placeholder="岗位编码或名称"
-                aria-label="搜索岗位编码或名称"
-                @keyup.enter="loadPositions"
-                @clear="loadPositions"
-              >
-                <template #prefix><ArtSvgIcon icon="ri:search-line" /></template>
-              </ElInput>
-              <ArtIconButton
-                icon="ri:search-line"
-                label="查询岗位"
-                :loading="positionState.loading"
-                @click="loadPositions"
+      <div class="position-safety-page__workspace">
+        <ArtWorkspaceSplitter
+          primary-size="276px"
+          primary-min="244px"
+          primary-max="380px"
+          :breakpoint="820"
+          stacked-primary-size="280px"
+        >
+          <template #primary>
+            <aside class="position-safety-page__organization-panel">
+              <OrganizationNavigator
+                :data="organizationState.tree"
+                :loading="organizationState.loading"
+                :error="organizationState.error"
+                :selected-key="organizationState.selectedKey"
+                :all-key="ALL_ORGANIZATIONS_KEY"
+                @select="handleOrganizationSelect"
+                @refresh="loadOrganizations"
               />
-            </template>
+            </aside>
+          </template>
 
-            <ElTable
-              :data="positionState.rows"
-              :row-key="(row: SmisPositionOption) => row.id"
-              :current-row-key="positionState.selectedId || undefined"
-              height="142"
-              highlight-current-row
-              table-layout="fixed"
-              @row-click="handlePositionSelect"
+          <main class="position-safety-page__main">
+            <ArtSectionCard
+              class="position-safety-page__positions"
+              title="岗位选择"
+              :subtitle="positionSectionSubtitle"
+              :loading="positionState.loading"
+              :error="positionState.error"
+              :empty="!positionState.loading && !positionState.error && !positionState.rows.length"
+              empty-title="当前范围暂无岗位"
+              empty-description="岗位来自 HR 岗位管理，并按岗位编制、员工任职和已维护标准关联到当前组织。"
+              :min-height="164"
+              @retry="loadPositions"
             >
-              <ElTableColumn
-                prop="positionName"
-                label="岗位信息"
-                min-width="280"
-                show-overflow-tooltip
+              <template #actions>
+                <ElInput
+                  v-model="positionState.keyword"
+                  class="position-safety-page__position-search"
+                  clearable
+                  placeholder="岗位编码或名称"
+                  aria-label="搜索岗位编码或名称"
+                  @keyup.enter="loadPositions"
+                  @clear="loadPositions"
+                >
+                  <template #prefix><ArtSvgIcon icon="ri:search-line" /></template>
+                </ElInput>
+                <ArtIconButton
+                  icon="ri:search-line"
+                  label="查询岗位"
+                  :loading="positionState.loading"
+                  @click="loadPositions"
+                />
+              </template>
+
+              <ElTable
+                :data="positionState.rows"
+                :row-key="(row: SmisPositionOption) => row.id"
+                :current-row-key="positionState.selectedId || undefined"
+                height="142"
+                highlight-current-row
+                table-layout="fixed"
+                @row-click="handlePositionSelect"
               >
-                <template #default="{ row }">
-                  <div class="position-safety-page__position-identity">
-                    <span class="position-safety-page__position-icon" aria-hidden="true">
-                      <ArtSvgIcon icon="ri:briefcase-4-line" />
+                <ElTableColumn
+                  prop="positionName"
+                  label="岗位信息"
+                  min-width="280"
+                  show-overflow-tooltip
+                >
+                  <template #default="{ row }">
+                    <div class="position-safety-page__position-identity">
+                      <span class="position-safety-page__position-icon" aria-hidden="true">
+                        <ArtSvgIcon icon="ri:briefcase-4-line" />
+                      </span>
+                      <span class="position-safety-page__position-copy">
+                        <strong>{{ row.positionName }}</strong>
+                        <small>
+                          <span translate="no">{{ row.positionCode }}</span>
+                          <i aria-hidden="true"></i>
+                          {{ row.description || 'HR 岗位主数据' }}
+                        </small>
+                      </span>
+                    </div>
+                  </template>
+                </ElTableColumn>
+                <ElTableColumn prop="employeeCount" label="在岗人数" width="96" align="right">
+                  <template #default="{ row }">
+                    <span class="position-safety-page__employee-count">
+                      <strong>{{ row.employeeCount }}</strong
+                      ><small> 人</small>
                     </span>
-                    <span class="position-safety-page__position-copy">
-                      <strong>{{ row.positionName }}</strong>
-                      <small>
-                        <span translate="no">{{ row.positionCode }}</span>
-                        <i aria-hidden="true"></i>
-                        {{ row.description || 'HR 岗位主数据' }}
-                      </small>
+                  </template>
+                </ElTableColumn>
+                <ElTableColumn label="当前范围" width="104" align="center">
+                  <template #default="{ row }">
+                    <span
+                      class="position-safety-page__position-state"
+                      :class="{ 'is-current': row.id === positionState.selectedId }"
+                    >
+                      <ArtSvgIcon
+                        :icon="
+                          row.id === positionState.selectedId
+                            ? 'ri:check-line'
+                            : 'ri:arrow-right-s-line'
+                        "
+                      />
+                      {{ row.id === positionState.selectedId ? '已选择' : '选择' }}
                     </span>
-                  </div>
-                </template>
-              </ElTableColumn>
-              <ElTableColumn prop="employeeCount" label="在岗人数" width="96" align="right">
-                <template #default="{ row }">
-                  <span class="position-safety-page__employee-count">
-                    <strong>{{ row.employeeCount }}</strong
-                    ><small> 人</small>
-                  </span>
-                </template>
-              </ElTableColumn>
-              <ElTableColumn label="当前范围" width="104" align="center">
-                <template #default="{ row }">
-                  <span
-                    class="position-safety-page__position-state"
-                    :class="{ 'is-current': row.id === positionState.selectedId }"
-                  >
-                    <ArtSvgIcon
-                      :icon="
-                        row.id === positionState.selectedId
-                          ? 'ri:check-line'
-                          : 'ri:arrow-right-s-line'
-                      "
-                    />
-                    {{ row.id === positionState.selectedId ? '已选择' : '选择' }}
-                  </span>
-                </template>
-              </ElTableColumn>
-            </ElTable>
-          </ArtSectionCard>
+                  </template>
+                </ElTableColumn>
+              </ElTable>
+            </ArtSectionCard>
 
-          <ArtTableQuery
-            ref="tableQueryRef"
-            v-model="tableState.searchQuery"
-            class="position-safety-page__table"
-            :search-items="searchItems"
-            :api-fn="fetchTableData"
-            :columns-factory="columnsFactory"
-            :header-actions="headerActions"
-            header-actions-placement="workspace"
-            :immediate="false"
-            :search-bar-props="{
-              span: 8,
-              labelWidth: 96,
-              showExpand: false,
-              disabledSearch: !positionState.selectedId
-            }"
-            :table-props="{
-              rowKey: 'id',
-              tableLayout: 'fixed',
-              emptyText: positionState.selectedId ? '暂无隐患排查标准' : '请先选择岗位',
-              emptyDescription: positionState.selectedId
-                ? '可新增或导入当前组织、岗位的隐患排查标准。'
-                : '从上方岗位列表选择一个岗位后查看标准。',
-              showOverflowTooltip: true
-            }"
-            :on-success="handleTableSuccess"
-            focusable
-            focus-scope-selector=".position-safety-page__workspace"
-          />
-        </main>
-      </ArtWorkspaceSplitter>
+            <ArtTableQuery
+              ref="tableQueryRef"
+              v-model="tableState.searchQuery"
+              class="position-safety-page__table"
+              :search-items="searchItems"
+              :api-fn="fetchTableData"
+              :columns-factory="columnsFactory"
+              :header-actions="headerActions"
+              header-actions-placement="workspace"
+              :immediate="false"
+              :search-bar-props="{
+                span: 8,
+                labelWidth: 96,
+                showExpand: false,
+                disabledSearch: !positionState.selectedId
+              }"
+              :table-props="{
+                rowKey: 'id',
+                tableLayout: 'fixed',
+                emptyText: positionState.selectedId ? '暂无隐患排查标准' : '请先选择岗位',
+                emptyDescription: positionState.selectedId
+                  ? '可新增或导入当前组织、岗位的隐患排查标准。'
+                  : '从上方岗位列表选择一个岗位后查看标准。',
+                showOverflowTooltip: true
+              }"
+              :on-success="handleTableSuccess"
+              focusable
+              focus-scope-selector=".position-safety-page__workspace"
+            />
+          </main>
+        </ArtWorkspaceSplitter>
+      </div>
+
+      <ResponsibilityDialog ref="dialogRef" @success="handleSaveSuccess" />
     </div>
-
-    <ResponsibilityDialog ref="dialogRef" @success="handleSaveSuccess" />
-  </div>
+  </ArtPermissionGuard>
 </template>
 
 <script setup lang="tsx">

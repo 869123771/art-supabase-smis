@@ -1,0 +1,1 @@
+import{$n as e,mn as t,rn as n}from"./style-C1L0GNpN.js";import{t as r}from"./smis-page-placeholder-wwhm9pit.js";var i=t({name:`SmisToolIssuanceStandard`,__name:`index`,setup(t){return(t,i)=>(e(),n(r,{section:`安全生产 / 工器具领用`,title:`工器具发放标准`}))}});export{i as default};

@@ -1,204 +1,209 @@
 <template>
-  <div
-    v-auth="'SmisEmergencyDrillReport:View'"
-    class="drill-report-page business-workspace-page art-full-height"
-  >
-    <BusinessWorkspaceHeader
-      eyebrow="DRILL INSIGHTS"
-      title="应急演练报表"
-      description="按日期和组织分析演练兑现、频次、迟延情况与未兑现计划。"
-      icon="ri:bar-chart-box-line"
-      :tags="[
-        { label: '多维检索', type: 'primary', effect: 'plain' },
-        {
-          label: `延迟完成 ${overview.lateCount}`,
-          type: overview.lateCount ? 'danger' : 'success',
-          effect: 'light'
-        },
-        { label: '未兑现计划可追溯', type: 'warning', effect: 'plain' }
-      ]"
-      :metrics="metrics"
-    />
-    <ElScrollbar class="drill-report-page__scroll">
-      <div class="drill-report-page__body">
-        <ArtSearchBar
-          v-model="query"
-          :items="searchItems"
-          :span="6"
-          label-position="top"
-          :show-expand="false"
-          :disabled-search="loading"
-          @search="loadReport"
-          @reset="resetQuery"
-        />
-        <div class="drill-report-page__content">
-          <ArtSectionCard
-            class="drill-report-page__panel"
-            title="演练执行分析"
-            subtitle="按组织、计划类别和演练级别聚合"
-            :loading="loading"
-            :error="loadError"
-            :empty="!loading && !loadError && rows.length === 0"
-            empty-title="暂无已提交演练记录"
-            empty-description="调整日期或组织范围后重新查询。"
-            :min-height="320"
-            @retry="loadReport"
-          >
-            <template #actions
-              ><ElTag type="success" effect="plain">{{ rows.length }} 个维度</ElTag></template
-            >
-            <div class="drill-report-page__analysis-summary" aria-label="演练执行摘要">
-              <div class="drill-report-page__analysis-item">
-                <span>计划兑现率</span>
-                <strong>{{ completionRate }}%</strong>
-                <small>已形成正式记录的计划占比</small>
-              </div>
-              <div class="drill-report-page__analysis-item">
-                <span>实际演练</span>
-                <strong>{{ totalDrillCount }}</strong>
-                <small>当前筛选范围累计次数</small>
-              </div>
-              <div class="drill-report-page__analysis-item">
-                <span>覆盖组织</span>
-                <strong>{{ coveredOrganizationCount }}</strong>
-                <small>已开展演练的组织数量</small>
-              </div>
-            </div>
-            <ArtTable
-              :data="rows"
-              :pagination="false"
-              class="drill-report-page__table"
-              table-layout="fixed"
-              empty-text="当前筛选范围暂无已提交演练记录"
-            >
-              <ElTableColumn
-                prop="organizationName"
-                label="演练组织"
-                min-width="180"
-                show-overflow-tooltip
-              />
-              <ElTableColumn prop="planCategory" label="计划类别" width="150"
-                ><template #default="{ row }"
-                  ><ArtDictDisplay
-                    dict-code="smisEmergencyPlanCategory"
-                    :value="row.planCategory"
-                    display="tag" /></template
-              ></ElTableColumn>
-              <ElTableColumn prop="planLevel" label="演练级别" width="130"
-                ><template #default="{ row }"
-                  ><ArtDictDisplay
-                    dict-code="smisEmergencyPlanLevel"
-                    :value="row.planLevel" /></template
-              ></ElTableColumn>
-              <ElTableColumn prop="drillCount" label="实际演练次数" width="130" align="center"
-                ><template #default="{ row }"
-                  ><strong class="drill-report-page__number">{{ row.drillCount }}</strong></template
-                ></ElTableColumn
-              >
-              <ElTableColumn prop="averageIntervalDays" label="平均间隔" width="130" align="center"
-                ><template #default="{ row }">{{
-                  row.averageIntervalDays == null ? '单次演练' : `${row.averageIntervalDays} 天`
-                }}</template></ElTableColumn
-              >
-              <ElTableColumn prop="lateCount" label="延迟完成" width="110" align="center"
-                ><template #default="{ row }"
-                  ><ElTag :type="row.lateCount ? 'danger' : 'success'" effect="light">{{
-                    row.lateCount
-                  }}</ElTag></template
-                ></ElTableColumn
-              >
-            </ArtTable>
-          </ArtSectionCard>
-          <aside class="drill-report-page__aside" aria-label="未兑现计划与统计口径">
+  <ArtPermissionGuard permission="SmisEmergencyDrillReport:View">
+    <div class="drill-report-page business-workspace-page art-full-height">
+      <BusinessWorkspaceHeader
+        eyebrow="DRILL INSIGHTS"
+        title="应急演练报表"
+        description="按日期和组织分析演练兑现、频次、迟延情况与未兑现计划。"
+        icon="ri:bar-chart-box-line"
+        :tags="[
+          { label: '多维检索', type: 'primary', effect: 'plain' },
+          {
+            label: `延迟完成 ${overview.lateCount}`,
+            type: overview.lateCount ? 'danger' : 'success',
+            effect: 'light'
+          },
+          { label: '未兑现计划可追溯', type: 'warning', effect: 'plain' }
+        ]"
+        :metrics="metrics"
+      />
+      <ElScrollbar class="drill-report-page__scroll">
+        <div class="drill-report-page__body">
+          <ArtSearchBar
+            v-model="query"
+            :items="searchItems"
+            :span="6"
+            label-position="top"
+            :show-expand="false"
+            :disabled-search="loading"
+            @search="loadReport"
+            @reset="resetQuery"
+          />
+          <div class="drill-report-page__content">
             <ArtSectionCard
-              class="drill-report-page__panel drill-report-page__panel--warning"
-              title="未兑现演练计划"
-              subtitle="计划中且尚无已提交演练记录"
+              class="drill-report-page__panel"
+              title="演练执行分析"
+              subtitle="按组织、计划类别和演练级别聚合"
               :loading="loading"
               :error="loadError"
-              :empty="!loading && !loadError && outstanding.length === 0"
-              empty-title="当前范围没有未兑现计划"
-              empty-description="所有计划均已兑现，或可调整筛选范围继续查看。"
-              :empty-visual-size="72"
-              :min-height="240"
+              :empty="!loading && !loadError && rows.length === 0"
+              empty-title="暂无已提交演练记录"
+              empty-description="调整日期或组织范围后重新查询。"
+              :min-height="320"
               @retry="loadReport"
             >
               <template #actions
-                ><ElTag :type="outstanding.length ? 'warning' : 'success'" effect="light"
-                  >{{ outstanding.length }} 条</ElTag
-                ></template
+                ><ElTag type="success" effect="plain">{{ rows.length }} 个维度</ElTag></template
               >
+              <div class="drill-report-page__analysis-summary" aria-label="演练执行摘要">
+                <div class="drill-report-page__analysis-item">
+                  <span>计划兑现率</span>
+                  <strong>{{ completionRate }}%</strong>
+                  <small>已形成正式记录的计划占比</small>
+                </div>
+                <div class="drill-report-page__analysis-item">
+                  <span>实际演练</span>
+                  <strong>{{ totalDrillCount }}</strong>
+                  <small>当前筛选范围累计次数</small>
+                </div>
+                <div class="drill-report-page__analysis-item">
+                  <span>覆盖组织</span>
+                  <strong>{{ coveredOrganizationCount }}</strong>
+                  <small>已开展演练的组织数量</small>
+                </div>
+              </div>
               <ArtTable
-                :data="outstanding"
+                :data="rows"
                 :pagination="false"
+                class="drill-report-page__table"
                 table-layout="fixed"
-                empty-text="很好，当前范围没有未兑现演练计划"
+                empty-text="当前筛选范围暂无已提交演练记录"
               >
-                <ElTableColumn
-                  prop="drillName"
-                  label="演练计划"
-                  min-width="210"
-                  show-overflow-tooltip
-                  ><template #default="{ row }"
-                    ><div class="drill-report-page__plan"
-                      ><strong>{{ row.drillName }}</strong
-                      ><small>{{ row.planNo }}</small></div
-                    ></template
-                  ></ElTableColumn
-                >
                 <ElTableColumn
                   prop="organizationName"
                   label="演练组织"
-                  min-width="150"
+                  min-width="180"
                   show-overflow-tooltip
                 />
-                <ElTableColumn prop="planEndDate" label="计划完成日" width="120" />
-                <ElTableColumn prop="warningStatus" label="状态" width="92"
+                <ElTableColumn prop="planCategory" label="计划类别" width="150"
                   ><template #default="{ row }"
                     ><ArtDictDisplay
-                      dict-code="smisEmergencyPlanWarningStatus"
-                      :value="row.warningStatus"
+                      dict-code="smisEmergencyPlanCategory"
+                      :value="row.planCategory"
                       display="tag" /></template
                 ></ElTableColumn>
+                <ElTableColumn prop="planLevel" label="演练级别" width="130"
+                  ><template #default="{ row }"
+                    ><ArtDictDisplay
+                      dict-code="smisEmergencyPlanLevel"
+                      :value="row.planLevel" /></template
+                ></ElTableColumn>
+                <ElTableColumn prop="drillCount" label="实际演练次数" width="130" align="center"
+                  ><template #default="{ row }"
+                    ><strong class="drill-report-page__number">{{
+                      row.drillCount
+                    }}</strong></template
+                  ></ElTableColumn
+                >
+                <ElTableColumn
+                  prop="averageIntervalDays"
+                  label="平均间隔"
+                  width="130"
+                  align="center"
+                  ><template #default="{ row }">{{
+                    row.averageIntervalDays == null ? '单次演练' : `${row.averageIntervalDays} 天`
+                  }}</template></ElTableColumn
+                >
+                <ElTableColumn prop="lateCount" label="延迟完成" width="110" align="center"
+                  ><template #default="{ row }"
+                    ><ElTag :type="row.lateCount ? 'danger' : 'success'" effect="light">{{
+                      row.lateCount
+                    }}</ElTag></template
+                  ></ElTableColumn
+                >
               </ArtTable>
             </ArtSectionCard>
-            <section
-              class="drill-report-page__scope art-card-xs"
-              aria-labelledby="report-scope-title"
-            >
-              <div class="drill-report-page__scope-heading">
-                <span aria-hidden="true"><ArtSvgIcon icon="ri:information-line" /></span>
-                <div>
-                  <h2 id="report-scope-title">统计口径</h2>
-                  <p>帮助快速理解报表中的关键状态</p>
+            <aside class="drill-report-page__aside" aria-label="未兑现计划与统计口径">
+              <ArtSectionCard
+                class="drill-report-page__panel drill-report-page__panel--warning"
+                title="未兑现演练计划"
+                subtitle="计划中且尚无已提交演练记录"
+                :loading="loading"
+                :error="loadError"
+                :empty="!loading && !loadError && outstanding.length === 0"
+                empty-title="当前范围没有未兑现计划"
+                empty-description="所有计划均已兑现，或可调整筛选范围继续查看。"
+                :empty-visual-size="72"
+                :min-height="240"
+                @retry="loadReport"
+              >
+                <template #actions
+                  ><ElTag :type="outstanding.length ? 'warning' : 'success'" effect="light"
+                    >{{ outstanding.length }} 条</ElTag
+                  ></template
+                >
+                <ArtTable
+                  :data="outstanding"
+                  :pagination="false"
+                  table-layout="fixed"
+                  empty-text="很好，当前范围没有未兑现演练计划"
+                >
+                  <ElTableColumn
+                    prop="drillName"
+                    label="演练计划"
+                    min-width="210"
+                    show-overflow-tooltip
+                    ><template #default="{ row }"
+                      ><div class="drill-report-page__plan"
+                        ><strong>{{ row.drillName }}</strong
+                        ><small>{{ row.planNo }}</small></div
+                      ></template
+                    ></ElTableColumn
+                  >
+                  <ElTableColumn
+                    prop="organizationName"
+                    label="演练组织"
+                    min-width="150"
+                    show-overflow-tooltip
+                  />
+                  <ElTableColumn prop="planEndDate" label="计划完成日" width="120" />
+                  <ElTableColumn prop="warningStatus" label="状态" width="92"
+                    ><template #default="{ row }"
+                      ><ArtDictDisplay
+                        dict-code="smisEmergencyPlanWarningStatus"
+                        :value="row.warningStatus"
+                        display="tag" /></template
+                  ></ElTableColumn>
+                </ArtTable>
+              </ArtSectionCard>
+              <section
+                class="drill-report-page__scope art-card-xs"
+                aria-labelledby="report-scope-title"
+              >
+                <div class="drill-report-page__scope-heading">
+                  <span aria-hidden="true"><ArtSvgIcon icon="ri:information-line" /></span>
+                  <div>
+                    <h2 id="report-scope-title">统计口径</h2>
+                    <p>帮助快速理解报表中的关键状态</p>
+                  </div>
                 </div>
-              </div>
-              <ul>
-                <li>
-                  <span class="is-success" aria-hidden="true"
-                    ><ArtSvgIcon icon="ri:checkbox-circle-line"
-                  /></span>
-                  <p><strong>已兑现</strong><small>计划已关联一条正式提交的演练记录</small></p>
-                </li>
-                <li>
-                  <span class="is-warning" aria-hidden="true"
-                    ><ArtSvgIcon icon="ri:time-line"
-                  /></span>
-                  <p><strong>延迟完成</strong><small>实际演练日期晚于计划完成日期</small></p>
-                </li>
-                <li>
-                  <span class="is-danger" aria-hidden="true"
-                    ><ArtSvgIcon icon="ri:alarm-warning-line"
-                  /></span>
-                  <p><strong>预警中</strong><small>计划将在三日内到期，或当前已逾期</small></p>
-                </li>
-              </ul>
-            </section>
-          </aside>
+                <ul>
+                  <li>
+                    <span class="is-success" aria-hidden="true"
+                      ><ArtSvgIcon icon="ri:checkbox-circle-line"
+                    /></span>
+                    <p><strong>已兑现</strong><small>计划已关联一条正式提交的演练记录</small></p>
+                  </li>
+                  <li>
+                    <span class="is-warning" aria-hidden="true"
+                      ><ArtSvgIcon icon="ri:time-line"
+                    /></span>
+                    <p><strong>延迟完成</strong><small>实际演练日期晚于计划完成日期</small></p>
+                  </li>
+                  <li>
+                    <span class="is-danger" aria-hidden="true"
+                      ><ArtSvgIcon icon="ri:alarm-warning-line"
+                    /></span>
+                    <p><strong>预警中</strong><small>计划将在三日内到期，或当前已逾期</small></p>
+                  </li>
+                </ul>
+              </section>
+            </aside>
+          </div>
         </div>
-      </div>
-    </ElScrollbar>
-  </div>
+      </ElScrollbar>
+    </div>
+  </ArtPermissionGuard>
 </template>
 
 <script setup lang="ts">

@@ -1,41 +1,40 @@
 <template>
-  <div
-    v-auth="'SmisEmergencyDrillRecord:View'"
-    class="drill-record-page business-workspace-page art-full-height"
-  >
-    <BusinessWorkspaceHeader
-      eyebrow="DRILL EVIDENCE"
-      title="应急演练记录"
-      description="承接演练计划，沉淀实际日期、参演人员、过程评价与现场证据。"
-      icon="ri:clipboard-check-line"
-      :tags="[
-        { label: '计划自动带入', type: 'primary', effect: 'plain' },
-        { label: '员工批量选择', type: 'success', effect: 'light' },
-        { label: '提交即兑现', type: 'warning', effect: 'plain' }
-      ]"
-      :metrics="metrics"
-      ><template #actions><BusinessTableWorkspaceActions :table="tableRef" /></template
-    ></BusinessWorkspaceHeader>
-    <ArtTableQuery
-      ref="tableRef"
-      v-model="searchQuery"
-      class="drill-record-page__table"
-      :api-fn="fetchTableData"
-      :search-items="searchItems"
-      :columns-factory="columnsFactory"
-      :header-actions="headerActions"
-      header-actions-placement="workspace"
-      :search-bar-props="{ span: 6, labelWidth: 82, showExpand: false }"
-      :table-props="{
-        rowKey: 'id',
-        tableLayout: 'fixed',
-        emptyText: '暂无应急演练记录',
-        emptyDescription: '可从演练计划下推，或新增记录后选择计划编号。'
-      }"
-      focusable
-    />
-    <DrillRecordDialog ref="dialogRef" @success="handleSaveSuccess" />
-  </div>
+  <ArtPermissionGuard permission="SmisEmergencyDrillRecord:View">
+    <div class="drill-record-page business-workspace-page art-full-height">
+      <BusinessWorkspaceHeader
+        eyebrow="DRILL EVIDENCE"
+        title="应急演练记录"
+        description="承接演练计划，沉淀实际日期、参演人员、过程评价与现场证据。"
+        icon="ri:clipboard-check-line"
+        :tags="[
+          { label: '计划自动带入', type: 'primary', effect: 'plain' },
+          { label: '员工批量选择', type: 'success', effect: 'light' },
+          { label: '提交即兑现', type: 'warning', effect: 'plain' }
+        ]"
+        :metrics="metrics"
+        ><template #actions><BusinessTableWorkspaceActions :table="tableRef" /></template
+      ></BusinessWorkspaceHeader>
+      <ArtTableQuery
+        ref="tableRef"
+        v-model="searchQuery"
+        class="drill-record-page__table"
+        :api-fn="fetchTableData"
+        :search-items="searchItems"
+        :columns-factory="columnsFactory"
+        :header-actions="headerActions"
+        header-actions-placement="workspace"
+        :search-bar-props="{ span: 6, labelWidth: 82, showExpand: false }"
+        :table-props="{
+          rowKey: 'id',
+          tableLayout: 'fixed',
+          emptyText: '暂无应急演练记录',
+          emptyDescription: '可从演练计划下推，或新增记录后选择计划编号。'
+        }"
+        focusable
+      />
+      <DrillRecordDialog ref="dialogRef" @success="handleSaveSuccess" />
+    </div>
+  </ArtPermissionGuard>
 </template>
 
 <script setup lang="tsx">

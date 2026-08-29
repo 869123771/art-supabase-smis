@@ -59,6 +59,40 @@ export {
 } from '@smis/api/modules/equipment-category'
 
 export {
+  deleteMaterialCategories,
+  deleteMaterials,
+  fetchMaterialCategoryList,
+  fetchMaterialList,
+  saveMaterial,
+  saveMaterialCategory
+} from '@smis/api/modules/material'
+
+export {
+  deletePpeIssuanceStandards,
+  fetchPpeIssuanceStandardList,
+  fetchPpePersonalStandardItems,
+  fetchPpePersonalStandardList,
+  fetchPpeScopeOptions,
+  generatePpePersonalStandards,
+  savePpeIssuanceStandard
+} from '@smis/api/modules/ppe-standard'
+
+export {
+  confirmPpeRequisitionItems,
+  deletePpeIssuanceRecords,
+  fetchPpeIssuanceRecordList,
+  fetchPpeIssuanceStatistics,
+  fetchPpePersonalRequisitionList,
+  fetchPpeSetting,
+  generateDuePpeRequisitions,
+  postPpeIssuanceRecord,
+  pushPpeRequisitionItems,
+  savePpeIssuanceRecord,
+  savePpePersonalIssuePlan,
+  savePpeSetting
+} from '@smis/api/modules/ppe-requisition'
+
+export {
   deleteStorageLocations,
   fetchStorageLocationList,
   saveStorageLocation
@@ -127,14 +161,18 @@ export {
 export {
   deleteAccidentAnalyses,
   deleteAccidentReports,
+  deleteHistoricalAccidentCases,
   deleteWorkInjuryDeclarations,
   fetchAccidentAnalysisList,
   fetchAccidentEmployeeCandidates,
   fetchAccidentReportList,
   fetchAccidentReportOptions,
+  fetchHistoricalAccidentCaseList,
+  fetchSafetyAccidentStatistics,
   fetchWorkInjuryDeclarationList,
   saveAccidentAnalysis,
   saveAccidentReport,
+  saveHistoricalAccidentCase,
   saveWorkInjuryDeclaration
 } from '@smis/api/modules/accident'
 
@@ -180,6 +218,17 @@ export type {
   SmisEquipmentCategorySearchParams,
   SmisEquipmentCategoryStatus,
   SmisEquipmentInspectionCategory,
+  SmisMaterial,
+  SmisMaterialCategory,
+  SmisMaterialCategoryOverview,
+  SmisMaterialCategorySavePayload,
+  SmisMaterialCategorySearchParams,
+  SmisMaterialOverview,
+  SmisMaterialSavePayload,
+  SmisMaterialSearchParams,
+  SmisMaterialSource,
+  SmisMaterialStatus,
+  SmisMaterialType,
   SmisStorageLocation,
   SmisStorageLocationOverview,
   SmisStorageLocationResponsible,
@@ -274,6 +323,7 @@ export type {
   SmisAccidentAnalysisSavePayload,
   SmisAccidentAnalysisSearchParams,
   SmisAccidentCategory,
+  SmisAccidentCaseStatus,
   SmisAccidentEmployee,
   SmisAccidentLevel,
   SmisAccidentOption,
@@ -284,10 +334,48 @@ export type {
   SmisAccidentReportOverview,
   SmisAccidentReportSavePayload,
   SmisAccidentReportSearchParams,
+  SmisHistoricalAccidentCase,
+  SmisHistoricalAccidentCaseListResult,
+  SmisHistoricalAccidentCaseOverview,
+  SmisHistoricalAccidentCaseSavePayload,
+  SmisHistoricalAccidentCaseSearchParams,
+  SmisSafetyAccidentDimensionStat,
+  SmisSafetyAccidentOrganizationStat,
+  SmisSafetyAccidentStatisticsOverview,
+  SmisSafetyAccidentStatisticsResult,
+  SmisSafetyAccidentStatisticsSearchParams,
+  SmisSafetyAccidentTrendPoint,
   SmisWorkInjuryDeclaration,
   SmisWorkInjuryListResult,
   SmisWorkInjuryOverview,
   SmisWorkInjurySavePayload,
   SmisWorkInjurySearchParams,
-  SmisWorkInjuryType
+  SmisWorkInjuryType,
+  SmisPpeGenerateResult,
+  SmisPpeIssuanceCycle,
+  SmisPpeIssuanceStandard,
+  SmisPpeIssuanceStandardDetail,
+  SmisPpeIssuanceStandardOverview,
+  SmisPpeIssuanceStandardSavePayload,
+  SmisPpeIssuanceStandardSearchParams,
+  SmisPpePersonalStandard,
+  SmisPpePersonalStandardItem,
+  SmisPpePersonalStandardOverview,
+  SmisPpePersonalStandardSearchParams,
+  SmisPpeScopeOption,
+  SmisPpeStandardStatus,
+  SmisPpeDueGenerateResult,
+  SmisPpeIssuanceRecord,
+  SmisPpeIssuanceRecordItem,
+  SmisPpeIssuanceRecordOverview,
+  SmisPpeIssuanceRecordSavePayload,
+  SmisPpeIssuanceRecordSearchParams,
+  SmisPpeIssuanceStatistics,
+  SmisPpeIssuanceStatisticsRow,
+  SmisPpeIssuanceStatus,
+  SmisPpePersonalRequisitionItem,
+  SmisPpePersonalRequisitionOverview,
+  SmisPpePersonalRequisitionSearchParams,
+  SmisPpeRequisitionStatus,
+  SmisPpeSetting
 } from '@smis/api/types'

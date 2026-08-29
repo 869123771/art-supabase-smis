@@ -1,172 +1,171 @@
 <template>
-  <div
-    v-auth="'SmisPositionRiskList:View'"
-    class="position-risk-page business-workspace-page art-full-height"
-  >
-    <BusinessWorkspaceHeader
-      class="position-risk-page__overview"
-      eyebrow="POSITION RISK CONTROL"
-      title="岗位风险清单"
-      description="按组织部门和 HR 岗位维护危害因素与隐患控制措施标准，形成可执行、可核验的岗位风险清单。"
-      icon="ri:shield-flash-line"
-      density="compact"
-      :tags="workspaceTags"
-      :metrics="workspaceMetrics"
-    >
-      <template #actions><BusinessTableWorkspaceActions :table="tableQueryRef" /></template>
-    </BusinessWorkspaceHeader>
-
-    <div class="position-risk-page__workspace">
-      <ArtWorkspaceSplitter
-        primary-size="276px"
-        primary-min="244px"
-        primary-max="380px"
-        :breakpoint="820"
-        stacked-primary-size="280px"
+  <ArtPermissionGuard permission="SmisPositionRiskList:View">
+    <div class="position-risk-page business-workspace-page art-full-height">
+      <BusinessWorkspaceHeader
+        class="position-risk-page__overview"
+        eyebrow="POSITION RISK CONTROL"
+        title="岗位风险清单"
+        description="按组织部门和 HR 岗位维护危害因素与隐患控制措施标准，形成可执行、可核验的岗位风险清单。"
+        icon="ri:shield-flash-line"
+        density="compact"
+        :tags="workspaceTags"
+        :metrics="workspaceMetrics"
       >
-        <template #primary>
-          <aside class="position-risk-page__organization-panel">
-            <OrganizationNavigator
-              :data="organizationState.tree"
-              :loading="organizationState.loading"
-              :error="organizationState.error"
-              :selected-key="organizationState.selectedKey"
-              @select="handleOrganizationSelect"
-              @refresh="loadOrganizations"
-            />
-          </aside>
-        </template>
+        <template #actions><BusinessTableWorkspaceActions :table="tableQueryRef" /></template>
+      </BusinessWorkspaceHeader>
 
-        <main class="position-risk-page__main">
-          <ArtSectionCard
-            class="position-risk-page__positions"
-            title="组织机构岗位"
-            :subtitle="positionSectionSubtitle"
-            :loading="positionState.loading"
-            :error="positionState.error"
-            :empty="!positionState.loading && !positionState.error && !positionState.rows.length"
-            empty-title="当前部门暂无关联岗位"
-            empty-description="岗位保持平铺展示，数据来自 HR 岗位编制、员工任职或已维护的风险清单。"
-            :min-height="164"
-            @retry="() => loadPositions()"
-          >
-            <template #actions>
-              <ElInput
-                v-model="positionState.keyword"
-                class="position-risk-page__position-search"
-                clearable
-                placeholder="岗位编码或名称"
-                aria-label="搜索岗位编码或名称"
-                @keyup.enter="() => loadPositions()"
-                @clear="() => loadPositions()"
-              >
-                <template #prefix><ArtSvgIcon icon="ri:search-line" /></template>
-              </ElInput>
-              <ArtIconButton
-                icon="ri:search-line"
-                label="查询岗位"
-                :loading="positionState.loading"
-                @click="() => loadPositions()"
+      <div class="position-risk-page__workspace">
+        <ArtWorkspaceSplitter
+          primary-size="276px"
+          primary-min="244px"
+          primary-max="380px"
+          :breakpoint="820"
+          stacked-primary-size="280px"
+        >
+          <template #primary>
+            <aside class="position-risk-page__organization-panel">
+              <OrganizationNavigator
+                :data="organizationState.tree"
+                :loading="organizationState.loading"
+                :error="organizationState.error"
+                :selected-key="organizationState.selectedKey"
+                @select="handleOrganizationSelect"
+                @refresh="loadOrganizations"
               />
-            </template>
+            </aside>
+          </template>
 
-            <ElTable
-              :data="positionState.rows"
-              :row-key="(row: SmisPositionOption) => row.id"
-              :current-row-key="positionState.selectedId || undefined"
-              height="142"
-              highlight-current-row
-              table-layout="fixed"
-              @row-click="handlePositionSelect"
+          <main class="position-risk-page__main">
+            <ArtSectionCard
+              class="position-risk-page__positions"
+              title="组织机构岗位"
+              :subtitle="positionSectionSubtitle"
+              :loading="positionState.loading"
+              :error="positionState.error"
+              :empty="!positionState.loading && !positionState.error && !positionState.rows.length"
+              empty-title="当前部门暂无关联岗位"
+              empty-description="岗位保持平铺展示，数据来自 HR 岗位编制、员工任职或已维护的风险清单。"
+              :min-height="164"
+              @retry="() => loadPositions()"
             >
-              <ElTableColumn
-                prop="positionName"
-                label="岗位信息"
-                min-width="280"
-                show-overflow-tooltip
+              <template #actions>
+                <ElInput
+                  v-model="positionState.keyword"
+                  class="position-risk-page__position-search"
+                  clearable
+                  placeholder="岗位编码或名称"
+                  aria-label="搜索岗位编码或名称"
+                  @keyup.enter="() => loadPositions()"
+                  @clear="() => loadPositions()"
+                >
+                  <template #prefix><ArtSvgIcon icon="ri:search-line" /></template>
+                </ElInput>
+                <ArtIconButton
+                  icon="ri:search-line"
+                  label="查询岗位"
+                  :loading="positionState.loading"
+                  @click="() => loadPositions()"
+                />
+              </template>
+
+              <ElTable
+                :data="positionState.rows"
+                :row-key="(row: SmisPositionOption) => row.id"
+                :current-row-key="positionState.selectedId || undefined"
+                height="142"
+                highlight-current-row
+                table-layout="fixed"
+                @row-click="handlePositionSelect"
               >
-                <template #default="{ row }">
-                  <div class="position-risk-page__position-identity">
-                    <span class="position-risk-page__position-icon" aria-hidden="true"
-                      ><ArtSvgIcon icon="ri:briefcase-4-line"
-                    /></span>
-                    <span class="position-risk-page__position-copy">
-                      <strong>{{ row.positionName }}</strong>
-                      <small
-                        ><span translate="no">{{ row.positionCode }}</span
-                        ><i aria-hidden="true"></i>{{ row.description || 'HR 岗位主数据' }}</small
-                      >
-                    </span>
-                  </div>
-                </template>
-              </ElTableColumn>
-              <ElTableColumn prop="employeeCount" label="在岗人数" width="92" align="right">
-                <template #default="{ row }"
-                  ><strong>{{ row.employeeCount }}</strong
-                  ><small class="position-risk-page__unit"> 人</small></template
+                <ElTableColumn
+                  prop="positionName"
+                  label="岗位信息"
+                  min-width="280"
+                  show-overflow-tooltip
                 >
-              </ElTableColumn>
-              <ElTableColumn prop="controlCount" label="控制措施" width="96" align="right">
-                <template #default="{ row }"
-                  ><strong>{{ row.controlCount || 0 }}</strong
-                  ><small class="position-risk-page__unit"> 条</small></template
-                >
-              </ElTableColumn>
-              <ElTableColumn label="当前范围" width="104" align="center">
-                <template #default="{ row }">
-                  <span
-                    class="position-risk-page__position-state"
-                    :class="{ 'is-current': row.id === positionState.selectedId }"
+                  <template #default="{ row }">
+                    <div class="position-risk-page__position-identity">
+                      <span class="position-risk-page__position-icon" aria-hidden="true"
+                        ><ArtSvgIcon icon="ri:briefcase-4-line"
+                      /></span>
+                      <span class="position-risk-page__position-copy">
+                        <strong>{{ row.positionName }}</strong>
+                        <small
+                          ><span translate="no">{{ row.positionCode }}</span
+                          ><i aria-hidden="true"></i>{{ row.description || 'HR 岗位主数据' }}</small
+                        >
+                      </span>
+                    </div>
+                  </template>
+                </ElTableColumn>
+                <ElTableColumn prop="employeeCount" label="在岗人数" width="92" align="right">
+                  <template #default="{ row }"
+                    ><strong>{{ row.employeeCount }}</strong
+                    ><small class="position-risk-page__unit"> 人</small></template
                   >
-                    <ArtSvgIcon
-                      :icon="
-                        row.id === positionState.selectedId
-                          ? 'ri:check-line'
-                          : 'ri:arrow-right-s-line'
-                      "
-                    />
-                    {{ row.id === positionState.selectedId ? '已选择' : '选择' }}
-                  </span>
-                </template>
-              </ElTableColumn>
-            </ElTable>
-          </ArtSectionCard>
+                </ElTableColumn>
+                <ElTableColumn prop="controlCount" label="控制措施" width="96" align="right">
+                  <template #default="{ row }"
+                    ><strong>{{ row.controlCount || 0 }}</strong
+                    ><small class="position-risk-page__unit"> 条</small></template
+                  >
+                </ElTableColumn>
+                <ElTableColumn label="当前范围" width="104" align="center">
+                  <template #default="{ row }">
+                    <span
+                      class="position-risk-page__position-state"
+                      :class="{ 'is-current': row.id === positionState.selectedId }"
+                    >
+                      <ArtSvgIcon
+                        :icon="
+                          row.id === positionState.selectedId
+                            ? 'ri:check-line'
+                            : 'ri:arrow-right-s-line'
+                        "
+                      />
+                      {{ row.id === positionState.selectedId ? '已选择' : '选择' }}
+                    </span>
+                  </template>
+                </ElTableColumn>
+              </ElTable>
+            </ArtSectionCard>
 
-          <ArtTableQuery
-            ref="tableQueryRef"
-            v-model="tableState.searchQuery"
-            class="position-risk-page__table"
-            :search-items="searchItems"
-            :api-fn="fetchTableData"
-            :columns-factory="columnsFactory"
-            :header-actions="headerActions"
-            header-actions-placement="workspace"
-            :immediate="false"
-            :search-bar-props="{
-              span: 6,
-              labelWidth: 88,
-              showExpand: true,
-              disabledSearch: !positionState.selectedId
-            }"
-            :table-props="{
-              rowKey: 'id',
-              tableLayout: 'fixed',
-              emptyText: positionState.selectedId ? '暂无隐患控制措施标准' : '请先选择岗位',
-              emptyDescription: positionState.selectedId
-                ? '可新增当前组织、岗位的危害因素与控制措施。'
-                : '从上方平铺岗位列表选择一个岗位后查看清单。',
-              showOverflowTooltip: true
-            }"
-            :on-success="handleTableSuccess"
-            focusable
-            focus-scope-selector=".position-risk-page__workspace"
-          />
-        </main>
-      </ArtWorkspaceSplitter>
+            <ArtTableQuery
+              ref="tableQueryRef"
+              v-model="tableState.searchQuery"
+              class="position-risk-page__table"
+              :search-items="searchItems"
+              :api-fn="fetchTableData"
+              :columns-factory="columnsFactory"
+              :header-actions="headerActions"
+              header-actions-placement="workspace"
+              :immediate="false"
+              :search-bar-props="{
+                span: 6,
+                labelWidth: 88,
+                showExpand: true,
+                disabledSearch: !positionState.selectedId
+              }"
+              :table-props="{
+                rowKey: 'id',
+                tableLayout: 'fixed',
+                emptyText: positionState.selectedId ? '暂无隐患控制措施标准' : '请先选择岗位',
+                emptyDescription: positionState.selectedId
+                  ? '可新增当前组织、岗位的危害因素与控制措施。'
+                  : '从上方平铺岗位列表选择一个岗位后查看清单。',
+                showOverflowTooltip: true
+              }"
+              :on-success="handleTableSuccess"
+              focusable
+              focus-scope-selector=".position-risk-page__workspace"
+            />
+          </main>
+        </ArtWorkspaceSplitter>
+      </div>
+
+      <RiskControlDialog ref="dialogRef" @success="handleSaveSuccess" />
     </div>
-
-    <RiskControlDialog ref="dialogRef" @success="handleSaveSuccess" />
-  </div>
+  </ArtPermissionGuard>
 </template>
 
 <script setup lang="tsx">

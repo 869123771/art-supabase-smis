@@ -10,6 +10,11 @@ import type {
   SmisAccidentReportListResult,
   SmisAccidentReportSavePayload,
   SmisAccidentReportSearchParams,
+  SmisHistoricalAccidentCaseListResult,
+  SmisHistoricalAccidentCaseSavePayload,
+  SmisHistoricalAccidentCaseSearchParams,
+  SmisSafetyAccidentStatisticsResult,
+  SmisSafetyAccidentStatisticsSearchParams,
   SmisTreeOrganization,
   SmisWorkInjuryListResult,
   SmisWorkInjurySavePayload,
@@ -32,6 +37,15 @@ const toOrganizationTree = (rows: SmisTreeOrganization[]): SmisTreeOrganization[
 const accidentOverview = () => ({ total: 0, currentMonth: 0, highSeverity: 0, affectedPeople: 0 })
 const accidentAnalysisOverview = () => ({ total: 0, complete: 0, pending: 0, participantCount: 0 })
 const workInjuryOverview = () => ({ total: 0, slight: 0, minor: 0, serious: 0, fatal: 0 })
+const historicalCaseOverview = () => ({ total: 0, inUse: 0, currentYear: 0, highSeverity: 0 })
+const accidentStatistics = (): SmisSafetyAccidentStatisticsResult => ({
+  overview: { total: 0, currentYear: 0, highSeverity: 0, affectedPeople: 0 },
+  trend: [],
+  levels: [],
+  categories: [],
+  organizations: [],
+  organizationOptions: []
+})
 
 export async function fetchAccidentEmployeeCandidates(
   params: {
@@ -105,6 +119,74 @@ export async function deleteAccidentReports(ids: string[]) {
     () => supabase.rpc('smis_delete_accident_reports_secure', { p_ids: ids }),
     { showMessage: true, breakReturn: true, message: '事故快报已删除' }
   )
+}
+
+export async function fetchHistoricalAccidentCaseList(
+  params: SmisHistoricalAccidentCaseSearchParams = {}
+) {
+  const from = Math.max(params.from ?? 0, 0)
+  const result = await responseHandle<Partial<SmisHistoricalAccidentCaseListResult>>(
+    () =>
+      supabase.rpc('smis_list_historical_accident_cases_secure', {
+        p_from: from,
+        p_to: Math.max(params.to ?? from + 19, from),
+        p_keyword: params.keyword?.trim() || null,
+        p_accident_level: params.accidentLevel || null,
+        p_start_date: params.startDate || null,
+        p_end_date: params.endDate || null,
+        p_ids: params.ids?.length ? params.ids : null
+      }),
+    { showErrorMessage: true }
+  )
+  return {
+    data: result.data?.records ?? [],
+    total: result.data?.total ?? 0,
+    overview: result.data?.overview ?? historicalCaseOverview(),
+    organizations: toOrganizationTree(result.data?.organizations ?? []),
+    error: result.error
+  }
+}
+
+export async function saveHistoricalAccidentCase(params: SmisHistoricalAccidentCaseSavePayload) {
+  return await responseHandle<string>(
+    () =>
+      supabase.rpc('smis_save_historical_accident_case_secure', {
+        p_id: params.id ?? null,
+        p_payload: keysToSnakeDeep(omit(params, ['id']))
+      }),
+    {
+      showMessage: true,
+      breakReturn: true,
+      message: params.id ? '事故案例已更新' : '事故案例已新增'
+    }
+  )
+}
+
+export async function deleteHistoricalAccidentCases(ids: string[]) {
+  return await responseHandle<number>(
+    () => supabase.rpc('smis_delete_historical_accident_cases_secure', { p_ids: ids }),
+    { showMessage: true, breakReturn: true, message: '事故案例已删除' }
+  )
+}
+
+export async function fetchSafetyAccidentStatistics(
+  params: SmisSafetyAccidentStatisticsSearchParams = {}
+) {
+  const result = await responseHandle<SmisSafetyAccidentStatisticsResult>(
+    () =>
+      supabase.rpc('smis_get_safety_accident_statistics_secure', {
+        p_start_date: params.startDate || null,
+        p_end_date: params.endDate || null,
+        p_organization_id: params.organizationId || null
+      }),
+    { showErrorMessage: true }
+  )
+  const data = result.data ?? accidentStatistics()
+  return {
+    ...data,
+    organizationOptions: toOrganizationTree(data.organizationOptions),
+    error: result.error
+  }
 }
 
 export async function fetchAccidentReportOptions(keyword?: string) {

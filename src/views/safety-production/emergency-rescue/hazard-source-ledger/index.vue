@@ -1,64 +1,63 @@
 <template>
-  <div
-    v-auth="'SmisHazardSourceLedger:View'"
-    class="hazard-page business-workspace-page art-full-height"
-  >
-    <BusinessWorkspaceHeader
-      eyebrow="HAZARD SOURCE CONTROL"
-      title="危险源台账"
-      description="以场所树为主线，统一维护危险源识别、分级、管控责任与现场照片。"
-      icon="ri:alarm-warning-line"
-      :tags="[
-        { label: '场所树导航', type: 'primary', effect: 'plain' },
-        { label: '租户编号规则', type: 'success', effect: 'light' },
-        { label: '分级统计', type: 'warning', effect: 'plain' }
-      ]"
-      :metrics="metrics"
-    >
-      <template #actions><BusinessTableWorkspaceActions :table="tableRef" /></template>
-    </BusinessWorkspaceHeader>
-    <div class="hazard-page__workspace">
-      <ArtWorkspaceSplitter
-        primary-size="292px"
-        primary-min="250px"
-        primary-max="380px"
-        :breakpoint="920"
-        stacked-primary-size="34vh"
+  <ArtPermissionGuard permission="SmisHazardSourceLedger:View">
+    <div class="hazard-page business-workspace-page art-full-height">
+      <BusinessWorkspaceHeader
+        eyebrow="HAZARD SOURCE CONTROL"
+        title="危险源台账"
+        description="以场所树为主线，统一维护危险源识别、分级、管控责任与现场照片。"
+        icon="ri:alarm-warning-line"
+        :tags="[
+          { label: '场所树导航', type: 'primary', effect: 'plain' },
+          { label: '租户编号规则', type: 'success', effect: 'light' },
+          { label: '分级统计', type: 'warning', effect: 'plain' }
+        ]"
+        :metrics="metrics"
       >
-        <template #primary>
-          <SiteNavigator
-            :data="state.sites"
-            :loading="state.loading"
-            :error="state.error"
-            :selected-key="state.selectedSiteId"
-            @select="handleSiteSelect"
-            @refresh="refresh"
+        <template #actions><BusinessTableWorkspaceActions :table="tableRef" /></template>
+      </BusinessWorkspaceHeader>
+      <div class="hazard-page__workspace">
+        <ArtWorkspaceSplitter
+          primary-size="292px"
+          primary-min="250px"
+          primary-max="380px"
+          :breakpoint="920"
+          stacked-primary-size="34vh"
+        >
+          <template #primary>
+            <SiteNavigator
+              :data="state.sites"
+              :loading="state.loading"
+              :error="state.error"
+              :selected-key="state.selectedSiteId"
+              @select="handleSiteSelect"
+              @refresh="refresh"
+            />
+          </template>
+          <ArtTableQuery
+            ref="tableRef"
+            v-model="searchQuery"
+            class="hazard-page__table"
+            :api-fn="fetchTableData"
+            :search-items="searchItems"
+            :columns-factory="columnsFactory"
+            :header-actions="headerActions"
+            header-actions-placement="workspace"
+            :search-bar-props="{ span: 6, labelWidth: 76, showExpand: false }"
+            :table-props="{
+              rowKey: 'id',
+              tableLayout: 'fixed',
+              emptyText: state.selectedSiteId === 'all' ? '暂无危险源' : '当前场所暂无危险源',
+              emptyDescription: '可点击新增，建立危险源识别与管控责任。'
+            }"
+            focusable
+            focus-scope-selector=".hazard-page__workspace"
           />
-        </template>
-        <ArtTableQuery
-          ref="tableRef"
-          v-model="searchQuery"
-          class="hazard-page__table"
-          :api-fn="fetchTableData"
-          :search-items="searchItems"
-          :columns-factory="columnsFactory"
-          :header-actions="headerActions"
-          header-actions-placement="workspace"
-          :search-bar-props="{ span: 6, labelWidth: 76, showExpand: false }"
-          :table-props="{
-            rowKey: 'id',
-            tableLayout: 'fixed',
-            emptyText: state.selectedSiteId === 'all' ? '暂无危险源' : '当前场所暂无危险源',
-            emptyDescription: '可点击新增，建立危险源识别与管控责任。'
-          }"
-          focusable
-          focus-scope-selector=".hazard-page__workspace"
-        />
-      </ArtWorkspaceSplitter>
+        </ArtWorkspaceSplitter>
+      </div>
+      <HazardSourceDialog ref="dialogRef" @success="handleSaveSuccess" />
+      <HazardStatisticsDialog ref="statisticsRef" />
     </div>
-    <HazardSourceDialog ref="dialogRef" @success="handleSaveSuccess" />
-    <HazardStatisticsDialog ref="statisticsRef" />
-  </div>
+  </ArtPermissionGuard>
 </template>
 
 <script setup lang="tsx">

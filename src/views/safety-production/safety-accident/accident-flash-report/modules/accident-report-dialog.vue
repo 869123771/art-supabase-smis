@@ -162,9 +162,9 @@
     {
       label: '事故时间',
       key: 'accidentTime',
-      type: 'datetime',
+      type: 'date',
       valueFormat: 'YYYY-MM-DD HH:mm:ss',
-      props: { placeholder: '选择事故发生时间', clearable: false }
+      props: { placeholder: '选择事故发生时间', clearable: false, type: 'datetime' }
     },
     {
       label: '事故地点',

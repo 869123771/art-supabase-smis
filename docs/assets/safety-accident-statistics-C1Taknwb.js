@@ -1,1 +1,0 @@
-import{$n as e,mn as t,rn as n}from"./style-C1L0GNpN.js";import{t as r}from"./smis-page-placeholder-CU6ksoZa.js";var i=t({name:`SmisSafetyAccidentStatistics`,__name:`index`,setup(t){return(t,i)=>(e(),n(r,{section:`安全生产 / 安全事故`,title:`安全事故统计`}))}});export{i as default};

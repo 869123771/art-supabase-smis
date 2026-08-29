@@ -1,80 +1,79 @@
 <template>
-  <div
-    v-auth="'SmisLeaveInformation:View'"
-    class="leave-information-page business-workspace-page art-full-height"
-  >
-    <BusinessWorkspaceHeader
-      class="leave-information-page__overview"
-      eyebrow="LEAVE INFORMATION"
-      title="请假信息维护"
-      description="按组织统一维护员工请假、代理安排和身份审计快照，人员信息与 HR 员工花名册保持联动。"
-      icon="ri:calendar-event-line"
-      density="compact"
-      :tags="workspaceTags"
-      :metrics="workspaceMetrics"
-    >
-      <template #actions><BusinessTableWorkspaceActions :table="tableQueryRef" /></template>
-    </BusinessWorkspaceHeader>
-
-    <div class="leave-information-page__workspace">
-      <ArtWorkspaceSplitter
-        primary-size="288px"
-        primary-min="244px"
-        primary-max="380px"
-        :breakpoint="820"
-        stacked-primary-size="320px"
+  <ArtPermissionGuard permission="SmisLeaveInformation:View">
+    <div class="leave-information-page business-workspace-page art-full-height">
+      <BusinessWorkspaceHeader
+        class="leave-information-page__overview"
+        eyebrow="LEAVE INFORMATION"
+        title="请假信息维护"
+        description="按组织统一维护员工请假、代理安排和身份审计快照，人员信息与 HR 员工花名册保持联动。"
+        icon="ri:calendar-event-line"
+        density="compact"
+        :tags="workspaceTags"
+        :metrics="workspaceMetrics"
       >
-        <template #primary>
-          <aside class="leave-information-page__tree-panel">
-            <OrganizationNavigator
-              :data="organizationState.tree"
-              :loading="organizationState.loading"
-              :error="organizationState.error"
-              :selected-key="organizationState.selectedKey"
-              @select="handleOrganizationSelect"
-              @refresh="loadOrganizations"
-            />
-          </aside>
-        </template>
+        <template #actions><BusinessTableWorkspaceActions :table="tableQueryRef" /></template>
+      </BusinessWorkspaceHeader>
 
-        <main class="leave-information-page__main">
-          <div class="leave-information-page__scope-bar">
-            <div class="leave-information-page__scope-identity">
-              <span aria-hidden="true"><ArtSvgIcon :icon="selectedOrganizationIcon" /></span>
-              <span
-                ><small>当前查看范围</small><strong>{{ selectedOrganizationLabel }}</strong></span
-              >
+      <div class="leave-information-page__workspace">
+        <ArtWorkspaceSplitter
+          primary-size="288px"
+          primary-min="244px"
+          primary-max="380px"
+          :breakpoint="820"
+          stacked-primary-size="320px"
+        >
+          <template #primary>
+            <aside class="leave-information-page__tree-panel">
+              <OrganizationNavigator
+                :data="organizationState.tree"
+                :loading="organizationState.loading"
+                :error="organizationState.error"
+                :selected-key="organizationState.selectedKey"
+                @select="handleOrganizationSelect"
+                @refresh="loadOrganizations"
+              />
+            </aside>
+          </template>
+
+          <main class="leave-information-page__main">
+            <div class="leave-information-page__scope-bar">
+              <div class="leave-information-page__scope-identity">
+                <span aria-hidden="true"><ArtSvgIcon :icon="selectedOrganizationIcon" /></span>
+                <span
+                  ><small>当前查看范围</small><strong>{{ selectedOrganizationLabel }}</strong></span
+                >
+              </div>
+              <p><ArtSvgIcon icon="ri:git-merge-line" />选择组织节点时自动包含其下级部门</p>
             </div>
-            <p><ArtSvgIcon icon="ri:git-merge-line" />选择组织节点时自动包含其下级部门</p>
-          </div>
 
-          <ArtTableQuery
-            ref="tableQueryRef"
-            v-model="tableState.searchQuery"
-            class="leave-information-page__table"
-            :search-items="searchItems"
-            :api-fn="fetchTableData"
-            :columns-factory="columnsFactory"
-            :header-actions="headerActions"
-            header-actions-placement="workspace"
-            :search-bar-props="{ span: 8, labelWidth: 82, showExpand: false }"
-            :table-props="{
-              rowKey: 'id',
-              tableLayout: 'fixed',
-              emptyText: '暂无请假信息',
-              emptyDescription: '可新增请假信息，申请人与代理人均从员工花名册选择。',
-              showOverflowTooltip: true
-            }"
-            :on-success="handleTableSuccess"
-            focusable
-            focus-scope-selector=".leave-information-page__workspace"
-          />
-        </main>
-      </ArtWorkspaceSplitter>
+            <ArtTableQuery
+              ref="tableQueryRef"
+              v-model="tableState.searchQuery"
+              class="leave-information-page__table"
+              :search-items="searchItems"
+              :api-fn="fetchTableData"
+              :columns-factory="columnsFactory"
+              :header-actions="headerActions"
+              header-actions-placement="workspace"
+              :search-bar-props="{ span: 8, labelWidth: 82, showExpand: false }"
+              :table-props="{
+                rowKey: 'id',
+                tableLayout: 'fixed',
+                emptyText: '暂无请假信息',
+                emptyDescription: '可新增请假信息，申请人与代理人均从员工花名册选择。',
+                showOverflowTooltip: true
+              }"
+              :on-success="handleTableSuccess"
+              focusable
+              focus-scope-selector=".leave-information-page__workspace"
+            />
+          </main>
+        </ArtWorkspaceSplitter>
+      </div>
+
+      <LeaveInformationDialog ref="dialogRef" @success="handleSaveSuccess" />
     </div>
-
-    <LeaveInformationDialog ref="dialogRef" @success="handleSaveSuccess" />
-  </div>
+  </ArtPermissionGuard>
 </template>
 
 <script setup lang="tsx">

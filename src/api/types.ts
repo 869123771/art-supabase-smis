@@ -433,6 +433,106 @@ export interface SmisEquipmentCategorySavePayload {
   sort: number
 }
 
+export type SmisMaterialStatus = 'enabled' | 'disabled'
+export type SmisMaterialType = 'protective_equipment' | 'tool' | 'office_supply'
+export type SmisMaterialSource = 'purchase' | 'self_made'
+
+export interface SmisMaterialCategory {
+  id?: string
+  tenantId?: string
+  parentId?: string | null
+  parentCategoryName?: string | null
+  categoryCode: string
+  categoryName: string
+  sort: number
+  status: SmisMaterialStatus
+  description?: string | null
+  childCount: number
+  materialCount: number
+  children?: SmisMaterialCategory[]
+  createBy?: string | null
+  createTime?: string
+  updateBy?: string | null
+  updateTime?: string
+}
+
+export interface SmisMaterialCategorySearchParams {
+  keyword?: string
+  status?: SmisMaterialStatus
+  ancestorId?: string
+  from?: number
+  to?: number
+}
+
+export interface SmisMaterialCategoryOverview {
+  total: number
+  enabled: number
+  rootCount: number
+  usedCount: number
+}
+
+export interface SmisMaterialCategorySavePayload {
+  id?: string
+  parentId?: string | null
+  categoryCode: string
+  categoryName: string
+  sort: number
+  status: SmisMaterialStatus
+  description?: string
+}
+
+export interface SmisMaterial {
+  id: string
+  tenantId?: string
+  categoryId: string
+  materialCode: string
+  materialName: string
+  specificationModel?: string | null
+  drawingNo?: string | null
+  basicUnit: string
+  materialType: SmisMaterialType
+  materialSource: SmisMaterialSource
+  brand?: string | null
+  materialComposition?: string | null
+  placeOfOrigin?: string | null
+  imageUrls: string[]
+  description?: string | null
+  status: SmisMaterialStatus
+  sort: number
+  category: Pick<SmisMaterialCategory, 'id' | 'categoryCode' | 'categoryName'>
+  createBy?: string | null
+  createTime?: string
+  updateBy?: string | null
+  updateTime?: string
+}
+
+export interface SmisMaterialSearchParams {
+  materialName?: string
+  materialCode?: string
+  specificationModel?: string
+  drawingNo?: string
+  categoryId?: string
+  materialType?: SmisMaterialType
+  materialSource?: SmisMaterialSource
+  status?: SmisMaterialStatus
+  ids?: string[]
+  purpose?: 'list' | 'export'
+  from?: number
+  to?: number
+}
+
+export interface SmisMaterialOverview {
+  total: number
+  enabled: number
+  protectiveEquipment: number
+  pictured: number
+}
+
+export type SmisMaterialSavePayload = Omit<
+  SmisMaterial,
+  'id' | 'tenantId' | 'category' | 'createBy' | 'createTime' | 'updateBy' | 'updateTime'
+> & { id?: string }
+
 export type SmisStorageLocationStatus = 'enabled' | 'disabled'
 
 export interface SmisStorageLocationResponsible {
@@ -1470,6 +1570,108 @@ export interface SmisAccidentReportSavePayload {
   >
 }
 
+export type SmisAccidentCaseStatus = 'stopped' | 'in_use'
+
+export interface SmisHistoricalAccidentCase {
+  id: string
+  accidentName: string
+  accidentCategories: SmisAccidentCategory[]
+  accidentLevel: SmisAccidentLevel
+  accidentOrganizationId?: string | null
+  accidentOrganizationName?: string | null
+  occurrenceDate: string
+  caseStatus?: SmisAccidentCaseStatus | null
+  applicableCompanyId?: string | null
+  applicableCompanyName?: string | null
+  summary?: string | null
+  content: string
+  imageUrls: string[]
+  attachmentUrls: string[]
+  createBy?: string | null
+  createTime?: string
+  updateBy?: string | null
+  updateTime?: string
+}
+
+export interface SmisHistoricalAccidentCaseSearchParams {
+  keyword?: string
+  accidentLevel?: SmisAccidentLevel
+  startDate?: string
+  endDate?: string
+  ids?: string[]
+  from?: number
+  to?: number
+}
+
+export interface SmisHistoricalAccidentCaseOverview {
+  total: number
+  inUse: number
+  currentYear: number
+  highSeverity: number
+}
+
+export interface SmisHistoricalAccidentCaseListResult {
+  records: SmisHistoricalAccidentCase[]
+  total: number
+  overview: SmisHistoricalAccidentCaseOverview
+  organizations: SmisTreeOrganization[]
+}
+
+export interface SmisHistoricalAccidentCaseSavePayload {
+  id?: string
+  accidentName: string
+  accidentCategories: SmisAccidentCategory[]
+  accidentLevel: SmisAccidentLevel
+  accidentOrganizationId?: string | null
+  occurrenceDate: string
+  caseStatus?: SmisAccidentCaseStatus | null
+  applicableCompanyId?: string | null
+  summary?: string | null
+  content: string
+  imageUrls: string[]
+  attachmentUrls: string[]
+}
+
+export interface SmisSafetyAccidentStatisticsSearchParams {
+  startDate?: string
+  endDate?: string
+  organizationId?: string
+}
+
+export interface SmisSafetyAccidentStatisticsOverview {
+  total: number
+  currentYear: number
+  highSeverity: number
+  affectedPeople: number
+}
+
+export interface SmisSafetyAccidentTrendPoint {
+  period: string
+  label: string
+  count: number
+}
+
+export interface SmisSafetyAccidentDimensionStat {
+  value: string
+  count: number
+}
+
+export interface SmisSafetyAccidentOrganizationStat {
+  organizationId?: string | null
+  organizationName: string
+  count: number
+  highSeverity: number
+}
+
+export interface SmisSafetyAccidentStatisticsResult {
+  overview: SmisSafetyAccidentStatisticsOverview
+  trend: SmisSafetyAccidentTrendPoint[]
+  levels: SmisSafetyAccidentDimensionStat[]
+  categories: SmisSafetyAccidentDimensionStat[]
+  organizations: SmisSafetyAccidentOrganizationStat[]
+  organizationOptions: SmisTreeOrganization[]
+}
+
 export interface SmisAccidentOption {
   id: string
   accidentNo: string
@@ -1581,4 +1783,303 @@ export interface SmisWorkInjurySavePayload {
   accidentReportId: string
   declarantEmployeeId: string
   injuryType: SmisWorkInjuryType
+}
+
+export type SmisPpeIssuanceCycle = 'day' | 'week' | 'month' | 'half_year' | 'quarter' | 'year'
+export type SmisPpeStandardStatus = 'enabled' | 'disabled'
+
+export interface SmisPpeScopeOption {
+  id: string
+  parentId?: string | null
+  code: string
+  name: string
+  type?: string
+  sort?: number
+  organizationId?: string | null
+  organizationName?: string | null
+  children?: SmisPpeScopeOption[]
+}
+
+export interface SmisPpeIssuanceStandardDetail {
+  id?: string
+  materialId: string
+  materialCode: string
+  materialName: string
+  categoryName?: string
+  specificationModel?: string | null
+  basicUnit: string
+  imageUrls: string[]
+  quotaQuantity: number
+  issuanceCycle: SmisPpeIssuanceCycle
+  issuanceFrequency: number
+  status: SmisPpeStandardStatus
+  remark?: string | null
+  sort: number
+}
+
+export interface SmisPpeIssuanceStandard {
+  id: string
+  tenantId: string
+  standardNo: string
+  standardName: string
+  ratedQuantity: number
+  issuanceCycle: SmisPpeIssuanceCycle
+  issuanceFrequency: number
+  status: SmisPpeStandardStatus
+  description?: string | null
+  positions: SmisPpeScopeOption[]
+  organizations: SmisPpeScopeOption[]
+  details: SmisPpeIssuanceStandardDetail[]
+  createTime?: string
+  updateTime?: string
+}
+
+export interface SmisPpeIssuanceStandardSearchParams {
+  keyword?: string
+  status?: SmisPpeStandardStatus
+  purpose?: 'list' | 'export'
+  from?: number
+  to?: number
+}
+
+export interface SmisPpeIssuanceStandardOverview {
+  total: number
+  enabled: number
+  disabled: number
+  detailTotal: number
+}
+
+export interface SmisPpeIssuanceStandardSavePayload {
+  id?: string
+  standardNo?: string
+  standardName: string
+  positionIds: string[]
+  organizationIds: string[]
+  ratedQuantity: number
+  issuanceCycle: SmisPpeIssuanceCycle
+  issuanceFrequency: number
+  status: SmisPpeStandardStatus
+  description?: string | null
+  details: Array<
+    Pick<
+      SmisPpeIssuanceStandardDetail,
+      | 'materialId'
+      | 'quotaQuantity'
+      | 'issuanceCycle'
+      | 'issuanceFrequency'
+      | 'status'
+      | 'remark'
+      | 'sort'
+    >
+  >
+}
+
+export interface SmisPpePersonalStandard {
+  employeeId: string
+  employeeNo: string
+  employeeName: string
+  avatarUrl?: string | null
+  organizationId?: string | null
+  organizationName?: string | null
+  positionId?: string | null
+  positionName?: string | null
+  personalStandardId?: string | null
+  generatedAt?: string | null
+  status?: SmisPpeStandardStatus | null
+  itemCount: number
+}
+
+export interface SmisPpePersonalStandardItem {
+  id: string
+  sourceStandardId: string
+  sourceStandardNo: string
+  sourceStandardName: string
+  materialId: string
+  materialCode: string
+  materialName: string
+  categoryName: string
+  specificationModel?: string | null
+  basicUnit: string
+  imageUrls: string[]
+  quotaQuantity: number
+  issuanceCycle: SmisPpeIssuanceCycle
+  issuanceFrequency: number
+  status: SmisPpeStandardStatus
+  initialIssueDate?: string | null
+  lastIssueDate?: string | null
+  nextIssueDate?: string | null
+}
+
+export interface SmisPpePersonalStandardSearchParams {
+  keyword?: string
+  organizationIds?: string[]
+  positionId?: string
+  onlyMissing?: boolean
+  purpose?: 'list' | 'export'
+  from?: number
+  to?: number
+}
+
+export interface SmisPpePersonalStandardOverview {
+  employeeTotal: number
+  generatedTotal: number
+  missingTotal: number
+  itemTotal: number
+}
+
+export interface SmisPpeGenerateResult {
+  employeeCount: number
+  itemCount: number
+  unmatchedCount: number
+}
+
+export interface SmisPpeDueGenerateResult {
+  documentCount: number
+  itemCount: number
+}
+
+export type SmisPpeRequisitionStatus =
+  'pending_issue' | 'issued_pending_confirmation' | 'confirmed' | 'denied' | 'cancelled'
+
+export type SmisPpeIssuanceStatus = 'draft' | 'posted' | 'voided'
+
+export interface SmisPpePersonalRequisitionItem {
+  id: string
+  tenantId: string
+  requisitionId: string
+  requisitionNo: string
+  employeeId: string
+  employeeNo: string
+  employeeName: string
+  positionName?: string | null
+  organizationId?: string | null
+  organizationName?: string | null
+  operationDepartment?: string | null
+  operationArea?: string | null
+  team?: string | null
+  materialId: string
+  materialCategory?: string | null
+  materialName: string
+  specificationModel?: string | null
+  unit: string
+  imageUrls: string[]
+  quotaQuantity: number
+  requestedQuantity: number
+  quotaCycleMonths: number
+  plannedIssueDate: string
+  status: SmisPpeRequisitionStatus
+  reminder?: string | null
+  issuedAt?: string | null
+  confirmedAt?: string | null
+  confirmationSource?: 'employee' | 'system' | null
+  denialReason?: string | null
+  remark?: string | null
+}
+
+export interface SmisPpePersonalRequisitionSearchParams {
+  dateRange?: [string, string]
+  organizationId?: string
+  employeeId?: string
+  status?: SmisPpeRequisitionStatus
+  keyword?: string
+  purpose?: 'list' | 'export'
+  from?: number
+  to?: number
+}
+
+export interface SmisPpePersonalRequisitionOverview {
+  total: number
+  pending: number
+  waitingConfirmation: number
+  confirmed: number
+  overdue: number
+}
+
+export interface SmisPpeSetting {
+  autoConfirmDays: number
+}
+
+export interface SmisPpeIssuanceRecordItem {
+  id?: string
+  requisitionItemId?: string | null
+  materialId: string
+  materialCategory?: string | null
+  materialName: string
+  specificationModel?: string | null
+  unit: string
+  issueQuantity: number
+  remark?: string | null
+}
+
+export interface SmisPpeIssuanceRecord {
+  id: string
+  tenantId: string
+  issuanceNo: string
+  employeeId: string
+  employeeNo: string
+  employeeName: string
+  positionName?: string | null
+  organizationId?: string | null
+  organizationName?: string | null
+  warehouseId: string
+  warehouseName: string
+  issuerEmployeeId: string
+  issuerName: string
+  issueDate: string
+  status: SmisPpeIssuanceStatus
+  postedAt?: string | null
+  remark?: string | null
+  createTime?: string | null
+  items: SmisPpeIssuanceRecordItem[]
+}
+
+export interface SmisPpeIssuanceRecordSearchParams {
+  dateRange?: [string, string]
+  organizationId?: string
+  employeeId?: string
+  status?: SmisPpeIssuanceStatus
+  keyword?: string
+  purpose?: 'list' | 'export'
+  from?: number
+  to?: number
+}
+
+export interface SmisPpeIssuanceRecordOverview {
+  total: number
+  draft: number
+  posted: number
+  today: number
+  quantity: number
+}
+
+export interface SmisPpeIssuanceRecordSavePayload {
+  id?: string
+  employeeId: string
+  warehouseId: string
+  issuerEmployeeId: string
+  issueDate: string
+  remark?: string | null
+  items: Array<
+    Pick<SmisPpeIssuanceRecordItem, 'requisitionItemId' | 'materialId' | 'issueQuantity' | 'remark'>
+  >
+}
+
+export interface SmisPpeIssuanceStatisticsRow {
+  organizationId?: string | null
+  organizationName: string
+  materialName: string
+  specificationModel?: string | null
+  unit: string
+  quantity: number
+  employeeCount: number
+}
+
+export interface SmisPpeIssuanceStatistics {
+  summary: {
+    documentCount: number
+    employeeCount: number
+    materialCount: number
+    totalQuantity: number
+  }
+  rows: SmisPpeIssuanceStatisticsRow[]
 }

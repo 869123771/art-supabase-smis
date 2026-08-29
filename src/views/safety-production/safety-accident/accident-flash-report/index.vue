@@ -1,51 +1,50 @@
 <template>
-  <div
-    v-auth="'SmisAccidentFlashReport:View'"
-    class="accident-page business-workspace-page art-full-height"
-  >
-    <BusinessWorkspaceHeader
-      eyebrow="INCIDENT RESPONSE"
-      title="事故快报"
-      description="及时固化事故事实、人员影响与防范责任，为调查处置和工伤申报提供统一依据。"
-      icon="ri:alarm-warning-line"
-      :tags="[
-        { label: '编号自动生成', type: 'primary', effect: 'plain' },
-        { label: '人员档案快照', type: 'warning', effect: 'light' },
-        { label: '防范责任闭环', type: 'success', effect: 'plain' }
-      ]"
-      :metrics="metrics"
-    >
-      <template #actions><BusinessTableWorkspaceActions :table="tableRef" /></template>
-    </BusinessWorkspaceHeader>
-
-    <div class="accident-page__risk-strip" role="note">
-      <span><ArtSvgIcon icon="ri:shield-cross-line" /></span>
-      <p
-        ><strong>快报完整性提示</strong
-        >事故时间、地点、类别与级别是追溯核心；人员记录按保存时的花名册内容留存。</p
+  <ArtPermissionGuard permission="SmisAccidentFlashReport:View">
+    <div class="accident-page business-workspace-page art-full-height">
+      <BusinessWorkspaceHeader
+        eyebrow="INCIDENT RESPONSE"
+        title="事故快报"
+        description="及时固化事故事实、人员影响与防范责任，为调查处置和工伤申报提供统一依据。"
+        icon="ri:alarm-warning-line"
+        :tags="[
+          { label: '编号自动生成', type: 'primary', effect: 'plain' },
+          { label: '人员档案快照', type: 'warning', effect: 'light' },
+          { label: '防范责任闭环', type: 'success', effect: 'plain' }
+        ]"
+        :metrics="metrics"
       >
-    </div>
+        <template #actions><BusinessTableWorkspaceActions :table="tableRef" /></template>
+      </BusinessWorkspaceHeader>
 
-    <ArtTableQuery
-      ref="tableRef"
-      v-model="searchQuery"
-      class="accident-page__table"
-      :api-fn="fetchTableData"
-      :search-items="searchItems"
-      :columns-factory="columnsFactory"
-      :header-actions="headerActions"
-      header-actions-placement="workspace"
-      :search-bar-props="{ span: 6, labelWidth: 76, showExpand: false }"
-      :table-props="{
-        rowKey: 'id',
-        tableLayout: 'fixed',
-        emptyText: '暂无事故快报',
-        emptyDescription: '可点击新增，快速记录事故及相关人员信息。'
-      }"
-      focusable
-    />
-    <AccidentReportDialog ref="dialogRef" @success="handleSaveSuccess" />
-  </div>
+      <div class="accident-page__risk-strip" role="note">
+        <span><ArtSvgIcon icon="ri:shield-cross-line" /></span>
+        <p
+          ><strong>快报完整性提示</strong
+          >事故时间、地点、类别与级别是追溯核心；人员记录按保存时的花名册内容留存。</p
+        >
+      </div>
+
+      <ArtTableQuery
+        ref="tableRef"
+        v-model="searchQuery"
+        class="accident-page__table"
+        :api-fn="fetchTableData"
+        :search-items="searchItems"
+        :columns-factory="columnsFactory"
+        :header-actions="headerActions"
+        header-actions-placement="workspace"
+        :search-bar-props="{ span: 6, labelWidth: 76, showExpand: false }"
+        :table-props="{
+          rowKey: 'id',
+          tableLayout: 'fixed',
+          emptyText: '暂无事故快报',
+          emptyDescription: '可点击新增，快速记录事故及相关人员信息。'
+        }"
+        focusable
+      />
+      <AccidentReportDialog ref="dialogRef" @success="handleSaveSuccess" />
+    </div>
+  </ArtPermissionGuard>
 </template>
 
 <script setup lang="tsx">
@@ -160,8 +159,9 @@
     {
       label: '事故时间',
       key: 'accidentTimeRange',
-      type: 'daterange',
+      type: 'date',
       props: {
+        type: 'daterange',
         valueFormat: 'YYYY-MM-DD',
         startPlaceholder: '开始日期',
         endPlaceholder: '结束日期',

@@ -1,42 +1,41 @@
 <template>
-  <div
-    v-auth="'SmisEmergencyRescuePlan:View'"
-    class="emergency-plan-page business-workspace-page art-full-height"
-  >
-    <BusinessWorkspaceHeader
-      eyebrow="EMERGENCY PREPAREDNESS"
-      title="应急救援预案"
-      description="统一管理预案适用范围、演练频次、有效状态和下推演练计划。"
-      icon="ri:file-shield-2-line"
-      :tags="[
-        { label: '组织级别联动', type: 'primary', effect: 'plain' },
-        { label: '有效性控制', type: 'success', effect: 'light' },
-        { label: '下推演练计划', type: 'warning', effect: 'plain' }
-      ]"
-      :metrics="metrics"
-    >
-      <template #actions><BusinessTableWorkspaceActions :table="tableRef" /></template>
-    </BusinessWorkspaceHeader>
-    <ArtTableQuery
-      ref="tableRef"
-      v-model="searchQuery"
-      class="emergency-plan-page__table"
-      :api-fn="fetchTableData"
-      :search-items="searchItems"
-      :columns-factory="columnsFactory"
-      :header-actions="headerActions"
-      header-actions-placement="workspace"
-      :search-bar-props="{ span: 6, labelWidth: 82, showExpand: false }"
-      :table-props="{
-        rowKey: 'id',
-        tableLayout: 'fixed',
-        emptyText: '暂无应急救援预案',
-        emptyDescription: '可新增预案并提交，随后下推形成演练计划草稿。'
-      }"
-      focusable
-    />
-    <EmergencyPlanDialog ref="dialogRef" @success="handleSaveSuccess" />
-  </div>
+  <ArtPermissionGuard permission="SmisEmergencyRescuePlan:View">
+    <div class="emergency-plan-page business-workspace-page art-full-height">
+      <BusinessWorkspaceHeader
+        eyebrow="EMERGENCY PREPAREDNESS"
+        title="应急救援预案"
+        description="统一管理预案适用范围、演练频次、有效状态和下推演练计划。"
+        icon="ri:file-shield-2-line"
+        :tags="[
+          { label: '组织级别联动', type: 'primary', effect: 'plain' },
+          { label: '有效性控制', type: 'success', effect: 'light' },
+          { label: '下推演练计划', type: 'warning', effect: 'plain' }
+        ]"
+        :metrics="metrics"
+      >
+        <template #actions><BusinessTableWorkspaceActions :table="tableRef" /></template>
+      </BusinessWorkspaceHeader>
+      <ArtTableQuery
+        ref="tableRef"
+        v-model="searchQuery"
+        class="emergency-plan-page__table"
+        :api-fn="fetchTableData"
+        :search-items="searchItems"
+        :columns-factory="columnsFactory"
+        :header-actions="headerActions"
+        header-actions-placement="workspace"
+        :search-bar-props="{ span: 6, labelWidth: 82, showExpand: false }"
+        :table-props="{
+          rowKey: 'id',
+          tableLayout: 'fixed',
+          emptyText: '暂无应急救援预案',
+          emptyDescription: '可新增预案并提交，随后下推形成演练计划草稿。'
+        }"
+        focusable
+      />
+      <EmergencyPlanDialog ref="dialogRef" @success="handleSaveSuccess" />
+    </div>
+  </ArtPermissionGuard>
 </template>
 
 <script setup lang="tsx">

@@ -1,1 +1,0 @@
-import{$n as e,mn as t,rn as n}from"./style-C1L0GNpN.js";import{t as r}from"./smis-page-placeholder-CU6ksoZa.js";var i=t({name:`SmisMaterialInformation`,__name:`index`,setup(t){return(t,i)=>(e(),n(r,{section:`安全生产 / 防护用品管理`,title:`物料信息`}))}});export{i as default};
