@@ -35,7 +35,6 @@
         emptyDescription: '事故快报保存后会自动生成，也可点击事故分析选择已有事故。'
       }"
       focusable
-      focus-scope-selector=".analysis-page"
     />
     <AccidentAnalysisDialog ref="dialogRef" @success="handleSaveSuccess" />
   </div>

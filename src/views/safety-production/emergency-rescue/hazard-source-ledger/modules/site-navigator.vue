@@ -5,27 +5,29 @@
         <ArtSvgIcon icon="ri:refresh-line" />
       </ElButton>
     </template>
-    <div class="site-navigator__body" v-loading="loading">
-      <ElAlert v-if="error" :title="error" type="error" :closable="false" show-icon />
-      <ElTree
-        v-else-if="treeData.length"
-        :data="treeData"
-        node-key="id"
-        :props="{ label: 'siteName', children: 'children' }"
-        default-expand-all
-        highlight-current
-        :current-node-key="selectedKey"
-        @node-click="(node: SmisHazardSite) => $emit('select', node.id)"
-      >
-        <template #default="{ data }">
-          <span class="site-navigator__node">
-            <ArtSvgIcon :icon="data.children?.length ? 'ri:folder-3-line' : 'ri:map-pin-line'" />
-            <span :title="data.siteName">{{ data.siteName }}</span>
-          </span>
-        </template>
-      </ElTree>
-      <ArtEmptyState v-else title="暂无场所" description="请先在场所维护中建立场所树。" />
-    </div>
+    <ElScrollbar class="site-navigator__scroll">
+      <div class="site-navigator__body" v-loading="loading">
+        <ElAlert v-if="error" :title="error" type="error" :closable="false" show-icon />
+        <ElTree
+          v-else-if="treeData.length"
+          :data="treeData"
+          node-key="id"
+          :props="{ label: 'siteName', children: 'children' }"
+          default-expand-all
+          highlight-current
+          :current-node-key="selectedKey"
+          @node-click="(node: SmisHazardSite) => $emit('select', node.id)"
+        >
+          <template #default="{ data }">
+            <span class="site-navigator__node">
+              <ArtSvgIcon :icon="data.children?.length ? 'ri:folder-3-line' : 'ri:map-pin-line'" />
+              <span :title="data.siteName">{{ data.siteName }}</span>
+            </span>
+          </template>
+        </ElTree>
+        <ArtEmptyState v-else title="暂无场所" description="请先在场所维护中建立场所树。" />
+      </div>
+    </ElScrollbar>
   </ArtSectionCard>
 </template>
 
@@ -60,11 +62,13 @@
       min-height: 0;
     }
 
-    &__body {
+    &__scroll {
       flex: 1 1 auto;
       min-height: 0;
+    }
+
+    &__body {
       padding: 4px 2px 12px;
-      overflow: auto;
     }
 
     &__node {

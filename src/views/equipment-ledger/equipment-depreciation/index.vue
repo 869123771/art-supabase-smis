@@ -198,10 +198,10 @@
     {
       prop: 'equipment',
       label: '设备信息',
-      minWidth: 220,
+      minWidth: 250,
       formatter: (row) => (
         <div class="equipment-depreciation-page__equipment">
-          <span>
+          <span aria-hidden="true">
             <ArtSvgIcon icon="ri:archive-line" />
           </span>
           <span>
@@ -322,45 +322,58 @@
       flex: 1;
       min-height: 0;
     }
-    &__code {
+
+    :deep(.equipment-depreciation-page__code) {
       font-family: var(--art-code-font-family, 'SFMono-Regular', Consolas, monospace);
       font-weight: 600;
       color: var(--theme-color);
     }
-    &__equipment {
+
+    :deep(.equipment-depreciation-page__equipment) {
       display: grid;
-      grid-template-columns: 40px minmax(0, 1fr);
+      grid-template-columns: 36px minmax(0, 1fr);
       gap: 10px;
       align-items: center;
-    }
-    &__equipment > span:first-child {
-      display: grid;
-      place-items: center;
-      width: 40px;
-      height: 40px;
-      color: #059669;
-      background: color-mix(in srgb, #10b981 9%, var(--default-box-color));
-      border-radius: 10px;
-    }
-    &__equipment > span:last-child {
-      display: grid;
       min-width: 0;
+
+      > span:first-child {
+        display: grid;
+        place-items: center;
+        width: 36px;
+        height: 36px;
+        color: var(--theme-color);
+        background: color-mix(in srgb, var(--theme-color) 9%, var(--el-bg-color));
+        border-radius: var(--el-border-radius-base);
+      }
+
+      > span:last-child {
+        display: grid;
+        min-width: 0;
+      }
+
+      strong,
+      small {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      strong {
+        color: var(--el-text-color-primary);
+      }
+
+      small {
+        margin-top: 2px;
+        font-size: 11px;
+        color: var(--el-text-color-secondary);
+      }
     }
-    &__equipment strong,
-    &__equipment small {
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
+
+    :deep(.equipment-depreciation-page__net) {
+      color: var(--el-color-success-dark-2);
     }
-    &__equipment small {
-      margin-top: 3px;
-      font-size: 11px;
-      color: var(--el-text-color-secondary);
-    }
-    &__net {
-      color: #047857;
-    }
-    &__actions {
+
+    :deep(.equipment-depreciation-page__actions) {
       display: flex;
       gap: 4px;
     }

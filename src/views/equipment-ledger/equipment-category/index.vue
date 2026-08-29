@@ -249,7 +249,7 @@
 
   const columnsFactory = (): ColumnOption<SmisEquipmentCategory>[] => [
     { type: 'selection', width: 48 },
-    { type: 'globalIndex', label: '序号', width: 72 },
+    { prop: 'sort', label: '排序', width: 82, align: 'center', sortable: true },
     {
       prop: 'categoryName',
       label: '设备分类',

@@ -199,8 +199,8 @@
     {
       label: '间接经济损失（万元）',
       key: 'indirectEconomicLoss',
-      type: 'inputNumber',
-      props: { min: 0, precision: 2, controlsPosition: 'right', class: 'w-full' }
+      type: 'number',
+      props: { min: 0, precision: 2, controlsPosition: 'right', class: '!w-full' }
     },
     { label: '分析与判定', key: 'analysis', type: 'divider', span: 24 },
     {

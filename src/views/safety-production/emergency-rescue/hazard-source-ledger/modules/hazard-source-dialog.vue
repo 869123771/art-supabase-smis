@@ -1,5 +1,5 @@
 <template>
-  <ArtDialog ref="dialogRef" size="xl" :show-footer="false">
+  <ArtDialog ref="dialogRef" size="xl">
     <div class="hazard-dialog">
       <div class="hazard-dialog__context">
         <span><ArtSvgIcon icon="ri:alarm-warning-line" /></span>
@@ -68,8 +68,11 @@
           />
         </template>
       </ArtForm>
+    </div>
+
+    <template #footer="{ api }">
       <div class="hazard-dialog__footer">
-        <ElButton @click="dialogRef?.handleClose()">关闭</ElButton>
+        <ElButton :disabled="submitting" @click="api.handleClose()">关闭</ElButton>
         <ElButton :loading="submitting" @click="handleSave(false)">保存</ElButton>
         <ElButton
           v-auth="'SmisHazardSourceLedger:Submit'"
@@ -80,7 +83,7 @@
           保存并提交
         </ElButton>
       </div>
-    </div>
+    </template>
   </ArtDialog>
 </template>
 
@@ -309,6 +312,7 @@
       border-left: 3px solid var(--el-color-danger);
       border-radius: var(--el-border-radius-base);
     }
+
     &__context > span {
       display: grid;
       place-items: center;
@@ -318,25 +322,25 @@
       background: var(--default-box-color);
       border-radius: var(--el-border-radius-base);
     }
+
     &__context p {
       margin: 3px 0 0;
       font-size: 12px;
       color: var(--el-text-color-secondary);
     }
+
     &__control {
       width: 100%;
     }
+
     &__footer {
-      position: sticky;
-      bottom: 0;
       display: flex;
       gap: 10px;
+      align-items: center;
       justify-content: flex-end;
-      padding: 16px 0 2px;
-      margin-top: 16px;
-      background: var(--default-box-color);
-      border-top: 1px solid var(--el-border-color-lighter);
+      width: 100%;
     }
+
     :deep(.art-upload) {
       display: flex;
       flex-wrap: wrap;

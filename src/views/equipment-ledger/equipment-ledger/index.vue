@@ -558,7 +558,7 @@
 
   const columnsFactory = (): ColumnOption<SmisEquipment>[] => [
     { type: 'selection', width: 48 },
-    { type: 'globalIndex', label: '序号', width: 70 },
+    { prop: 'sort', label: '排序', width: 86, align: 'center', sortable: true },
     {
       prop: 'equipmentName',
       label: '设备信息',

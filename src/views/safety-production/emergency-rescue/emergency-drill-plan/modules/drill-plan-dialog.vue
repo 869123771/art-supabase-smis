@@ -33,6 +33,12 @@
               :label="`${item.planName} · ${item.planNo}`"
               :value="item.id"
             />
+            <template #empty>
+              <div class="drill-plan-dialog__source-empty">
+                <ArtSvgIcon icon="ri:information-line" />
+                <span>暂无已提交且有效的应急预案，请先完成预案提交。</span>
+              </div>
+            </template>
           </ElSelect>
         </template>
         <template #compilationOrganizationId
@@ -485,6 +491,22 @@
 
       small {
         color: var(--el-text-color-secondary);
+      }
+    }
+
+    &__source-empty {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
+      padding: 8px 12px;
+      font-size: 13px;
+      color: var(--el-text-color-secondary);
+
+      svg {
+        flex: 0 0 auto;
+        color: var(--theme-color);
       }
     }
 

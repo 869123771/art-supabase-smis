@@ -573,6 +573,7 @@ export interface SmisEquipmentBoiler {
 
 export interface SmisEquipment {
   id: string
+  sort: number
   categoryId: string
   locationId?: string | null
   usingOrganizationId: string

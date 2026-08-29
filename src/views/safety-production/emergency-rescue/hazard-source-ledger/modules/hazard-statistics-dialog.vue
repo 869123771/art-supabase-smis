@@ -34,7 +34,7 @@
             >
           </div>
         </div>
-        <ElTable :data="displayRows" border stripe>
+        <ArtTable :data="displayRows" :pagination="false" border stripe>
           <ElTableColumn type="index" label="序号" width="72" align="center" />
           <ElTableColumn prop="label" label="危险等级" min-width="180" />
           <ElTableColumn prop="count" label="危险源数量" min-width="150" align="right" />
@@ -46,7 +46,7 @@
                 "
             /></template>
           </ElTableColumn>
-        </ElTable>
+        </ArtTable>
       </ArtSectionCard>
     </div>
   </ArtDialog>
@@ -55,6 +55,7 @@
 <script setup lang="ts">
   import ArtDialog from '@/components/core/dialogs/art-dialog/index.vue'
   import type { ArtDialogExpose } from '@/components/core/dialogs/art-dialog/types'
+  import ArtTable from '@/components/core/tables/art-table/index.vue'
   import ArtSectionCard from '@/components/core/surfaces/art-section-card/index.vue'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
   import { useUserStore } from '@/store/modules/user'
@@ -113,18 +114,21 @@
     display: grid;
     gap: 14px;
   }
+
   .hazard-statistics__query {
     display: grid;
     grid-template-columns: minmax(260px, 1fr) auto;
     gap: 12px;
     align-items: center;
   }
+
   .hazard-statistics__summary {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 10px;
     margin-bottom: 16px;
   }
+
   .hazard-statistics__metric {
     display: flex;
     gap: 10px;
@@ -134,42 +138,52 @@
     border: 1px solid var(--el-border-color-lighter);
     border-radius: var(--el-border-radius-base);
   }
+
   .hazard-statistics__metric > span {
     display: grid;
     place-items: center;
     width: 36px;
     height: 36px;
-    border-radius: 10px;
+    border-radius: var(--el-border-radius-base);
   }
+
   .hazard-statistics__metric div {
     display: grid;
   }
+
   .hazard-statistics__metric strong {
     font-size: 20px;
   }
+
   .hazard-statistics__metric small {
     color: var(--el-text-color-secondary);
   }
+
   .tone-1 {
     color: var(--el-color-danger);
     background: var(--el-color-danger-light-9);
   }
+
   .tone-2 {
     color: var(--el-color-warning);
     background: var(--el-color-warning-light-9);
   }
+
   .tone-3 {
     color: var(--theme-color);
     background: color-mix(in srgb, var(--theme-color) 10%, transparent);
   }
+
   .tone-4 {
     color: var(--el-text-color-secondary);
     background: var(--art-gray-100);
   }
+
   @media (width <= 720px) {
     .hazard-statistics__query {
       grid-template-columns: 1fr;
     }
+
     .hazard-statistics__summary {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }

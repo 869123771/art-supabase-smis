@@ -93,6 +93,7 @@
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
   import { useDocumentNumberRule } from '@/hooks/core/useDocumentNumberRule'
   import { useUserStore } from '@/store/modules/user'
+  import { resolveSupplierDictionaryLabel } from '@smis/domain/supplier-dictionary'
   import {
     fetchEquipmentLedgerList,
     fetchSupplierList,
@@ -120,6 +121,7 @@
   }
   interface EquipmentForm {
     id?: string
+    sort: number
     categoryId: string
     locationId?: string
     usingOrganizationId: string
@@ -177,6 +179,7 @@
   const numberRule = useDocumentNumberRule('smis.equipment')
 
   const initialForm = (): EquipmentForm => ({
+    sort: 10,
     categoryId: '',
     locationId: undefined,
     usingOrganizationId: '',
@@ -297,6 +300,19 @@
         type: 'select',
         options: dictOptions('smisEquipmentKind'),
         props: { clearable: false }
+      },
+      {
+        label: '排序',
+        key: 'sort',
+        type: 'number',
+        props: {
+          min: 0,
+          max: 999999,
+          step: 10,
+          stepStrictly: true,
+          controlsPosition: 'right',
+          class: '!w-full'
+        }
       },
       {
         label: '设备分类',
@@ -589,6 +605,7 @@
         { max: 120, message: '设备名称不能超过 120 个字符', trigger: 'blur' }
       ],
       equipmentKind: [{ required: true, message: '请选择设备类型', trigger: 'change' }],
+      sort: [{ required: true, message: '请输入排序', trigger: 'change' }],
       categoryId: [{ required: true, message: '请选择设备分类', trigger: 'change' }],
       usingOrganizationId: [{ required: true, message: '请选择使用部门', trigger: 'change' }],
       managingOrganizationId: [{ required: true, message: '请选择管理部门', trigger: 'change' }],
@@ -599,7 +616,18 @@
   const supplierColumns: DataSelectColumn[] = [
     { prop: 'supplierCode', label: '供应商编码', minWidth: 150 },
     { prop: 'supplierName', label: '供应商名称', minWidth: 220 },
-    { prop: 'supplierCategory', label: '分类', width: 120 }
+    {
+      prop: 'supplierCategory',
+      label: '分类',
+      width: 132,
+      formatter: (row) =>
+        resolveSupplierDictionaryLabel(
+          'supplierCategory',
+          String(row.supplierCategory || ''),
+          getDictMap.value.supplierCategory
+        ),
+      tagType: 'primary'
+    }
   ]
   const accessoryColumns: DataSelectColumn[] = [
     { prop: 'equipmentCode', label: '设备编码', minWidth: 150 },
@@ -735,7 +763,8 @@
               'smisEquipmentAssetStatus',
               'smisEquipmentImportanceLevel',
               'smisEquipmentStatus',
-              'smisBoilerType'
+              'smisBoilerType',
+              'supplierCategory'
             ].map((code) => userStore.ensureDictLoaded(code)),
             formRef.value?.reloadOptions('usingOrganizationId'),
             formRef.value?.reloadOptions('managingOrganizationId')
@@ -768,6 +797,7 @@
       border: 1px solid color-mix(in srgb, var(--theme-color) 16%, transparent);
       border-radius: 12px;
     }
+
     &__context > span {
       display: grid;
       place-items: center;
@@ -778,9 +808,11 @@
       border-radius: 11px;
       box-shadow: 0 8px 20px rgb(15 23 42 / 8%);
     }
+
     &__context strong {
       color: var(--el-text-color-primary);
     }
+
     &__context p {
       margin: 3px 0 0;
       font-size: 12px;

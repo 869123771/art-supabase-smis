@@ -188,7 +188,7 @@
       {
         label: '排序',
         key: 'sort',
-        type: 'inputNumber',
+        type: 'number',
         props: {
           min: 0,
           max: 999999,

@@ -6,21 +6,21 @@
         <span>批量选择员工后自动固化事故发生时的人事档案快照</span>
       </div>
       <AccidentEmployeeMultipleSelect
-        :model-value="selectedIds"
-        :selected-data="selectedEmployees"
-        @update:selected-data="handleSelectedEmployees"
+        v-model="selectedIds"
+        v-model:selected-data="selectedEmployees"
       />
     </div>
 
-    <ElTable
+    <ArtTable
       v-if="rows.length"
       :data="rows"
+      :pagination="false"
       row-key="localKey"
       table-layout="fixed"
       class="accident-people-editor__table"
     >
       <ElTableColumn type="expand" width="48">
-        <template #default="{ row, $index }">
+        <template #default="{ row }">
           <div class="accident-people-editor__detail">
             <dl class="accident-people-editor__snapshot">
               <div
@@ -52,70 +52,52 @@
               <label>
                 <span>工种年龄（年）</span>
                 <ElInputNumber
-                  :model-value="toNumber(row.jobYears)"
+                  v-model="row.jobYears"
                   :min="0"
                   :max="100"
                   :precision="1"
                   controls-position="right"
                   placeholder="请输入"
-                  @update:model-value="patchRow($index, { jobYears: $event })"
                 />
               </label>
               <label>
                 <span>受过几级安全教育</span>
                 <ElInput
-                  :model-value="row.safetyEducationLevel || ''"
+                  v-model="row.safetyEducationLevel"
                   maxlength="80"
                   placeholder="例如：三级安全教育"
-                  @update:model-value="patchRow($index, { safetyEducationLevel: $event })"
                 />
               </label>
               <label>
                 <span>受害性质</span>
-                <ElInput
-                  :model-value="row.victimNature || ''"
-                  maxlength="100"
-                  placeholder="请输入受害性质"
-                  @update:model-value="patchRow($index, { victimNature: $event })"
-                />
+                <ElInput v-model="row.victimNature" maxlength="100" placeholder="请输入受害性质" />
               </label>
               <label>
                 <span>伤害部位</span>
-                <ElInput
-                  :model-value="row.injuryPart || ''"
-                  maxlength="100"
-                  placeholder="请输入伤害部位"
-                  @update:model-value="patchRow($index, { injuryPart: $event })"
-                />
+                <ElInput v-model="row.injuryPart" maxlength="100" placeholder="请输入伤害部位" />
               </label>
               <label>
                 <span>伤害程度</span>
-                <ElInput
-                  :model-value="row.injuryDegree || ''"
-                  maxlength="100"
-                  placeholder="请输入伤害程度"
-                  @update:model-value="patchRow($index, { injuryDegree: $event })"
-                />
+                <ElInput v-model="row.injuryDegree" maxlength="100" placeholder="请输入伤害程度" />
               </label>
               <label class="is-wide">
                 <span>备注</span>
                 <ElInput
-                  :model-value="row.remark || ''"
+                  v-model="row.remark"
                   type="textarea"
                   :rows="2"
                   maxlength="500"
                   show-word-limit
                   resize="none"
                   placeholder="补充人员伤害或处置说明"
-                  @update:model-value="patchRow($index, { remark: $event })"
                 />
               </label>
             </div>
           </div>
         </template>
       </ElTableColumn>
-      <ElTableColumn type="index" label="序号" width="64" align="center" />
-      <ElTableColumn label="人员" min-width="180">
+      <ElTableColumn type="index" label="序号" width="56" align="center" />
+      <ElTableColumn label="人员" min-width="150">
         <template #default="{ row }">
           <div class="accident-people-editor__identity">
             <strong>{{ row.employeeName }}</strong>
@@ -123,18 +105,18 @@
           </div>
         </template>
       </ElTableColumn>
-      <ElTableColumn label="组织路径" min-width="240">
+      <ElTableColumn label="组织路径" min-width="190" show-overflow-tooltip>
         <template #default="{ row }">{{ organizationPath(row) }}</template>
       </ElTableColumn>
-      <ElTableColumn label="性别 / 年龄" width="108">
+      <ElTableColumn label="性别 / 年龄" width="96">
         <template #default="{ row }">{{ row.gender || '—' }} / {{ row.age ?? '—' }}</template>
       </ElTableColumn>
-      <ElTableColumn label="工种 / 工龄" min-width="160">
+      <ElTableColumn label="工种 / 工龄" min-width="140" show-overflow-tooltip>
         <template #default="{ row }">
           {{ row.jobTitle || '—' }} · {{ formatYears(row.workYears) }}
         </template>
       </ElTableColumn>
-      <ElTableColumn label="伤害摘要" min-width="190">
+      <ElTableColumn label="伤害摘要" min-width="160" show-overflow-tooltip>
         <template #default="{ row }">
           {{
             [row.victimNature, row.injuryPart, row.injuryDegree].filter(Boolean).join(' · ') ||
@@ -142,14 +124,14 @@
           }}
         </template>
       </ElTableColumn>
-      <ElTableColumn label="操作" width="76" align="center">
+      <ElTableColumn label="操作" width="64" align="center">
         <template #default="{ $index }">
           <ElButton link type="danger" aria-label="移除事故人员" @click="removeRow($index)">
             移除
           </ElButton>
         </template>
       </ElTableColumn>
-    </ElTable>
+    </ArtTable>
     <ArtEmptyState
       v-else
       title="暂无事故相关人员"
@@ -160,8 +142,9 @@
 </template>
 
 <script setup lang="ts">
-  import { cloneDeep, omit } from 'lodash-es'
+  import { cloneDeep, isEqual, omit } from 'lodash-es'
   import ArtEmptyState from '@/components/core/feedback/art-empty-state/index.vue'
+  import ArtTable from '@/components/core/tables/art-table/index.vue'
   import type { SmisAccidentEmployee, SmisAccidentPerson } from '@smis/api'
   import AccidentEmployeeMultipleSelect from '../../shared/accident-employee-multiple-select.vue'
 
@@ -176,17 +159,26 @@
   const rows = ref<EditorRow[]>([])
   let localSequence = 0
   const createLocalKey = (): string => `person-${Date.now()}-${localSequence++}`
-  const toEditorRows = (value: SmisAccidentPerson[]): EditorRow[] =>
-    cloneDeep(value).map((item) => ({ ...item, localKey: item.id || createLocalKey() }))
+  const toModelRows = (): SmisAccidentPerson[] =>
+    rows.value.map((row, index) => ({ ...omit(row, 'localKey'), sort: index }))
+  const toEditorRows = (value: SmisAccidentPerson[]): EditorRow[] => {
+    const currentByEmployeeId = new Map(rows.value.map((row) => [row.employeeId, row.localKey]))
+    return cloneDeep(value).map((item) => ({
+      ...item,
+      localKey: item.id || currentByEmployeeId.get(item.employeeId) || createLocalKey()
+    }))
+  }
+  const sync = (): void => emit('update:modelValue', toModelRows())
   watch(
     () => props.modelValue,
     (value) => {
+      if (isEqual(value, toModelRows())) return
       rows.value = toEditorRows(value)
     },
     { immediate: true }
   )
-  const selectedIds = computed(() => rows.value.map((row) => row.employeeId))
-  const selectedEmployees = computed<SmisAccidentEmployee[]>(() =>
+  watch(rows, sync, { deep: true, flush: 'sync' })
+  const toSelectedEmployees = (): SmisAccidentEmployee[] =>
     rows.value.map((row) => ({
       id: row.employeeId,
       tenantId: '',
@@ -206,19 +198,7 @@
       operationAreaName: row.operationAreaName,
       teamName: row.teamName
     }))
-  )
-  const sync = (): void =>
-    emit(
-      'update:modelValue',
-      rows.value.map((row, index) => ({ ...omit(row, 'localKey'), sort: index }))
-    )
-  const patchRow = (index: number, patch: Partial<EditorRow>): void => {
-    const next = cloneDeep(rows.value)
-    Object.assign(next[index], patch)
-    rows.value = next
-    sync()
-  }
-  const handleSelectedEmployees = (employees: SmisAccidentEmployee[]): void => {
+  function handleSelectedEmployees(employees: SmisAccidentEmployee[]): void {
     const existing = new Map(rows.value.map((row) => [row.employeeId, row]))
     rows.value = employees.map((employee, index) => {
       const current = existing.get(employee.id)
@@ -249,11 +229,21 @@
         sort: index
       }
     })
-    sync()
   }
+  const selectedIds = computed<string[]>({
+    get: () => rows.value.map((row) => row.employeeId),
+    set: (ids) => {
+      const selectedIdSet = new Set(ids)
+      if (ids.length >= rows.value.length) return
+      rows.value = rows.value.filter((row) => selectedIdSet.has(row.employeeId))
+    }
+  })
+  const selectedEmployees = computed<SmisAccidentEmployee[]>({
+    get: toSelectedEmployees,
+    set: handleSelectedEmployees
+  })
   const removeRow = (index: number): void => {
     rows.value.splice(index, 1)
-    sync()
   }
   type OrganizationField =
     'companyName' | 'operationDepartmentName' | 'operationAreaName' | 'teamName'
