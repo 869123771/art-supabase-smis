@@ -31,8 +31,14 @@
             label-key="equipmentName"
             description-key="equipmentCode"
             placeholder="点击选择设备"
+            empty-text="暂无可检验设备"
+            empty-description="请先维护当前租户的设备台账，再创建检验申报。"
             show-pagination
-          />
+          >
+            <template #empty>
+              <SmisDataSourceEmptyActions source="equipment" />
+            </template>
+          </ArtTableSingleSelect>
         </template>
 
         <template #inspectionInstitutionId>
@@ -46,8 +52,14 @@
             label-key="supplierName"
             description-key="supplierCode"
             placeholder="点击选择检验机构"
+            empty-text="暂无可选检验机构"
+            empty-description="请在供应商主数据中新增单位，并将供应商类别设为“检验机构”。"
             show-pagination
-          />
+          >
+            <template #empty>
+              <SmisDataSourceEmptyActions source="supplier" />
+            </template>
+          </ArtTableSingleSelect>
         </template>
 
         <template #images>
@@ -80,6 +92,7 @@
   import ArtTableSingleSelect from '@/components/core/forms/art-data-select/table-single.vue'
   import ArtUploadImage from '@/components/core/forms/art-upload-image/index.vue'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
+  import SmisDataSourceEmptyActions from '@smis/views/components/smis-data-source-empty-actions.vue'
   import { useDocumentNumberRule } from '@/hooks/core/useDocumentNumberRule'
   import { useUserStore } from '@/store/modules/user'
   import {

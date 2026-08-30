@@ -18,8 +18,12 @@
           children-key="children"
           title="选择公司或部门"
           placeholder="全部组织"
+          empty-text="暂无可选组织"
+          empty-description="请先在系统组织管理中维护当前租户的公司或部门。"
           clearable
-        />
+        >
+          <template #empty><SmisDataSourceEmptyActions source="organization" /></template>
+        </ArtTreeSingleSelect>
       </template>
       <template #employeeId>
         <ArtEmployeeSelect
@@ -70,6 +74,7 @@
   import ArtEmployeeSelect from '@/components/business/art-employee-select/index.vue'
   import ArtTreeSingleSelect from '@/components/core/forms/art-data-select/tree-single.vue'
   import type { ArtDialogExpose } from '@/components/core/dialogs/art-dialog/types'
+  import SmisDataSourceEmptyActions from '@smis/views/components/smis-data-source-empty-actions.vue'
   import { useUserStore } from '@/store/modules/user'
   import {
     fetchPpeIssuanceStatistics,

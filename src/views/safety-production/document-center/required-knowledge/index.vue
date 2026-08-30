@@ -1,9 +1,12 @@
 <template>
-  <SmisPagePlaceholder section="安全生产 / 文档中心" title="应知应会" />
+  <ArtPermissionGuard permission="SmisRequiredKnowledge:View" resource-name="应知应会">
+    <DocumentRegisterWorkspace kind="required_knowledge" />
+  </ArtPermissionGuard>
 </template>
 
 <script setup lang="ts">
-  import SmisPagePlaceholder from '@smis/views/components/smis-page-placeholder.vue'
+  import ArtPermissionGuard from '@/components/core/feedback/art-permission-guard/index.vue'
+  import DocumentRegisterWorkspace from '../shared/document-register-workspace.vue'
 
   defineOptions({ name: 'SmisRequiredKnowledge' })
 </script>

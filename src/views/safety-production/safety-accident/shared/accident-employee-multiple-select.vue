@@ -12,13 +12,19 @@
     :label-key="employeeLabel"
     :description-key="employeeDescription"
     empty-text="暂无可选员工"
+    empty-description="当前租户没有可选的在职或试用期员工，请先完善员工花名册。"
     @update:model-value="emit('update:modelValue', normalizeIds($event))"
     @update:selected-data="emit('update:selectedData', normalizeRows($event))"
-  />
+  >
+    <template #empty>
+      <SmisDataSourceEmptyActions source="employee" />
+    </template>
+  </ArtTableMultipleSelect>
 </template>
 
 <script setup lang="ts">
   import ArtTableMultipleSelect from '@/components/core/forms/art-data-select/table-multiple.vue'
+  import SmisDataSourceEmptyActions from '@smis/views/components/smis-data-source-empty-actions.vue'
   import type {
     DataSelectColumn,
     DataSelectFetchParams,

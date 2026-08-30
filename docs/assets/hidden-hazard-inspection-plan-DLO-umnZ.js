@@ -1,0 +1,1 @@
+import{er as e,hn as t,in as n}from"./style-Du4Cu68A.js";import{t as r}from"./smis-page-placeholder-iPM_TTEz.js";var i=t({name:`SmisDualControlHiddenHazardInspectionPlan`,__name:`index`,setup(t){return(t,i)=>(e(),n(r,{section:`双控体系 / 隐患治理`,title:`隐患排查计划`}))}});export{i as default};

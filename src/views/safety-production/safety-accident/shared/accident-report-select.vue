@@ -12,14 +12,20 @@
     label-key="accidentName"
     description-key="accidentNo"
     empty-text="暂无可关联事故快报"
+    empty-description="请先新增当前租户的事故快报，再返回关联事故。"
     @update:model-value="emit('update:modelValue', normalizeValue($event))"
     @update:selected-data="emit('update:selectedData', normalizeRows($event))"
-  />
+  >
+    <template #empty>
+      <SmisDataSourceEmptyActions source="accident-report" />
+    </template>
+  </ArtTableSingleSelect>
 </template>
 
 <script setup lang="ts">
   import dayjs from 'dayjs'
   import ArtTableSingleSelect from '@/components/core/forms/art-data-select/table-single.vue'
+  import SmisDataSourceEmptyActions from '@smis/views/components/smis-data-source-empty-actions.vue'
   import type {
     DataSelectColumn,
     DataSelectFetchParams,

@@ -1,0 +1,358 @@
+<template>
+  <ArtDialog ref="dialogRef" size="full">
+    <div class="announcement-editor-dialog">
+      <ArtForm
+        ref="formRef"
+        v-model="form.model"
+        :items="form.items"
+        :rules="form.rules"
+        :span="12"
+        :gutter="24"
+        label-position="top"
+        :show-reset="false"
+        :show-submit="false"
+      >
+        <template #audienceEmployeeIds>
+          <AntiViolationEmployeeMultipleSelect
+            v-model="form.model.audienceEmployeeIds"
+            v-model:selected-data="employeeSelection"
+            title="选择公告接收人员"
+            placeholder="从员工花名册批量选择"
+          />
+        </template>
+
+        <template #audienceOrganizationIds>
+          <ElTreeSelect
+            v-model="form.model.audienceOrganizationIds"
+            class="announcement-editor-dialog__full-control"
+            :data="organizations"
+            :props="organizationTreeProps"
+            node-key="id"
+            value-key="id"
+            multiple
+            show-checkbox
+            check-strictly
+            collapse-tags
+            collapse-tags-tooltip
+            :max-collapse-tags="3"
+            filterable
+            clearable
+            default-expand-all
+            placeholder="选择一个或多个发布组织"
+          />
+        </template>
+
+        <template #contentHtml>
+          <ArtWangEditor
+            v-model="form.model.contentHtml"
+            height="340px"
+            placeholder="请输入公告正文，可使用标题、列表、表格与链接组织内容…"
+            :exclude-keys="['fontFamily', 'uploadImage', 'uploadVideo']"
+          />
+        </template>
+
+        <template #attachmentUrls>
+          <ArtUploadFile
+            v-model="form.model.attachmentUrls"
+            multiple
+            :limit="20"
+            accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,image/*"
+            tip="支持文档、表格、演示稿、压缩包和图片，最多 20 个附件"
+          />
+        </template>
+      </ArtForm>
+    </div>
+  </ArtDialog>
+</template>
+
+<script setup lang="ts">
+  import DOMPurify from 'dompurify'
+  import dayjs from 'dayjs'
+  import type { FormRules } from 'element-plus'
+  import type { EmployeeIntegrationItem } from '@/api/integration/employees'
+  import ArtDialog from '@/components/core/dialogs/art-dialog/index.vue'
+  import type { ArtDialogExpose } from '@/components/core/dialogs/art-dialog/types'
+  import ArtForm, {
+    type FormItem,
+    type FormItemOption
+  } from '@/components/core/forms/art-form/index.vue'
+  import ArtWangEditor from '@/components/core/forms/art-wang-editor/index.vue'
+  import ArtUploadFile from '@/components/core/forms/art-upload-file/index.vue'
+  import { useUserStore } from '@/store/modules/user'
+  import {
+    saveAnnouncement,
+    type SmisAnnouncement,
+    type SmisAnnouncementCategoryOption,
+    type SmisAnnouncementOrganization,
+    type SmisAnnouncementSavePayload
+  } from '@smis/api'
+  import AntiViolationEmployeeMultipleSelect from '../../shared/anti-violation-employee-multiple-select.vue'
+
+  export interface AnnouncementEditorDialogOpenData {
+    row?: SmisAnnouncement
+    categories: SmisAnnouncementCategoryOption[]
+    organizations: SmisAnnouncementOrganization[]
+  }
+  interface FormExpose {
+    validate: () => Promise<boolean>
+    clearValidate: () => void
+  }
+
+  const emit = defineEmits<{ success: [type: 'add' | 'edit'] }>()
+  const userStore = useUserStore()
+  const { getDictMap, getUserInfo } = storeToRefs(userStore)
+  const dialogRef = ref<ArtDialogExpose<AnnouncementEditorDialogOpenData>>()
+  const formRef = ref<FormExpose>()
+  const categories = shallowRef<SmisAnnouncementCategoryOption[]>([])
+  const organizations = shallowRef<SmisAnnouncementOrganization[]>([])
+  const employeeSelection = shallowRef<EmployeeIntegrationItem[]>([])
+  const organizationTreeProps = { children: 'children', label: 'organizationName', value: 'id' }
+
+  const createInitialForm = (): SmisAnnouncementSavePayload => ({
+    operation: 'add',
+    categoryId: '',
+    title: '',
+    contentHtml: '',
+    contentText: '',
+    audienceType: 'all',
+    audienceEmployeeIds: [],
+    audienceOrganizationIds: [],
+    effectiveStartDate: dayjs().format('YYYY-MM-DD'),
+    effectiveEndDate: null,
+    isPinned: false,
+    attachmentUrls: []
+  })
+  const categoryOptions = computed<FormItemOption[]>(() =>
+    categories.value.map((item) => ({ label: item.categoryName, value: item.id }))
+  )
+  const audienceOptions = computed<FormItemOption[]>(() =>
+    (getDictMap.value.smisAnnouncementAudienceType ?? []).map((item) => ({
+      label: item.label || item.name,
+      value: item.value
+    }))
+  )
+  const announcementModel = reactive<SmisAnnouncementSavePayload>(createInitialForm())
+  const form = reactive<{
+    model: SmisAnnouncementSavePayload
+    items: ComputedRef<FormItem[]>
+    rules: FormRules<SmisAnnouncementSavePayload>
+  }>({
+    model: announcementModel,
+    items: computed(() => [
+      { label: '公告信息', key: 'baseSection', type: 'divider', span: 24 },
+      {
+        label: '公告标题',
+        key: 'title',
+        type: 'input',
+        span: 16,
+        props: {
+          maxlength: 200,
+          showWordLimit: true,
+          placeholder: '请输入准确、便于检索的公告标题'
+        }
+      },
+      {
+        label: '公告分类',
+        key: 'categoryId',
+        type: 'select',
+        span: 8,
+        options: categoryOptions.value,
+        props: { filterable: true, clearable: true, placeholder: '请选择公告分类' }
+      },
+      {
+        label: '生效日期',
+        key: 'effectiveStartDate',
+        type: 'date',
+        span: 8,
+        props: { type: 'date', valueFormat: 'YYYY-MM-DD', class: '!w-full' }
+      },
+      {
+        label: '结束日期',
+        key: 'effectiveEndDate',
+        type: 'date',
+        span: 8,
+        props: {
+          type: 'date',
+          valueFormat: 'YYYY-MM-DD',
+          clearable: true,
+          class: '!w-full',
+          placeholder: '长期有效可不填'
+        }
+      },
+      {
+        label: '置顶显示',
+        key: 'isPinned',
+        type: 'switch',
+        span: 8,
+        props: { inlinePrompt: true, activeText: '是', inactiveText: '否' }
+      },
+      { label: '公告正文', key: 'contentSection', type: 'divider', span: 24 },
+      { label: '内容', key: 'contentHtml', type: 'text', span: 24 },
+      { label: '发布范围与附件', key: 'scopeSection', type: 'divider', span: 24 },
+      {
+        label: '发布范围',
+        key: 'audienceType',
+        type: 'radioGroup',
+        span: 24,
+        options: audienceOptions.value,
+        props: { optionType: 'button' }
+      },
+      {
+        label: '指定人员',
+        key: 'audienceEmployeeIds',
+        type: 'text',
+        span: 24,
+        hidden: announcementModel.audienceType !== 'employees'
+      },
+      {
+        label: '指定组织',
+        key: 'audienceOrganizationIds',
+        type: 'text',
+        span: 24,
+        hidden: announcementModel.audienceType !== 'organizations'
+      },
+      { label: '相关附件', key: 'attachmentUrls', type: 'text', span: 24 }
+    ]),
+    rules: {
+      title: [
+        { required: true, message: '请输入公告标题', trigger: 'blur' },
+        { max: 200, message: '公告标题不能超过 200 个字符', trigger: 'blur' }
+      ],
+      categoryId: [{ required: true, message: '请选择公告分类', trigger: 'change' }],
+      effectiveStartDate: [{ required: true, message: '请选择生效日期', trigger: 'change' }],
+      contentHtml: [{ required: true, message: '请输入公告正文', trigger: 'change' }],
+      audienceType: [{ required: true, message: '请选择发布范围', trigger: 'change' }],
+      audienceEmployeeIds: [
+        {
+          validator: (_rule, value, callback) => {
+            if (
+              announcementModel.audienceType === 'employees' &&
+              (!Array.isArray(value) || value.length === 0)
+            )
+              callback(new Error('请至少选择一名接收人员'))
+            else callback()
+          },
+          trigger: 'change'
+        }
+      ],
+      audienceOrganizationIds: [
+        {
+          validator: (_rule, value, callback) => {
+            if (
+              announcementModel.audienceType === 'organizations' &&
+              (!Array.isArray(value) || value.length === 0)
+            )
+              callback(new Error('请至少选择一个接收组织'))
+            else callback()
+          },
+          trigger: 'change'
+        }
+      ]
+    }
+  })
+
+  const toEmployeeSelection = (row: SmisAnnouncement): EmployeeIntegrationItem[] =>
+    row.audienceEmployees.map((person) => ({
+      id: person.id,
+      tenantId: getUserInfo.value.tenantId || '',
+      employeeNo: person.employeeNo,
+      employeeName: person.employeeName,
+      employmentStatus: 'active',
+      organization: person.organizationName
+        ? { id: '', organizationCode: '', organizationName: person.organizationName }
+        : null
+    }))
+  const resetForm = async (): Promise<void> => {
+    Object.assign(form.model, createInitialForm())
+    employeeSelection.value = []
+    await nextTick()
+    formRef.value?.clearValidate()
+  }
+  const extractText = (html: string): string => {
+    const container = document.createElement('div')
+    container.innerHTML = DOMPurify.sanitize(html)
+    return (container.textContent || '').replace(/\s+/g, ' ').trim()
+  }
+  const handleSubmit = async (): Promise<boolean> => {
+    try {
+      await formRef.value?.validate()
+      const cleanHtml = DOMPurify.sanitize(form.model.contentHtml)
+      const contentText = extractText(cleanHtml)
+      if (!contentText) {
+        ElMessage.warning('请输入有效公告正文')
+        return false
+      }
+      await saveAnnouncement({
+        ...toRaw(form.model),
+        contentHtml: cleanHtml,
+        contentText,
+        title: form.model.title.trim(),
+        effectiveEndDate: form.model.effectiveEndDate || null,
+        audienceEmployeeIds:
+          form.model.audienceType === 'employees' ? [...form.model.audienceEmployeeIds] : [],
+        audienceOrganizationIds:
+          form.model.audienceType === 'organizations'
+            ? [...form.model.audienceOrganizationIds]
+            : [],
+        attachmentUrls: [...form.model.attachmentUrls]
+      })
+      emit('success', form.model.id ? 'edit' : 'add')
+      return true
+    } catch {
+      return false
+    }
+  }
+  const handleOpen = async (data: AnnouncementEditorDialogOpenData): Promise<void> => {
+    categories.value = data.categories
+    organizations.value = data.organizations
+    await resetForm()
+    if (data.row) {
+      Object.assign(form.model, {
+        id: data.row.id,
+        operation: 'edit',
+        categoryId: data.row.categoryId,
+        title: data.row.title,
+        contentHtml: data.row.contentHtml,
+        contentText: data.row.contentText,
+        audienceType: data.row.audienceType,
+        audienceEmployeeIds: data.row.audienceEmployees.map((item) => item.id),
+        audienceOrganizationIds: data.row.audienceOrganizations.map((item) => item.id),
+        effectiveStartDate: data.row.effectiveStartDate,
+        effectiveEndDate: data.row.effectiveEndDate || null,
+        isPinned: data.row.isPinned,
+        attachmentUrls: [...data.row.attachmentUrls]
+      })
+      employeeSelection.value = toEmployeeSelection(data.row)
+    }
+    await dialogRef.value?.handleOpen(data, {
+      title: data.row ? '编辑公告草稿' : '新建公告',
+      subtitle: '公告先保存为草稿，确认内容与发布范围后再从列表执行发布。',
+      confirmText: '保存为草稿',
+      contentMaxHeight: 'calc(100vh - 150px)',
+      onOpen: async (_openData, api) => {
+        api.setLoading(true)
+        try {
+          await userStore.ensureDictLoaded('smisAnnouncementAudienceType')
+        } finally {
+          api.setLoading(false)
+        }
+      },
+      onConfirm: handleSubmit
+    })
+  }
+  defineExpose({ handleOpen })
+</script>
+
+<style scoped lang="scss">
+  .announcement-editor-dialog {
+    min-width: 0;
+
+    &__full-control {
+      width: 100%;
+    }
+
+    :deep(.editor-wrapper) {
+      border-radius: var(--el-border-radius-base);
+    }
+  }
+</style>

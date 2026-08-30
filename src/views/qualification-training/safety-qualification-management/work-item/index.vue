@@ -1,9 +1,9 @@
 <template>
-  <SmisPagePlaceholder section="资质培训 / 安全资质管理" title="作业项目" />
+  <QualificationCatalogPage catalog-type="work_item" />
 </template>
 
 <script setup lang="ts">
-  import SmisPagePlaceholder from '@smis/views/components/smis-page-placeholder.vue'
+  import QualificationCatalogPage from '../shared/qualification-catalog-page.vue'
 
   defineOptions({ name: 'SmisWorkItem' })
 </script>

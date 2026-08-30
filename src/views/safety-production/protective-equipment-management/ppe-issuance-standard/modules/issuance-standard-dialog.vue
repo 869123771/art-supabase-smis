@@ -32,8 +32,14 @@
             subtitle="数据来源 HR 岗位主数据，支持跨组织多选"
             placeholder="请选择适用岗位"
             search-placeholder="搜索岗位名称或编码"
+            empty-text="暂无可选岗位"
+            empty-description="请先在 HR 岗位管理中新增并启用岗位。"
             @update:selected-data="selectedPositions = normalizeScopeRows($event)"
-          />
+          >
+            <template #empty>
+              <SmisDataSourceEmptyActions source="position" />
+            </template>
+          </ArtTableMultipleSelect>
         </template>
         <template #organizationIds>
           <ArtTreeMultipleSelect
@@ -51,8 +57,14 @@
             :tree-check-strictly="true"
             :show-selected-panel="true"
             :max-tag-count="4"
+            empty-text="暂无可选组织"
+            empty-description="请先在系统组织管理中维护当前租户的公司或部门。"
             @update:selected-data="selectedOrganizations = normalizeScopeRows($event)"
-          />
+          >
+            <template #empty>
+              <SmisDataSourceEmptyActions source="organization" />
+            </template>
+          </ArtTreeMultipleSelect>
         </template>
       </ArtForm>
 
@@ -73,8 +85,14 @@
             subtitle="支持多选，确认后批量加入明细标准"
             placeholder="新增明细"
             search-placeholder="搜索物料名称或编码"
+            empty-text="暂无可选防护用品"
+            empty-description="当前租户没有匹配的启用防护用品，请在物料信息中新增或调整物料类型。"
             @update:selected-data="handleMaterialsSelected"
-          />
+          >
+            <template #empty>
+              <SmisDataSourceEmptyActions source="material" />
+            </template>
+          </ArtTableMultipleSelect>
         </template>
         <ArtTable
           :data="form.details"
@@ -112,6 +130,7 @@
   import ArtForm, { type FormItem } from '@/components/core/forms/art-form/index.vue'
   import ArtTable from '@/components/core/tables/art-table/index.vue'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
+  import SmisDataSourceEmptyActions from '@smis/views/components/smis-data-source-empty-actions.vue'
   import type { ColumnOption } from '@/types'
   import { useDocumentNumberRule } from '@/hooks/core/useDocumentNumberRule'
   import { useUserStore } from '@/store/modules/user'

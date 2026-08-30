@@ -38,8 +38,14 @@
           subtitle="仅显示当前租户已启用的仓库或存放位置"
           placeholder="请选择发放仓库"
           search-placeholder="搜索仓库名称或编码"
+          empty-text="暂无可用仓库"
+          empty-description="当前租户没有启用的仓库或存放位置，请先维护仓储位置。"
           @update:selected-data="selection.warehouse = normalizeWarehouses($event)"
-        />
+        >
+          <template #empty>
+            <SmisDataSourceEmptyActions source="storage-location" />
+          </template>
+        </ArtTableSingleSelect>
       </template>
       <template #issuerEmployeeId>
         <ArtEmployeeSelect
@@ -70,8 +76,14 @@
           subtitle="支持一次选择多条防护用品明细"
           placeholder="新增明细"
           search-placeholder="搜索物料名称或编码"
+          empty-text="暂无可选防护用品"
+          empty-description="当前租户没有匹配的启用防护用品，请在物料信息中新增或调整物料类型。"
           @update:selected-data="handleMaterialsChange"
-        />
+        >
+          <template #empty>
+            <SmisDataSourceEmptyActions source="material" />
+          </template>
+        </ArtTableMultipleSelect>
       </template>
       <ArtTable
         :data="form.model.items"
@@ -101,6 +113,7 @@
   } from '@/components/core/forms/art-data-select/types'
   import type { ArtDialogExpose } from '@/components/core/dialogs/art-dialog/types'
   import type { ColumnOption } from '@/types'
+  import SmisDataSourceEmptyActions from '@smis/views/components/smis-data-source-empty-actions.vue'
   import { useUserStore } from '@/store/modules/user'
   import {
     fetchMaterialList,

@@ -31,8 +31,13 @@
             :tree-check-strictly="true"
             :max-tag-count="3"
             empty-text="暂无可选岗位"
+            empty-description="请先在 HR 岗位管理中新增并启用岗位，再维护岗位作业指导书。"
             @update:selected-data="handleSelectedDataUpdate"
-          />
+          >
+            <template #empty>
+              <SmisDataSourceEmptyActions source="position" />
+            </template>
+          </ArtTreeMultipleSelect>
           <p>
             <ArtSvgIcon icon="ri:information-line" />
             已选择 {{ form.scopeKeys.length }} 个岗位，同一份指导书可同时适用于多个组织岗位。
@@ -94,6 +99,7 @@
   import type { Resource } from '@/components/core/forms/art-resource-picker/type'
   import ArtAttachmentLink from '@/components/core/media/art-file-viewer/attachment-link.vue'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
+  import SmisDataSourceEmptyActions from '@smis/views/components/smis-data-source-empty-actions.vue'
   import { useUserStore } from '@/store/modules/user'
   import {
     savePositionWorkInstruction,

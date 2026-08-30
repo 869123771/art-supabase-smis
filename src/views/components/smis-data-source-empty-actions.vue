@@ -1,0 +1,166 @@
+<template>
+  <ArtDataSourceEmptyActions
+    :actions="sourceConfig.actions"
+    :resource-name="sourceConfig.resourceName"
+  />
+</template>
+
+<script setup lang="ts">
+  import ArtDataSourceEmptyActions, {
+    type ArtDataSourceEmptyAction
+  } from '@/components/business/art-data-source-empty-actions/index.vue'
+
+  defineOptions({ name: 'SmisDataSourceEmptyActions' })
+
+  type DataSource =
+    | 'accident-report'
+    | 'antiViolationStandard'
+    | 'employee'
+    | 'equipment'
+    | 'material'
+    | 'organization'
+    | 'position'
+    | 'site'
+    | 'storage-location'
+    | 'supplier'
+    | 'tool-issuance-record'
+
+  interface SourceConfig {
+    resourceName: string
+    actions: readonly ArtDataSourceEmptyAction[]
+  }
+
+  const props = defineProps<{ source: DataSource }>()
+
+  const sourceConfigs: Record<DataSource, SourceConfig> = {
+    'accident-report': {
+      resourceName: '事故快报',
+      actions: [
+        {
+          label: '去维护事故快报',
+          routeName: 'SmisAccidentFlashReport',
+          permission: 'SmisAccidentFlashReport:View',
+          icon: 'ri:alarm-warning-line'
+        }
+      ]
+    },
+    antiViolationStandard: {
+      resourceName: '反违章标准库',
+      actions: [
+        {
+          label: '去维护反违章标准库',
+          routeName: 'SmisAntiViolationStandardLibrary',
+          permission: 'SmisAntiViolationStandardLibrary:View',
+          icon: 'ri:book-shelf-line'
+        }
+      ]
+    },
+    employee: {
+      resourceName: '员工花名册',
+      actions: [
+        {
+          label: '去维护员工花名册',
+          routeName: 'HrEmployeeRoster',
+          permission: 'Hr:Employee:View',
+          icon: 'ri:contacts-book-3-line'
+        }
+      ]
+    },
+    equipment: {
+      resourceName: '设备台账',
+      actions: [
+        {
+          label: '去维护设备台账',
+          routeName: 'SmisEquipmentLedgerList',
+          permission: 'SmisEquipmentLedger:View',
+          icon: 'ri:archive-stack-line'
+        }
+      ]
+    },
+    material: {
+      resourceName: '物料信息与物料类别',
+      actions: [
+        {
+          label: '去维护物料信息',
+          routeName: 'SmisMaterialInformation',
+          permission: 'SmisMaterialInformation:View',
+          icon: 'ri:archive-drawer-line'
+        },
+        {
+          label: '按需维护物料类别',
+          routeName: 'SmisMaterialCategory',
+          permission: 'SmisMaterialCategory:View',
+          icon: 'ri:node-tree'
+        }
+      ]
+    },
+    organization: {
+      resourceName: '组织架构',
+      actions: [
+        {
+          label: '去维护组织架构',
+          routeName: 'Organization',
+          permission: 'System:Organization:View',
+          icon: 'ri:organization-chart'
+        }
+      ]
+    },
+    position: {
+      resourceName: '岗位主数据',
+      actions: [
+        {
+          label: '去维护岗位',
+          routeName: 'HrPosition',
+          permission: 'Hr:Position:View',
+          icon: 'ri:briefcase-4-line'
+        }
+      ]
+    },
+    site: {
+      resourceName: '场所维护',
+      actions: [
+        {
+          label: '去维护场所',
+          routeName: 'SmisSite',
+          permission: 'SmisSite:View',
+          icon: 'ri:map-pin-line'
+        }
+      ]
+    },
+    'storage-location': {
+      resourceName: '仓库或存放位置',
+      actions: [
+        {
+          label: '去维护仓库位置',
+          routeName: 'SmisStorageLocation',
+          permission: 'SmisStorageLocation:View',
+          icon: 'ri:map-pin-2-line'
+        }
+      ]
+    },
+    supplier: {
+      resourceName: '供应商主数据',
+      actions: [
+        {
+          label: '去维护供应商',
+          routeName: 'SmisSupplier',
+          permission: 'SmisSupplier:View',
+          icon: 'ri:building-4-line'
+        }
+      ]
+    },
+    'tool-issuance-record': {
+      resourceName: '工器具发放记录',
+      actions: [
+        {
+          label: '去查看工器具发放记录',
+          routeName: 'SmisToolIssuanceRecord',
+          permission: 'SmisToolIssuanceRecord:View',
+          icon: 'ri:file-list-3-line'
+        }
+      ]
+    }
+  }
+
+  const sourceConfig = computed(() => sourceConfigs[props.source])
+</script>

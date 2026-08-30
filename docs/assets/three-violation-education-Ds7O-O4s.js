@@ -1,1 +1,0 @@
-import{$n as e,mn as t,rn as n}from"./style-C1L0GNpN.js";import{t as r}from"./smis-page-placeholder-wwhm9pit.js";var i=t({name:`SmisThreeViolationEducation`,__name:`index`,setup(t){return(t,i)=>(e(),n(r,{section:`安全生产 / 反违章管理`,title:`三违人员教育信息`}))}});export{i as default};

@@ -6,5 +6,8 @@
 - `equipment-ledger`：设备台账
 - `safety-production`：安全生产，包含应急救援、安全事故、防护用品、工器具、反违章和文档中心
 - `qualification-training`：资质培训，包含安全资质、培训、课程、考试和题库管理
+- `dual-control-system`：双控体系，包含风险管控、隐患治理、双控清单和双控报表
+- `special-operation-management`：特殊作业管理，包含基础配置和各类特殊作业申请入口
+- `hazardous-waste-management`：危废管理，包含仓库、名录、入库和出库入口
 
 已实现的业务页保持原有功能；本次新增叶子目录暂时展示统一占位状态，后续页面在对应目录内继续实现。

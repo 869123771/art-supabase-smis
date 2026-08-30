@@ -1,1 +1,0 @@
-import{$n as e,mn as t,rn as n}from"./style-C1L0GNpN.js";import{t as r}from"./smis-page-placeholder-wwhm9pit.js";var i=t({name:`SmisSafetyTrainingRecord`,__name:`index`,setup(t){return(t,i)=>(e(),n(r,{section:`资质培训 / 培训管理`,title:`安全培训记录`}))}});export{i as default};

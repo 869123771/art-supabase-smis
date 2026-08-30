@@ -31,9 +31,14 @@
             description-key="equipmentCode"
             placeholder="点击选择设备"
             empty-text="当前租户暂无设备台账"
+            empty-description="请先在设备台账新增并启用设备，再建立折旧方案。"
             show-pagination
             @change="handleEquipmentChange"
-          />
+          >
+            <template #empty>
+              <SmisDataSourceEmptyActions source="equipment" />
+            </template>
+          </ArtTableSingleSelect>
         </template>
         <template #depreciationMethod>
           <ElRadioGroup
@@ -67,6 +72,7 @@
   import ArtForm, { type FormItem } from '@/components/core/forms/art-form/index.vue'
   import ArtTableSingleSelect from '@/components/core/forms/art-data-select/table-single.vue'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
+  import SmisDataSourceEmptyActions from '@smis/views/components/smis-data-source-empty-actions.vue'
   import { useDocumentNumberRule } from '@/hooks/core/useDocumentNumberRule'
   import { useUserStore } from '@/store/modules/user'
   import {

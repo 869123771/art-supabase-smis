@@ -104,9 +104,15 @@
       prop: 'issuanceFrequency',
       label: '周期数',
       required: true,
-      width: 130,
+      width: 140,
       formatter: (row) => (
-        <ElInputNumber v-model={row.issuanceFrequency} min={1} max={9999} precision={0} />
+        <ElInputNumber
+          v-model={row.issuanceFrequency}
+          min={1}
+          max={9999}
+          precision={0}
+          class="!w-full"
+        />
       )
     },
     {

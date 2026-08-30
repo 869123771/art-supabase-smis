@@ -295,19 +295,23 @@
     }
   }
   const handleApplicantChange = async (
-    value: string | undefined,
+    value: string | string[] | undefined,
     rows: EmployeeIntegrationItem[]
   ): Promise<void> => {
+    const employeeId = Array.isArray(value) ? value[0] : value
     applicantSelection.value = rows
     form.model.applicantIdCardNo = ''
-    if (!value) return
-    await setApplicant(value, true)
-    if (form.model.proxyEmployeeId === value) {
+    if (!employeeId) return
+    await setApplicant(employeeId, true)
+    if (form.model.proxyEmployeeId === employeeId) {
       form.model.proxyEmployeeId = undefined
       proxySelection.value = []
     }
   }
-  const handleProxyChange = (_value: string | undefined, rows: EmployeeIntegrationItem[]): void => {
+  const handleProxyChange = (
+    _value: string | string[] | undefined,
+    rows: EmployeeIntegrationItem[]
+  ): void => {
     proxySelection.value = rows
   }
   const handleProxyFlagChange = (value: boolean): void => {

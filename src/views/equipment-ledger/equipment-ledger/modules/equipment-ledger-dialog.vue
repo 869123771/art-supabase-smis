@@ -39,8 +39,14 @@
             label-key="supplierName"
             description-key="supplierCode"
             placeholder="选择设备供应商"
+            empty-text="暂无可选供应商"
+            empty-description="请先维护当前租户的供应商主数据。"
             show-pagination
-          />
+          >
+            <template #empty>
+              <SmisDataSourceEmptyActions source="supplier" />
+            </template>
+          </ArtTableSingleSelect>
         </template>
         <template #pressureGaugeIds>
           <ArtTableMultipleSelect
@@ -53,7 +59,13 @@
             label-key="equipmentName"
             description-key="equipmentCode"
             placeholder="选择一台或多台压力表"
-          />
+            empty-text="暂无可选压力表"
+            empty-description="请先在设备台账中新增设备，并将设备类型维护为压力表。"
+          >
+            <template #empty>
+              <SmisDataSourceEmptyActions source="equipment" />
+            </template>
+          </ArtTableMultipleSelect>
         </template>
         <template #safetyValveIds>
           <ArtTableMultipleSelect
@@ -66,7 +78,13 @@
             label-key="equipmentName"
             description-key="equipmentCode"
             placeholder="选择一台或多台安全阀"
-          />
+            empty-text="暂无可选安全阀"
+            empty-description="请先在设备台账中新增设备，并将设备类型维护为安全阀。"
+          >
+            <template #empty>
+              <SmisDataSourceEmptyActions source="equipment" />
+            </template>
+          </ArtTableMultipleSelect>
         </template>
       </ArtForm>
     </div>
@@ -91,6 +109,7 @@
   import ArtTableSingleSelect from '@/components/core/forms/art-data-select/table-single.vue'
   import ArtTableMultipleSelect from '@/components/core/forms/art-data-select/table-multiple.vue'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
+  import SmisDataSourceEmptyActions from '@smis/views/components/smis-data-source-empty-actions.vue'
   import { useDocumentNumberRule } from '@/hooks/core/useDocumentNumberRule'
   import { useUserStore } from '@/store/modules/user'
   import { resolveSupplierDictionaryLabel } from '@smis/domain/supplier-dictionary'

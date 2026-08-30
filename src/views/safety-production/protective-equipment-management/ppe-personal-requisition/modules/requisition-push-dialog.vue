@@ -36,8 +36,14 @@
           subtitle="仅显示当前租户已启用的仓库或存放位置"
           placeholder="请选择发放仓库"
           search-placeholder="搜索仓库名称或编码"
+          empty-text="暂无可用仓库"
+          empty-description="当前租户没有启用的仓库或存放位置，请先维护仓储位置。"
           @update:selected-data="selection.warehouse = normalizeWarehouses($event)"
-        />
+        >
+          <template #empty>
+            <SmisDataSourceEmptyActions source="storage-location" />
+          </template>
+        </ArtTableSingleSelect>
       </template>
       <template #issuerEmployeeId>
         <ArtEmployeeSelect
@@ -77,6 +83,7 @@
   } from '@/components/core/forms/art-data-select/types'
   import type { ArtDialogExpose } from '@/components/core/dialogs/art-dialog/types'
   import type { ColumnOption } from '@/types'
+  import SmisDataSourceEmptyActions from '@smis/views/components/smis-data-source-empty-actions.vue'
   import { useUserStore } from '@/store/modules/user'
   import {
     fetchStorageLocationList,
@@ -139,6 +146,7 @@
           min={0.001}
           precision={3}
           controlsPosition="right"
+          class="!w-full"
         />
       )
     },
