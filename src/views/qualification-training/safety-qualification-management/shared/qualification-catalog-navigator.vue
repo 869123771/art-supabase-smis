@@ -49,11 +49,19 @@
         >
           <template #default="{ data: node }">
             <div class="qualification-catalog-navigator__node">
-              <ArtSvgIcon :icon="node.childCount ? 'ri:folder-3-line' : 'ri:file-list-3-line'" />
+              <ArtSvgIcon
+                :icon="
+                  node.nodeKind === 'category'
+                    ? 'ri:folder-settings-line'
+                    : node.childCount
+                      ? 'ri:folder-3-line'
+                      : 'ri:file-list-3-line'
+                "
+              />
               <span
                 ><strong :title="node.itemName">{{ node.itemName }}</strong
                 ><small
-                  >{{ node.itemCode
+                  >{{ node.itemCode }} · {{ node.nodeKind === 'category' ? '作业类别' : '项目'
                   }}<template v-if="node.status === 'disabled'"> · 已停用</template></small
                 ></span
               >
@@ -72,10 +80,10 @@
   import ArtSectionCard from '@/components/core/surfaces/art-section-card/index.vue'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
   import TreeUtils from '@/utils/tree'
-  import type { SmisQualificationCatalog } from '@smis/api'
+  import type { SmisQualificationCatalogNavigationNode } from '@smis/api'
   const ALL_KEY = 'all'
   const props = defineProps<{
-    data: SmisQualificationCatalog[]
+    data: SmisQualificationCatalogNavigationNode[]
     loading: boolean
     error: string | null
     selectedKey: string
@@ -88,14 +96,15 @@
   const treeUtils = new TreeUtils({ idKey: 'id', parentKey: 'parentId', childrenKey: 'children' })
   const nodeCount = computed(() => treeUtils.treeToList(props.data).length)
   const filterNode = (value: string, data: TreeNodeData): boolean => {
-    const row = data as SmisQualificationCatalog
+    const row = data as SmisQualificationCatalogNavigationNode
     const query = value.trim().toLocaleLowerCase('zh-CN')
     return (
       !query ||
       [row.itemName, row.itemCode].some((field) => field.toLocaleLowerCase('zh-CN').includes(query))
     )
   }
-  const handleNodeClick = (row: SmisQualificationCatalog): void => emit('select', row.id)
+  const handleNodeClick = (row: SmisQualificationCatalogNavigationNode): void =>
+    emit('select', row.id)
   const sync = async (): Promise<void> => {
     await nextTick()
     treeRef.value?.setCurrentKey(props.selectedKey === ALL_KEY ? undefined : props.selectedKey)

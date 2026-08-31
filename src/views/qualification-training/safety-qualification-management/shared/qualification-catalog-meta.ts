@@ -1,7 +1,7 @@
-import type { SmisQualificationCatalogType } from '@smis/api'
+import type { SmisQualificationMaintenanceCatalogType } from '@smis/api'
 
 export const qualificationCatalogConfig: Record<
-  SmisQualificationCatalogType,
+  SmisQualificationMaintenanceCatalogType,
   {
     title: string
     eyebrow: string
@@ -35,8 +35,8 @@ export const qualificationCatalogConfig: Record<
     eyebrow: 'PERMITTED OPERATION TAXONOMY',
     icon: 'ri:shield-check-line',
     permission: 'SmisPermittedOperationItem',
-    description: '维护人员获准操作项目层级，支持证件明细自动带出项目编码与名称。',
-    codePlaceholder: '如 N1',
-    namePlaceholder: '如 起重机指挥'
+    description: '按作业类别维护准操项目树，支持证件明细自动带出准操项目代号与名称。',
+    codePlaceholder: '如 1.1',
+    namePlaceholder: '如 高压电工作业'
   }
 }

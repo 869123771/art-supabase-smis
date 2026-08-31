@@ -1,16 +1,12 @@
 <template>
-  <ArtPermissionGuard permission="SmisPersonnelCertificateLedger:View" resource-name="人员证件台账">
+  <ArtPermissionGuard :permission="permissionCode('View')" :resource-name="pageTitle">
     <div class="certificate-ledger-page business-workspace-page art-full-height">
       <BusinessWorkspaceHeader
-        eyebrow="PERSONNEL QUALIFICATION LEDGER"
-        title="人员证件台账"
-        description="以员工为主线统一管理五类安全资质证件、多项作业资格、到期提醒和复审证据。"
+        :eyebrow="eyebrow"
+        :title="pageTitle"
+        :description="pageDescription"
         icon="ri:award-line"
-        :tags="[
-          { label: '员工花名册联动', type: 'primary', effect: 'plain' },
-          { label: '一证多项目', type: 'success', effect: 'light' },
-          { label: '到期风险分级', type: 'warning', effect: 'plain' }
-        ]"
+        :tags="workspaceTags"
         :metrics="metrics"
       >
         <template #actions><BusinessTableWorkspaceActions :table="tableRef" /></template>
@@ -29,12 +25,12 @@
         :columns-factory="columnsFactory"
         :header-actions="headerActions"
         header-actions-placement="workspace"
-        :search-bar-props="{ span: 6, labelWidth: 84, showExpand: true, defaultExpanded: true }"
+        :search-bar-props="{ span: 6, labelWidth: 84, showExpand: true, defaultExpanded: false }"
         :table-props="{
           rowKey: 'id',
           tableLayout: 'fixed',
-          emptyText: '暂无人员证件',
-          emptyDescription: '新增证件后，可为同一证件维护多个作业项目和到期提醒。'
+          emptyText: `暂无${pageTitle}`,
+          emptyDescription: `新增${pageTitle}后，可为同一证件维护多个作业项目和到期提醒。`
         }"
         focusable
       />
@@ -62,11 +58,13 @@
   import ArtPermissionGuard from '@/components/core/feedback/art-permission-guard/index.vue'
   import BusinessTableWorkspaceActions from '@/components/business/business-table-workspace-actions/index.vue'
   import BusinessWorkspaceHeader, {
-    type BusinessWorkspaceMetric
+    type BusinessWorkspaceMetric,
+    type BusinessWorkspaceTag
   } from '@/components/business/business-workspace-header/index.vue'
   import {
     deletePersonnelCertificates,
     fetchPersonnelCertificateList,
+    type SmisCertificateCategory,
     type SmisCertificateReminderState,
     type SmisPersonnelCertificate,
     type SmisPersonnelCertificateOverview,
@@ -76,8 +74,26 @@
     type PersonnelCertificateDialogMode,
     type PersonnelCertificateDialogOpenData
   } from './modules/personnel-certificate-dialog.vue'
+  import { getCertificateCategoryMeta } from './modules/certificate-category-meta'
 
   defineOptions({ name: 'SmisSpecialEquipmentPersonnelCertificateLedger' })
+  interface Props {
+    category?: SmisCertificateCategory
+    pageTitle?: string
+    eyebrow?: string
+    pageDescription?: string
+    permissionPrefix?: string
+    scopeTag?: string
+  }
+  const props = withDefaults(defineProps<Props>(), {
+    pageTitle: '特种设备人员证件台账',
+    eyebrow: 'PERSONNEL QUALIFICATION LEDGER',
+    pageDescription: '以员工为主线统一管理五类安全资质证件、多项作业资格、到期提醒和复审证据。',
+    permissionPrefix: 'SmisPersonnelCertificateLedger',
+    scopeTag: ''
+  })
+  const { category, pageTitle, eyebrow, pageDescription, permissionPrefix, scopeTag } =
+    toRefs(props)
   type TableParams = SmisPersonnelCertificateSearchParams &
     Pick<Api.Common.PaginationParams, 'current' | 'size'>
   interface DialogExpose {
@@ -105,6 +121,12 @@
     )
   const categoryOptions = dictOptions('smisCertificateCategory')
   const warningOptions = dictOptions('smisCertificateWarningStatus')
+  const permissionCode = (action: string): string => `${permissionPrefix.value}:${action}`
+  const workspaceTags = computed<BusinessWorkspaceTag[]>(() => [
+    { label: '员工花名册联动', type: 'primary', effect: 'plain' },
+    { label: scopeTag.value || '一证多项目', type: 'success', effect: 'light' },
+    { label: '到期风险分级', type: 'warning', effect: 'plain' }
+  ])
   const metrics = computed<BusinessWorkspaceMetric[]>(() => [
     {
       label: '证件总数',
@@ -134,66 +156,98 @@
       tone: 'danger'
     }
   ])
-  const searchItems = computed<SearchFormItem[]>(() => [
-    {
-      label: '人员姓名',
-      key: 'employeeName',
-      type: 'input',
-      props: { clearable: true, placeholder: '请输入人员姓名' }
-    },
-    {
-      label: '证件编号',
-      key: 'certificateNumber',
-      type: 'input',
-      props: { clearable: true, placeholder: '请输入证件编号' }
-    },
-    {
-      label: '证件类别',
-      key: 'certificateCategory',
-      type: 'select',
-      options: categoryOptions.value,
-      props: { clearable: true, placeholder: '全部证件类别' }
-    },
-    {
-      label: '有效日期',
-      key: 'effectiveDateRange',
-      type: 'date',
-      span: 12,
-      props: {
-        type: 'daterange',
-        valueFormat: 'YYYY-MM-DD',
-        startPlaceholder: '开始日期',
-        endPlaceholder: '结束日期',
-        rangeSeparator: '至',
-        clearable: true,
-        class: '!w-full'
+  const searchItems = computed<SearchFormItem[]>(() => {
+    const items: SearchFormItem[] = [
+      {
+        label: '人员姓名',
+        key: 'employeeName',
+        type: 'input',
+        props: { clearable: true, placeholder: '请输入人员姓名' }
+      },
+      {
+        label: '证件编号',
+        key: 'certificateNumber',
+        type: 'input',
+        props: { clearable: true, placeholder: '请输入证件编号' }
       }
-    },
-    {
-      label: '预警状态',
-      key: 'warningStatus',
-      type: 'select',
-      options: warningOptions.value,
-      props: { clearable: true, placeholder: '全部预警状态' }
+    ]
+    if (!category.value) {
+      items.push({
+        label: '证件类别',
+        key: 'certificateCategory',
+        type: 'select',
+        options: categoryOptions.value,
+        props: { clearable: true, placeholder: '全部证件类别' }
+      })
     }
-  ])
+    items.push(
+      {
+        label: '有效日期',
+        key: 'effectiveDateRange',
+        type: 'date',
+        span: 12,
+        props: {
+          type: 'daterange',
+          valueFormat: 'YYYY-MM-DD',
+          startPlaceholder: '开始日期',
+          endPlaceholder: '结束日期',
+          rangeSeparator: '至',
+          clearable: true,
+          class: '!w-full'
+        }
+      },
+      {
+        label: '预警状态',
+        key: 'warningStatus',
+        type: 'select',
+        options: warningOptions.value,
+        props: { clearable: true, placeholder: '全部预警状态' }
+      }
+    )
+    return items
+  })
   const openDialog = (mode: PersonnelCertificateDialogMode, row?: SmisPersonnelCertificate): void =>
-    void dialogRef.value?.handleOpen({ mode, row })
+    void dialogRef.value?.handleOpen({
+      mode,
+      row,
+      category: category.value,
+      pageTitle: pageTitle.value
+    })
   const exportColumns: ArtTableQueryExcelColumn[] = [
     { key: 'employeeNo', title: '员工工号' },
     { key: 'employeeName', title: '人员姓名' },
     { key: 'gender', title: '性别' },
+    { key: 'idCardNo', title: '身份证号' },
+    { key: 'educationLevel', title: '最高学历' },
     { key: 'organizationName', title: '所属部门' },
     { key: 'jobTitle', title: '岗位' },
     { key: 'phone', title: '联系电话' },
     { key: 'certificateCategoryText', title: '证件类别' },
     { key: 'certificateNumber', title: '证件编号' },
+    { key: 'categoryDetailText', title: '类别特有信息' },
+    { key: 'warningStatusText', title: '预警状态' },
     { key: 'nearestEffectiveDate', title: '最近有效日期' },
     { key: 'reminderStateText', title: '到期状态' },
     { key: 'itemText', title: '作业项目' }
   ]
   const categoryLabel = (value: string): string =>
     categoryOptions.value.find((item) => item.value === value)?.label || value
+  const warningLabel = (value: string): string =>
+    warningOptions.value.find((item) => item.value === value)?.label || value
+  const dictionaryLabel = (code: string, value: string): string =>
+    (getDictMap.value[code] ?? []).find((item) => item.value === value)?.label || value
+  const categoryDetail = (row: SmisPersonnelCertificate): string => {
+    const meta = getCertificateCategoryMeta(row.certificateCategory)
+    const details = (meta.extraFields ?? []).flatMap((field) => {
+      const value = row.extraFields[field.key]?.trim()
+      if (!value) return []
+      return [`${field.label}：${field.dictCode ? dictionaryLabel(field.dictCode, value) : value}`]
+    })
+    return details.join('；') || '—'
+  }
+  const showCategoryDetail = computed(
+    () => !category.value || Boolean(getCertificateCategoryMeta(category.value).extraFields?.length)
+  )
   const riskMeta = (state: SmisCertificateReminderState) =>
     ({
       normal: { label: '正常', type: 'success' },
@@ -205,6 +259,8 @@
     rows.map((row) => ({
       ...row,
       certificateCategoryText: categoryLabel(row.certificateCategory),
+      categoryDetailText: categoryDetail(row),
+      warningStatusText: warningLabel(row.warningStatus),
       reminderStateText: riskMeta(row.reminderState).label,
       itemText: row.items
         .map((item) => `${item.workCode} ${item.workName}（${item.effectiveDate}）`)
@@ -212,13 +268,13 @@
     }))
   const headerActions = computed<ArtTableQueryHeaderAction[]>(() => [
     {
-      permission: 'SmisPersonnelCertificateLedger:Add',
+      permission: permissionCode('Add'),
       type: 'add',
       label: '新增',
       onClick: () => openDialog('add')
     },
     {
-      permission: 'SmisPersonnelCertificateLedger:Copy',
+      permission: permissionCode('Copy'),
       key: 'copy',
       label: '复制并新增',
       icon: 'ri:file-copy-line',
@@ -227,7 +283,7 @@
       onClick: ({ selectedRows }) => openDialog('copy', selectedRows[0] as SmisPersonnelCertificate)
     },
     {
-      permission: 'SmisPersonnelCertificateLedger:Edit',
+      permission: permissionCode('Edit'),
       key: 'edit',
       label: '编辑',
       icon: 'ri:edit-line',
@@ -236,7 +292,7 @@
       onClick: ({ selectedRows }) => openDialog('edit', selectedRows[0] as SmisPersonnelCertificate)
     },
     {
-      permission: 'SmisPersonnelCertificateLedger:Delete',
+      permission: permissionCode('Delete'),
       type: 'delete',
       content: ({ selectedCount }: ArtTableQueryHeaderActionContext) =>
         `确定删除选中的 ${selectedCount} 张人员证件吗？证件项目和复审记录将一并删除。`,
@@ -246,17 +302,18 @@
       }
     },
     {
-      permission: 'SmisPersonnelCertificateLedger:Export',
+      permission: permissionCode('Export'),
       type: 'export',
       label: '导出',
-      exportFilename: '人员证件台账',
-      exportSheetName: '人员证件台账',
+      exportFilename: pageTitle.value,
+      exportSheetName: pageTitle.value,
       exportColumns,
       exportApi: async ({ maxRows }) => ({
         data: formatExportRows(
           (
             await fetchPersonnelCertificateList({
               ...searchQuery,
+              certificateCategory: category.value ?? searchQuery.certificateCategory,
               purpose: 'export',
               from: 0,
               to: maxRows - 1
@@ -366,6 +423,23 @@
       formatter: (row) => [row.organizationName, row.jobTitle].filter(Boolean).join(' · ') || '—'
     },
     { prop: 'phone', label: '联系电话', width: 140 },
+    ...(category.value && getCertificateCategoryMeta(category.value).showEmployeeProfile
+      ? [
+          {
+            prop: 'idCardNo',
+            label: '身份证号',
+            minWidth: 180,
+            showOverflowTooltip: true,
+            formatter: (row: SmisPersonnelCertificate) => row.idCardNo || '—'
+          },
+          {
+            prop: 'educationLevel',
+            label: '最高学历',
+            width: 120,
+            formatter: (row: SmisPersonnelCertificate) => row.educationLevel || '—'
+          }
+        ]
+      : []),
     {
       prop: 'certificateCategory',
       label: '证件类别',
@@ -379,6 +453,24 @@
       )
     },
     { prop: 'certificateNumber', label: '证件编号', minWidth: 170, showOverflowTooltip: true },
+    ...(showCategoryDetail.value
+      ? [
+          {
+            prop: 'extraFields',
+            label: '类别特有信息',
+            minWidth: 180,
+            showOverflowTooltip: true,
+            formatter: categoryDetail
+          } as ColumnOption<SmisPersonnelCertificate>
+        ]
+      : []),
+    {
+      prop: 'warningStatus',
+      label: '预警状态',
+      width: 110,
+      align: 'center',
+      dict: { code: 'smisCertificateWarningStatus', display: 'auto' }
+    },
     {
       prop: 'nearestEffectiveDate',
       label: '最近有效日期',
@@ -415,12 +507,12 @@
       formatter: (row) => (
         <div class="certificate-ledger-page__actions">
           <ArtButtonTable
-            permission="SmisPersonnelCertificateLedger:Edit"
+            permission={permissionCode('Edit')}
             type="edit"
             onClick={() => openDialog('edit', row)}
           />
           <ArtButtonTable
-            permission="SmisPersonnelCertificateLedger:Delete"
+            permission={permissionCode('Delete')}
             type="delete"
             onClick={() => void handleDelete(row)}
           />
@@ -429,7 +521,11 @@
     }
   ]
   const fetchTableData = async (params: TableParams) => {
-    const result = await fetchPersonnelCertificateList({ ...params, ...pageInfoHandler(params) })
+    const result = await fetchPersonnelCertificateList({
+      ...params,
+      ...pageInfoHandler(params),
+      certificateCategory: category.value ?? params.certificateCategory
+    })
     Object.assign(overview, result.overview)
     return { records: result.data, total: result.total }
   }
@@ -452,7 +548,12 @@
           'smisCertificateCategory',
           'smisCertificateWarningStatus',
           'smisCertificateReminderDays',
-          'smisCertificateDismissalReason'
+          'smisCertificateDismissalReason',
+          'smisSafetyManagerUnitType',
+          'smisSafetyManagerOccupationType',
+          'smisRegisteredSafetyOfficerType',
+          'smisRegisteredEngineerType',
+          'smisRegisteredPracticeCategory'
         ].map((code) => userStore.ensureDictLoaded(code))
       )
   )

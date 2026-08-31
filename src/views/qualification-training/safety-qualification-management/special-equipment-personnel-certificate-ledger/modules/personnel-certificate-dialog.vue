@@ -1,12 +1,6 @@
 <template>
   <ArtDialog ref="dialogRef" size="xl">
-    <ElForm
-      ref="formRef"
-      :model="form"
-      :rules="rules"
-      label-position="top"
-      class="certificate-dialog"
-    >
+    <div class="certificate-dialog">
       <div class="certificate-dialog__employee">
         <ElAvatar :size="56" :src="employeeSelection[0]?.avatarUrl || undefined">{{
           employeeSelection[0]?.employeeName?.slice(-1) || '人'
@@ -19,198 +13,118 @@
       </div>
 
       <ArtSectionCard title="人员与证件" subtitle="证件人员为主表，人员基础资料不重复录入">
-        <div class="certificate-dialog__grid">
-          <ElFormItem label="持证人员" prop="employeeId" class="is-wide">
+        <ArtForm
+          ref="formRef"
+          v-model="form"
+          :items="formItems"
+          :rules="rules"
+          :span="8"
+          :gutter="20"
+          :show-reset="false"
+          :show-submit="false"
+          scroll-to-error
+        >
+          <template #employeeId>
             <ArtEmployeeSelect
               v-model="form.employeeId"
               v-model:selected-data="employeeSelection"
+              :api-fn="fetchCertificateEmployees"
               title="选择持证人员"
-              subtitle="选择后自动带出性别、组织、岗位、联系电话和头像"
+              :subtitle="employeeSelectorSubtitle"
+              @change="handleEmployeeChange"
             />
-          </ElFormItem>
-          <ElFormItem label="证件类别" prop="certificateCategory">
-            <ElSelect
-              v-model="form.certificateCategory"
-              placeholder="请选择证件类别"
-              @change="handleCategoryChange"
-            >
-              <ElOption
-                v-for="item in categoryOptions"
-                :key="item.value"
-                :label="item.label"
-                :value="item.value"
-              />
-            </ElSelect>
-          </ElFormItem>
-          <ElFormItem label="证件编号" prop="certificateNumber"
-            ><ElInput v-model="form.certificateNumber" maxlength="100" placeholder="请输入证件编号"
-          /></ElFormItem>
-          <ElFormItem label="发证机关"
-            ><ElInput v-model="form.issuingAuthority" maxlength="200" placeholder="请输入发证机关"
-          /></ElFormItem>
-          <ElFormItem label="档案编号"
-            ><ElInput v-model="form.archiveNumber" maxlength="100" placeholder="请输入档案编号"
-          /></ElFormItem>
-          <ElFormItem label="预警状态" prop="warningStatus">
-            <ElRadioGroup v-model="form.warningStatus"
-              ><ElRadioButton
-                v-for="item in warningOptions"
-                :key="item.value"
-                :value="item.value"
-                >{{ item.label }}</ElRadioButton
-              ></ElRadioGroup
-            >
-          </ElFormItem>
-          <ElFormItem v-if="extraFieldMeta" :label="extraFieldMeta.label">
-            <ElInput
-              v-model="form.extraFields[extraFieldMeta.key]"
-              :placeholder="extraFieldMeta.placeholder"
-              maxlength="120"
-            />
-          </ElFormItem>
-          <ElFormItem label="证件照片" class="certificate-dialog__photo">
+          </template>
+          <template #certificatePhotoUrl>
             <ArtUploadImage
               v-model="form.certificatePhotoUrl"
               title="上传证件照片"
               :limit="1"
               :size="112"
             />
-          </ElFormItem>
-          <ElFormItem label="备注" class="is-wide"
-            ><ElInput
-              v-model="form.remark"
-              type="textarea"
-              :rows="3"
-              maxlength="1000"
-              show-word-limit
-              resize="none"
-              placeholder="补充证件管理说明（选填）"
-          /></ElFormItem>
-        </div>
+          </template>
+        </ArtForm>
       </ArtSectionCard>
 
-      <ArtSectionCard
-        title="作业项目明细"
-        subtitle="一个证件可关联多个作业项目；项目编码随选项自动带出"
-      >
-        <template #actions
+      <ArtSectionCard :title="categoryMeta.detailTitle" :subtitle="categoryMeta.detailSubtitle">
+        <template v-if="!categoryMeta.certificateTermCode" #actions
           ><ElButton type="primary" plain @click="addItem"
             ><ArtSvgIcon icon="ri:add-line" />新增项目</ElButton
           ></template
         >
-        <ElTable
+        <ArtTable
           :data="form.items"
+          :columns="itemColumns"
+          :pagination="false"
           row-key="key"
           table-layout="fixed"
-          empty-text="请至少新增一个作业项目"
-        >
-          <ElTableColumn label="作业项目" min-width="250">
-            <template #default="{ row }"
-              ><ElSelect
-                v-model="row.catalogId"
-                filterable
-                placeholder="选择后自动带出编码"
-                @change="() => syncCatalog(row)"
-                ><ElOption
-                  v-for="item in activeCatalogOptions"
-                  :key="item.id"
-                  :label="`${item.itemCode} · ${item.itemName}`"
-                  :value="item.id" /></ElSelect
-            ></template>
-          </ElTableColumn>
-          <ElTableColumn label="项目编码" width="120"
-            ><template #default="{ row }"
-              ><ElInput :model-value="row.workCode || '—'" readonly /></template
-          ></ElTableColumn>
-          <ElTableColumn label="批准日期" width="160"
-            ><template #default="{ row }"
-              ><ElDatePicker
-                v-model="row.approvalDate"
-                type="date"
-                value-format="YYYY-MM-DD"
-                placeholder="批准日期" /></template
-          ></ElTableColumn>
-          <ElTableColumn label="有效日期" width="160"
-            ><template #default="{ row }"
-              ><ElDatePicker
-                v-model="row.effectiveDate"
-                type="date"
-                value-format="YYYY-MM-DD"
-                placeholder="有效日期" /></template
-          ></ElTableColumn>
-          <ElTableColumn label="提前提醒" width="160"
-            ><template #default="{ row }"
-              ><ElSelect v-model="row.reminderDays"
-                ><ElOption
-                  v-for="item in reminderOptions"
-                  :key="item.value"
-                  :label="item.label"
-                  :value="Number(item.value)" /></ElSelect></template
-          ></ElTableColumn>
-          <ElTableColumn v-if="isEditing" label="消除提醒" width="150"
-            ><template #default="{ row }"
-              ><ElSelect v-model="row.dismissalReason" clearable placeholder="仅离岗/培训"
-                ><ElOption
-                  v-for="item in dismissalOptions"
-                  :key="item.value"
-                  :label="item.label"
-                  :value="item.value" /></ElSelect></template
-          ></ElTableColumn>
-          <ElTableColumn label="操作" width="74" align="center"
-            ><template #default="{ $index }"
-              ><ElButton type="danger" link aria-label="删除作业项目" @click="removeItem($index)"
-                ><ArtSvgIcon icon="ri:delete-bin-line" /></ElButton></template
-          ></ElTableColumn>
-        </ElTable>
+          :empty-text="`请至少新增一条${categoryMeta.detailTitle}`"
+        />
         <p class="certificate-dialog__hint"
           ><ArtSvgIcon icon="ri:information-line" />
           修改批准日期或有效日期时，系统自动保存旧值和新值，形成不可修改的复审记录。</p
         >
       </ArtSectionCard>
-    </ElForm>
+    </div>
   </ArtDialog>
 </template>
 
-<script setup lang="ts">
-  import type { FormInstance, FormRules } from 'element-plus'
+<script setup lang="tsx">
+  import { uniqBy } from 'lodash-es'
+  import { ElButton, ElDatePicker, ElInput, ElOption, ElSelect, type FormRules } from 'element-plus'
+  import type { ColumnOption } from '@/types'
   import type { EmployeeIntegrationItem } from '@/api/integration/employees'
   import ArtDialog from '@/components/core/dialogs/art-dialog/index.vue'
   import type { ArtDialogExpose } from '@/components/core/dialogs/art-dialog/types'
+  import ArtForm from '@/components/core/forms/art-form/index.vue'
+  import type { FormItem } from '@/components/core/forms/art-form/index.vue'
   import ArtEmployeeSelect from '@/components/business/art-employee-select/index.vue'
   import ArtUploadImage from '@/components/core/forms/art-upload-image/index.vue'
   import ArtSectionCard from '@/components/core/surfaces/art-section-card/index.vue'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
+  import ArtTable from '@/components/core/tables/art-table/index.vue'
   import { useUserStore } from '@/store/modules/user'
   import {
-    fetchQualificationCatalogList,
+    fetchPersonnelCertificateEmployeeDetail,
+    fetchPersonnelCertificateEmployeeOptions,
+    fetchPersonnelCertificateCatalogOptions,
     savePersonnelCertificate,
+    type PersonnelCertificateEmployee,
     type SmisCertificateCategory,
     type SmisCertificateDismissalReason,
     type SmisCertificateWarningStatus,
     type SmisPersonnelCertificate,
     type SmisPersonnelCertificateSavePayload,
-    type SmisQualificationCatalog,
-    type SmisQualificationCatalogType
+    type SmisQualificationCatalog
   } from '@smis/api'
+  import {
+    getCertificateCategoryMeta,
+    isCatalogAllowedForCertificateCategory
+  } from './certificate-category-meta'
 
   export type PersonnelCertificateDialogMode = 'add' | 'edit' | 'copy'
   export interface PersonnelCertificateDialogOpenData {
     mode: PersonnelCertificateDialogMode
     row?: SmisPersonnelCertificate
+    category?: SmisCertificateCategory
+    pageTitle?: string
   }
   interface ItemForm {
     key: string
     id?: string
     catalogId: string
+    workCategoryId: string
     workCode: string
     approvalDate: string
     effectiveDate: string
     reminderDays: number
     dismissalReason?: SmisCertificateDismissalReason
+    reviewCount: number
   }
   interface FormModel {
     id?: string
     employeeId: string
+    employeeIdCardNo: string
+    employeeEducationLevel: string
     certificateCategory: SmisCertificateCategory
     certificateNumber: string
     issuingAuthority: string
@@ -221,27 +135,36 @@
     remark: string
     items: ItemForm[]
   }
+  interface ArtFormExpose {
+    validate: () => Promise<boolean | void>
+    clearValidate: () => void
+  }
 
   const emit = defineEmits<{ success: [] }>()
   const userStore = useUserStore()
   const { getDictMap } = storeToRefs(userStore)
   const dialogRef = ref<ArtDialogExpose<PersonnelCertificateDialogOpenData>>()
-  const formRef = ref<FormInstance>()
-  const employeeSelection = ref<EmployeeIntegrationItem[]>([])
+  const formRef = ref<ArtFormExpose>()
+  const employeeSelection = ref<PersonnelCertificateEmployee[]>([])
   const catalogOptions = ref<SmisQualificationCatalog[]>([])
   const isEditing = ref(false)
+  const isCategoryLocked = ref(false)
   let itemSequence = 0
   const makeItem = (): ItemForm => ({
     key: `item-${++itemSequence}`,
     catalogId: '',
+    workCategoryId: '',
     workCode: '',
     approvalDate: '',
     effectiveDate: '',
-    reminderDays: 30
+    reminderDays: 30,
+    reviewCount: 0
   })
   const initial = (): FormModel => ({
     id: undefined,
     employeeId: '',
+    employeeIdCardNo: '',
+    employeeEducationLevel: '',
     certificateCategory: 'special_equipment_personnel',
     certificateNumber: '',
     issuingAuthority: '',
@@ -253,12 +176,22 @@
     items: [makeItem()]
   })
   const form = reactive<FormModel>(initial())
-  const rules: FormRules<FormModel> = {
-    employeeId: [{ required: true, message: '请选择持证人员', trigger: 'change' }],
-    certificateCategory: [{ required: true, message: '请选择证件类别', trigger: 'change' }],
-    certificateNumber: [{ required: true, message: '请输入证件编号', trigger: 'blur' }],
-    warningStatus: [{ required: true, message: '请选择预警状态', trigger: 'change' }]
-  }
+  const rules = computed<FormRules<FormModel>>(() => {
+    const result: FormRules<FormModel> = {
+      employeeId: [{ required: true, message: '请选择持证人员', trigger: 'change' }],
+      certificateCategory: [{ required: true, message: '请选择证件类别', trigger: 'change' }],
+      certificateNumber: [{ required: true, message: '请输入证件编号', trigger: 'blur' }],
+      warningStatus: [{ required: true, message: '请选择预警状态', trigger: 'change' }]
+    }
+    for (const field of categoryMeta.value.extraFields ?? []) {
+      if (field.required) {
+        result[`extraFields.${field.key}`] = [
+          { required: true, message: field.placeholder, trigger: 'change' }
+        ]
+      }
+    }
+    return result
+  })
   const dictOptions = (code: string) =>
     computed(() =>
       (getDictMap.value[code] ?? []).map((item) => ({
@@ -266,25 +199,178 @@
         value: item.value
       }))
     )
+  const dictionaryOptions = (code: string) =>
+    (getDictMap.value[code] ?? []).map((item) => ({
+      label: item.label || item.name,
+      value: item.value
+    }))
   const categoryOptions = dictOptions('smisCertificateCategory')
   const warningOptions = dictOptions('smisCertificateWarningStatus')
   const reminderOptions = dictOptions('smisCertificateReminderDays')
   const dismissalOptions = dictOptions('smisCertificateDismissalReason')
-  const catalogType = computed<SmisQualificationCatalogType>(
-    () =>
-      ({
-        special_equipment_personnel: 'work_item',
-        special_equipment_operator: 'work_item',
-        special_operation: 'permitted_operation_item',
-        safety_manager: 'work_category',
-        registered_safety_engineer: 'work_category'
-      })[form.certificateCategory] as SmisQualificationCatalogType
-  )
+  const categoryMeta = computed(() => getCertificateCategoryMeta(form.certificateCategory))
+  const selectedCatalogIds = computed(() => form.items.map((item) => item.catalogId))
   const activeCatalogOptions = computed(() =>
     catalogOptions.value.filter(
-      (item) => item.catalogType === catalogType.value && item.status === 'enabled'
+      (item) =>
+        isCatalogAllowedForCertificateCategory(item, form.certificateCategory) &&
+        (item.status === 'enabled' || selectedCatalogIds.value.includes(item.id))
     )
   )
+  const activeWorkCategoryOptions = computed(() =>
+    catalogOptions.value.filter(
+      (item) => item.catalogType === 'work_category' && item.status === 'enabled'
+    )
+  )
+  const employeeSelectorSubtitle = computed(() =>
+    categoryMeta.value.showEmployeeProfile
+      ? '选择后自动带出性别、组织、岗位、手机号、身份证号和最高学历'
+      : '选择后自动带出性别、组织、岗位、手机号和头像'
+  )
+  const projectColumnLabel = computed(() =>
+    form.certificateCategory === 'special_operation' ? '准操项目' : '作业项目'
+  )
+  const approvalDateLabel = computed(() => {
+    if (categoryMeta.value.approvalDateLabel) return categoryMeta.value.approvalDateLabel
+    if (form.certificateCategory === 'safety_manager') return '发证日期'
+    if (form.certificateCategory === 'special_operation') return '初次发证日期'
+    return '批准日期'
+  })
+  const itemColumns = computed<ColumnOption<ItemForm>[]>(() => {
+    const columns: ColumnOption<ItemForm>[] = []
+    if (categoryMeta.value.showWorkCategory) {
+      columns.push({
+        prop: 'workCategoryId',
+        label: '作业类别',
+        minWidth: 190,
+        required: true,
+        formatter: (row) => (
+          <ElSelect
+            v-model={row.workCategoryId}
+            filterable
+            placeholder="请选择作业类别"
+            onChange={() => handleWorkCategoryChange(row)}
+          >
+            {activeWorkCategoryOptions.value.map((item) => (
+              <ElOption key={item.id} label={item.itemName} value={item.id} />
+            ))}
+          </ElSelect>
+        )
+      })
+    }
+    if (!categoryMeta.value.certificateTermCode) {
+      columns.push(
+        {
+          prop: 'catalogId',
+          label: projectColumnLabel.value,
+          minWidth: 250,
+          required: true,
+          formatter: (row) => (
+            <ElSelect
+              v-model={row.catalogId}
+              filterable
+              disabled={categoryMeta.value.showWorkCategory && !row.workCategoryId}
+              placeholder="请选择项目，编码将自动带出"
+              onChange={() => syncCatalog(row)}
+            >
+              {activeCatalogOptionsFor(row).map((item) => (
+                <ElOption
+                  key={item.id}
+                  label={`${item.itemCode} · ${item.itemName}`}
+                  value={item.id}
+                />
+              ))}
+            </ElSelect>
+          )
+        },
+        {
+          prop: 'workCode',
+          label: '项目编码',
+          width: 120,
+          formatter: (row) => <ElInput modelValue={row.workCode || '—'} readonly />
+        }
+      )
+    }
+    columns.push(
+      {
+        prop: 'approvalDate',
+        label: approvalDateLabel.value,
+        width: 160,
+        required: true,
+        formatter: (row) => (
+          <ElDatePicker
+            v-model={row.approvalDate}
+            type="date"
+            valueFormat="YYYY-MM-DD"
+            placeholder={approvalDateLabel.value}
+            class="!w-full"
+          />
+        )
+      },
+      {
+        prop: 'effectiveDate',
+        label: '有效日期',
+        width: 160,
+        required: true,
+        formatter: (row) => (
+          <ElDatePicker
+            v-model={row.effectiveDate}
+            type="date"
+            valueFormat="YYYY-MM-DD"
+            placeholder="有效日期"
+            class="!w-full"
+          />
+        )
+      },
+      {
+        prop: 'reminderDays',
+        label: '提前提醒',
+        width: 160,
+        formatter: (row) => (
+          <ElSelect v-model={row.reminderDays}>
+            {reminderOptions.value.map((item) => (
+              <ElOption key={item.value} label={item.label} value={Number(item.value)} />
+            ))}
+          </ElSelect>
+        )
+      }
+    )
+    if (isEditing.value) {
+      columns.push({
+        prop: 'dismissalReason',
+        label: '消除提醒',
+        width: 150,
+        formatter: (row) => (
+          <ElSelect v-model={row.dismissalReason} clearable placeholder="仅离岗/培训">
+            {dismissalOptions.value.map((item) => (
+              <ElOption key={item.value} label={item.label} value={item.value} />
+            ))}
+          </ElSelect>
+        )
+      })
+    }
+    if (!categoryMeta.value.certificateTermCode) {
+      columns.push({
+        prop: 'operation',
+        label: '操作',
+        width: 74,
+        fixed: 'right',
+        align: 'center',
+        formatter: (row) => (
+          <ElButton
+            type="danger"
+            link
+            aria-label={row.reviewCount ? '已有复审记录，不能移除' : '删除作业项目'}
+            disabled={Boolean(row.reviewCount)}
+            onClick={() => removeItem(form.items.findIndex((item) => item.key === row.key))}
+          >
+            <ArtSvgIcon icon="ri:delete-bin-line" />
+          </ElButton>
+        )
+      })
+    }
+    return columns
+  })
   const employeeContext = computed(() => {
     const employee = employeeSelection.value[0]
     return employee
@@ -293,61 +379,164 @@
           employee.gender,
           employee.organization?.organizationName,
           employee.jobTitle,
-          employee.phone
+          employee.phone,
+          categoryMeta.value.showEmployeeProfile ? employee.idCardNo : '',
+          categoryMeta.value.showEmployeeProfile ? employee.educationLevel : ''
         ]
           .filter(Boolean)
           .join(' · ')
-      : '选择后自动展示性别、组织、岗位、联系电话和照片。'
+      : employeeSelectorSubtitle.value
   })
-  const extraFieldMeta = computed(
-    () =>
-      ({
-        special_equipment_personnel: {
-          key: 'equipmentType',
-          label: '设备种类',
-          placeholder: '如 锅炉、压力容器'
+  const formItems = computed<FormItem[]>(() => {
+    const showEmployeeProfile = Boolean(categoryMeta.value.showEmployeeProfile)
+    const employeeItems: FormItem[] = [
+      { label: '姓名', key: 'employeeId', type: 'input', span: showEmployeeProfile ? 8 : 16 }
+    ]
+    if (showEmployeeProfile) {
+      employeeItems.push(
+        {
+          label: '身份证号',
+          key: 'employeeIdCardNo',
+          type: 'input',
+          props: { readonly: true, placeholder: '由员工花名册自动带出' }
         },
-        special_equipment_operator: {
-          key: 'operationLevel',
-          label: '作业级别',
-          placeholder: '请输入作业级别'
-        },
-        special_operation: {
-          key: 'operationCategory',
-          label: '操作类别',
-          placeholder: '请输入操作类别'
-        },
-        safety_manager: {
-          key: 'qualificationType',
-          label: '资格类型',
-          placeholder: '如 主要负责人、安全管理人员'
-        },
-        registered_safety_engineer: {
-          key: 'practiceCategory',
-          label: '执业类别',
-          placeholder: '请输入注册执业类别'
+        {
+          label: categoryMeta.value.employeeEducationLabel || '最高学历',
+          key: 'employeeEducationLevel',
+          type: 'input',
+          props: { readonly: true, placeholder: '由员工花名册自动带出' }
         }
-      })[form.certificateCategory]
-  )
-  const syncCatalog = (row: ItemForm): void => {
-    row.workCode = catalogOptions.value.find((item) => item.id === row.catalogId)?.itemCode || ''
+      )
+    }
+    const extraItems: FormItem[] = (categoryMeta.value.extraFields ?? []).map((field) => ({
+      label: field.label,
+      key: `extraFields.${field.key}`,
+      type: field.type ?? 'input',
+      options: field.dictCode ? dictionaryOptions(field.dictCode) : undefined,
+      props: {
+        clearable: true,
+        maxlength: field.type === 'select' ? undefined : 120,
+        placeholder: field.placeholder
+      }
+    }))
+    return [
+      ...employeeItems,
+      {
+        label: '证件类别',
+        key: 'certificateCategory',
+        type: 'select',
+        options: categoryOptions.value,
+        props: {
+          disabled: isCategoryLocked.value,
+          placeholder: '请选择证件类别',
+          onChange: handleCategoryChange
+        }
+      },
+      {
+        label: '证件编号',
+        key: 'certificateNumber',
+        type: 'input',
+        props: { maxlength: 100, placeholder: '请输入证件编号' }
+      },
+      {
+        label: '发证机关',
+        key: 'issuingAuthority',
+        type: 'input',
+        props: { maxlength: 200, placeholder: '请输入发证机关' }
+      },
+      {
+        label: '档案编号',
+        key: 'archiveNumber',
+        type: 'input',
+        props: { maxlength: 100, placeholder: '请输入档案编号' }
+      },
+      {
+        label: '预警状态',
+        key: 'warningStatus',
+        type: 'radioGroup',
+        options: warningOptions.value,
+        props: { optionType: 'button' }
+      },
+      ...extraItems,
+      { label: '证件照片', key: 'certificatePhotoUrl', type: 'input', span: 8 },
+      {
+        label: '备注',
+        key: 'remark',
+        type: 'textarea',
+        span: 24,
+        props: {
+          rows: 3,
+          maxlength: 1000,
+          resize: 'none',
+          placeholder: '补充证件管理说明（选填）'
+        }
+      }
+    ]
+  })
+  const isItemForm = (row: unknown): row is ItemForm => {
+    if (!row || typeof row !== 'object') return false
+    return (
+      'key' in row &&
+      typeof row.key === 'string' &&
+      'catalogId' in row &&
+      typeof row.catalogId === 'string'
+    )
+  }
+  const activeCatalogOptionsFor = (row: unknown): SmisQualificationCatalog[] => {
+    if (!isItemForm(row)) return []
+    return activeCatalogOptions.value.filter(
+      (item) => !categoryMeta.value.showWorkCategory || item.workCategoryId === row.workCategoryId
+    )
+  }
+  const syncCatalog = (row: unknown): void => {
+    if (!isItemForm(row)) return
+    const catalog = catalogOptions.value.find((item) => item.id === row.catalogId)
+    row.workCode = catalog?.itemCode || ''
+    row.workCategoryId = catalog?.workCategoryId || row.workCategoryId
+  }
+  const handleWorkCategoryChange = (row: unknown): void => {
+    if (!isItemForm(row)) return
+    row.catalogId = ''
+    row.workCode = ''
+  }
+  const ensureCertificateTermItem = (): void => {
+    const termCode = categoryMeta.value.certificateTermCode
+    if (!termCode) return
+    const term = catalogOptions.value.find(
+      (item) => item.catalogType === 'certificate_term' && item.itemCode === termCode
+    )
+    if (!term) return
+    const row = form.items[0] ?? makeItem()
+    row.catalogId = term.id
+    row.workCode = term.itemCode
+    row.workCategoryId = ''
+    form.items = [row]
   }
   const addItem = (): void => {
     form.items.push(makeItem())
   }
   const removeItem = (index: number): void => {
+    if (form.items[index]?.reviewCount) {
+      ElMessage.warning('已有复审记录的作业项目不能移除，请保留该项目的历史证据')
+      return
+    }
     form.items.splice(index, 1)
   }
   const handleCategoryChange = (): void => {
+    form.extraFields = {}
     form.items = [makeItem()]
+    void loadCatalogs()
+    if (form.employeeId) void loadEmployeeDetail(form.employeeId)
   }
-  const toEmployee = (row: SmisPersonnelCertificate): EmployeeIntegrationItem => ({
+  const toEmployee = (row: SmisPersonnelCertificate): PersonnelCertificateEmployee => ({
     id: row.employeeId,
     tenantId: row.tenantId || '',
     employeeNo: row.employeeNo,
     employeeName: row.employeeName,
     avatarUrl: row.avatarUrl || null,
     gender: row.gender || null,
+    idCardNo: row.idCardNo || null,
+    educationLevel: row.educationLevel || null,
     phone: row.phone || '',
     jobTitle: row.jobTitle || null,
     employmentStatus: 'active',
@@ -355,6 +544,29 @@
       ? { id: '', organizationCode: '', organizationName: row.organizationName }
       : null
   })
+
+  const fetchCertificateEmployees = (
+    params: Parameters<typeof fetchPersonnelCertificateEmployeeOptions>[1]
+  ) => fetchPersonnelCertificateEmployeeOptions(form.certificateCategory, params)
+  const loadEmployeeDetail = async (employeeId: string): Promise<void> => {
+    const category = form.certificateCategory
+    const result = await fetchPersonnelCertificateEmployeeDetail(category, employeeId)
+    if (form.certificateCategory !== category || form.employeeId !== employeeId) return
+    const employee = result.data
+    if (!employee) return
+    employeeSelection.value = [employee]
+    form.employeeIdCardNo = employee.idCardNo?.trim() || ''
+    form.employeeEducationLevel = employee.educationLevel?.trim() || ''
+  }
+  const handleEmployeeChange = (
+    value: string | undefined,
+    rows: EmployeeIntegrationItem[]
+  ): void => {
+    employeeSelection.value = rows
+    form.employeeIdCardNo = ''
+    form.employeeEducationLevel = ''
+    if (value) void loadEmployeeDetail(value)
+  }
 
   const validateItems = (): boolean => {
     if (!form.items.length) {
@@ -364,15 +576,16 @@
     const invalid = form.items.some(
       (item) =>
         !item.catalogId ||
+        (categoryMeta.value.showWorkCategory && !item.workCategoryId) ||
         !item.approvalDate ||
         !item.effectiveDate ||
         item.effectiveDate < item.approvalDate
     )
     if (invalid) {
-      ElMessage.warning('请完整填写作业项目日期，且有效日期不能早于批准日期')
+      ElMessage.warning('请完整填写项目、批准日期和有效日期，且有效日期不能早于批准日期')
       return false
     }
-    if (new Set(form.items.map((item) => item.catalogId)).size !== form.items.length) {
+    if (uniqBy(form.items, 'catalogId').length !== form.items.length) {
       ElMessage.warning('同一证件不能重复选择作业项目')
       return false
     }
@@ -382,6 +595,14 @@
     try {
       await formRef.value?.validate()
       if (!validateItems()) return false
+      const extraFields = (categoryMeta.value.extraFields ?? []).reduce<Record<string, string>>(
+        (result, field) => {
+          const value = form.extraFields[field.key]?.trim()
+          if (value) result[field.key] = value
+          return result
+        },
+        {}
+      )
       const payload: SmisPersonnelCertificateSavePayload = {
         id: form.id,
         employeeId: form.employeeId,
@@ -391,7 +612,7 @@
         archiveNumber: form.archiveNumber.trim() || null,
         certificatePhotoUrl: form.certificatePhotoUrl || null,
         warningStatus: form.warningStatus,
-        extraFields: { ...form.extraFields },
+        extraFields,
         remark: form.remark.trim() || null,
         items: form.items.map((item) => ({
           id: item.id,
@@ -410,32 +631,24 @@
     }
   }
   const loadCatalogs = async (): Promise<void> => {
-    const types: SmisQualificationCatalogType[] = [
-      'work_item',
-      'work_category',
-      'permitted_operation_item'
-    ]
-    const results = await Promise.all(
-      types.map((type) =>
-        fetchQualificationCatalogList({
-          catalogType: type,
-          status: 'enabled',
-          purpose: 'option',
-          from: 0,
-          to: 9999
-        })
-      )
-    )
-    catalogOptions.value = results.flatMap((result) => result.data)
+    const category = form.certificateCategory
+    const result = await fetchPersonnelCertificateCatalogOptions(category)
+    if (form.certificateCategory !== category) return
+    catalogOptions.value = result.data
+    ensureCertificateTermItem()
   }
   const handleOpen = async (data: PersonnelCertificateDialogOpenData): Promise<void> => {
     isEditing.value = data.mode === 'edit'
+    isCategoryLocked.value = Boolean(data.category) || data.mode === 'edit'
     Object.assign(form, initial())
+    if (data.category) form.certificateCategory = data.category
     employeeSelection.value = []
     if (data.row) {
       Object.assign(form, {
         id: data.mode === 'edit' ? data.row.id : undefined,
         employeeId: data.row.employeeId,
+        employeeIdCardNo: data.row.idCardNo || '',
+        employeeEducationLevel: data.row.educationLevel || '',
         certificateCategory: data.row.certificateCategory,
         certificateNumber:
           data.mode === 'copy' ? `${data.row.certificateNumber}-副本` : data.row.certificateNumber,
@@ -449,11 +662,13 @@
           key: `item-${++itemSequence}`,
           id: data.mode === 'edit' ? item.id : undefined,
           catalogId: item.catalogId,
+          workCategoryId: item.workCategoryId || '',
           workCode: item.workCode,
           approvalDate: item.approvalDate,
           effectiveDate: item.effectiveDate,
           reminderDays: item.reminderDays,
-          dismissalReason: data.mode === 'edit' ? item.dismissalReason || undefined : undefined
+          dismissalReason: data.mode === 'edit' ? item.dismissalReason || undefined : undefined,
+          reviewCount: data.mode === 'edit' ? item.reviewCount : 0
         }))
       })
       employeeSelection.value = [toEmployee(data.row)]
@@ -463,11 +678,13 @@
     await dialogRef.value?.handleOpen(data, {
       title:
         data.mode === 'edit'
-          ? '编辑人员证件'
+          ? `编辑${data.pageTitle || '人员证件'}`
           : data.mode === 'copy'
-            ? '复制并新增人员证件'
-            : '新增人员证件',
-      subtitle: '统一维护人员、证件和多项作业资质；日期变更自动形成复审记录',
+            ? `复制并新增${data.pageTitle || '人员证件'}`
+            : `新增${data.pageTitle || '人员证件'}`,
+      subtitle: categoryMeta.value.detailSubtitle.includes('复审记录')
+        ? categoryMeta.value.detailSubtitle
+        : `${categoryMeta.value.detailSubtitle}；日期变更自动形成复审记录`,
       confirmText: data.mode === 'copy' ? '复制并保存' : '保存人员证件',
       contentMaxHeight: 'calc(100vh - 128px)',
       onOpen: async (_data, api) => {
@@ -478,10 +695,17 @@
               'smisCertificateCategory',
               'smisCertificateWarningStatus',
               'smisCertificateReminderDays',
-              'smisCertificateDismissalReason'
+              'smisCertificateDismissalReason',
+              'smisSafetyManagerUnitType',
+              'smisSafetyManagerOccupationType',
+              'smisRegisteredSafetyOfficerType',
+              'smisRegisteredEngineerType',
+              'smisRegisteredPracticeCategory'
             ].map((code) => userStore.ensureDictLoaded(code))
           )
           await loadCatalogs()
+          ensureCertificateTermItem()
+          if (form.employeeId) await loadEmployeeDetail(form.employeeId)
         } finally {
           api.setLoading(false)
         }
@@ -519,20 +743,6 @@
       }
     }
 
-    &__grid {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 0 20px;
-
-      .is-wide {
-        grid-column: span 2;
-      }
-    }
-
-    &__photo {
-      grid-row: span 2;
-    }
-
     &__hint {
       display: flex;
       gap: 6px;
@@ -548,21 +758,7 @@
     }
   }
 
-  @media (width <= 980px) {
-    .certificate-dialog__grid {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-  }
-
   @media (width <= 680px) {
-    .certificate-dialog__grid {
-      grid-template-columns: 1fr;
-
-      .is-wide {
-        grid-column: auto;
-      }
-    }
-
     .certificate-dialog__employee {
       grid-template-columns: auto minmax(0, 1fr);
 

@@ -1,9 +1,16 @@
 <template>
-  <SmisPagePlaceholder section="资质培训 / 安全资质管理" title="特种设备作业人员证件台账" />
+  <PersonnelCertificateLedger
+    category="special_equipment_operator"
+    page-title="特种设备作业人员证件台账"
+    eyebrow="SPECIAL EQUIPMENT OPERATOR CERTIFICATES"
+    page-description="关联员工花名册，统一维护 G、R、D、T、Q、N、F 类作业项目、有效期提醒和复审记录。"
+    permission-prefix="SmisSpecialEquipmentOperatorCertificateLedger"
+    scope-tag="G/R/D/T/Q/N/F 作业项目"
+  />
 </template>
 
 <script setup lang="ts">
-  import SmisPagePlaceholder from '@smis/views/components/smis-page-placeholder.vue'
+  import PersonnelCertificateLedger from '../special-equipment-personnel-certificate-ledger/index.vue'
 
   defineOptions({ name: 'SmisSpecialEquipmentOperatorCertificateLedger' })
 </script>

@@ -20,6 +20,7 @@
     | 'material'
     | 'organization'
     | 'position'
+    | 'safety-training-plan'
     | 'site'
     | 'storage-location'
     | 'supplier'
@@ -113,6 +114,17 @@
           routeName: 'HrPosition',
           permission: 'Hr:Position:View',
           icon: 'ri:briefcase-4-line'
+        }
+      ]
+    },
+    'safety-training-plan': {
+      resourceName: '安全培训计划',
+      actions: [
+        {
+          label: '去维护安全培训计划',
+          routeName: 'SmisSafetyTrainingPlan',
+          permission: 'SmisSafetyTrainingPlan:View',
+          icon: 'ri:calendar-schedule-line'
         }
       ]
     },

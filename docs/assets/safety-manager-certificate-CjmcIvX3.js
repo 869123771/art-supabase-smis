@@ -1,1 +1,0 @@
-import{er as e,hn as t,in as n}from"./style-Du4Cu68A.js";import{t as r}from"./smis-page-placeholder-iPM_TTEz.js";var i=t({name:`SmisSafetyManagerCertificate`,__name:`index`,setup(t){return(t,i)=>(e(),n(r,{section:`资质培训 / 安全资质管理`,title:`安全管理人员证`}))}});export{i as default};

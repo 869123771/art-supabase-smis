@@ -5,7 +5,13 @@
         <span aria-hidden="true"><ArtSvgIcon icon="ri:node-tree" /></span>
         <div>
           <strong>维护{{ config.title }}层级</strong>
-          <p>编码用于业务联动；停用节点保留历史引用，不再用于新增证件。</p>
+          <p>
+            {{
+              isPermittedOperationItem
+                ? '准操项目按作业类别归集，并可在类别内继续维护上下级。'
+                : '编码用于业务联动；停用节点保留历史引用，不再用于新增证件。'
+            }}
+          </p>
         </div>
       </div>
       <ArtForm
@@ -38,21 +44,24 @@
     saveQualificationCatalog,
     type SmisQualificationCatalog,
     type SmisQualificationCatalogSavePayload,
-    type SmisQualificationCatalogType,
+    type SmisQualificationMaintenanceCatalogType,
     type SmisQualificationStatus
   } from '@smis/api'
   import { qualificationCatalogConfig } from './qualification-catalog-meta'
 
   export interface QualificationCatalogDialogOpenData {
-    catalogType: SmisQualificationCatalogType
+    catalogType: SmisQualificationMaintenanceCatalogType
     row?: SmisQualificationCatalog
     tree: SmisQualificationCatalog[]
+    workCategories: SmisQualificationCatalog[]
     presetParentId?: string
+    presetWorkCategoryId?: string
   }
 
   interface FormModel {
     id?: string
     parentId?: string
+    workCategoryId?: string
     itemCode: string
     itemName: string
     sort: number
@@ -70,48 +79,81 @@
   const treeUtils = new TreeUtils({ idKey: 'id', parentKey: 'parentId', childrenKey: 'children' })
   const dialogRef = ref<ArtDialogExpose<QualificationCatalogDialogOpenData>>()
   const formRef = ref<FormExpose>()
-  const catalogType = ref<SmisQualificationCatalogType>('work_item')
+  const catalogType = ref<SmisQualificationMaintenanceCatalogType>('work_item')
   const sourceTree = shallowRef<SmisQualificationCatalog[]>([])
+  const workCategories = shallowRef<SmisQualificationCatalog[]>([])
   const config = computed(() => qualificationCatalogConfig[catalogType.value])
+  const isPermittedOperationItem = computed(() => catalogType.value === 'permitted_operation_item')
   const initial = (): FormModel => ({
     id: undefined,
     parentId: undefined,
+    workCategoryId: undefined,
     itemCode: '',
     itemName: '',
     sort: 10,
     status: 'enabled',
     remark: ''
   })
+  const formModel = reactive<FormModel>(initial())
   const statusOptions = computed<FormItemOption[]>(() =>
     (getDictMap.value.smisQualificationStatus ?? []).map((item) => ({
       label: item.label || item.name,
       value: item.value
     }))
   )
+  const parentTree = computed(() =>
+    isPermittedOperationItem.value
+      ? treeUtils.removeNodesByCondition(
+          sourceTree.value,
+          (item) => item.workCategoryId !== formModel.workCategoryId
+        ).tree
+      : sourceTree.value
+  )
   const form = reactive<{
     model: FormModel
     items: ComputedRef<FormItem[]>
     rules: FormRules<FormModel>
   }>({
-    model: initial(),
+    model: formModel,
     items: computed(() => [
+      ...(isPermittedOperationItem.value
+        ? [
+            {
+              label: '作业类别',
+              key: 'workCategoryId',
+              type: 'treeSelect',
+              span: 24,
+              props: {
+                data: workCategories.value,
+                nodeKey: 'id',
+                checkStrictly: true,
+                clearable: true,
+                defaultExpandAll: true,
+                props: { label: 'itemName', value: 'id', children: 'children' },
+                placeholder: '请选择准操项目所属作业类别'
+              }
+            } as FormItem
+          ]
+        : []),
       {
         label: `上级${config.value.title}`,
         key: 'parentId',
         type: 'treeSelect',
         span: 24,
         props: {
-          data: sourceTree.value,
+          data: parentTree.value,
           nodeKey: 'id',
           checkStrictly: true,
           clearable: true,
           defaultExpandAll: true,
           props: { label: 'itemName', value: 'id', children: 'children' },
-          placeholder: '不选择则创建一级节点'
+          placeholder: isPermittedOperationItem.value
+            ? '不选择则创建该类别下的一级项目'
+            : '不选择则创建一级节点'
         }
       },
       {
-        label: `${config.value.title}编码`,
+        label: `${config.value.title}${isPermittedOperationItem.value ? '代号' : '编码'}`,
         key: 'itemCode',
         type: 'input',
         props: { maxlength: 50, clearable: true, placeholder: config.value.codePlaceholder }
@@ -144,7 +186,14 @@
       }
     ]),
     rules: {
-      itemCode: [{ required: true, message: '请输入编码', trigger: 'blur' }],
+      workCategoryId: [{ required: true, message: '请选择作业类别', trigger: 'change' }],
+      itemCode: [
+        {
+          required: true,
+          message: '请输入代号或编码',
+          trigger: 'blur'
+        }
+      ],
       itemName: [{ required: true, message: '请输入名称', trigger: 'blur' }],
       status: [{ required: true, message: '请选择启用状态', trigger: 'change' }]
     }
@@ -157,6 +206,7 @@
         id: form.model.id,
         catalogType: catalogType.value,
         parentId: form.model.parentId || null,
+        workCategoryId: isPermittedOperationItem.value ? form.model.workCategoryId || null : null,
         itemCode: form.model.itemCode.trim().toUpperCase(),
         itemName: form.model.itemName.trim(),
         sort: Number(form.model.sort),
@@ -175,6 +225,7 @@
     catalogType.value = data.catalogType
     Object.assign(form.model, initial())
     sourceTree.value = data.tree
+    workCategories.value = data.workCategories
     if (data.row) {
       const blocked = new Set(
         treeUtils.getDescendants(data.tree, data.row.id, true).map((item) => item.id)
@@ -185,13 +236,17 @@
       Object.assign(form.model, {
         id: data.row.id,
         parentId: data.row.parentId || undefined,
+        workCategoryId: data.row.workCategoryId || undefined,
         itemCode: data.row.itemCode,
         itemName: data.row.itemName,
         sort: data.row.sort,
         status: data.row.status,
         remark: data.row.remark || ''
       })
-    } else form.model.parentId = data.presetParentId
+    } else {
+      form.model.workCategoryId = data.presetWorkCategoryId
+      form.model.parentId = data.presetParentId
+    }
     await nextTick()
     formRef.value?.clearValidate()
     await dialogRef.value?.handleOpen(data, {
@@ -209,6 +264,14 @@
       onConfirm: handleSubmit
     })
   }
+  watch(
+    () => form.model.workCategoryId,
+    (workCategoryId) => {
+      if (!isPermittedOperationItem.value || !form.model.parentId) return
+      const parent = treeUtils.findNode(sourceTree.value, form.model.parentId)
+      if (parent?.workCategoryId !== workCategoryId) form.model.parentId = undefined
+    }
+  )
   defineExpose({ handleOpen })
 </script>
 

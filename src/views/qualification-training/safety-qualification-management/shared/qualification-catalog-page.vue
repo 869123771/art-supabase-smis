@@ -25,11 +25,11 @@
         >
           <template #primary>
             <QualificationCatalogNavigator
-              :data="tree.data"
+              :data="tree.navigationData"
               :loading="tree.loading"
               :error="tree.error"
               :selected-key="tree.selectedKey"
-              :title="config.title"
+              :title="navigatorTitle"
               @select="handleTreeSelect"
               @refresh="refresh"
             />
@@ -86,9 +86,10 @@
     deleteQualificationCatalog,
     fetchQualificationCatalogList,
     type SmisQualificationCatalog,
+    type SmisQualificationCatalogNavigationNode,
     type SmisQualificationCatalogOverview,
     type SmisQualificationCatalogSearchParams,
-    type SmisQualificationCatalogType
+    type SmisQualificationMaintenanceCatalogType
   } from '@smis/api'
   import QualificationCatalogNavigator from './qualification-catalog-navigator.vue'
   import QualificationCatalogDialog, {
@@ -96,7 +97,7 @@
   } from './qualification-catalog-dialog.vue'
   import { qualificationCatalogConfig } from './qualification-catalog-meta'
 
-  const props = defineProps<{ catalogType: SmisQualificationCatalogType }>()
+  const props = defineProps<{ catalogType: SmisQualificationMaintenanceCatalogType }>()
   const ALL_KEY = 'all'
   type TableParams = SmisQualificationCatalogSearchParams &
     Pick<Api.Common.PaginationParams, 'current' | 'size'>
@@ -104,6 +105,10 @@
     handleOpen: (data: QualificationCatalogDialogOpenData) => Promise<void>
   }
   const config = computed(() => qualificationCatalogConfig[props.catalogType])
+  const isPermittedOperationItem = computed(() => props.catalogType === 'permitted_operation_item')
+  const navigatorTitle = computed(() =>
+    isPermittedOperationItem.value ? '作业类别与准操项目' : config.value.title
+  )
   const { confirmDelete } = useArtFeedback()
   const userStore = useUserStore()
   const { getDictMap } = storeToRefs(userStore)
@@ -118,13 +123,27 @@
   })
   const tree = reactive<{
     data: SmisQualificationCatalog[]
+    workCategories: SmisQualificationCatalog[]
+    navigationData: SmisQualificationCatalogNavigationNode[]
     selectedKey: string
     loading: boolean
     error: string | null
-  }>({ data: [], selectedKey: ALL_KEY, loading: false, error: null })
+  }>({
+    data: [],
+    workCategories: [],
+    navigationData: [],
+    selectedKey: ALL_KEY,
+    loading: false,
+    error: null
+  })
   const searchQuery = reactive<Omit<SmisQualificationCatalogSearchParams, 'catalogType'>>({})
   const selectedNode = computed(() =>
-    tree.selectedKey === ALL_KEY ? null : treeUtils.findNode(tree.data, tree.selectedKey)
+    tree.selectedKey === ALL_KEY
+      ? null
+      : (treeUtils.findNode(
+          tree.navigationData,
+          tree.selectedKey
+        ) as SmisQualificationCatalogNavigationNode | null)
   )
   const statusOptions = computed(() =>
     (getDictMap.value.smisQualificationStatus ?? []).map((item) => ({
@@ -156,7 +175,7 @@
     {
       label: '一级节点',
       value: overview.rootCount,
-      description: '树形结构根节点',
+      description: isPermittedOperationItem.value ? '类别下一级项目' : '树形结构根节点',
       icon: 'ri:git-branch-line'
     }
   ])
@@ -174,18 +193,38 @@
       props: { options: statusOptions.value, clearable: true, placeholder: '全部状态' }
     }
   ])
+  const selectedCatalogFilters = computed<
+    Pick<SmisQualificationCatalogSearchParams, 'ancestorId' | 'workCategoryId'>
+  >(() => {
+    if (!selectedNode.value) return {}
+    return selectedNode.value.nodeKind === 'category'
+      ? { workCategoryId: selectedNode.value.id }
+      : { ancestorId: selectedNode.value.id }
+  })
   const openDialog = (row?: SmisQualificationCatalog): void =>
     void dialogRef.value?.handleOpen({
       catalogType: props.catalogType,
       row,
       tree: tree.data,
-      presetParentId: !row ? selectedNode.value?.id : undefined
+      workCategories: tree.workCategories,
+      presetParentId:
+        !row && selectedNode.value?.nodeKind === 'item' ? selectedNode.value.id : undefined,
+      presetWorkCategoryId: !row
+        ? selectedNode.value?.nodeKind === 'category'
+          ? selectedNode.value.id
+          : selectedNode.value?.workCategoryId || undefined
+        : undefined
     })
   const headerActions = computed<ArtTableQueryHeaderAction[]>(() => [
     {
       permission: `${config.value.permission}:Add`,
       type: 'add',
-      label: selectedNode.value ? `新增下级${config.value.title}` : `新增${config.value.title}`,
+      label:
+        selectedNode.value?.nodeKind === 'category'
+          ? '在此类别下新增准操项目'
+          : selectedNode.value
+            ? `新增下级${config.value.title}`
+            : `新增${config.value.title}`,
       onClick: () => openDialog()
     },
     {
@@ -209,7 +248,8 @@
       exportFilename: config.value.title,
       exportSheetName: config.value.title,
       exportColumns: [
-        { key: 'itemCode', title: '编码' },
+        ...(isPermittedOperationItem.value ? [{ key: 'workCategoryName', title: '作业类别' }] : []),
+        { key: 'itemCode', title: isPermittedOperationItem.value ? '代号' : '编码' },
         { key: 'itemName', title: '名称' },
         { key: 'parentName', title: '上级节点' },
         { key: 'status', title: '启用状态' },
@@ -219,8 +259,8 @@
         data: (
           await fetchQualificationCatalogList({
             ...searchQuery,
+            ...selectedCatalogFilters.value,
             catalogType: props.catalogType,
-            ancestorId: tree.selectedKey === ALL_KEY ? undefined : tree.selectedKey,
             purpose: 'export',
             from: 0,
             to: maxRows - 1
@@ -231,7 +271,7 @@
   ])
   const columnsFactory = (): ColumnOption<SmisQualificationCatalog>[] => [
     { type: 'selection', width: 48 },
-    { prop: 'sort', label: '显示顺序', width: 100, align: 'center', sortable: true },
+    { prop: 'sort', label: '显示顺序', width: 108, align: 'center', sortable: true },
     {
       prop: 'itemName',
       label: config.value.title,
@@ -249,12 +289,24 @@
         </div>
       )
     },
+    ...(isPermittedOperationItem.value
+      ? [
+          {
+            prop: 'workCategoryName',
+            label: '作业类别',
+            minWidth: 190,
+            showOverflowTooltip: true,
+            formatter: (row: SmisQualificationCatalog) => row.workCategoryName || '—'
+          } as ColumnOption<SmisQualificationCatalog>
+        ]
+      : []),
     {
       prop: 'parentName',
-      label: '上级节点',
+      label: isPermittedOperationItem.value ? '上级准操项目' : '上级节点',
       minWidth: 160,
       showOverflowTooltip: true,
-      formatter: (row) => row.parentName || '一级节点'
+      formatter: (row) =>
+        row.parentName || (isPermittedOperationItem.value ? '类别下一级项目' : '一级节点')
     },
     {
       prop: 'status',
@@ -300,10 +352,12 @@
       const result = await fetchQualificationCatalogList({
         ...params,
         ...pageInfoHandler(params),
-        catalogType: props.catalogType,
-        ancestorId: tree.selectedKey === ALL_KEY ? undefined : tree.selectedKey
+        ...selectedCatalogFilters.value,
+        catalogType: props.catalogType
       })
       tree.data = result.tree
+      tree.workCategories = result.workCategories
+      tree.navigationData = result.navigationTree
       Object.assign(overview, result.overview)
       tree.error = result.error ? `${config.value.title}结构加载失败，请重试。` : null
       return { records: result.data, total: result.total }
