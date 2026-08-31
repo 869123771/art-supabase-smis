@@ -1,0 +1,1 @@
+import{an as e,gn as t,tr as n}from"./style-D3Duppxh.js";import{t as r}from"./smis-page-placeholder-BLWa4iKJ.js";var i=t({name:`SmisDualControlSpecialEquipmentRiskControlStatistics`,__name:`index`,setup(t){return(t,i)=>(n(),e(r,{section:`双控体系 / 双控报表`,title:`特种设备风控统计`}))}});export{i as default};

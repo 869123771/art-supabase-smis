@@ -66,7 +66,19 @@
         />
       </div>
 
-      <ArtDialog ref="paperDialogRef" size="full">
+      <ArtDialog ref="paperDialogRef" size="xl">
+        <div class="exam-page__paper-hero">
+          <span aria-hidden="true"><ArtSvgIcon icon="ri:file-settings-line" /></span>
+          <div>
+            <strong>{{ paperForm.id ? '维护试卷配置' : '创建标准化考试' }}</strong>
+            <small>先设置考试规则，再完成组卷与人员分配；未分配人员时仍可保存草稿。</small>
+          </div>
+          <ol aria-label="试卷配置进度">
+            <li :class="{ 'is-ready': Boolean(paperForm.paperTitle) }">1 基本规则</li>
+            <li :class="{ 'is-ready': selectedQuestions.length > 0 }">2 完成组卷</li>
+            <li :class="{ 'is-ready': paperForm.employeeIds.length > 0 }">3 分配人员</li>
+          </ol>
+        </div>
         <ArtForm
           ref="paperFormRef"
           v-model="paperForm"
@@ -80,26 +92,46 @@
         >
           <template #questions>
             <div class="exam-page__assembly">
+              <header class="exam-page__assembly-heading">
+                <div>
+                  <small>STEP 02 · ASSEMBLY</small>
+                  <strong>配置试题与分值</strong>
+                  <p>固定组卷适合统一试卷，随机组卷适合降低重复考试的答案传播风险。</p>
+                </div>
+                <ElRadioGroup v-model="paperForm.assemblyMode" class="exam-page__assembly-mode">
+                  <ElRadioButton
+                    v-for="item in assemblyModeOptions"
+                    :key="item.value"
+                    :value="item.value"
+                  >
+                    {{ item.label }}
+                  </ElRadioButton>
+                </ElRadioGroup>
+              </header>
               <ElAlert
                 title="试卷发布时会固定题目快照，后续题库调整不会改变历史试卷和评分口径。"
                 type="info"
                 :closable="false"
                 show-icon
               />
-              <ElRadioGroup v-model="paperForm.assemblyMode"
-                ><ElRadioButton
-                  v-for="item in assemblyModeOptions"
-                  :key="item.value"
-                  :value="item.value"
-                  >{{ item.label }}</ElRadioButton
-                ></ElRadioGroup
-              >
+              <ElAlert
+                v-if="passingScoreInvalid"
+                title="及格分数不能高于当前试卷总分，请调整及格线或题目分值。"
+                type="warning"
+                :closable="false"
+                show-icon
+              />
               <template v-if="paperForm.assemblyMode === 'random'">
+                <div class="exam-page__rule-guide" aria-hidden="true">
+                  <span>抽题分类</span><span>题型</span><span>数量</span><span>每题分值</span
+                  ><span>操作</span>
+                </div>
                 <div
                   v-for="(rule, index) in paperForm.randomRule"
                   :key="index"
                   class="exam-page__rule"
                 >
+                  <b>{{ index + 1 }}</b>
                   <ElSelect v-model="rule.categoryId" clearable placeholder="全部分类"
                     ><ElOption
                       v-for="item in categoryOptions"
@@ -114,9 +146,16 @@
                       :label="item.label"
                       :value="item.value"
                   /></ElSelect>
-                  <ElInputNumber v-model="rule.count" :min="1" :max="200" /><span>题</span
-                  ><ElInputNumber v-model="rule.score" :min="0.01" :max="999" :precision="2" /><span
-                    >分/题</span
+                  <div class="exam-page__number-field"
+                    ><ElInputNumber v-model="rule.count" :min="1" :max="200" /><span>题</span></div
+                  >
+                  <div class="exam-page__number-field"
+                    ><ElInputNumber
+                      v-model="rule.score"
+                      :min="0.01"
+                      :max="999"
+                      :precision="2"
+                    /><span>分</span></div
                   >
                   <ElButton
                     circle
@@ -127,91 +166,133 @@
                     ><ArtSvgIcon icon="ri:delete-bin-line"
                   /></ElButton>
                 </div>
-                <div class="exam-page__rule-actions"
-                  ><ElButton
-                    plain
-                    @click="
-                      paperForm.randomRule.push({
-                        categoryId: null,
-                        questionType: null,
-                        count: 5,
-                        score: 2
-                      })
-                    "
-                    ><ArtSvgIcon icon="ri:add-line" />添加抽题规则</ElButton
-                  ><ElButton
-                    v-auth="'SmisExamManagement:Generate'"
-                    type="primary"
-                    :loading="generating"
-                    @click="randomGenerate"
-                    ><ArtSvgIcon icon="ri:shuffle-line" />随机生成</ElButton
-                  ></div
-                >
+                <div class="exam-page__rule-actions">
+                  <small>随机生成会替换当前已选题目，生成后仍可逐题调整分值。</small>
+                  <div>
+                    <ElButton
+                      plain
+                      @click="
+                        paperForm.randomRule.push({
+                          categoryId: null,
+                          questionType: null,
+                          count: 5,
+                          score: 2
+                        })
+                      "
+                    >
+                      <ArtSvgIcon icon="ri:add-line" />添加抽题规则
+                    </ElButton>
+                    <ElButton
+                      v-auth="'SmisExamManagement:Generate'"
+                      type="primary"
+                      :loading="generating"
+                      @click="randomGenerate"
+                    >
+                      <ArtSvgIcon icon="ri:shuffle-line" />随机生成
+                    </ElButton>
+                  </div>
+                </div>
               </template>
-              <div v-else class="exam-page__question-picker"
-                ><ElInput
-                  v-model="questionKeyword"
-                  clearable
-                  placeholder="搜索题干"
-                  prefix-icon="Search"
-                /><ElScrollbar height="260px" class="exam-page__question-list"
-                  ><ElCheckboxGroup v-model="selectedQuestionIds"
-                    ><label v-for="question in filteredQuestions" :key="question.id"
-                      ><ElCheckbox :value="question.id" /><span
-                        ><strong>{{ question.stem }}</strong
-                        ><small
-                          >{{ question.categoryName }} ·
-                          <ArtDictDisplay
-                            dict-code="smisQuestionType"
-                            :value="question.questionType"
-                            display="text"
-                          />
-                          · 默认 {{ question.defaultScore }} 分</small
-                        ></span
-                      ></label
-                    ></ElCheckboxGroup
-                  ></ElScrollbar
-                ></div
+              <div
+                class="exam-page__assembly-workspace"
+                :class="{ 'is-random': paperForm.assemblyMode === 'random' }"
               >
-              <div class="exam-page__selected"
-                ><header
-                  ><strong>已选 {{ selectedQuestions.length }} 题</strong
-                  ><span>试卷总分 {{ totalScore }} 分</span></header
-                ><ArtTable
-                  :data="selectedQuestions"
-                  :columns="selectedQuestionColumns"
-                  :pagination="false"
-                  row-key="questionId"
-                  table-layout="fixed"
-                  size="small"
-                  max-height="260"
-                  empty-text="尚未选择试题"
-                />
-                ></div
-              >
+                <section
+                  v-if="paperForm.assemblyMode === 'fixed'"
+                  class="exam-page__question-picker"
+                >
+                  <header>
+                    <div
+                      ><strong>可选题目</strong
+                      ><small>{{ filteredQuestions.length }} 道可用</small></div
+                    >
+                    <span class="exam-page__picker-hint">
+                      <ArtSvgIcon icon="ri:checkbox-circle-line" />勾选即加入试卷
+                    </span>
+                  </header>
+                  <ElInput v-model="questionKeyword" clearable placeholder="搜索题干">
+                    <template #prefix><ArtSvgIcon icon="ri:search-line" /></template>
+                  </ElInput>
+                  <ElScrollbar height="300px" class="exam-page__question-list">
+                    <ElCheckboxGroup v-if="filteredQuestions.length" v-model="selectedQuestionIds">
+                      <ElCheckbox
+                        v-for="question in filteredQuestions"
+                        :key="question.id"
+                        :value="question.id"
+                        class="exam-page__question-option"
+                      >
+                        <span class="exam-page__question-copy">
+                          <strong>{{ question.stem }}</strong>
+                          <small>
+                            {{ question.categoryName }} ·
+                            <ArtDictDisplay
+                              dict-code="smisQuestionType"
+                              :value="question.questionType"
+                              display="text"
+                            />
+                            · 默认 {{ question.defaultScore }} 分
+                          </small>
+                        </span>
+                      </ElCheckbox>
+                    </ElCheckboxGroup>
+                    <ElEmpty v-else description="没有匹配的可用题目" :image-size="64" />
+                  </ElScrollbar>
+                </section>
+                <section class="exam-page__selected">
+                  <header>
+                    <div><strong>试卷题目</strong><small>可直接调整每题分值</small></div>
+                    <span>{{ selectedQuestions.length }} 题 · {{ totalScore }} 分</span>
+                  </header>
+                  <ArtTable
+                    :data="selectedQuestions"
+                    :columns="selectedQuestionColumns"
+                    :pagination="false"
+                    row-key="questionId"
+                    table-layout="fixed"
+                    size="small"
+                    max-height="300"
+                    empty-text="尚未选择试题"
+                  />
+                </section>
+              </div>
             </div>
           </template>
-          <template #employeeIds
-            ><TrainingEmployeeMultipleSelect
-              v-model="paperForm.employeeIds"
-              v-model:selected-data="employeeSelection"
-              title="选择考试人员"
-            /><small class="exam-page__helper"
-              >已选择 {{ paperForm.employeeIds.length }} 人；保存后创建考试任务。</small
-            ></template
-          >
+          <template #employeeIds>
+            <div class="exam-page__assignment">
+              <header>
+                <div><strong>考试人员</strong><small>保存后将为所选员工创建考试任务</small></div>
+                <ElTag :type="paperForm.employeeIds.length ? 'success' : 'info'" effect="light">
+                  已选 {{ paperForm.employeeIds.length }} 人
+                </ElTag>
+              </header>
+              <TrainingEmployeeMultipleSelect
+                v-model="paperForm.employeeIds"
+                v-model:selected-data="employeeSelection"
+                title="选择考试人员"
+              />
+              <small class="exam-page__helper">
+                暂不分配人员也可保存草稿，发布前再补充考试范围。
+              </small>
+            </div>
+          </template>
         </ArtForm>
-        <template #footer="{ api }"
-          ><div class="exam-page__footer"
-            ><span>共 {{ selectedQuestions.length }} 题，{{ totalScore }} 分</span
-            ><div
-              ><ElButton @click="api.handleClose()">取消</ElButton
-              ><ElButton type="primary" :loading="submitting" @click="submitPaper"
-                >保存试卷</ElButton
-              ></div
-            ></div
-          ></template
-        >
+        <template #footer="{ api }">
+          <div class="exam-page__footer">
+            <div class="exam-page__footer-summary">
+              <span :class="{ 'is-ready': paperConfigurationReady }" aria-hidden="true"></span>
+              <div>
+                <strong>{{ selectedQuestions.length }} 题 · {{ totalScore }} 分</strong>
+                <small>及格线 {{ paperForm.passingScore || 0 }} 分</small>
+              </div>
+            </div>
+            <div>
+              <ElButton @click="api.handleClose()">取消</ElButton>
+              <ElButton type="primary" :loading="submitting" @click="submitPaper">{{
+                paperForm.id ? '保存变更' : '保存试卷'
+              }}</ElButton>
+            </div>
+          </div>
+        </template>
       </ArtDialog>
 
       <ArtDialog ref="detailDialogRef" size="xl">
@@ -330,7 +411,7 @@
 
 <script setup lang="tsx">
   import type { FormRules } from 'element-plus'
-  import { ElButton, ElInputNumber } from 'element-plus'
+  import { ElButton, ElInputNumber, ElMessage } from 'element-plus'
   import type { EmployeeIntegrationItem } from '@/api/integration/employees'
   import type { SearchFormItem } from '@/components/core/forms/art-search-bar/index.vue'
   import type {
@@ -389,7 +470,7 @@
     Pick<Api.Common.PaginationParams, 'current' | 'size'>
   const userStore = useUserStore()
   const { getDictMap } = storeToRefs(userStore)
-  const { confirmDelete } = useArtFeedback()
+  const { confirm, confirmDelete } = useArtFeedback()
   const activeTab = ref<'paper' | 'record'>('paper')
   const paperTableRef = ref<ArtTableQueryExpose>()
   const recordTableRef = ref<ArtTableQueryExpose>()
@@ -458,11 +539,11 @@
     row.attemptStatus === 'in_progress' ? 'in_progress' : row.passed ? 'passed' : 'failed'
   const selectedQuestionColumns = computed<ColumnOption<SmisExamQuestionSelection>[]>(() => [
     { type: 'globalIndex', label: '序号', width: 58, align: 'center' },
-    { prop: 'stem', label: '题目', minWidth: 320, showOverflowTooltip: true },
+    { prop: 'stem', label: '题目', minWidth: 180, showOverflowTooltip: true },
     {
       prop: 'questionType',
       label: '题型',
-      width: 100,
+      width: 82,
       formatter: (row) => (
         <ArtDictDisplay dictCode="smisQuestionType" value={row.questionType} display="tag" />
       )
@@ -470,7 +551,7 @@
     {
       prop: 'score',
       label: '分值',
-      width: 150,
+      width: 124,
       required: true,
       formatter: (row) => (
         <ElInputNumber
@@ -486,8 +567,7 @@
     {
       prop: 'operation',
       label: '操作',
-      width: 76,
-      fixed: 'right',
+      width: 64,
       align: 'center',
       formatter: (row) => (
         <ElButton link type="danger" onClick={() => removeSelected(row.questionId)}>
@@ -503,6 +583,24 @@
   )
   const totalScore = computed(() =>
     selectedQuestions.value.reduce((sum, item) => sum + Number(item.score || 0), 0)
+  )
+  const passingScoreInvalid = computed(
+    () => totalScore.value > 0 && Number(paperForm.passingScore) > totalScore.value
+  )
+  const dateRangeInvalid = computed(
+    () =>
+      Boolean(paperForm.openAt) &&
+      Boolean(paperForm.closeAt) &&
+      new Date(paperForm.closeAt as string).getTime() <=
+        new Date(paperForm.openAt as string).getTime()
+  )
+  const paperConfigurationReady = computed(
+    () =>
+      Boolean(paperForm.paperTitle.trim()) &&
+      selectedQuestions.value.length > 0 &&
+      totalScore.value > 0 &&
+      !passingScoreInvalid.value &&
+      !dateRangeInvalid.value
   )
   watch(
     selectedQuestionIds,
@@ -535,6 +633,12 @@
       })
     },
     { deep: true }
+  )
+  watch(
+    () => paperForm.allowRetake,
+    (allowed) => {
+      paperForm.maxAttempts = allowed ? Math.max(Number(paperForm.maxAttempts || 0), 2) : 1
+    }
   )
   useIntervalFn(() => {
     nowTick.value = Date.now()
@@ -667,13 +771,21 @@
       label: '试卷标题',
       key: 'paperTitle',
       type: 'input',
+      span: 12,
       props: { maxlength: 200, showWordLimit: true }
     },
-    { label: '试卷编号', key: 'paperNo', type: 'input', props: { placeholder: '留空自动生成' } },
+    {
+      label: '试卷编号（可选）',
+      key: 'paperNo',
+      type: 'input',
+      span: 6,
+      props: { placeholder: '留空自动生成' }
+    },
     {
       label: '及格分数',
       key: 'passingScore',
       type: 'inputNumber',
+      span: 6,
       props: { min: 0.01, max: 99999, precision: 2, class: '!w-full' }
     },
     { label: '考试规则', key: 'ruleSection', type: 'divider', span: 24 },
@@ -681,12 +793,14 @@
       label: '考试时长（分钟）',
       key: 'timeLimitMinutes',
       type: 'inputNumber',
+      span: 6,
       props: { min: 1, max: 1440, class: '!w-full' }
     },
     {
       label: '开放时间',
       key: 'openAt',
       type: 'date',
+      span: 9,
       props: {
         type: 'datetime',
         valueFormat: 'YYYY-MM-DDTHH:mm:ssZ',
@@ -698,6 +812,7 @@
       label: '结束时间',
       key: 'closeAt',
       type: 'date',
+      span: 9,
       props: {
         type: 'datetime',
         valueFormat: 'YYYY-MM-DDTHH:mm:ssZ',
@@ -705,12 +820,18 @@
         class: '!w-full'
       }
     },
-    { label: '允许补考', key: 'allowRetake', type: 'switch' },
+    { label: '允许补考', key: 'allowRetake', type: 'switch', span: 6 },
     {
-      label: '最多考试次数',
+      label: '最多考试次数（含首次）',
       key: 'maxAttempts',
       type: 'inputNumber',
-      props: { min: 1, max: 20, class: '!w-full' }
+      span: 6,
+      props: {
+        min: paperForm.allowRetake ? 2 : 1,
+        max: 20,
+        disabled: !paperForm.allowRetake,
+        class: '!w-full'
+      }
     },
     { label: '组卷与人员', key: 'assemblySection', type: 'divider', span: 24 },
     { label: '组卷配置', key: 'questions', span: 24 },
@@ -725,7 +846,15 @@
   ])
   const paperRules: FormRules = {
     paperTitle: [{ required: true, message: '请输入试卷标题', trigger: 'blur' }],
-    passingScore: [{ required: true, message: '请输入及格分数', trigger: 'change' }]
+    passingScore: [{ required: true, message: '请输入及格分数', trigger: 'change' }],
+    timeLimitMinutes: [{ required: true, message: '请输入考试时长', trigger: 'change' }],
+    closeAt: [
+      {
+        validator: (_rule, _value, callback) =>
+          dateRangeInvalid.value ? callback(new Error('结束时间必须晚于开放时间')) : callback(),
+        trigger: 'change'
+      }
+    ]
   }
   const openPaper = async (row?: SmisExamPaper, copy = false) => {
     const bank = await fetchQuestionBankList({ status: 'enabled', from: 0, to: 4999 })
@@ -761,6 +890,20 @@
     })
   }
   const randomGenerate = async () => {
+    if (!paperForm.randomRule.length) {
+      ElMessage.warning('请至少添加一条随机抽题规则')
+      return
+    }
+    if (selectedQuestions.value.length) {
+      try {
+        await confirm('随机生成会替换当前已选题目，是否继续？', {
+          title: '重新生成试题',
+          confirmButtonText: '继续生成'
+        })
+      } catch {
+        return
+      }
+    }
     try {
       generating.value = true
       selectedQuestions.value = (await generateExamQuestions(paperForm.randomRule)).map((item) => ({
@@ -769,6 +912,9 @@
         questionType: item.questionType as SmisExamQuestionSelection['questionType']
       }))
       selectedQuestionIds.value = selectedQuestions.value.map((item) => item.questionId)
+      if (!selectedQuestions.value.length) {
+        ElMessage.warning('当前规则没有匹配到可用题目，请调整分类、题型或数量')
+      }
     } finally {
       generating.value = false
     }
@@ -780,7 +926,26 @@
   const submitPaper = async () => {
     try {
       await paperFormRef.value?.validate()
-      if (!selectedQuestions.value.length) throw new Error('请选择题目')
+      if (dateRangeInvalid.value) {
+        ElMessage.warning('结束时间必须晚于开放时间')
+        return
+      }
+      if (!selectedQuestions.value.length) {
+        ElMessage.warning('请至少选择一道试题后再保存')
+        return
+      }
+      if (totalScore.value <= 0) {
+        ElMessage.warning('试卷总分必须大于 0 分')
+        return
+      }
+      if (passingScoreInvalid.value) {
+        ElMessage.warning('及格分数不能高于试卷总分')
+        return
+      }
+      if (paperForm.allowRetake && paperForm.maxAttempts < 2) {
+        ElMessage.warning('允许补考时，最多考试次数至少为 2 次')
+        return
+      }
       submitting.value = true
       await saveExamPaper({
         ...paperForm,
@@ -1214,34 +1379,224 @@
     }
   }
 
+  .exam-page__paper-hero {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr) auto;
+    gap: 14px;
+    align-items: center;
+    padding: 14px 16px;
+    margin-bottom: 18px;
+    background:
+      linear-gradient(
+        115deg,
+        color-mix(in srgb, var(--theme-color) 10%, transparent),
+        transparent 62%
+      ),
+      var(--el-fill-color-lighter);
+    border: 1px solid color-mix(in srgb, var(--theme-color) 16%, var(--el-border-color-lighter));
+    border-radius: var(--custom-radius);
+
+    > span {
+      display: grid;
+      place-items: center;
+      width: 44px;
+      height: 44px;
+      font-size: 20px;
+      color: var(--theme-color);
+      background: var(--default-box-color);
+      border-radius: var(--el-border-radius-base);
+    }
+
+    > div {
+      display: grid;
+      gap: 3px;
+      min-width: 0;
+
+      strong {
+        font-size: 16px;
+      }
+
+      small {
+        color: var(--el-text-color-secondary);
+      }
+    }
+
+    ol {
+      display: flex;
+      gap: 6px;
+      padding: 0;
+      margin: 0;
+      list-style: none;
+    }
+
+    li {
+      padding: 5px 9px;
+      font-size: 12px;
+      color: var(--el-text-color-secondary);
+      background: var(--default-box-color);
+      border: 1px solid var(--el-border-color-lighter);
+      border-radius: 999px;
+
+      &.is-ready {
+        color: var(--el-color-success);
+        background: var(--el-color-success-light-9);
+        border-color: var(--el-color-success-light-7);
+      }
+    }
+  }
+
   .exam-page__assembly {
     display: grid;
-    gap: 14px;
-    padding: 16px;
+    gap: 16px;
+    padding: 18px;
+    background: color-mix(in srgb, var(--el-fill-color-light) 42%, transparent);
     border: 1px solid var(--el-border-color-lighter);
     border-radius: var(--custom-radius);
   }
 
-  .exam-page__rule {
+  .exam-page__assembly-heading {
     display: grid;
-    grid-template-columns: minmax(140px, 1fr) minmax(130px, 1fr) 120px 28px 120px 44px 34px;
-    gap: 8px;
-    align-items: center;
-    padding: 10px;
-    background: var(--el-fill-color-lighter);
-    border-radius: var(--el-border-radius-base);
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 18px;
+    align-items: flex-end;
+
+    > div {
+      display: grid;
+      gap: 3px;
+    }
+
+    small {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--theme-color);
+      letter-spacing: 0.12em;
+    }
+
+    strong {
+      font-size: 16px;
+    }
+
+    p {
+      margin: 0;
+      color: var(--el-text-color-secondary);
+    }
   }
 
-  .exam-page__rule-actions,
-  .exam-page__footer {
+  :deep(.exam-page__assembly-mode.el-radio-group) {
+    display: inline-flex;
+    flex-wrap: nowrap !important;
+    justify-self: end;
+    width: auto;
+    min-width: 270px;
+  }
+
+  :deep(.exam-page__assembly-mode .el-radio-button) {
+    flex: 0 0 auto;
+  }
+
+  .exam-page__rule-guide {
+    display: grid;
+    grid-template-columns: minmax(140px, 1fr) minmax(130px, 1fr) 150px 150px 34px;
+    gap: 8px;
+    padding: 0 10px 0 50px;
+    font-size: 12px;
+    color: var(--el-text-color-secondary);
+  }
+
+  .exam-page__rule {
+    display: grid;
+    grid-template-columns: 30px minmax(140px, 1fr) minmax(130px, 1fr) 150px 150px 34px;
+    gap: 8px;
+    align-items: center;
+    padding: 11px 10px;
+    background: var(--default-box-color);
+    border: 1px solid var(--el-border-color-lighter);
+    border-radius: var(--el-border-radius-base);
+
+    > b {
+      display: grid;
+      place-items: center;
+      width: 28px;
+      height: 28px;
+      color: var(--theme-color);
+      background: color-mix(in srgb, var(--theme-color) 10%, transparent);
+      border-radius: 50%;
+    }
+  }
+
+  .exam-page__number-field {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 24px;
+    gap: 6px;
+    align-items: center;
+
+    > span {
+      color: var(--el-text-color-secondary);
+    }
+  }
+
+  .exam-page__rule-actions {
     display: flex;
+    gap: 12px;
     align-items: center;
     justify-content: space-between;
+
+    > small {
+      color: var(--el-text-color-secondary);
+    }
+
+    > div {
+      display: flex;
+      gap: 8px;
+    }
+  }
+
+  .exam-page__assembly-workspace {
+    display: grid;
+    grid-template-columns: minmax(320px, 0.9fr) minmax(0, 1.1fr);
+    gap: 14px;
+    align-items: stretch;
+
+    &.is-random {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  .exam-page__question-picker,
+  .exam-page__selected,
+  .exam-page__assignment {
+    display: grid;
+    gap: 12px;
+    min-width: 0;
+    padding: 14px;
+    background: var(--default-box-color);
+    border: 1px solid var(--el-border-color-lighter);
+    border-radius: var(--el-border-radius-base);
+
+    > header {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+
+      > div {
+        display: grid;
+        gap: 2px;
+      }
+
+      small {
+        color: var(--el-text-color-secondary);
+      }
+    }
   }
 
   .exam-page__question-picker {
-    display: grid;
-    gap: 10px;
+    grid-template-rows: auto auto minmax(0, 1fr);
+  }
+
+  .exam-page__selected {
+    grid-template-rows: auto minmax(0, 1fr);
+    align-content: start;
   }
 
   .exam-page__question-list {
@@ -1252,16 +1607,42 @@
       display: grid;
     }
 
-    label {
-      display: grid;
-      grid-template-columns: 24px minmax(0, 1fr);
+    :deep(.exam-page__question-option.el-checkbox) {
+      display: flex;
       gap: 8px;
       align-items: start;
+      width: 100%;
+      height: auto;
       padding: 10px 12px;
+      margin: 0;
       border-bottom: 1px solid var(--el-border-color-lighter);
+      transition: background-color var(--art-motion-duration-fast);
 
-      span {
-        display: grid;
+      &:hover {
+        background: var(--el-fill-color-lighter);
+      }
+    }
+
+    :deep(.exam-page__question-option .el-checkbox__input) {
+      flex: 0 0 auto;
+      margin-top: 2px;
+    }
+
+    :deep(.exam-page__question-option .el-checkbox__label) {
+      min-width: 0;
+      padding-left: 0;
+      color: inherit;
+    }
+
+    .exam-page__question-copy {
+      display: grid;
+      min-width: 0;
+
+      strong,
+      small {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
 
       small {
@@ -1271,10 +1652,65 @@
     }
   }
 
-  .exam-page__selected header {
+  .exam-page__selected > header > span {
+    font-weight: 600;
+    color: var(--theme-color);
+  }
+
+  .exam-page__picker-hint {
+    display: inline-flex;
+    gap: 5px;
+    align-items: center;
+    font-size: 12px;
+    color: var(--el-text-color-secondary);
+
+    svg {
+      color: var(--el-color-success);
+    }
+  }
+
+  .exam-page__assignment {
+    padding: 16px;
+  }
+
+  .exam-page__footer {
     display: flex;
+    gap: 16px;
+    align-items: center;
     justify-content: space-between;
-    padding: 8px 0;
+
+    > div:last-child {
+      display: flex;
+      gap: 8px;
+    }
+  }
+
+  .exam-page__footer-summary {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+
+    > span {
+      width: 9px;
+      height: 9px;
+      background: var(--el-color-warning);
+      border-radius: 50%;
+      box-shadow: 0 0 0 4px var(--el-color-warning-light-9);
+
+      &.is-ready {
+        background: var(--el-color-success);
+        box-shadow: 0 0 0 4px var(--el-color-success-light-9);
+      }
+    }
+
+    > div {
+      display: grid;
+      gap: 1px;
+    }
+
+    small {
+      color: var(--el-text-color-secondary);
+    }
   }
 
   .exam-page__helper {
@@ -1464,9 +1900,47 @@
     }
   }
 
+  @media (width <= 1100px) {
+    .exam-page__paper-hero {
+      grid-template-columns: 44px minmax(0, 1fr);
+
+      ol {
+        grid-column: 1 / -1;
+      }
+    }
+
+    .exam-page__assembly-workspace {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
   @media (width <= 900px) {
+    .exam-page__assembly-heading,
+    .exam-page__rule-actions {
+      grid-template-columns: 1fr;
+      align-items: stretch;
+    }
+
+    :deep(.exam-page__assembly-mode.el-radio-group) {
+      justify-self: stretch;
+      width: 100%;
+      min-width: 0;
+    }
+
+    .exam-page__assembly-heading :deep(.el-radio-button) {
+      flex: 1;
+    }
+
+    .exam-page__rule-guide {
+      display: none;
+    }
+
     .exam-page__rule {
       grid-template-columns: 1fr 1fr;
+
+      > b {
+        grid-column: 1 / -1;
+      }
     }
 
     .exam-page__detail-summary {

@@ -1,1 +1,0 @@
-import{er as e,hn as t,in as n}from"./style-Du4Cu68A.js";import{t as r}from"./smis-page-placeholder-iPM_TTEz.js";var i=t({name:`SmisRoadBreakingOperationApplication`,__name:`index`,setup(t){return(t,i)=>(e(),n(r,{section:`特殊作业管理`,title:`断路作业申请`}))}});export{i as default};

@@ -73,7 +73,7 @@
 
             <ArtSectionCard
               title="签到状态构成"
-              subtitle="汇总已提交培训记录中的逐人签到状态"
+              subtitle="汇总已归档培训记录中的逐人签到状态"
               :loading="state.loading"
               :error="state.error"
               :empty="!state.loading && !state.error && !state.data.attendanceStats.length"
@@ -261,7 +261,7 @@
     {
       label: '正式记录',
       value: state.data.overview.recordCount,
-      description: '已提交培训记录',
+      description: '已归档培训记录',
       icon: 'ri:file-shield-2-line',
       tone: 'primary'
     },

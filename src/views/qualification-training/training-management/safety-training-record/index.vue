@@ -9,7 +9,7 @@
         :tags="[
           { label: '计划自动带入', type: 'primary', effect: 'plain' },
           { label: '逐人签到', type: 'success', effect: 'light' },
-          { label: '提交后锁定', type: 'warning', effect: 'plain' }
+          { label: '归档后锁定', type: 'warning', effect: 'plain' }
         ]"
         :metrics="metrics"
       >
@@ -44,12 +44,12 @@
   import type { SearchFormItem } from '@/components/core/forms/art-search-bar/index.vue'
   import type {
     ArtTableQueryExpose,
+    ArtTableQueryExcelColumn,
     ArtTableQueryHeaderAction,
     ArtTableQueryHeaderActionContext
   } from '@/components/core/tables/art-table-query/index.vue'
   import type { ColumnOption } from '@/types'
   import { pageInfoHandler } from '@/utils/table/tableUtils'
-  import { useUserStore } from '@/store/modules/user'
   import { useArtFeedback } from '@/hooks/core/useArtFeedback'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import ArtDictDisplay from '@/components/core/base/art-dict-display/index.vue'
@@ -69,6 +69,11 @@
   import TrainingRecordDialog, {
     type TrainingRecordDialogOpenData
   } from './modules/training-record-dialog.vue'
+  import {
+    trainingRecordStatusItem,
+    trainingRecordStatusLabel,
+    trainingRecordStatusOptions
+  } from './modules/training-record-status'
 
   defineOptions({ name: 'SmisSafetyTrainingRecord' })
   type TableParams = SmisSafetyTrainingRecordSearchParams &
@@ -79,8 +84,6 @@
 
   const route = useRoute()
   const router = useRouter()
-  const userStore = useUserStore()
-  const { getDictMap } = storeToRefs(userStore)
   const { confirmDelete } = useArtFeedback()
   const tableRef = ref<ArtTableQueryExpose>()
   const dialogRef = ref<DialogExpose>()
@@ -95,11 +98,6 @@
     participantCount: 0,
     presentCount: 0
   })
-  const dictOptions = (code: string) =>
-    (getDictMap.value[code] ?? []).map((item) => ({
-      label: item.label || item.name,
-      value: item.value
-    }))
   const attendanceRate = computed(() =>
     overview.participantCount
       ? Math.round((overview.presentCount * 1000) / overview.participantCount) / 10
@@ -152,7 +150,7 @@
       key: 'status',
       type: 'select',
       props: {
-        options: dictOptions('smisSafetyTrainingRecordStatus'),
+        options: trainingRecordStatusOptions,
         clearable: true,
         placeholder: '全部状态'
       }
@@ -301,11 +299,7 @@
       label: '记录状态',
       width: 96,
       formatter: (row) => (
-        <ArtDictDisplay
-          dictCode="smisSafetyTrainingRecordStatus"
-          value={row.status}
-          display="tag"
-        />
+        <ArtDictDisplay item={trainingRecordStatusItem(row.status)} display="tag" />
       )
     },
     {
@@ -343,7 +337,7 @@
       )
     }
   ]
-  const exportColumns = [
+  const exportColumns: ArtTableQueryExcelColumn[] = [
     { key: 'recordNo', title: '培训记录单号' },
     { key: 'planNo', title: '培训计划编号' },
     { key: 'subject', title: '培训主题' },
@@ -355,7 +349,11 @@
     { key: 'presentCount', title: '签到人数' },
     { key: 'attendanceRate', title: '签到率(%)' },
     { key: 'trainingHours', title: '培训学时' },
-    { key: 'status', title: '记录状态' }
+    {
+      key: 'status',
+      title: '记录状态',
+      formatter: (value) => trainingRecordStatusLabel(value as SmisSafetyTrainingRecord['status'])
+    }
   ]
   const headerActions = computed<ArtTableQueryHeaderAction[]>(() => [
     {
@@ -404,9 +402,6 @@
   }
   const handleSaveSuccess = (type: 'add' | 'edit') =>
     void (type === 'add' ? tableRef.value?.refreshCreate() : tableRef.value?.refreshUpdate())
-  onMounted(async () => {
-    await userStore.ensureDictLoaded('smisSafetyTrainingRecordStatus')
-  })
 </script>
 
 <style scoped lang="scss">

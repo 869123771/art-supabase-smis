@@ -17,96 +17,64 @@
       ></BusinessWorkspaceHeader>
 
       <div class="question-bank__workspace">
-        <aside class="question-bank__categories art-card-xs">
-          <header
-            ><div
-              ><strong>题库分类</strong><small>{{ categories.length }} 个分类</small></div
-            ><ElButton
-              v-auth="'SmisQuestionBankManagement:ManageCategory'"
-              circle
-              text
-              aria-label="新增分类"
-              title="新增题库分类"
-              @click="openCategory()"
-              ><ArtSvgIcon icon="ri:add-line" /></ElButton
-          ></header>
-          <ElScrollbar class="question-bank__category-scroll">
-            <nav aria-label="题库分类">
-              <button
-                class="question-bank__category-select"
-                :class="{ 'is-active': !searchQuery.categoryId }"
-                type="button"
-                @click="selectCategory()"
-                ><span><ArtSvgIcon icon="ri:folder-3-line" />全部题目</span
-                ><b>{{ overview.total }}</b></button
-              >
-              <div
-                v-for="item in categories"
-                :key="item.id"
-                class="question-bank__category-row"
-                :class="{ 'is-active': searchQuery.categoryId === item.id }"
-              >
-                <button
-                  class="question-bank__category-select"
-                  type="button"
-                  :title="item.categoryName"
-                  @click="selectCategory(item.id)"
-                  ><span><ArtSvgIcon icon="ri:folder-line" />{{ item.categoryName }}</span
-                  ><b>{{ item.questionCount }}</b></button
-                >
-                <span class="question-bank__category-actions">
-                  <ElButton
-                    v-auth="'SmisQuestionBankManagement:ManageCategory'"
-                    link
-                    :aria-label="`编辑分类${item.categoryName}`"
-                    :title="`编辑分类：${item.categoryName}`"
-                    @click="openCategory(item)"
-                    ><ArtSvgIcon icon="ri:edit-line"
-                  /></ElButton>
-                  <ElButton
-                    v-auth="'SmisQuestionBankManagement:ManageCategory'"
-                    link
-                    type="danger"
-                    :aria-label="`删除分类${item.categoryName}`"
-                    :title="`删除分类：${item.categoryName}`"
-                    @click="removeCategory(item)"
-                    ><ArtSvgIcon icon="ri:delete-bin-line"
-                  /></ElButton>
-                </span>
-              </div>
-              <ArtEmptyState
-                v-if="!categories.length"
-                title="暂无题库分类"
-                description="新增分类后可按培训主题组织题目。"
-                size="compact"
-                :visual-size="60"
-              />
-            </nav>
-          </ElScrollbar>
-        </aside>
+        <ArtWorkspaceSplitter
+          primary-size="320px"
+          primary-min="280px"
+          primary-max="420px"
+          :breakpoint="900"
+          stacked-primary-size="38vh"
+        >
+          <template #primary>
+            <QuestionCategoryNavigator
+              :data="categoryTree"
+              :loading="categoryLoading"
+              :error="categoryError"
+              :selected-key="selectedCategoryKey"
+              :total-questions="overview.total"
+              @select="selectCategory"
+              @refresh="refreshCategories"
+              @add="openCategory(undefined, $event)"
+              @edit="openCategory"
+              @delete="removeCategory"
+            />
+          </template>
 
-        <ArtTableQuery
-          ref="tableRef"
-          v-model="searchQuery"
-          class="question-bank__table"
-          :api-fn="fetchTableData"
-          :search-items="searchItems"
-          :columns-factory="columnsFactory"
-          :header-actions="headerActions"
-          header-actions-placement="workspace"
-          :search-bar-props="{ span: 8, labelWidth: 72 }"
-          :table-props="{
-            rowKey: 'id',
-            tableLayout: 'fixed',
-            emptyText: '暂无题目',
-            emptyDescription: '新增题目后即可用于固定或随机组卷。'
-          }"
-          focus-scope-selector=".question-bank__workspace"
-          focusable
-        />
+          <ArtTableQuery
+            ref="tableRef"
+            v-model="searchQuery"
+            class="question-bank__table"
+            :api-fn="fetchTableData"
+            :search-items="searchItems"
+            :columns-factory="columnsFactory"
+            :header-actions="headerActions"
+            header-actions-placement="workspace"
+            :search-bar-props="{ span: 8, labelWidth: 72 }"
+            :table-props="{
+              rowKey: 'id',
+              tableLayout: 'fixed',
+              emptyText: searchQuery.categoryId ? '当前分类暂无题目' : '暂无题目',
+              emptyDescription: searchQuery.categoryId
+                ? '可在当前分类新增题目，或切换左侧分类查看其他内容。'
+                : '新增题目后即可用于固定或随机组卷。'
+            }"
+            focus-scope-selector=".question-bank__workspace"
+            focusable
+          />
+        </ArtWorkspaceSplitter>
       </div>
 
       <ArtDialog ref="categoryDialogRef" size="sm">
+        <ElAlert
+          class="question-bank__category-tip"
+          :title="
+            categoryForm.id
+              ? '调整上级分类会同步改变左侧树位置；停用分类后不再用于新增题目。'
+              : '可选择当前分类作为父级，形成清晰的培训主题层级。'
+          "
+          type="info"
+          :closable="false"
+          show-icon
+        />
         <ArtForm
           ref="categoryFormRef"
           v-model="categoryForm"
@@ -199,6 +167,7 @@
   } from '@/components/core/tables/art-table-query/index.vue'
   import type { ColumnOption } from '@/types'
   import { pageInfoHandler } from '@/utils/table/tableUtils'
+  import TreeUtils from '@/utils/tree'
   import { useArtFeedback } from '@/hooks/core/useArtFeedback'
   import { useUserStore } from '@/store/modules/user'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
@@ -207,10 +176,10 @@
   } from '@/components/core/forms/art-button-more/index.vue'
   import ArtDictDisplay from '@/components/core/base/art-dict-display/index.vue'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
-  import ArtEmptyState from '@/components/core/feedback/art-empty-state/index.vue'
   import ArtDialog from '@/components/core/dialogs/art-dialog/index.vue'
   import type { ArtDialogExpose } from '@/components/core/dialogs/art-dialog/types'
   import ArtForm, { type FormItem } from '@/components/core/forms/art-form/index.vue'
+  import ArtWorkspaceSplitter from '@/components/core/layouts/art-workspace-splitter/index.vue'
   import BusinessWorkspaceHeader, {
     type BusinessWorkspaceMetric
   } from '@/components/business/business-workspace-header/index.vue'
@@ -228,6 +197,9 @@
     type SmisQuestionCategory,
     type SmisQuestionPayload
   } from '@smis/api'
+  import QuestionCategoryNavigator, {
+    type QuestionCategoryTreeNode
+  } from './modules/question-category-navigator.vue'
 
   defineOptions({ name: 'SmisQuestionBankManagement' })
   type TableParams = SmisQuestionBankSearchParams &
@@ -235,12 +207,16 @@
   const userStore = useUserStore()
   const { getDictMap } = storeToRefs(userStore)
   const { confirmDelete } = useArtFeedback()
+  const ALL_KEY = 'all'
+  const treeUtils = new TreeUtils({ idKey: 'id', parentKey: 'parentId', childrenKey: 'children' })
   const tableRef = ref<ArtTableQueryExpose>()
   const categoryDialogRef = ref<ArtDialogExpose>()
   const questionDialogRef = ref<ArtDialogExpose>()
   const categoryFormRef = ref<InstanceType<typeof ArtForm>>()
   const questionFormRef = ref<InstanceType<typeof ArtForm>>()
   const submitting = ref(false)
+  const categoryLoading = ref(true)
+  const categoryError = ref<string | null>(null)
   const searchQuery = ref<SmisQuestionBankSearchParams>({})
   const categories = ref<SmisQuestionCategory[]>([])
   const overview = reactive<SmisQuestionBankOverview>({
@@ -252,6 +228,7 @@
   })
   const categoryForm = reactive({
     id: '',
+    parentId: null as string | null,
     categoryName: '',
     status: 'enabled' as 'enabled' | 'disabled',
     sort: 10,
@@ -284,11 +261,49 @@
     }))
   const exportDictLabel = (code: string, value: unknown) =>
     dictOptions(code).find((item) => item.value === String(value))?.label ?? String(value ?? '')
-  const categoryOptions = computed(() =>
-    categories.value
-      .filter((item) => item.status === 'enabled')
-      .map((item) => ({ label: item.categoryName, value: item.id }))
+  const categoryTree = computed<QuestionCategoryTreeNode[]>(() =>
+    treeUtils.listToTree<QuestionCategoryTreeNode>(categories.value, (left, right) =>
+      left.sort === right.sort
+        ? left.categoryName.localeCompare(right.categoryName, 'zh-CN')
+        : left.sort - right.sort
+    )
   )
+  const flattenCategories = (
+    nodes: QuestionCategoryTreeNode[],
+    depth = 0
+  ): Array<QuestionCategoryTreeNode & { depth: number }> =>
+    nodes.flatMap((node) => [
+      { ...node, depth },
+      ...flattenCategories(node.children ?? [], depth + 1)
+    ])
+  const categoryFlat = computed(() => flattenCategories(categoryTree.value))
+  const categoryOptions = computed(() =>
+    categoryFlat.value
+      .filter((item) => item.status === 'enabled')
+      .map((item) => ({
+        label: `${'　'.repeat(item.depth)}${item.depth ? '└ ' : ''}${item.categoryName}`,
+        value: item.id
+      }))
+  )
+  const categoryParentOptions = computed(() => {
+    const blockedIds = new Set<string>()
+    if (categoryForm.id) {
+      const current = treeUtils.findNode(
+        categoryTree.value,
+        categoryForm.id
+      ) as QuestionCategoryTreeNode | null
+      if (current) {
+        treeUtils.treeToList([current]).forEach((item) => blockedIds.add(item.id))
+      }
+    }
+    return categoryFlat.value
+      .filter((item) => !blockedIds.has(item.id))
+      .map((item) => ({
+        label: `${'　'.repeat(item.depth)}${item.depth ? '└ ' : ''}${item.categoryName}`,
+        value: item.id
+      }))
+  })
+  const selectedCategoryKey = computed(() => searchQuery.value.categoryId ?? ALL_KEY)
   const metrics = computed<BusinessWorkspaceMetric[]>(() => [
     {
       label: '题目总数',
@@ -346,6 +361,13 @@
       key: 'categoryName',
       type: 'input',
       props: { maxlength: 100, showWordLimit: true }
+    },
+    {
+      label: '上级分类',
+      key: 'parentId',
+      type: 'select',
+      options: categoryParentOptions.value,
+      props: { clearable: true, filterable: true, placeholder: '不选择则作为一级分类' }
     },
     {
       label: '启用状态',
@@ -433,20 +455,25 @@
       }
     }
   )
-  const selectCategory = (id?: string) => {
-    searchQuery.value.categoryId = id
+  const selectCategory = (key: string) => {
+    searchQuery.value.categoryId = key === ALL_KEY ? undefined : key
     void tableRef.value?.refreshUpdate()
   }
-  const openCategory = async (row?: SmisQuestionCategory) => {
+  const refreshCategories = async () => {
+    categoryLoading.value = true
+    await tableRef.value?.refreshUpdate()
+  }
+  const openCategory = async (row?: SmisQuestionCategory, parentId?: string) => {
     Object.assign(categoryForm, {
       id: row?.id ?? '',
+      parentId: row?.parentId ?? parentId ?? null,
       categoryName: row?.categoryName ?? '',
       status: row?.status ?? 'enabled',
       sort: row?.sort ?? 10,
       remark: row?.remark ?? ''
     })
     await categoryDialogRef.value?.handleOpen(undefined, {
-      title: row ? '编辑题库分类' : '新增题库分类'
+      title: row ? '编辑题库分类' : parentId ? '新增下级分类' : '新增题库分类'
     })
   }
   const submitCategory = async () => {
@@ -464,7 +491,9 @@
   }
   const removeCategory = async (row: SmisQuestionCategory) => {
     try {
-      await confirmDelete(`确定删除分类“${row.categoryName}”吗？`)
+      await confirmDelete(
+        `确定删除分类“${row.categoryName}”吗？如分类下仍有题目或下级分类，系统将阻止删除以保护组卷数据。`
+      )
       await deleteQuestionCategory(row.id)
       if (searchQuery.value.categoryId === row.id) searchQuery.value.categoryId = undefined
       await tableRef.value?.refreshRemove()
@@ -512,8 +541,14 @@
   const submitQuestion = async () => {
     try {
       await questionFormRef.value?.validate()
-      if (questionForm.options.some((item) => !item.content.trim())) throw new Error('选项不能为空')
-      if (!questionForm.correctAnswers.length) throw new Error('请选择正确答案')
+      if (questionForm.options.some((item) => !item.content.trim())) {
+        ElMessage.warning('请完整填写全部答案选项')
+        return
+      }
+      if (!questionForm.correctAnswers.length) {
+        ElMessage.warning('请至少设置一个正确答案')
+        return
+      }
       submitting.value = true
       await saveQuestion({
         ...questionForm,
@@ -679,11 +714,17 @@
     }
   ])
   const fetchTableData = async (params: TableParams) => {
-    const { from, to } = pageInfoHandler({ current: params.current, size: params.size })
-    const result = await fetchQuestionBankList({ ...params, from, to })
-    categories.value = result.categories
-    Object.assign(overview, result.overview)
-    return result
+    categoryLoading.value = true
+    try {
+      const { from, to } = pageInfoHandler({ current: params.current, size: params.size })
+      const result = await fetchQuestionBankList({ ...params, from, to })
+      categories.value = result.categories
+      Object.assign(overview, result.overview)
+      categoryError.value = result.error ? '分类加载失败，请稍后重试。' : null
+      return result
+    } finally {
+      categoryLoading.value = false
+    }
   }
   onMounted(async () => {
     await Promise.all(
@@ -699,125 +740,17 @@
   }
 
   .question-bank__workspace {
-    display: grid;
-    flex: 1;
-    grid-template-columns: 236px minmax(0, 1fr);
-    gap: 12px;
-    min-height: 0;
-  }
-
-  .question-bank__categories {
-    display: flex;
-    flex-direction: column;
-    min-height: 0;
-    padding: 14px;
-
-    header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 2px 4px 12px;
-
-      div {
-        display: grid;
-        gap: 2px;
-      }
-
-      small {
-        font-size: 12px;
-        color: var(--el-text-color-secondary);
-      }
-    }
-  }
-
-  .question-bank__category-scroll {
     flex: 1;
     min-height: 0;
-  }
-
-  .question-bank__category-row {
-    position: relative;
-    display: flex;
-    align-items: center;
-    min-width: 0;
-    margin-bottom: 4px;
-    border-radius: var(--el-border-radius-base);
-
-    &:hover,
-    &:focus-within,
-    &.is-active {
-      color: var(--theme-color);
-      background: color-mix(in srgb, var(--theme-color) 9%, transparent);
-    }
-
-    &:hover .question-bank__category-actions,
-    &:focus-within .question-bank__category-actions {
-      display: flex;
-    }
-  }
-
-  .question-bank__category-select {
-    position: relative;
-    display: flex;
-    flex: 1;
-    align-items: center;
-    width: 100%;
-    min-width: 0;
-    min-height: 42px;
-    padding: 0 10px;
-    margin-bottom: 4px;
-    color: var(--el-text-color-regular);
-    text-align: left;
-    cursor: pointer;
-    background: transparent;
-    border: 0;
-    border-radius: var(--el-border-radius-base);
-
-    span:first-child {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-      min-width: 0;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    b {
-      margin-left: auto;
-      font-size: 12px;
-      color: var(--el-text-color-secondary);
-    }
-
-    &:hover,
-    &:focus-visible,
-    &.is-active {
-      color: var(--theme-color);
-      background: color-mix(in srgb, var(--theme-color) 9%, transparent);
-    }
-
-    &:focus-visible {
-      outline: 2px solid color-mix(in srgb, var(--theme-color) 38%, transparent);
-      outline-offset: -2px;
-    }
-  }
-
-  .question-bank__category-row .question-bank__category-select {
-    padding-right: 66px;
-    margin-bottom: 0;
-    background: transparent;
-  }
-
-  .question-bank__category-actions {
-    position: absolute;
-    right: 6px;
-    display: none;
-    align-items: center;
   }
 
   .question-bank__table {
     min-width: 0;
     min-height: 0;
+  }
+
+  .question-bank__category-tip {
+    margin-bottom: 18px;
   }
 
   :deep(.question-bank__stem) {
@@ -865,12 +798,8 @@
   }
 
   @media (width <= 900px) {
-    .question-bank__workspace {
-      grid-template-columns: 1fr;
-    }
-
-    .question-bank__categories {
-      max-height: 210px;
+    .question-bank__option {
+      grid-template-columns: 56px 36px minmax(0, 1fr) 32px;
     }
   }
 </style>

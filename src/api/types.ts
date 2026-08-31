@@ -376,6 +376,54 @@ export interface SmisInspectionCategorySavePayload {
   status: SmisInspectionCategoryStatus
 }
 
+export type SmisHazardFactorCategoryStatus = 'enabled' | 'disabled'
+export type SmisHazardFactorCategoryTagStyle =
+  'primary' | 'success' | 'info' | 'warning' | 'danger' | ''
+
+export interface SmisHazardFactorCategory {
+  id?: string
+  tenantId: string
+  tenantName?: string
+  tenantCode?: string
+  categoryCode: string
+  categoryName: string
+  sort: number
+  textColor?: string | null
+  tagStyle: SmisHazardFactorCategoryTagStyle
+  status: SmisHazardFactorCategoryStatus
+  createBy?: string | null
+  createTime?: string
+  updateBy?: string | null
+  updateTime?: string
+}
+
+export interface SmisHazardFactorCategorySearchParams {
+  keyword?: string
+  status?: SmisHazardFactorCategoryStatus
+  tagStyle?: Exclude<SmisHazardFactorCategoryTagStyle, ''>
+  tenantId?: string | null
+  from?: number
+  to?: number
+}
+
+export interface SmisHazardFactorCategoryOverview {
+  total: number
+  enabled: number
+  disabled: number
+  styled: number
+}
+
+export interface SmisHazardFactorCategorySavePayload {
+  id?: string
+  tenantId?: string | null
+  categoryCode: string
+  categoryName: string
+  sort: number
+  textColor?: string | null
+  tagStyle: SmisHazardFactorCategoryTagStyle
+  status: SmisHazardFactorCategoryStatus
+}
+
 export type SmisEquipmentCategoryStatus = 'enabled' | 'disabled'
 
 export interface SmisEquipmentInspectionCategory {

@@ -1,0 +1,1 @@
+import{an as e,gn as t,tr as n}from"./style-D3Duppxh.js";import{t as r}from"./smis-page-placeholder-BLWa4iKJ.js";var i=t({name:`SmisHazardousWasteCatalog`,__name:`index`,setup(t){return(t,i)=>(n(),e(r,{section:`危废管理`,title:`危废名录`}))}});export{i as default};

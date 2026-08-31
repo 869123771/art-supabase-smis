@@ -12,11 +12,7 @@
               {{ formatDateRange(detailRecord.actualStartAt, detailRecord.actualEndAt) }}
             </p>
           </div>
-          <ArtDictDisplay
-            dict-code="smisSafetyTrainingRecordStatus"
-            :value="detailRecord.status"
-            display="tag"
-          />
+          <ArtDictDisplay :item="trainingRecordStatusItem(detailRecord.status)" display="tag" />
         </header>
 
         <section class="training-record-dialog__metrics" aria-label="培训执行概览">
@@ -150,13 +146,9 @@
           <span aria-hidden="true"><ArtSvgIcon icon="ri:file-list-3-line" /></span>
           <div>
             <strong>{{ form.recordNo || '新培训记录' }}</strong>
-            <p>计划信息和参训名单自动带入；提交前须逐人确认签到状态。</p>
+            <p>计划信息和参训名单自动带入；归档前须逐人确认签到状态。</p>
           </div>
-          <ArtDictDisplay
-            dict-code="smisSafetyTrainingRecordStatus"
-            :value="form.status"
-            display="tag"
-          />
+          <ArtDictDisplay :item="trainingRecordStatusItem(form.status)" display="tag" />
         </div>
 
         <ArtForm
@@ -277,7 +269,7 @@
               type="primary"
               :loading="submitting"
               @click="handleSave(true)"
-              >提交归档</ElButton
+              >确认归档</ElButton
             >
           </template>
         </div>
@@ -310,6 +302,7 @@
   import ArtSectionCard from '@/components/core/surfaces/art-section-card/index.vue'
   import SmisDataSourceEmptyActions from '@smis/views/components/smis-data-source-empty-actions.vue'
   import { useDocumentNumberRule } from '@/hooks/core/useDocumentNumberRule'
+  import { useArtFeedback } from '@/hooks/core/useArtFeedback'
   import { useUserStore } from '@/store/modules/user'
   import {
     saveSafetyTrainingRecord,
@@ -321,6 +314,7 @@
     type SmisSafetyTrainingRecordSavePayload,
     type SmisSafetyTrainingSignMethod
   } from '@smis/api'
+  import { trainingRecordStatusItem } from './training-record-status'
 
   export interface TrainingRecordDialogOpenData {
     row?: SmisSafetyTrainingRecord
@@ -350,6 +344,7 @@
 
   const emit = defineEmits<{ success: [type: 'add' | 'edit'] }>()
   const userStore = useUserStore()
+  const { confirm } = useArtFeedback()
   const { getDictMap } = storeToRefs(userStore)
   const dialogRef = ref<ArtDialogExpose<TrainingRecordDialogOpenData>>()
   const formRef = ref<InstanceType<typeof ArtForm>>()
@@ -788,8 +783,14 @@
         return
       }
       if (submit && form.participants.some((item) => item.attendanceStatus === 'pending')) {
-        ElMessage.warning('提交前请完成全部参训人员的签到状态')
+        ElMessage.warning('归档前请完成全部参训人员的签到状态')
         return
+      }
+      if (submit) {
+        await confirm('归档后记录将锁定，不能再编辑签到、成绩和归档材料。请确认内容已核对完整。', {
+          title: '确认归档培训记录',
+          confirmButtonText: '确认归档'
+        })
       }
       submitting.value = true
       const type = form.id ? 'edit' : 'add'

@@ -365,7 +365,7 @@
 
 <script setup lang="tsx">
   import dayjs from 'dayjs'
-  import type { ElTree } from 'element-plus'
+  import type { ElTree, TreeNodeData } from 'element-plus'
   import { ElMessage, ElTag } from 'element-plus'
   import { useTable } from '@/hooks/core/useTable'
   import { useWorkspaceFocus } from '@/hooks/core/useWorkspaceFocus'
@@ -791,8 +791,12 @@
     selectedCategoryId.value = id
     void reloadByContext()
   }
-  const filterCategoryNode = (value: string, item: SmisDocumentCategory): boolean =>
-    !value || item.categoryName.toLocaleLowerCase().includes(value.trim().toLocaleLowerCase())
+  const filterCategoryNode = (value: string, data: TreeNodeData): boolean => {
+    const item = data as SmisDocumentCategory
+    return (
+      !value || item.categoryName.toLocaleLowerCase().includes(value.trim().toLocaleLowerCase())
+    )
+  }
   watch(categoryKeyword, (value) => categoryTreeRef.value?.filter(value))
   watchDebounced(
     () => query.keyword,

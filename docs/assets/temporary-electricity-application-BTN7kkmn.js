@@ -1,0 +1,1 @@
+import{an as e,gn as t,tr as n}from"./style-D3Duppxh.js";import{t as r}from"./smis-page-placeholder-BLWa4iKJ.js";var i=t({name:`SmisTemporaryElectricityApplication`,__name:`index`,setup(t){return(t,i)=>(n(),e(r,{section:`特殊作业管理`,title:`临时用电作业申请`}))}});export{i as default};

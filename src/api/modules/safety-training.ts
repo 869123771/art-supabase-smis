@@ -132,7 +132,7 @@ export async function saveSafetyTrainingRecord(
     {
       showMessage: true,
       breakReturn: true,
-      message: submit ? '培训记录已提交，计划已完成' : '培训记录草稿已保存'
+      message: submit ? '培训记录已归档，计划已完成' : '培训记录草稿已保存'
     }
   )
 }

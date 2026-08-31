@@ -1,1 +1,0 @@
-import{er as e,hn as t,in as n}from"./style-Du4Cu68A.js";import{t as r}from"./smis-page-placeholder-iPM_TTEz.js";var i=t({name:`SmisSpecialOperationSafetyChecklist`,__name:`index`,setup(t){return(t,i)=>(e(),n(r,{section:`特殊作业管理`,title:`安全检查表`}))}});export{i as default};

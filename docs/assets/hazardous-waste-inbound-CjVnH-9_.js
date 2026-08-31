@@ -1,1 +1,0 @@
-import{er as e,hn as t,in as n}from"./style-Du4Cu68A.js";import{t as r}from"./smis-page-placeholder-iPM_TTEz.js";var i=t({name:`SmisHazardousWasteInbound`,__name:`index`,setup(t){return(t,i)=>(e(),n(r,{section:`危废管理`,title:`危废入库`}))}});export{i as default};

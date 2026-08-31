@@ -1,1 +1,0 @@
-import{er as e,hn as t,in as n}from"./style-Du4Cu68A.js";import{t as r}from"./smis-page-placeholder-iPM_TTEz.js";var i=t({name:`SmisDualControlInspectionType`,__name:`index`,setup(t){return(t,i)=>(e(),n(r,{section:`双控体系 / 风险管控`,title:`排查类型`}))}});export{i as default};

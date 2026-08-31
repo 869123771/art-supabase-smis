@@ -53,6 +53,12 @@ export {
 } from '@smis/api/modules/inspection-category'
 
 export {
+  deleteHazardFactorCategories,
+  fetchHazardFactorCategoryList,
+  saveHazardFactorCategory
+} from '@smis/api/modules/hazard-factor-category'
+
+export {
   deleteEquipmentCategories,
   fetchEquipmentCategoryList,
   saveEquipmentCategory
@@ -344,6 +350,12 @@ export type {
   SmisInspectionCategorySavePayload,
   SmisInspectionCategorySearchParams,
   SmisInspectionCategoryStatus,
+  SmisHazardFactorCategory,
+  SmisHazardFactorCategoryOverview,
+  SmisHazardFactorCategorySavePayload,
+  SmisHazardFactorCategorySearchParams,
+  SmisHazardFactorCategoryStatus,
+  SmisHazardFactorCategoryTagStyle,
   SmisEquipmentCategory,
   SmisEquipmentCategoryOverview,
   SmisEquipmentCategorySavePayload,
