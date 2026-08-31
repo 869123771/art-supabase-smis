@@ -5,12 +5,18 @@
         <span aria-hidden="true"><ArtSvgIcon icon="ri:shield-check-line" /></span>
         <div>
           <strong>{{ targetTenantName }} · 风险辨识基础口径</strong>
-          <p>编号用于稳定引用；禁用后保留历史数据，但不再出现在新业务的可选范围中。</p>
+          <p>因素类型用于一级分组，类别用于具体风险项；禁用后保留历史数据。</p>
         </div>
       </div>
 
       <div class="hazard-factor-category-dialog__preview" aria-live="polite">
         <span class="hazard-factor-category-dialog__preview-label">标签预览</span>
+        <ArtDictDisplay
+          v-if="form.model.factorType"
+          dict-code="smisHazardFactorType"
+          :value="form.model.factorType"
+          display="tag"
+        />
         <ElTag v-if="form.model.tagStyle" :type="form.model.tagStyle">
           {{ previewName }}
         </ElTag>
@@ -72,6 +78,7 @@
     type FormItemOption
   } from '@/components/core/forms/art-form/index.vue'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
+  import ArtDictDisplay from '@/components/core/base/art-dict-display/index.vue'
   import { useUserStore } from '@/store/modules/user'
   import { useTenantScopeStore } from '@/store/modules/tenantScope'
   import {
@@ -79,7 +86,8 @@
     type SmisHazardFactorCategory,
     type SmisHazardFactorCategorySavePayload,
     type SmisHazardFactorCategoryStatus,
-    type SmisHazardFactorCategoryTagStyle
+    type SmisHazardFactorCategoryTagStyle,
+    type SmisHazardFactorType
   } from '@smis/api'
 
   export interface HazardFactorCategoryDialogOpenData {
@@ -91,6 +99,7 @@
   interface HazardFactorCategoryForm {
     id?: string
     tenantId: string
+    factorType: SmisHazardFactorType | ''
     categoryCode: string
     categoryName: string
     sort: number
@@ -129,6 +138,7 @@
   const initialForm = (): HazardFactorCategoryForm => ({
     id: undefined,
     tenantId: '',
+    factorType: '',
     categoryCode: '',
     categoryName: '',
     sort: 1,
@@ -139,6 +149,13 @@
 
   const statusOptions = computed<FormItemOption[]>(() =>
     (getDictMap.value.smisHazardFactorCategoryStatus ?? []).map((item) => ({
+      label: item.label || item.name,
+      value: item.value
+    }))
+  )
+
+  const factorTypeOptions = computed<FormItemOption[]>(() =>
+    (getDictMap.value.smisHazardFactorType ?? []).map((item) => ({
       label: item.label || item.name,
       value: item.value
     }))
@@ -171,6 +188,13 @@
           ]
         : []),
       {
+        label: '因素类型',
+        key: 'factorType',
+        type: 'select',
+        options: factorTypeOptions.value,
+        props: { clearable: false, placeholder: '请选择人的、物的、环境或管理因素' }
+      },
+      {
         label: '危害因素类别编号',
         key: 'categoryCode',
         type: 'input',
@@ -180,6 +204,7 @@
         label: '危害因素类别',
         key: 'categoryName',
         type: 'input',
+        span: 24,
         props: { maxlength: 200, clearable: true, placeholder: '请输入具体危害因素类别' }
       },
       {
@@ -200,6 +225,7 @@
     ]),
     rules: {
       tenantId: [{ required: true, message: '请选择所属租户', trigger: 'change' }],
+      factorType: [{ required: true, message: '请选择因素类型', trigger: 'change' }],
       categoryCode: [
         { required: true, message: '请输入危害因素类别编号', trigger: 'blur' },
         {
@@ -241,9 +267,12 @@
   const handleSubmit = async (): Promise<boolean> => {
     try {
       await formRef.value?.validate()
+      const factorType = form.model.factorType
+      if (!factorType) return false
       const payload: SmisHazardFactorCategorySavePayload = {
         id: form.model.id,
         tenantId: form.model.tenantId,
+        factorType,
         categoryCode: form.model.categoryCode.trim().toUpperCase(),
         categoryName: form.model.categoryName.trim(),
         sort: form.model.sort,
@@ -268,6 +297,7 @@
       Object.assign(form.model, {
         id: data.row.id,
         tenantId: data.row.tenantId,
+        factorType: data.row.factorType,
         categoryCode: data.row.categoryCode,
         categoryName: data.row.categoryName,
         sort: data.row.sort,
@@ -279,13 +309,14 @@
 
     await dialogRef.value?.handleOpen(data, {
       title: data.row ? '编辑危害因素类别' : '新增危害因素类别',
-      subtitle: '维护类别编号、排序、视觉标识与启停状态',
+      subtitle: '选择因素类型，并维护具体类别、排序、视觉标识与启停状态',
       confirmText: '保存危害因素类别',
       onOpen: async (_openData, api) => {
         api.setLoading(true)
         try {
           await Promise.all([
             userStore.ensureDictLoaded('smisHazardFactorCategoryStatus'),
+            userStore.ensureDictLoaded('smisHazardFactorType'),
             isPlatformSuper.value ? tenantScopeStore.loadTenantOptions() : Promise.resolve()
           ])
         } finally {

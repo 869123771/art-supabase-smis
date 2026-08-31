@@ -29,7 +29,7 @@
         :columns-factory="columnsFactory"
         :header-actions="table.headerActions"
         header-actions-placement="workspace"
-        :search-bar-props="{ span: 8, labelWidth: 84, showExpand: false }"
+        :search-bar-props="{ span: 6, labelWidth: 84, showExpand: false }"
         :table-props="{
           rowKey: 'id',
           tableLayout: 'fixed',
@@ -72,7 +72,8 @@
     type SmisHazardFactorCategory,
     type SmisHazardFactorCategoryOverview,
     type SmisHazardFactorCategorySearchParams,
-    type SmisHazardFactorCategoryTagStyle
+    type SmisHazardFactorCategoryTagStyle,
+    type SmisHazardFactorType
   } from '@smis/api'
   import HazardFactorCategoryDialog, {
     type HazardFactorCategoryDialogOpenData
@@ -122,6 +123,13 @@
     (getDictMap.value.smisHazardFactorCategoryStatus ?? []).map((item) => ({
       label: item.label || item.name,
       value: item.value
+    }))
+  )
+
+  const factorTypeOptions = computed(() =>
+    (getDictMap.value.smisHazardFactorType ?? []).map((item) => ({
+      label: item.label || item.name,
+      value: item.value as SmisHazardFactorType
     }))
   )
 
@@ -212,6 +220,12 @@
         props: { clearable: true, placeholder: '类别编号或类别名称' }
       },
       {
+        label: '因素类型',
+        key: 'factorType',
+        type: 'select',
+        props: { options: factorTypeOptions.value, clearable: true, placeholder: '全部类型' }
+      },
+      {
         label: '启用状态',
         key: 'status',
         type: 'select',
@@ -262,6 +276,15 @@
             <small>编号 {row.categoryCode}</small>
           </div>
         </div>
+      )
+    },
+    {
+      prop: 'factorType',
+      label: '因素类型',
+      width: 112,
+      align: 'center',
+      formatter: (row) => (
+        <ArtDictDisplay dictCode="smisHazardFactorType" value={row.factorType} display="tag" />
       )
     },
     {
@@ -365,6 +388,7 @@
     const { from, to } = pageInfoHandler({ current: params.current, size: params.size })
     const response = await fetchHazardFactorCategoryList({
       keyword: params.keyword,
+      factorType: params.factorType,
       status: params.status,
       tagStyle: params.tagStyle,
       tenantId: effectiveTenantId.value,
@@ -397,6 +421,7 @@
   onMounted(async () => {
     await Promise.all([
       userStore.ensureDictLoaded('smisHazardFactorCategoryStatus'),
+      userStore.ensureDictLoaded('smisHazardFactorType'),
       tenantScopeStore.loadTenantOptions()
     ])
   })

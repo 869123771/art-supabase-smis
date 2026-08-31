@@ -1,0 +1,1 @@
+import{an as e,gn as t,tr as n}from"./style-D3Duppxh.js";import{t as r}from"./qualification-catalog-page-DoRdnGob.js";var i=t({name:`SmisWorkItem`,__name:`index`,setup(t){return(t,i)=>(n(),e(r,{"catalog-type":`work_item`}))}});export{i as default};

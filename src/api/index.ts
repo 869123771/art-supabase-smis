@@ -356,6 +356,7 @@ export type {
   SmisHazardFactorCategorySearchParams,
   SmisHazardFactorCategoryStatus,
   SmisHazardFactorCategoryTagStyle,
+  SmisHazardFactorType,
   SmisEquipmentCategory,
   SmisEquipmentCategoryOverview,
   SmisEquipmentCategorySavePayload,

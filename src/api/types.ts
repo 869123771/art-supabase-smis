@@ -377,6 +377,7 @@ export interface SmisInspectionCategorySavePayload {
 }
 
 export type SmisHazardFactorCategoryStatus = 'enabled' | 'disabled'
+export type SmisHazardFactorType = 'human' | 'material' | 'environment' | 'management'
 export type SmisHazardFactorCategoryTagStyle =
   'primary' | 'success' | 'info' | 'warning' | 'danger' | ''
 
@@ -385,6 +386,7 @@ export interface SmisHazardFactorCategory {
   tenantId: string
   tenantName?: string
   tenantCode?: string
+  factorType: SmisHazardFactorType
   categoryCode: string
   categoryName: string
   sort: number
@@ -399,6 +401,7 @@ export interface SmisHazardFactorCategory {
 
 export interface SmisHazardFactorCategorySearchParams {
   keyword?: string
+  factorType?: SmisHazardFactorType
   status?: SmisHazardFactorCategoryStatus
   tagStyle?: Exclude<SmisHazardFactorCategoryTagStyle, ''>
   tenantId?: string | null
@@ -416,6 +419,7 @@ export interface SmisHazardFactorCategoryOverview {
 export interface SmisHazardFactorCategorySavePayload {
   id?: string
   tenantId?: string | null
+  factorType: SmisHazardFactorType
   categoryCode: string
   categoryName: string
   sort: number
