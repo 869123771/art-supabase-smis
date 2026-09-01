@@ -9,6 +9,12 @@ import type {
   SmisEquipmentInspectionCategory
 } from '@smis/api/types'
 
+interface EquipmentCategoryProfile {
+  id: string
+  tenantId?: string
+  profileType: SmisEquipmentCategory['profileType']
+}
+
 interface EquipmentCategoryListResult {
   records?: SmisEquipmentCategory[]
   total?: number
@@ -31,34 +37,55 @@ const treeUtils = new TreeUtils({
 })
 const { supabase, keysToSnakeDeep, responseHandle } = useSupabase()
 
-export async function fetchEquipmentCategoryList(params: SmisEquipmentCategorySearchParams = {}) {
-  const from = Math.max(params.from ?? 0, 0)
-  const result = await responseHandle<EquipmentCategoryListResult>(
-    () =>
-      supabase.rpc('smis_list_equipment_categories_secure', {
-        p_from: from,
-        p_to: Math.max(params.to ?? from + 19, from),
-        p_keyword: params.keyword?.trim() || null,
-        p_status: params.status || null,
-        p_ancestor_id: params.ancestorId || null
-      }),
+export const compareEquipmentCategoryOrder = (
+  left: SmisEquipmentCategory,
+  right: SmisEquipmentCategory
+): number =>
+  (left.sort ?? 0) - (right.sort ?? 0) ||
+  left.categoryName.localeCompare(right.categoryName, 'zh-CN')
+
+export async function fetchEquipmentCategoryProfiles() {
+  return await responseHandle<EquipmentCategoryProfile[]>(
+    () => supabase.rpc('smis_list_equipment_category_profiles_secure'),
     { showErrorMessage: true }
   )
+}
+
+export async function fetchEquipmentCategoryList(params: SmisEquipmentCategorySearchParams = {}) {
+  const from = Math.max(params.from ?? 0, 0)
+  const [result, profileResult] = await Promise.all([
+    responseHandle<EquipmentCategoryListResult>(
+      () =>
+        supabase.rpc('smis_list_equipment_categories_secure', {
+          p_from: from,
+          p_to: Math.max(params.to ?? from + 19, from),
+          p_keyword: params.keyword?.trim() || null,
+          p_status: params.status || null,
+          p_ancestor_id: params.ancestorId || null
+        }),
+      { showErrorMessage: true }
+    ),
+    fetchEquipmentCategoryProfiles()
+  ])
+
+  const profileMap = new Map(
+    (profileResult.data ?? []).map((item) => [item.id, item.profileType] as const)
+  )
+  const enrichProfile = (item: SmisEquipmentCategory): SmisEquipmentCategory => ({
+    ...item,
+    profileType: profileMap.get(item.id || '') ?? item.profileType ?? 'general'
+  })
 
   const flatTree = (result.data?.tree ?? []).map((item) => ({
-    ...item,
+    ...enrichProfile(item),
     childCount: item.childCount ?? 0,
     inspectionCategories: item.inspectionCategories ?? []
   }))
 
   return {
-    data: result.data?.records ?? [],
+    data: (result.data?.records ?? []).map(enrichProfile),
     total: result.data?.total ?? 0,
-    tree: treeUtils.listToTree(
-      flatTree,
-      (a, b) =>
-        (a.sort ?? 0) - (b.sort ?? 0) || a.categoryName.localeCompare(b.categoryName, 'zh-CN')
-    ),
+    tree: treeUtils.listToTree(flatTree, compareEquipmentCategoryOrder),
     inspectionOptions: result.data?.inspectionOptions ?? [],
     overview: result.data?.overview ?? emptyOverview(),
     error: result.error
@@ -68,7 +95,7 @@ export async function fetchEquipmentCategoryList(params: SmisEquipmentCategorySe
 export async function saveEquipmentCategory(params: SmisEquipmentCategorySavePayload) {
   return await responseHandle<string>(
     () =>
-      supabase.rpc('smis_save_equipment_category_secure', {
+      supabase.rpc('smis_save_equipment_category_profile_secure', {
         p_id: params.id ?? null,
         p_payload: keysToSnakeDeep(omit(params, ['id']))
       }),

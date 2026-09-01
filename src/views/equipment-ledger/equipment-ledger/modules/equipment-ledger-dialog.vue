@@ -1,5 +1,5 @@
 <template>
-  <ArtDialog ref="dialogRef" size="xl">
+  <ArtDialog ref="dialogRef" size="xl" @closed="emit('closed')">
     <div class="equipment-ledger-dialog">
       <div class="equipment-ledger-dialog__context">
         <span><ArtSvgIcon icon="ri:qr-code-line" /></span>
@@ -50,41 +50,95 @@
         </template>
         <template #pressureGaugeIds>
           <ArtTableMultipleSelect
+            ref="pressureGaugeSelectRef"
             v-model="form.model.pressureGaugeIds"
             :selected-data="pressureGaugeSelection"
             :api-fn="(params) => fetchAccessoryOptions('pressure_gauge', params)"
             :columns="accessoryColumns"
             title="选择压力表"
-            subtitle="仅展示当前租户设备台账中的压力表"
+            subtitle="仅展示当前租户档案模板为压力表的设备"
             label-key="equipmentName"
             description-key="equipmentCode"
             placeholder="选择一台或多台压力表"
             empty-text="暂无可选压力表"
-            empty-description="请先在设备台账中新增设备，并将设备类型维护为压力表。"
+            empty-description="请先新增设备，并将设备分类选择为压力表对应分类。"
           >
             <template #empty>
-              <SmisDataSourceEmptyActions source="equipment" />
+              <div class="equipment-ledger-dialog__accessory-empty">
+                <ElButton
+                  v-if="canAddEquipment"
+                  type="primary"
+                  @click="handleCreateAccessory('pressure_gauge')"
+                >
+                  <ArtSvgIcon icon="ri:add-line" />
+                  新增压力表设备
+                </ElButton>
+                <p v-else>当前账号暂无新增设备权限，请联系管理员维护压力表设备。</p>
+              </div>
             </template>
           </ArtTableMultipleSelect>
         </template>
         <template #safetyValveIds>
           <ArtTableMultipleSelect
+            ref="safetyValveSelectRef"
             v-model="form.model.safetyValveIds"
             :selected-data="safetyValveSelection"
             :api-fn="(params) => fetchAccessoryOptions('safety_valve', params)"
             :columns="accessoryColumns"
             title="选择安全阀"
-            subtitle="仅展示当前租户设备台账中的安全阀"
+            subtitle="仅展示当前租户档案模板为安全阀的设备"
             label-key="equipmentName"
             description-key="equipmentCode"
             placeholder="选择一台或多台安全阀"
             empty-text="暂无可选安全阀"
-            empty-description="请先在设备台账中新增设备，并将设备类型维护为安全阀。"
+            empty-description="请先新增设备，并将设备分类选择为安全阀对应分类。"
           >
             <template #empty>
-              <SmisDataSourceEmptyActions source="equipment" />
+              <div class="equipment-ledger-dialog__accessory-empty">
+                <ElButton
+                  v-if="canAddEquipment"
+                  type="primary"
+                  @click="handleCreateAccessory('safety_valve')"
+                >
+                  <ArtSvgIcon icon="ri:add-line" />
+                  新增安全阀设备
+                </ElButton>
+                <p v-else>当前账号暂无新增设备权限，请联系管理员维护安全阀设备。</p>
+              </div>
             </template>
           </ArtTableMultipleSelect>
+        </template>
+        <template #maintenanceQualificationUrl>
+          <ArtUploadFile
+            v-model="form.model.maintenanceQualificationUrl"
+            accept=".pdf,.doc,.docx,image/*"
+            title="上传维保单位资质证书"
+            tip="支持 PDF、Word 或图片，单个文件不超过 20 MB"
+          />
+        </template>
+        <template #useRegistrationCertificateUrl>
+          <ArtUploadFile
+            v-model="form.model.useRegistrationCertificateUrl"
+            accept=".pdf,image/*"
+            title="上传使用登记证"
+            tip="支持 PDF 或图片，单个文件不超过 20 MB"
+          />
+        </template>
+        <template #nameplateUrl>
+          <ArtUploadImage
+            v-model="form.model.nameplateUrl"
+            title="上传设备铭牌"
+            :size="112"
+            :limit="1"
+          />
+        </template>
+        <template #photoUrl>
+          <ArtUploadImage
+            v-model="form.model.photoUrl"
+            title="上传设备照片"
+            :size="112"
+            :limit="1"
+          />
         </template>
       </ArtForm>
     </div>
@@ -92,8 +146,10 @@
 </template>
 
 <script setup lang="ts">
-  import type { FormRules } from 'element-plus'
+  import { ElButton, type FormRules } from 'element-plus'
+  import { uniqBy } from 'lodash-es'
   import type {
+    ArtDataSelectExpose,
     DataSelectColumn,
     DataSelectFetchParams,
     DataSelectRecord
@@ -109,10 +165,14 @@
   import ArtTableSingleSelect from '@/components/core/forms/art-data-select/table-single.vue'
   import ArtTableMultipleSelect from '@/components/core/forms/art-data-select/table-multiple.vue'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
+  import ArtUploadFile from '@/components/core/forms/art-upload-file/index.vue'
+  import ArtUploadImage from '@/components/core/forms/art-upload-image/index.vue'
   import SmisDataSourceEmptyActions from '@smis/views/components/smis-data-source-empty-actions.vue'
   import { useDocumentNumberRule } from '@/hooks/core/useDocumentNumberRule'
+  import { useAuth } from '@/hooks/core/useAuth'
   import { useUserStore } from '@/store/modules/user'
   import { resolveSupplierDictionaryLabel } from '@smis/domain/supplier-dictionary'
+  import { getEquipmentProfileDefinition } from '@smis/domain/equipment-profile'
   import {
     fetchEquipmentLedgerList,
     fetchSupplierList,
@@ -138,6 +198,7 @@
     presetLocationId?: string
     presetKind?: SmisEquipmentKind
   }
+  export type EquipmentAccessoryKind = 'pressure_gauge' | 'safety_valve'
   interface EquipmentForm {
     id?: string
     sort: number
@@ -155,6 +216,18 @@
     model: string
     manufacturer: string
     factoryNo: string
+    registrationCode: string
+    internalNo: string
+    useCertificateNo: string
+    detailLocation: string
+    maintenanceOrganization: string
+    installationOrganization: string
+    designOrganization: string
+    maintenanceQualificationUrl: string
+    useRegistrationCertificateUrl: string
+    nameplateUrl: string
+    photoUrl: string
+    specialParameters: Record<string, string | number | boolean | null>
     manufactureDate: string
     installationDate: string
     commissioningDate: string
@@ -183,11 +256,18 @@
     reloadOptions: (key: string) => Promise<void>
   }
 
-  const emit = defineEmits<{ success: [type: 'add' | 'edit'] }>()
+  const emit = defineEmits<{
+    success: [type: 'add' | 'edit']
+    closed: []
+    createAccessory: [kind: EquipmentAccessoryKind]
+  }>()
+  const { hasAuth } = useAuth()
   const userStore = useUserStore()
   const { getDictMap, getUserInfo } = storeToRefs(userStore)
   const dialogRef = ref<ArtDialogExpose<EquipmentLedgerDialogOpenData>>()
   const formRef = ref<FormExpose>()
+  const pressureGaugeSelectRef = ref<ArtDataSelectExpose>()
+  const safetyValveSelectRef = ref<ArtDataSelectExpose>()
   const source = reactive<{
     categoryTree: SmisEquipmentCategory[]
     locationTree: SmisStorageLocation[]
@@ -196,6 +276,7 @@
   const pressureGaugeSelection = shallowRef<DataSelectRecord[]>([])
   const safetyValveSelection = shallowRef<DataSelectRecord[]>([])
   const numberRule = useDocumentNumberRule('smis.equipment')
+  const canAddEquipment = computed(() => hasAuth('SmisEquipmentLedger:Add'))
 
   const initialForm = (): EquipmentForm => ({
     sort: 10,
@@ -213,6 +294,18 @@
     model: '',
     manufacturer: '',
     factoryNo: '',
+    registrationCode: '',
+    internalNo: '',
+    useCertificateNo: '',
+    detailLocation: '',
+    maintenanceOrganization: '',
+    installationOrganization: '',
+    designOrganization: '',
+    maintenanceQualificationUrl: '',
+    useRegistrationCertificateUrl: '',
+    nameplateUrl: '',
+    photoUrl: '',
+    specialParameters: {},
     manufactureDate: '',
     installationDate: '',
     commissioningDate: '',
@@ -270,15 +363,36 @@
     }))
   const categoryOptions = computed(() => mapCategory(source.categoryTree))
   const locationOptions = computed(() => mapLocation(source.locationTree))
-  const boilerVisible = computed(() => formModel.equipmentKind === 'boiler')
+  const findCategory = (
+    items: SmisEquipmentCategory[],
+    categoryId: string
+  ): SmisEquipmentCategory | undefined => {
+    for (const item of items) {
+      if (item.id === categoryId) return item
+      const child = item.children ? findCategory(item.children, categoryId) : undefined
+      if (child) return child
+    }
+    return undefined
+  }
+  const selectedCategory = computed(() => findCategory(source.categoryTree, formModel.categoryId))
+  const profileType = computed(() => selectedCategory.value?.profileType || 'general')
+  const profileDefinition = computed(() => getEquipmentProfileDefinition(profileType.value))
   const equipmentCodeProps = computed<Record<string, unknown>>(() =>
     numberRule.inputProps(Boolean(formModel.id), '请输入设备编码', true)
   )
   watch(
-    () => formModel.equipmentKind,
-    (kind) => {
-      if (kind === 'boiler') formModel.isSpecialEquipment = true
-    }
+    profileType,
+    (nextProfile, previousProfile) => {
+      formModel.equipmentKind =
+        nextProfile === 'boiler' ||
+        nextProfile === 'pressure_gauge' ||
+        nextProfile === 'safety_valve'
+          ? nextProfile
+          : 'general'
+      formModel.isSpecialEquipment = nextProfile !== 'general'
+      if (previousProfile && previousProfile !== nextProfile) formModel.specialParameters = {}
+    },
+    { flush: 'sync' }
   )
 
   const commonInput = (placeholder: string, maxlength = 120) => ({
@@ -286,6 +400,29 @@
     maxlength,
     placeholder
   })
+  const profileFormItems = computed<FormItem[]>(() =>
+    profileDefinition.value.fields.map((field) => ({
+      label: field.unit ? `${field.label}（${field.unit}）` : field.label,
+      key: `specialParameters.${field.key}`,
+      type: field.type,
+      options: field.dictCode ? dictOptions(field.dictCode) : field.options,
+      props:
+        field.type === 'number'
+          ? {
+              min: 0,
+              precision: field.precision ?? 2,
+              controlsPosition: 'right',
+              class: '!w-full'
+            }
+          : field.type === 'date'
+            ? { valueFormat: 'YYYY-MM-DD', clearable: true, class: '!w-full' }
+            : {
+                clearable: true,
+                placeholder: field.placeholder || `请输入${field.label}`,
+                maxlength: 160
+              }
+    }))
+  )
   const form = reactive<{
     model: EquipmentForm
     items: ComputedRef<FormItem[]>
@@ -314,13 +451,6 @@
         props: commonInput('用于列表紧凑展示', 60)
       },
       {
-        label: '设备类型',
-        key: 'equipmentKind',
-        type: 'select',
-        options: dictOptions('smisEquipmentKind'),
-        props: { clearable: false }
-      },
-      {
         label: '排序',
         key: 'sort',
         type: 'number',
@@ -347,7 +477,7 @@
         }
       },
       {
-        label: '安装/存放位置',
+        label: '安装位置',
         key: 'locationId',
         type: 'treeSelect',
         options: locationOptions.value,
@@ -356,13 +486,32 @@
           checkStrictly: true,
           defaultExpandAll: true,
           renderAfterExpand: false,
-          placeholder: '选择存放位置'
+          placeholder: '从存放位置中选择安装位置'
         }
       },
       { label: '规格', key: 'specification', type: 'input', props: commonInput('请输入规格') },
       { label: '型号', key: 'model', type: 'input', props: commonInput('请输入设备型号') },
       { label: '制造商', key: 'manufacturer', type: 'input', props: commonInput('请输入制造商') },
       { label: '出厂编号', key: 'factoryNo', type: 'input', props: commonInput('请输入出厂编号') },
+      {
+        label: '注册代码',
+        key: 'registrationCode',
+        type: 'input',
+        props: commonInput('请输入注册代码')
+      },
+      { label: '内部编号', key: 'internalNo', type: 'input', props: commonInput('请输入内部编号') },
+      {
+        label: '使用证号',
+        key: 'useCertificateNo',
+        type: 'input',
+        props: commonInput('请输入使用证号')
+      },
+      {
+        label: '详细地点',
+        key: 'detailLocation',
+        type: 'input',
+        props: commonInput('补充楼层、区域或具体点位', 200)
+      },
       { label: '组织与责任', key: 'ownerSection', type: 'divider', span: 24 },
       {
         label: '使用部门',
@@ -404,6 +553,24 @@
       },
       { label: '设备责任人', key: 'responsibleEmployeeId', type: 'text' },
       { label: '供应商', key: 'supplierId', type: 'text' },
+      {
+        label: '维保单位',
+        key: 'maintenanceOrganization',
+        type: 'input',
+        props: commonInput('请输入维保单位')
+      },
+      {
+        label: '安装单位',
+        key: 'installationOrganization',
+        type: 'input',
+        props: commonInput('请输入安装单位')
+      },
+      {
+        label: '设计单位',
+        key: 'designOrganization',
+        type: 'input',
+        props: commonInput('请输入设计单位')
+      },
       { label: '状态与资产', key: 'statusSection', type: 'divider', span: 24 },
       {
         label: '使用状态',
@@ -502,96 +669,34 @@
         type: 'switch',
         description: '纳入特种设备检验与到期提醒范围'
       },
-      {
-        label: '锅炉专用信息',
-        key: 'boilerSection',
-        type: 'divider',
-        span: 24,
-        hidden: () => !boilerVisible.value
-      },
-      {
-        label: '锅炉种类',
-        key: 'boiler.boilerType',
-        type: 'select',
-        options: dictOptions('smisBoilerType'),
-        hidden: () => !boilerVisible.value
-      },
-      {
-        label: '注册代码',
-        key: 'boiler.registrationCode',
-        type: 'input',
-        props: commonInput('请输入锅炉注册代码'),
-        hidden: () => !boilerVisible.value
-      },
-      {
-        label: '使用证编号',
-        key: 'boiler.useCertificateNo',
-        type: 'input',
-        props: commonInput('请输入使用证编号'),
-        hidden: () => !boilerVisible.value
-      },
-      {
-        label: '内部编号',
-        key: 'boiler.internalNo',
-        type: 'input',
-        props: commonInput('请输入内部编号'),
-        hidden: () => !boilerVisible.value
-      },
-      {
-        label: '额定蒸发量',
-        key: 'boiler.ratedEvaporation',
-        type: 'number',
-        props: { min: 0, precision: 3 },
-        hidden: () => !boilerVisible.value
-      },
-      {
-        label: '设计压力（MPa）',
-        key: 'boiler.designPressure',
-        type: 'number',
-        props: { min: 0, precision: 3 },
-        hidden: () => !boilerVisible.value
-      },
-      {
-        label: '工作压力（MPa）',
-        key: 'boiler.workingPressure',
-        type: 'number',
-        props: { min: 0, precision: 3 },
-        hidden: () => !boilerVisible.value
-      },
-      {
-        label: '工作温度（℃）',
-        key: 'boiler.workingTemperature',
-        type: 'number',
-        props: { min: 0, precision: 3 },
-        hidden: () => !boilerVisible.value
-      },
-      {
-        label: '燃料种类',
-        key: 'boiler.fuelType',
-        type: 'input',
-        props: commonInput('如天然气、生物质'),
-        hidden: () => !boilerVisible.value
-      },
-      {
-        label: '用途',
-        key: 'boiler.purpose',
-        type: 'input',
-        props: commonInput('请输入锅炉用途'),
-        hidden: () => !boilerVisible.value
-      },
+      { label: '档案资料', key: 'documentSection', type: 'divider', span: 24 },
+      { label: '维保单位资质证书', key: 'maintenanceQualificationUrl', type: 'text', span: 12 },
+      { label: '使用登记证', key: 'useRegistrationCertificateUrl', type: 'text', span: 12 },
+      { label: '设备铭牌', key: 'nameplateUrl', type: 'text', span: 12 },
+      { label: '设备照片', key: 'photoUrl', type: 'text', span: 12 },
+      ...(profileDefinition.value.fields.length
+        ? [
+            {
+              label: `${profileDefinition.value.label}专用信息`,
+              key: 'specialProfileSection',
+              type: 'divider' as const,
+              span: 24,
+              description: profileDefinition.value.description
+            },
+            ...profileFormItems.value
+          ]
+        : []),
       {
         label: '压力表',
         key: 'pressureGaugeIds',
         type: 'text',
-        span: 12,
-        hidden: () => !boilerVisible.value
+        span: 12
       },
       {
         label: '安全阀',
         key: 'safetyValveIds',
         type: 'text',
-        span: 12,
-        hidden: () => !boilerVisible.value
+        span: 12
       },
       {
         label: '备注',
@@ -623,12 +728,10 @@
         { required: true, message: '请输入设备名称', trigger: 'blur' },
         { max: 120, message: '设备名称不能超过 120 个字符', trigger: 'blur' }
       ],
-      equipmentKind: [{ required: true, message: '请选择设备类型', trigger: 'change' }],
       sort: [{ required: true, message: '请输入排序', trigger: 'change' }],
       categoryId: [{ required: true, message: '请选择设备分类', trigger: 'change' }],
       usingOrganizationId: [{ required: true, message: '请选择使用部门', trigger: 'change' }],
-      managingOrganizationId: [{ required: true, message: '请选择管理部门', trigger: 'change' }],
-      'boiler.boilerType': [{ required: true, message: '请选择锅炉种类', trigger: 'change' }]
+      managingOrganizationId: [{ required: true, message: '请选择管理部门', trigger: 'change' }]
     }
   })
 
@@ -652,7 +755,7 @@
     { prop: 'equipmentCode', label: '设备编码', minWidth: 150 },
     { prop: 'equipmentName', label: '设备名称', minWidth: 200 },
     { prop: 'model', label: '型号', minWidth: 130 },
-    { prop: 'locationName', label: '存放位置', minWidth: 150 }
+    { prop: 'locationName', label: '安装位置', minWidth: 150 }
   ]
   const fetchSupplierOptions = async (params: DataSelectFetchParams) => {
     const from = (params.page - 1) * params.pageSize
@@ -663,50 +766,115 @@
     })
     return { data: result.data as DataSelectRecord[], total: result.total }
   }
-  const fetchAccessoryOptions = async (kind: SmisEquipmentKind, params: DataSelectFetchParams) => {
-    const from = (params.page - 1) * params.pageSize
-    const result = await fetchEquipmentLedgerList({
-      keyword: params.keyword,
-      equipmentKind: kind,
-      from,
-      to: from + params.pageSize - 1
-    })
-    return {
-      data: result.data.map((row) => ({
+  const findAccessoryCategories = (
+    items: SmisEquipmentCategory[],
+    kind: EquipmentAccessoryKind
+  ): SmisEquipmentCategory[] =>
+    items.flatMap((item) => [
+      ...(item.profileType === kind ? [item] : []),
+      ...findAccessoryCategories(item.children || [], kind)
+    ])
+  const fetchAccessoryRows = async (
+    kind: EquipmentAccessoryKind,
+    keyword = ''
+  ): Promise<DataSelectRecord[]> => {
+    const categories = findAccessoryCategories(source.categoryTree, kind)
+    const results = await Promise.all(
+      categories.map((category) =>
+        fetchEquipmentLedgerList({ categoryId: category.id, keyword, from: 0, to: 9999 })
+      )
+    )
+    return uniqBy(
+      results.flatMap((result) => result.data),
+      (row) => row.id
+    )
+      .sort(
+        (left, right) =>
+          left.sort - right.sort || left.equipmentName.localeCompare(right.equipmentName, 'zh-CN')
+      )
+      .map((row) => ({
         ...row,
         locationName: row.location?.locationName || '未设置位置'
-      })) as DataSelectRecord[],
-      total: result.total
+      })) as DataSelectRecord[]
+  }
+  const fetchAccessoryOptions = async (
+    kind: EquipmentAccessoryKind,
+    params: DataSelectFetchParams
+  ) => {
+    const rows = await fetchAccessoryRows(kind, params.keyword)
+    const from = (params.page - 1) * params.pageSize
+    return {
+      data: rows.slice(from, from + params.pageSize),
+      total: rows.length
     }
   }
   const selectedRows = async (
     ids: string[],
-    kind: SmisEquipmentKind
+    kind: EquipmentAccessoryKind
   ): Promise<DataSelectRecord[]> => {
     if (!ids.length) return []
-    const result = await fetchEquipmentLedgerList({ equipmentKind: kind, from: 0, to: 9999 })
-    return result.data.filter((row) => ids.includes(row.id)) as unknown as DataSelectRecord[]
+    const rows = await fetchAccessoryRows(kind)
+    return rows.filter((row) => ids.includes(String(row.id)))
   }
-  const buildPayload = (): SmisEquipmentSavePayload => ({
-    ...toRaw(form.model),
-    locationId: form.model.locationId || null,
-    responsibleEmployeeId: form.model.responsibleEmployeeId || null,
-    supplierId: form.model.supplierId || null,
-    equipmentCode: form.model.equipmentCode.trim(),
-    equipmentName: form.model.equipmentName.trim(),
-    equipmentShortName: form.model.equipmentShortName.trim(),
-    specification: form.model.specification.trim(),
-    model: form.model.model.trim(),
-    manufacturer: form.model.manufacturer.trim(),
-    factoryNo: form.model.factoryNo.trim(),
-    fixedAssetNo: form.model.fixedAssetNo.trim(),
-    erpCode: form.model.erpCode.trim(),
-    electronicTagCode: form.model.electronicTagCode.trim(),
-    remark: form.model.remark.trim(),
-    boiler: form.model.equipmentKind === 'boiler' ? { ...toRaw(form.model.boiler) } : null,
-    pressureGaugeIds: form.model.equipmentKind === 'boiler' ? [...form.model.pressureGaugeIds] : [],
-    safetyValveIds: form.model.equipmentKind === 'boiler' ? [...form.model.safetyValveIds] : []
-  })
+  const handleCreateAccessory = (kind: EquipmentAccessoryKind): void => {
+    if (kind === 'pressure_gauge') pressureGaugeSelectRef.value?.close()
+    else safetyValveSelectRef.value?.close()
+    emit('createAccessory', kind)
+  }
+  const openAccessorySelector = async (kind: EquipmentAccessoryKind): Promise<void> => {
+    await nextTick()
+    if (kind === 'pressure_gauge') await pressureGaugeSelectRef.value?.open()
+    else await safetyValveSelectRef.value?.open()
+  }
+  const numericParameter = (value: string | number | boolean | null | undefined) =>
+    typeof value === 'boolean' ? null : (value ?? null)
+  const buildPayload = (): SmisEquipmentSavePayload => {
+    const specialParameters = { ...toRaw(form.model.specialParameters) }
+    const isBoiler = profileType.value === 'boiler'
+    return {
+      ...toRaw(form.model),
+      locationId: form.model.locationId || null,
+      responsibleEmployeeId: form.model.responsibleEmployeeId || null,
+      supplierId: form.model.supplierId || null,
+      equipmentCode: form.model.equipmentCode.trim(),
+      equipmentName: form.model.equipmentName.trim(),
+      equipmentShortName: form.model.equipmentShortName.trim(),
+      specification: form.model.specification.trim(),
+      model: form.model.model.trim(),
+      manufacturer: form.model.manufacturer.trim(),
+      factoryNo: form.model.factoryNo.trim(),
+      registrationCode: form.model.registrationCode.trim(),
+      internalNo: form.model.internalNo.trim(),
+      useCertificateNo: form.model.useCertificateNo.trim(),
+      detailLocation: form.model.detailLocation.trim(),
+      maintenanceOrganization: form.model.maintenanceOrganization.trim(),
+      installationOrganization: form.model.installationOrganization.trim(),
+      designOrganization: form.model.designOrganization.trim(),
+      fixedAssetNo: form.model.fixedAssetNo.trim(),
+      erpCode: form.model.erpCode.trim(),
+      electronicTagCode: form.model.electronicTagCode.trim(),
+      remark: form.model.remark.trim(),
+      specialParameters,
+      boiler: isBoiler
+        ? {
+            boilerType: String(specialParameters.boilerType || 'water') as 'water' | 'steam',
+            registrationCode: form.model.registrationCode,
+            useCertificateNo: form.model.useCertificateNo,
+            internalNo: form.model.internalNo,
+            ratedEvaporation: numericParameter(specialParameters.evaporationCapacity),
+            designPressure: numericParameter(specialParameters.designPressure),
+            workingPressure: numericParameter(specialParameters.workingPressure),
+            workingTemperature: numericParameter(specialParameters.workingTemperature),
+            fuelType: String(specialParameters.combustionMethod || ''),
+            purpose: String(specialParameters.purpose || ''),
+            maintenanceOrganization: form.model.maintenanceOrganization,
+            installationOrganization: form.model.installationOrganization
+          }
+        : null,
+      pressureGaugeIds: [...form.model.pressureGaugeIds],
+      safetyValveIds: [...form.model.safetyValveIds]
+    }
+  }
   const resetForm = async () => {
     Object.assign(form.model, initialForm())
     supplierSelection.value = []
@@ -740,6 +908,33 @@
         model: data.row.model || '',
         manufacturer: data.row.manufacturer || '',
         factoryNo: data.row.factoryNo || '',
+        registrationCode: data.row.registrationCode || data.row.boiler?.registrationCode || '',
+        internalNo: data.row.internalNo || data.row.boiler?.internalNo || '',
+        useCertificateNo: data.row.useCertificateNo || data.row.boiler?.useCertificateNo || '',
+        detailLocation: data.row.detailLocation || '',
+        maintenanceOrganization:
+          data.row.maintenanceOrganization || data.row.boiler?.maintenanceOrganization || '',
+        installationOrganization:
+          data.row.installationOrganization || data.row.boiler?.installationOrganization || '',
+        designOrganization: data.row.designOrganization || '',
+        maintenanceQualificationUrl: data.row.maintenanceQualificationUrl || '',
+        useRegistrationCertificateUrl: data.row.useRegistrationCertificateUrl || '',
+        nameplateUrl: data.row.nameplateUrl || '',
+        photoUrl: data.row.photoUrl || '',
+        specialParameters: {
+          ...(data.row.boiler
+            ? {
+                boilerType: data.row.boiler.boilerType,
+                evaporationCapacity: data.row.boiler.ratedEvaporation,
+                designPressure: data.row.boiler.designPressure,
+                workingPressure: data.row.boiler.workingPressure,
+                workingTemperature: data.row.boiler.workingTemperature,
+                combustionMethod: data.row.boiler.fuelType,
+                purpose: data.row.boiler.purpose
+              }
+            : {}),
+          ...(data.row.specialParameters || {})
+        },
         manufactureDate: data.row.manufactureDate || '',
         installationDate: data.row.installationDate || '',
         commissioningDate: data.row.commissioningDate || '',
@@ -762,11 +957,16 @@
     } else {
       form.model.categoryId = data.presetCategoryId || ''
       form.model.locationId = data.presetLocationId
-      form.model.equipmentKind = data.presetKind || 'general'
-      if (data.presetKind === 'boiler') form.model.isSpecialEquipment = true
+      form.model.equipmentKind = data.presetKind || form.model.equipmentKind
     }
     await dialogRef.value?.handleOpen(data, {
-      title: data.row ? '编辑设备台账' : '新增设备台账',
+      title: data.row
+        ? '编辑设备台账'
+        : data.presetKind === 'pressure_gauge'
+          ? '新增压力表设备'
+          : data.presetKind === 'safety_valve'
+            ? '新增安全阀设备'
+            : '新增设备台账',
       subtitle: '维护设备主档、责任关系与专用设备扩展信息',
       confirmText: '保存设备台账',
       contentMaxHeight: 'calc(100vh - 168px)',
@@ -796,7 +996,7 @@
       onReset: () => void resetForm()
     })
   }
-  defineExpose({ handleOpen })
+  defineExpose({ handleOpen, openAccessorySelector })
 </script>
 
 <style scoped lang="scss">
@@ -836,6 +1036,21 @@
       margin: 3px 0 0;
       font-size: 12px;
       color: var(--el-text-color-secondary);
+    }
+
+    &__accessory-empty {
+      display: grid;
+      gap: var(--art-space-2);
+      justify-items: center;
+
+      p {
+        max-width: 420px;
+        margin: 0;
+        font-size: 13px;
+        line-height: 1.6;
+        color: var(--el-text-color-secondary);
+        text-align: center;
+      }
     }
   }
 </style>

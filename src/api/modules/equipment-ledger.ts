@@ -1,6 +1,10 @@
 import { omit } from 'lodash-es'
 import { useSupabase } from '@/hooks'
 import TreeUtils from '@/utils/tree'
+import {
+  compareEquipmentCategoryOrder,
+  fetchEquipmentCategoryProfiles
+} from '@smis/api/modules/equipment-category'
 import type {
   SmisEquipment,
   SmisEquipmentAttachment,
@@ -40,35 +44,49 @@ const { supabase, keysToSnakeDeep, responseHandle } = useSupabase()
 
 export async function fetchEquipmentLedgerList(params: SmisEquipmentSearchParams = {}) {
   const from = Math.max(params.from ?? 0, 0)
-  const result = await responseHandle<EquipmentLedgerListResult>(
-    () =>
-      supabase.rpc('smis_list_equipment_ledger_secure', {
-        p_from: from,
-        p_to: Math.max(params.to ?? from + 19, from),
-        p_keyword: params.keyword?.trim() || null,
-        p_category_id: params.categoryId || null,
-        p_location_id: params.locationId || null,
-        p_equipment_kind: params.equipmentKind || null,
-        p_model: params.model?.trim() || null,
-        p_operation_status: params.operationStatus || null,
-        p_supplier_id: params.supplierId || null,
-        p_importance_level: params.importanceLevel || null,
-        p_enable_date_from: params.enableDateFrom || null,
-        p_enable_date_to: params.enableDateTo || null,
-        p_asset_status: params.assetStatus || null,
-        p_use_status: params.useStatus || null
-      }),
-    { showErrorMessage: true }
-  )
+  const [result, profileResult] = await Promise.all([
+    responseHandle<EquipmentLedgerListResult>(
+      () =>
+        supabase.rpc('smis_list_equipment_ledger_secure', {
+          p_from: from,
+          p_to: Math.max(params.to ?? from + 19, from),
+          p_keyword: params.keyword?.trim() || null,
+          p_category_id: params.categoryId || null,
+          p_location_id: params.locationId || null,
+          p_equipment_kind: params.equipmentKind || null,
+          p_model: params.model?.trim() || null,
+          p_operation_status: params.operationStatus || null,
+          p_supplier_id: params.supplierId || null,
+          p_importance_level: params.importanceLevel || null,
+          p_enable_date_from: params.enableDateFrom || null,
+          p_enable_date_to: params.enableDateTo || null,
+          p_asset_status: params.assetStatus || null,
+          p_use_status: params.useStatus || null
+        }),
+      { showErrorMessage: true }
+    ),
+    fetchEquipmentCategoryProfiles()
+  ])
 
-  const categoryFlat = result.data?.categoryTree ?? []
+  const profileMap = new Map(
+    (profileResult.data ?? []).map((item) => [item.id, item.profileType] as const)
+  )
+  const categoryFlat = (result.data?.categoryTree ?? []).map((item) => ({
+    ...item,
+    profileType: profileMap.get(item.id || '') ?? item.profileType ?? 'general'
+  }))
   const locationFlat = result.data?.locationTree ?? []
   return {
-    data: result.data?.records ?? [],
+    data: (result.data?.records ?? []).map((item) => {
+      const profileType = profileMap.get(item.categoryId) ?? 'general'
+      return {
+        ...item,
+        profileType,
+        category: { ...item.category, profileType }
+      }
+    }),
     total: result.data?.total ?? 0,
-    categoryTree: categoryTreeUtils.listToTree(categoryFlat, (a, b) =>
-      a.categoryName.localeCompare(b.categoryName, 'zh-CN')
-    ),
+    categoryTree: categoryTreeUtils.listToTree(categoryFlat, compareEquipmentCategoryOrder),
     locationTree: locationTreeUtils.listToTree(locationFlat, (a, b) =>
       a.locationName.localeCompare(b.locationName, 'zh-CN')
     ),
@@ -80,7 +98,7 @@ export async function fetchEquipmentLedgerList(params: SmisEquipmentSearchParams
 export async function saveEquipmentLedger(params: SmisEquipmentSavePayload) {
   return await responseHandle<string>(
     () =>
-      supabase.rpc('smis_save_equipment_ledger_secure', {
+      supabase.rpc('smis_save_equipment_archive_secure', {
         p_id: params.id ?? null,
         p_payload: keysToSnakeDeep(omit(params, ['id']))
       }),
@@ -89,6 +107,13 @@ export async function saveEquipmentLedger(params: SmisEquipmentSavePayload) {
       breakReturn: true,
       message: params.id ? '设备台账已更新' : '设备台账已新增'
     }
+  )
+}
+
+export async function fetchEquipmentLedgerDetail(equipmentId: string) {
+  return await responseHandle<SmisEquipment | null>(
+    () => supabase.rpc('smis_get_equipment_archive_secure', { p_equipment_id: equipmentId }),
+    { showErrorMessage: true }
   )
 }
 

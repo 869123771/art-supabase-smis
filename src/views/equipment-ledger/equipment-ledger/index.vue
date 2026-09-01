@@ -58,7 +58,16 @@
       </ArtWorkspaceSplitter>
     </div>
 
-    <EquipmentLedgerDialog ref="dialogRef" @success="refreshWorkspace" />
+    <EquipmentLedgerDialog
+      ref="dialogRef"
+      @success="refreshWorkspace"
+      @create-accessory="openAccessoryDialog"
+    />
+    <EquipmentLedgerDialog
+      ref="accessoryDialogRef"
+      @success="handleAccessorySuccess"
+      @closed="handleAccessoryClosed"
+    />
 
     <ArtDialog ref="qrDialogRef" size="sm" :show-footer="false">
       <div v-if="qr.row" class="equipment-ledger-page__qr-card">
@@ -234,6 +243,7 @@
 
 <script setup lang="tsx">
   import dayjs from 'dayjs'
+  import { ElMessage } from 'element-plus'
   import QrcodeVue from 'qrcode.vue'
   import type { Resource } from '@/components/core/forms/art-resource-picker/type'
   import type { SearchFormItem } from '@/components/core/forms/art-search-bar/index.vue'
@@ -265,6 +275,7 @@
     deleteEquipmentAttachment,
     deleteEquipmentLedger,
     fetchEquipmentAttachments,
+    fetchEquipmentLedgerDetail,
     fetchEquipmentInspectionList,
     fetchEquipmentLedgerList,
     fetchSupplierList,
@@ -282,8 +293,10 @@
     type EquipmentTreeDimension
   } from './modules/equipment-dimension-navigator.vue'
   import EquipmentLedgerDialog, {
+    type EquipmentAccessoryKind,
     type EquipmentLedgerDialogOpenData
   } from './modules/equipment-ledger-dialog.vue'
+  import { getEquipmentProfileLabel } from '@smis/domain/equipment-profile'
 
   defineOptions({ name: 'SmisEquipmentLedgerList' })
   const ALL_KEY = 'all'
@@ -291,13 +304,19 @@
     Pick<Api.Common.PaginationParams, 'current' | 'size'> & { enableDateRange?: string[] }
   interface DialogExpose {
     handleOpen: (data: EquipmentLedgerDialogOpenData) => Promise<void>
+    openAccessorySelector: (kind: EquipmentAccessoryKind) => Promise<void>
   }
-
   const { confirmDelete } = useArtFeedback()
+  const router = useRouter()
   const userStore = useUserStore()
   const { getDictMap } = storeToRefs(userStore)
   const tableQueryRef = ref<ArtTableQueryExpose>()
   const dialogRef = ref<DialogExpose>()
+  const accessoryDialogRef = ref<DialogExpose>()
+  const accessoryWorkflow = reactive<{
+    kind: EquipmentAccessoryKind | null
+    saved: boolean
+  }>({ kind: null, saved: false })
   const qrDialogRef = ref<ArtDialogExpose<SmisEquipment>>()
   const lifecycleDrawerRef = ref<ArtDrawerExpose<SmisEquipment>>()
   const overview = reactive<SmisEquipmentOverview>({
@@ -372,9 +391,10 @@
     }
   ])
 
-  const openDialog = (row?: SmisEquipment): void => {
-    void dialogRef.value?.handleOpen({
-      row,
+  const openDialog = async (row?: SmisEquipment): Promise<void> => {
+    const detail = row ? (await fetchEquipmentLedgerDetail(row.id)).data || row : undefined
+    await dialogRef.value?.handleOpen({
+      row: detail,
       categoryTree: tree.categoryTree,
       locationTree: tree.locationTree,
       presetCategoryId:
@@ -386,6 +406,50 @@
           ? tree.selectedKey
           : undefined
     })
+  }
+  const findCategoryByProfile = (
+    items: SmisEquipmentCategory[],
+    kind: EquipmentAccessoryKind
+  ): SmisEquipmentCategory | undefined => {
+    for (const item of items) {
+      if (item.profileType === kind) return item
+      const child = findCategoryByProfile(item.children || [], kind)
+      if (child) return child
+    }
+    return undefined
+  }
+  const openAccessoryDialog = async (kind: EquipmentAccessoryKind): Promise<void> => {
+    const category = findCategoryByProfile(tree.categoryTree, kind)
+    if (!category) {
+      ElMessage.warning(
+        kind === 'pressure_gauge'
+          ? '请先在设备分类中配置“压力表”档案模板'
+          : '请先在设备分类中配置“安全阀”档案模板'
+      )
+      return
+    }
+    accessoryWorkflow.kind = kind
+    accessoryWorkflow.saved = false
+    await accessoryDialogRef.value?.handleOpen({
+      categoryTree: tree.categoryTree,
+      locationTree: tree.locationTree,
+      presetCategoryId: category.id,
+      presetKind: kind
+    })
+  }
+  const handleAccessorySuccess = async (): Promise<void> => {
+    accessoryWorkflow.saved = true
+    await refreshWorkspace()
+  }
+  const handleAccessoryClosed = async (): Promise<void> => {
+    const kind = accessoryWorkflow.kind
+    const shouldReopen = accessoryWorkflow.saved && kind
+    accessoryWorkflow.kind = null
+    accessoryWorkflow.saved = false
+    if (shouldReopen) await dialogRef.value?.openAccessorySelector(kind)
+  }
+  const openDetail = (row: SmisEquipment): void => {
+    void router.push(`/smis/equipment-ledger/equipment-ledger-detail/${row.id}`)
   }
   const loadAttachments = async (): Promise<void> => {
     if (!lifecycle.row) return
@@ -485,7 +549,7 @@
         props: { clearable: true, placeholder: '设备编码、名称、规格或出厂编号' }
       },
       {
-        label: '设备类型',
+        label: '基础类型',
         key: 'equipmentKind',
         type: 'select',
         props: {
@@ -566,7 +630,12 @@
       minWidth: 230,
       fixed: 'left',
       formatter: (row) => (
-        <div class="equipment-ledger-page__identity">
+        <button
+          type="button"
+          class="equipment-ledger-page__identity"
+          aria-label={`查看设备 ${row.equipmentName}`}
+          onClick={() => openDetail(row)}
+        >
           <span aria-hidden="true">
             <ArtSvgIcon
               icon={
@@ -584,14 +653,14 @@
             <strong title={row.equipmentName}>{row.equipmentName}</strong>
             <small title={row.equipmentCode}>{row.equipmentCode}</small>
           </span>
-        </div>
+        </button>
       )
     },
     {
       prop: 'equipmentKind',
-      label: '设备类型',
+      label: '档案模板',
       width: 112,
-      formatter: (row) => <ArtDictDisplay dictCode="smisEquipmentKind" value={row.equipmentKind} />
+      formatter: (row) => getEquipmentProfileLabel(row.profileType || row.category.profileType)
     },
     {
       prop: 'category',
@@ -602,7 +671,7 @@
     },
     {
       prop: 'location',
-      label: '存放位置',
+      label: '安装位置',
       minWidth: 160,
       showOverflowTooltip: true,
       formatter: (row) => row.location?.locationName || '未设置'
@@ -677,10 +746,16 @@
     {
       prop: 'operation',
       label: '操作',
-      width: 156,
+      width: 198,
       fixed: 'right',
       formatter: (row) => (
         <div class="equipment-ledger-page__actions">
+          <ArtButtonTable
+            permission="SmisEquipmentLedger:View"
+            type="view"
+            label="查看设备"
+            onClick={() => openDetail(row)}
+          />
           <ArtButtonTable
             icon="ri:qr-code-line"
             label="查看二维码"
@@ -689,7 +764,7 @@
           <ArtButtonTable
             permission="SmisEquipmentLedger:Edit"
             type="edit"
-            onClick={() => openDialog(row)}
+            onClick={() => void openDialog(row)}
           />
           <ArtButtonTable
             permission="SmisEquipmentLedger:Delete"
@@ -756,6 +831,7 @@
         'smisEquipmentAssetStatus',
         'smisEquipmentUseStatus',
         'smisEquipmentStatus',
+        'smisBoilerType',
         'smisEquipmentAttachmentType',
         'smisEquipmentInspectionConclusion',
         'smisEquipmentInspectionStatus'
@@ -795,6 +871,14 @@
       gap: 10px;
       align-items: center;
       min-width: 0;
+      padding: 0;
+      font: inherit;
+      color: inherit;
+      text-align: left;
+      cursor: pointer;
+      background: transparent;
+      border: 0;
+      border-radius: var(--el-border-radius-base);
 
       > span:first-child {
         display: grid;
@@ -819,7 +903,7 @@
       }
 
       strong {
-        color: var(--el-text-color-primary);
+        color: var(--theme-color);
       }
 
       small {
@@ -827,6 +911,16 @@
         font-size: 11px;
         color: var(--el-text-color-secondary);
       }
+    }
+
+    :deep(.equipment-ledger-page__identity:hover strong) {
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    :deep(.equipment-ledger-page__identity:focus-visible) {
+      outline: 2px solid var(--theme-color);
+      outline-offset: 3px;
     }
 
     :deep(.equipment-ledger-page__stack) {

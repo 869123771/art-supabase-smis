@@ -36,6 +36,7 @@
   import { useTenantScopeFormPolicy } from '@/hooks/core/useTenantScopeFormPolicy'
   import { useUserStore } from '@/store/modules/user'
   import TreeUtils from '@/utils/tree'
+  import { EQUIPMENT_PROFILE_OPTIONS } from '@smis/domain/equipment-profile'
   import {
     saveEquipmentCategory,
     type SmisEquipmentCategory,
@@ -65,6 +66,7 @@
     categoryCode: string
     categoryName: string
     categoryShortName: string
+    profileType: SmisEquipmentCategory['profileType']
     inspectionCategoryIds: string[]
     remark: string
     status: SmisEquipmentCategoryStatus
@@ -100,6 +102,7 @@
     categoryCode: '',
     categoryName: '',
     categoryShortName: '',
+    profileType: 'general',
     inspectionCategoryIds: [],
     remark: '',
     status: 'enabled',
@@ -161,6 +164,14 @@
             disabled: 'disabled'
           }
         }
+      },
+      {
+        label: '设备档案模板',
+        key: 'profileType',
+        type: 'select',
+        options: EQUIPMENT_PROFILE_OPTIONS,
+        description: '设备选中本分类后，新增/编辑页自动加载对应专用字段',
+        props: { clearable: false, placeholder: '选择设备档案模板' }
       },
       {
         label: '适用检验类别',
@@ -229,6 +240,7 @@
       ],
       categoryShortName: [{ max: 40, message: '设备分类简称不能超过 40 个字符', trigger: 'blur' }],
       status: [{ required: true, message: '请选择启用状态', trigger: 'change' }],
+      profileType: [{ required: true, message: '请选择设备档案模板', trigger: 'change' }],
       sort: [{ required: true, message: '请输入排序', trigger: 'change' }],
       remark: [{ max: 500, message: '备注不能超过 500 个字符', trigger: 'blur' }]
     }
@@ -287,6 +299,7 @@
         categoryCode: form.model.categoryCode.trim().toUpperCase(),
         categoryName: form.model.categoryName.trim(),
         categoryShortName: form.model.categoryShortName.trim(),
+        profileType: form.model.profileType,
         inspectionCategoryIds: [...form.model.inspectionCategoryIds],
         remark: form.model.remark.trim(),
         status: form.model.status,
@@ -321,6 +334,7 @@
         categoryCode: data.row.categoryCode,
         categoryName: data.row.categoryName,
         categoryShortName: data.row.categoryShortName || '',
+        profileType: data.row.profileType || 'general',
         inspectionCategoryIds: data.row.inspectionCategories.map((item) => item.id),
         remark: data.row.remark || '',
         status: data.row.status,

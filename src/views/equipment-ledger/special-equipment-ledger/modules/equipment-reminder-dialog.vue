@@ -273,6 +273,7 @@
   .equipment-reminder-dialog {
     display: grid;
     gap: 16px;
+
     &__summary {
       display: grid;
       grid-template-columns: 44px 1fr;
@@ -283,6 +284,7 @@
       border-left: 3px solid #f59e0b;
       border-radius: 10px;
     }
+
     &__summary > span {
       display: grid;
       place-items: center;
@@ -292,11 +294,13 @@
       background: var(--default-box-color);
       border-radius: 10px;
     }
+
     &__summary p {
       margin: 3px 0 0;
       font-size: 12px;
       color: var(--el-text-color-secondary);
     }
+
     &__tokens {
       display: flex;
       flex-wrap: wrap;
@@ -304,10 +308,12 @@
       align-items: center;
       padding: 0 16px;
     }
+
     &__tokens strong {
       margin-right: 4px;
       font-size: 12px;
     }
+
     &__tokens span {
       padding: 4px 7px;
       font-family: monospace;
@@ -316,10 +322,12 @@
       background: color-mix(in srgb, var(--theme-color) 8%, var(--default-box-color));
       border-radius: 6px;
     }
+
     &__deliveries {
       display: grid;
       gap: 8px;
     }
+
     &__deliveries article {
       display: grid;
       grid-template-columns: 110px 1fr auto;
@@ -329,6 +337,7 @@
       background: var(--art-gray-100);
       border-radius: 8px;
     }
+
     &__deliveries article > span {
       font-size: 12px;
       color: var(--el-text-color-secondary);

@@ -1,9 +1,681 @@
 <template>
-  <SmisPagePlaceholder section="双控体系 / 风险管控" title="风险分级管控" />
+  <ArtPermissionGuard
+    permission="SmisDualControlRiskClassificationControl:View"
+    resource-name="风险分级管控"
+  >
+    <div class="risk-control-page business-workspace-page art-full-height">
+      <BusinessWorkspaceHeader
+        eyebrow="HIERARCHICAL RISK CONTROL"
+        title="风险分级管控"
+        description="将已评价风险点落实到公司、车间、班组与岗位，绑定责任人和巡查频率，驱动后续任务自动生成。"
+        icon="ri:git-merge-line"
+        density="compact"
+        :tags="[
+          { label: '分级负责', type: 'primary', effect: 'plain' },
+          { label: '频率驱动', type: 'warning', effect: 'light' },
+          { label: '任务自动生成', type: 'success', effect: 'plain' }
+        ]"
+        :metrics="workspaceMetrics"
+      >
+        <template #actions><BusinessTableWorkspaceActions :table="tableQueryRef" /></template>
+      </BusinessWorkspaceHeader>
+
+      <div class="risk-control-page__status-strip" role="group" aria-label="管控状态快捷筛选">
+        <button :class="{ active: !searchQuery.controlStatus }" type="button" @click="setStatus()"
+          ><span>全部风险点</span><strong>{{ overview.total }}</strong></button
+        >
+        <button
+          :class="{ active: searchQuery.controlStatus === 'uncontrolled' }"
+          type="button"
+          @click="setStatus('uncontrolled')"
+          ><span>待管控</span><strong>{{ overview.uncontrolled }}</strong></button
+        >
+        <button
+          :class="{ active: searchQuery.controlStatus === 'active' }"
+          type="button"
+          @click="setStatus('active')"
+          ><span>管控中</span><strong>{{ overview.active }}</strong></button
+        >
+      </div>
+
+      <ArtTableQuery
+        ref="tableQueryRef"
+        class="risk-control-page__table"
+        v-model="searchQuery"
+        :api-fn="fetchTableData"
+        :search-items="searchItems"
+        :columns-factory="columnsFactory"
+        :header-actions="headerActions"
+        header-actions-placement="workspace"
+        :search-bar-props="{ span: 6, labelWidth: 84 }"
+        :table-props="{
+          rowKey: 'riskPointId',
+          tableLayout: 'fixed',
+          emptyText: '暂无可管控风险点',
+          emptyDescription: '请先完成危险有害因素的定量评价。'
+        }"
+        focusable
+      />
+
+      <RiskControlPlanDialog ref="dialogRef" @success="handleSaveSuccess" />
+    </div>
+  </ArtPermissionGuard>
 </template>
 
-<script setup lang="ts">
-  import SmisPagePlaceholder from '@smis/views/components/smis-page-placeholder.vue'
+<script setup lang="tsx">
+  import dayjs from 'dayjs'
+  import { ElMessage, ElTag } from 'element-plus'
+  import { fetchEmployeeSelectorList } from '@/api/integration/employees'
+  import type { SearchFormItem } from '@/components/core/forms/art-search-bar/index.vue'
+  import type {
+    ArtTableQueryExcelColumn,
+    ArtTableQueryExpose,
+    ArtTableQueryHeaderAction,
+    ArtTableQueryHeaderActionContext
+  } from '@/components/core/tables/art-table-query/index.vue'
+  import type { ColumnOption } from '@/types'
+  import { pageInfoHandler } from '@/utils/table/tableUtils'
+  import { useArtFeedback } from '@/hooks/core/useArtFeedback'
+  import { useUserStore } from '@/store/modules/user'
+  import ArtPermissionGuard from '@/components/core/feedback/art-permission-guard/index.vue'
+  import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
+  import ArtDictDisplay from '@/components/core/base/art-dict-display/index.vue'
+  import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
+  import BusinessTableWorkspaceActions from '@/components/business/business-table-workspace-actions/index.vue'
+  import BusinessWorkspaceHeader, {
+    type BusinessWorkspaceMetric
+  } from '@/components/business/business-workspace-header/index.vue'
+  import {
+    deleteRiskControlPlans,
+    fetchRiskControlOptions,
+    fetchRiskControlPointList,
+    saveRiskControlPlan,
+    type SmisRiskControlAssignment,
+    type SmisRiskControlLevel,
+    type SmisRiskControlOptions,
+    type SmisRiskControlOverview,
+    type SmisRiskControlPoint,
+    type SmisRiskControlSearchParams
+  } from '@smis/api'
+  import RiskControlPlanDialog, {
+    type RiskControlPlanDialogOpenData
+  } from './modules/risk-control-plan-dialog.vue'
 
   defineOptions({ name: 'SmisDualControlRiskClassificationControl' })
+  type TableParams = SmisRiskControlSearchParams &
+    Pick<Api.Common.PaginationParams, 'current' | 'size'>
+  interface DialogExpose {
+    handleOpen: (data: RiskControlPlanDialogOpenData) => Promise<void>
+  }
+  interface ControlImportRow {
+    riskPointNo?: string
+    status?: string
+    controlStartAt?: string
+    controlDescription?: string
+    controlLevels?: string
+    responsibleEmployees?: string
+    frequencies?: string
+    levelRequirements?: string
+  }
+
+  const { confirmDelete } = useArtFeedback()
+  const userStore = useUserStore()
+  const { getDictMap } = storeToRefs(userStore)
+  const tableQueryRef = ref<ArtTableQueryExpose>()
+  const dialogRef = ref<DialogExpose>()
+  const searchQuery = ref<SmisRiskControlSearchParams>({})
+  const options = shallowRef<SmisRiskControlOptions>({
+    riskPoints: [],
+    duplicateConfigurations: []
+  })
+  const optionsLoading = ref(false)
+  const overview = reactive<SmisRiskControlOverview>({
+    total: 0,
+    uncontrolled: 0,
+    active: 0,
+    major: 0
+  })
+  const controlLevelOptions: Array<{ label: string; value: SmisRiskControlLevel }> = [
+    { label: '公司级（厂级）', value: 'company' },
+    { label: '车间（部门级）', value: 'department' },
+    { label: '班组级', value: 'team' },
+    { label: '岗位级', value: 'position' }
+  ]
+  const controlLevelLabel = new Map(controlLevelOptions.map((item) => [item.value, item.label]))
+  const riskTypeOptions = computed(() =>
+    (getDictMap.value.smisRiskPointType ?? []).map((item) => ({
+      label: item.label || item.name,
+      value: item.value
+    }))
+  )
+  const statusOptions = [
+    { label: '未管控', value: 'uncontrolled' },
+    { label: '管控中', value: 'active' },
+    { label: '已停用', value: 'suspended' }
+  ]
+  const workspaceMetrics = computed<BusinessWorkspaceMetric[]>(() => [
+    {
+      label: '已评价风险点',
+      value: overview.total,
+      description: '进入分级管控范围',
+      icon: 'ri:radar-line'
+    },
+    {
+      label: '待管控',
+      value: overview.uncontrolled,
+      description: '尚未落实责任层级',
+      icon: 'ri:timer-line',
+      tone: 'warning'
+    },
+    {
+      label: '管控中',
+      value: overview.active,
+      description: '自动生成巡查任务',
+      icon: 'ri:shield-check-line',
+      tone: 'success'
+    },
+    {
+      label: '重大风险',
+      value: overview.major,
+      description: '优先关注与复核',
+      icon: 'ri:alarm-warning-line',
+      tone: 'danger'
+    }
+  ])
+  const searchItems = computed<SearchFormItem[]>(() => [
+    {
+      label: '风险点',
+      key: 'keyword',
+      type: 'input',
+      props: { clearable: true, placeholder: '风险点编号或名称' }
+    },
+    {
+      label: '风险类型',
+      key: 'riskType',
+      type: 'select',
+      props: { options: riskTypeOptions.value, clearable: true, placeholder: '全部类型' }
+    },
+    {
+      label: '管控层级',
+      key: 'controlLevel',
+      type: 'select',
+      props: { options: controlLevelOptions, clearable: true, placeholder: '全部层级' }
+    },
+    {
+      label: '管控状态',
+      key: 'controlStatus',
+      type: 'select',
+      props: { options: statusOptions, clearable: true, placeholder: '全部状态' }
+    }
+  ])
+  const excelColumns: ArtTableQueryExcelColumn[] = [
+    { key: 'riskPointNo', title: '风险点编号', required: true },
+    { key: 'riskPointName', title: '风险点名称' },
+    { key: 'riskPointType', title: '风险点类型' },
+    { key: 'riskLevelName', title: '风险等级' },
+    { key: 'accidentTypes', title: '事故类型' },
+    { key: 'controlLevels', title: '管控层级', required: true },
+    { key: 'responsibleEmployees', title: '管控责任人（与层级顺序一致）', required: true },
+    { key: 'frequencies', title: '管控频率（与层级顺序一致）', required: true },
+    { key: 'levelRequirements', title: '层级管控要求（与层级顺序一致）' },
+    { key: 'controlStartAt', title: '管控开始时间' },
+    { key: 'controlDescription', title: '总体管控说明' },
+    { key: 'status', title: '管控状态' }
+  ]
+  const loadOptions = async (): Promise<void> => {
+    optionsLoading.value = true
+    try {
+      options.value = await fetchRiskControlOptions()
+    } finally {
+      optionsLoading.value = false
+    }
+  }
+  const openDialog = async (row?: SmisRiskControlPoint): Promise<void> => {
+    if (!options.value.riskPoints.length && !optionsLoading.value) await loadOptions()
+    await dialogRef.value?.handleOpen({ row, options: options.value })
+  }
+  const setStatus = (status?: SmisRiskControlSearchParams['controlStatus']): void => {
+    searchQuery.value.controlStatus = status
+    void tableQueryRef.value?.refreshData()
+  }
+  const columnsFactory = (): ColumnOption<SmisRiskControlPoint>[] => [
+    { type: 'selection', width: 48, fixed: 'left', reserveSelection: true },
+    { type: 'globalIndex', label: '序号', width: 68 },
+    {
+      prop: 'riskPointNo',
+      label: '风险点编号',
+      width: 142,
+      fixed: 'left',
+      formatter: (row) => <span class="risk-control-page__code">{row.riskPointNo}</span>
+    },
+    {
+      prop: 'riskPointName',
+      label: '风险点名称',
+      minWidth: 230,
+      fixed: 'left',
+      formatter: (row) => (
+        <div class="risk-control-page__identity">
+          <span>
+            <ArtSvgIcon icon="ri:radar-line" />
+          </span>
+          <div>
+            <strong>{row.riskPointName}</strong>
+            <small>{row.siteName}</small>
+          </div>
+        </div>
+      )
+    },
+    {
+      prop: 'riskPointType',
+      label: '风险点类型',
+      width: 116,
+      formatter: (row) => (
+        <ArtDictDisplay dictCode="smisRiskPointType" value={row.riskPointType} display="tag" />
+      )
+    },
+    {
+      prop: 'riskLevelName',
+      label: '风险等级',
+      width: 118,
+      align: 'center',
+      formatter: (row) => (
+        <span class="risk-control-page__level" style={{ '--risk-color': row.riskLevelColor }}>
+          {row.riskLevelName}
+        </span>
+      )
+    },
+    {
+      prop: 'accidentTypes',
+      label: '事故类型',
+      minWidth: 180,
+      formatter: (row) => (
+        <div class="risk-control-page__tags">
+          {row.accidentTypes.map((item) => (
+            <ArtDictDisplay dictCode="smisAccidentCategory" value={item} display="tag" />
+          ))}
+        </div>
+      )
+    },
+    {
+      prop: 'controlLevels',
+      label: '管控层级',
+      minWidth: 220,
+      formatter: (row) =>
+        row.controlLevels.length ? (
+          <div class="risk-control-page__tags">
+            {row.controlLevels.map((item) => (
+              <ElTag effect="plain">{controlLevelLabel.get(item)}</ElTag>
+            ))}
+          </div>
+        ) : (
+          <span class="risk-control-page__muted">尚未设置</span>
+        )
+    },
+    {
+      prop: 'responsibleNames',
+      label: '管控责任人',
+      minWidth: 160,
+      formatter: (row) =>
+        row.responsibleNames || <span class="risk-control-page__muted">待落实</span>
+    },
+    {
+      prop: 'assignments',
+      label: '管控频率',
+      minWidth: 240,
+      formatter: (row) => (
+        <div class="risk-control-page__stack">
+          {row.assignments.length ? (
+            row.assignments.map((item) => (
+              <span>
+                <b>{controlLevelLabel.get(item.controlLevel)}</b>
+                <small>{item.frequencyLabel}</small>
+              </span>
+            ))
+          ) : (
+            <span class="risk-control-page__muted">待配置</span>
+          )}
+        </div>
+      )
+    },
+    {
+      prop: 'controlStatus',
+      label: '管控状态',
+      width: 108,
+      align: 'center',
+      formatter: (row) => (
+        <ArtDictDisplay dictCode="smisRiskControlStatus" value={row.controlStatus} display="tag" />
+      )
+    },
+    {
+      prop: 'taskCount',
+      label: '已生成任务',
+      width: 104,
+      align: 'center',
+      formatter: (row) => <strong class="risk-control-page__count">{row.taskCount}</strong>
+    },
+    {
+      prop: 'operation',
+      label: '操作',
+      width: 150,
+      fixed: 'right',
+      formatter: (row) => (
+        <div class="risk-control-page__actions">
+          <ArtButtonTable
+            type="edit"
+            permission="SmisDualControlRiskClassificationControl:Configure"
+            label="管控设置"
+            onClick={() => void openDialog(row)}
+          />
+          {row.planId ? (
+            <ArtButtonTable
+              type="delete"
+              permission="SmisDualControlRiskClassificationControl:Delete"
+              onClick={() => void handleDelete(row)}
+            />
+          ) : null}
+        </div>
+      )
+    }
+  ]
+  const fetchTableData = async (params: TableParams) => {
+    const { from, to } = pageInfoHandler({ current: params.current, size: params.size })
+    const response = await fetchRiskControlPointList({ ...params, from, to })
+    Object.assign(overview, response.overview)
+    return response
+  }
+  const split = (value?: string): string[] =>
+    String(value || '')
+      .split(/[|｜;；]/)
+      .map((item) => item.trim())
+      .filter(Boolean)
+  const resolveLevel = (value: string): SmisRiskControlLevel | undefined =>
+    controlLevelOptions.find((item) => item.value === value || item.label === value)?.value
+  const importRows = async (rows: unknown[]): Promise<void> => {
+    if (!options.value.riskPoints.length) await loadOptions()
+    for (const raw of rows as ControlImportRow[]) {
+      const point = options.value.riskPoints.find(
+        (item) => item.pointNo === String(raw.riskPointNo || '').trim()
+      )
+      if (!point) throw new Error(`未找到风险点：${raw.riskPointNo}`)
+      const levels = split(raw.controlLevels).map(resolveLevel)
+      if (levels.some((item) => !item)) throw new Error(`管控层级无法识别：${raw.controlLevels}`)
+      const employees = split(raw.responsibleEmployees)
+      const frequencies = split(raw.frequencies)
+      const requirements = split(raw.levelRequirements)
+      if (levels.length !== employees.length || levels.length !== frequencies.length)
+        throw new Error(`风险点 ${point.pointNo} 的层级、责任人和频率数量不一致`)
+      const assignments: SmisRiskControlAssignment[] = []
+      for (let index = 0; index < levels.length; index += 1) {
+        const employeeResult = await fetchEmployeeSelectorList({
+          keyword: employees[index],
+          from: 0,
+          to: 20
+        })
+        const employee = employeeResult.data.find(
+          (item) => item.employeeNo === employees[index] || item.employeeName === employees[index]
+        )
+        const frequency = options.value.duplicateConfigurations.find(
+          (item) =>
+            item.id === frequencies[index] ||
+            item.contentItem === frequencies[index] ||
+            item.displayLabel === frequencies[index]
+        )
+        if (!employee) throw new Error(`未找到在职员工：${employees[index]}`)
+        if (!frequency) throw new Error(`未找到重复配置：${frequencies[index]}`)
+        assignments.push({
+          controlLevel: levels[index]!,
+          responsibleEmployeeId: employee.id,
+          duplicateConfigurationId: frequency.id,
+          controlMeasure: requirements[index] || null,
+          sort: index + 1
+        })
+      }
+      await saveRiskControlPlan({
+        riskPointId: point.id,
+        controlStartAt: raw.controlStartAt
+          ? dayjs(raw.controlStartAt).toISOString()
+          : dayjs().toISOString(),
+        status: raw.status === '已停用' || raw.status === 'suspended' ? 'suspended' : 'active',
+        controlDescription: raw.controlDescription || null,
+        assignments
+      })
+    }
+  }
+  const headerActions = computed<ArtTableQueryHeaderAction[]>(() => [
+    {
+      permission: 'SmisDualControlRiskClassificationControl:Add',
+      type: 'add',
+      label: '新增管控设置',
+      onClick: () => void openDialog()
+    },
+    {
+      permission: 'SmisDualControlRiskClassificationControl:Import',
+      type: 'import',
+      importColumns: excelColumns,
+      importApi: importRows,
+      onImportError: () => void ElMessage.error('导入失败，请检查风险点编号、员工、层级与重复配置')
+    },
+    {
+      permission: 'SmisDualControlRiskClassificationControl:Export',
+      type: 'export',
+      exportFilename: '风险分级管控',
+      exportSheetName: '分级管控',
+      exportColumns: excelColumns,
+      exportApi: async () => ({
+        data: (
+          await fetchRiskControlPointList({ ...searchQuery.value, from: 0, to: 9999 })
+        ).data.map((row) => ({
+          ...row,
+          accidentTypes: row.accidentTypes.join('、'),
+          controlLevels: row.assignments
+            .map((item) => controlLevelLabel.get(item.controlLevel))
+            .join('|'),
+          responsibleEmployees: row.assignments
+            .map((item) => item.responsibleEmployeeNo || item.responsibleEmployeeName)
+            .join('|'),
+          frequencies: row.assignments.map((item) => item.frequencyLabel).join('|'),
+          levelRequirements: row.assignments.map((item) => item.controlMeasure || '').join('|'),
+          controlStartAt: row.controlStartAt
+            ? dayjs(row.controlStartAt).format('YYYY-MM-DD HH:mm')
+            : '',
+          status:
+            statusOptions.find((item) => item.value === row.controlStatus)?.label ||
+            row.controlStatus
+        }))
+      })
+    },
+    {
+      permission: 'SmisDualControlRiskClassificationControl:Delete',
+      type: 'delete',
+      content: ({ selectedCount }: ArtTableQueryHeaderActionContext) =>
+        `确定删除或停用选中的 ${selectedCount} 项管控配置吗？已有任务的配置将停用并保留审计。`,
+      disabled: ({ selectedRows }: ArtTableQueryHeaderActionContext) =>
+        !(selectedRows as SmisRiskControlPoint[]).some((row) => row.planId),
+      onClick: async ({ selectedRows, api }) => {
+        await deleteRiskControlPlans(
+          (selectedRows as SmisRiskControlPoint[]).flatMap((row) =>
+            row.planId ? [row.planId] : []
+          )
+        )
+        await api.refreshRemove()
+      }
+    }
+  ])
+  const handleSaveSuccess = (type: 'add' | 'edit'): void => {
+    void (type === 'add'
+      ? tableQueryRef.value?.refreshCreate()
+      : tableQueryRef.value?.refreshUpdate())
+  }
+  const handleDelete = async (row: SmisRiskControlPoint): Promise<void> => {
+    if (!row.planId) return
+    try {
+      await confirmDelete(
+        `确定删除风险点“${row.riskPointName}”的管控配置吗？已有任务时将改为停用。`
+      )
+      await deleteRiskControlPlans([row.planId])
+      await tableQueryRef.value?.refreshRemove()
+    } catch {
+      /* 用户取消 */
+    }
+  }
+  onMounted(async () => {
+    await Promise.all([
+      userStore.ensureDictLoaded('smisRiskPointType'),
+      userStore.ensureDictLoaded('smisAccidentCategory'),
+      userStore.ensureDictLoaded('smisRiskControlStatus'),
+      loadOptions()
+    ])
+  })
 </script>
+
+<style scoped lang="scss">
+  .risk-control-page {
+    gap: 12px;
+    min-width: 0;
+
+    &__status-strip {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      overflow: hidden;
+      background: var(--default-box-color);
+      border: 1px solid var(--el-border-color-lighter);
+      border-radius: var(--el-border-radius-base);
+    }
+
+    &__status-strip button {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
+      color: var(--el-text-color-secondary);
+      cursor: pointer;
+      background: transparent;
+      border: 0;
+      border-right: 1px solid var(--el-border-color-lighter);
+    }
+
+    &__status-strip button:last-child {
+      border-right: 0;
+    }
+
+    &__status-strip button.active {
+      color: var(--theme-color);
+      background: color-mix(in srgb, var(--theme-color) 7%, var(--default-box-color));
+      box-shadow: inset 0 -2px var(--theme-color);
+    }
+
+    &__status-strip strong {
+      font-family: var(--art-font-family-mono, Consolas, monospace);
+      font-size: 16px;
+    }
+
+    &__table {
+      flex: 1 1 auto;
+      min-width: 0;
+      min-height: 0;
+    }
+
+    :deep(.risk-control-page__code) {
+      font-family: var(--art-font-family-mono, Consolas, monospace);
+      font-size: 12px;
+      color: var(--theme-color);
+    }
+
+    :deep(.risk-control-page__identity) {
+      display: grid;
+      grid-template-columns: 34px minmax(0, 1fr);
+      gap: 10px;
+      align-items: center;
+    }
+
+    :deep(.risk-control-page__identity > span) {
+      display: grid;
+      place-items: center;
+      width: 34px;
+      height: 34px;
+      color: var(--theme-color);
+      background: color-mix(in srgb, var(--theme-color) 9%, var(--el-bg-color));
+      border-radius: var(--el-border-radius-base);
+    }
+
+    :deep(.risk-control-page__identity strong),
+    :deep(.risk-control-page__identity small) {
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    :deep(.risk-control-page__identity small) {
+      margin-top: 2px;
+      font-size: 11px;
+      color: var(--el-text-color-secondary);
+    }
+
+    :deep(.risk-control-page__tags) {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+
+    :deep(.risk-control-page__stack) {
+      display: grid;
+      gap: 4px;
+    }
+
+    :deep(.risk-control-page__stack > span) {
+      display: flex;
+      gap: 8px;
+      justify-content: space-between;
+    }
+
+    :deep(.risk-control-page__stack b) {
+      font-weight: 500;
+    }
+
+    :deep(.risk-control-page__stack small) {
+      color: var(--el-text-color-secondary);
+    }
+
+    :deep(.risk-control-page__level) {
+      display: inline-flex;
+      gap: 6px;
+      align-items: center;
+      font-weight: 600;
+    }
+
+    :deep(.risk-control-page__level::before) {
+      width: 8px;
+      height: 8px;
+      content: '';
+      background: var(--risk-color);
+      border-radius: 50%;
+    }
+
+    :deep(.risk-control-page__count) {
+      color: var(--theme-color);
+    }
+
+    :deep(.risk-control-page__muted) {
+      color: var(--el-text-color-placeholder);
+    }
+
+    :deep(.risk-control-page__actions) {
+      display: flex;
+      gap: 4px;
+      justify-content: center;
+    }
+  }
+
+  @media (width <= 760px) {
+    .risk-control-page__status-strip {
+      grid-template-columns: 1fr;
+    }
+
+    .risk-control-page__status-strip button {
+      border-right: 0;
+      border-bottom: 1px solid var(--el-border-color-lighter);
+    }
+  }
+</style>

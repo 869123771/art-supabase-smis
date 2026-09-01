@@ -149,6 +149,7 @@
       height: 100%;
       min-height: 0;
     }
+
     &__all {
       display: grid;
       grid-template-columns: 38px 1fr 18px;
@@ -165,14 +166,17 @@
       border: 1px solid transparent;
       border-radius: 10px;
     }
+
     &__all:hover,
     &__all.is-current {
       background: color-mix(in srgb, var(--theme-color) 9%, var(--default-box-color));
       border-color: color-mix(in srgb, var(--theme-color) 22%, transparent);
     }
+
     &__all.is-current {
       box-shadow: inset 3px 0 0 var(--theme-color);
     }
+
     &__all > span:first-child,
     &__node > span:first-child {
       display: grid;
@@ -183,25 +187,29 @@
       background: var(--default-box-color);
       border-radius: 9px;
     }
+
     &__all > span:nth-child(2),
     &__node > span:nth-child(2) {
       display: grid;
       min-width: 0;
     }
+
     strong {
       overflow: hidden;
-      color: var(--el-text-color-primary);
       text-overflow: ellipsis;
+      color: var(--el-text-color-primary);
       white-space: nowrap;
     }
+
     small {
       margin-top: 2px;
       overflow: hidden;
+      text-overflow: ellipsis;
       font-size: 11px;
       color: var(--el-text-color-secondary);
-      text-overflow: ellipsis;
       white-space: nowrap;
     }
+
     &__label {
       display: flex;
       justify-content: space-between;
@@ -209,26 +217,32 @@
       font-size: 12px;
       color: var(--el-text-color-secondary);
     }
+
     &__label span {
       font-weight: 600;
       color: var(--el-text-color-primary);
     }
+
     &__scrollbar {
       flex: 1;
       min-height: 230px;
     }
+
     :deep(.el-tree) {
       background: transparent;
     }
+
     :deep(.el-tree-node__content) {
       min-height: 50px;
       margin-bottom: 2px;
       border-radius: 9px;
     }
+
     :deep(.el-tree-node.is-current > .el-tree-node__content) {
       background: color-mix(in srgb, var(--theme-color) 10%, var(--default-box-color));
       box-shadow: inset 3px 0 0 var(--theme-color);
     }
+
     &__node {
       display: grid;
       grid-template-columns: 36px minmax(0, 1fr) 18px;
