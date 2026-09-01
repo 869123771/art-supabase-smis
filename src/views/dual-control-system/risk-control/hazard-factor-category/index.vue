@@ -72,7 +72,6 @@
     type SmisHazardFactorCategory,
     type SmisHazardFactorCategoryOverview,
     type SmisHazardFactorCategorySearchParams,
-    type SmisHazardFactorCategoryTagStyle,
     type SmisHazardFactorType
   } from '@smis/api'
   import HazardFactorCategoryDialog, {
@@ -94,17 +93,6 @@
     headerActions: ComputedRef<ArtTableQueryHeaderAction[]>
   }
 
-  const tagStyleOptions: Array<{
-    label: string
-    value: Exclude<SmisHazardFactorCategoryTagStyle, ''>
-  }> = [
-    { label: '主要', value: 'primary' },
-    { label: '成功', value: 'success' },
-    { label: '信息', value: 'info' },
-    { label: '警告', value: 'warning' },
-    { label: '危险', value: 'danger' }
-  ]
-  const tagStyleLabel = new Map(tagStyleOptions.map((item) => [item.value, item.label]))
   const { confirmDelete } = useArtFeedback()
   const userStore = useUserStore()
   const tenantScopeStore = useTenantScopeStore()
@@ -131,6 +119,17 @@
       label: item.label || item.name,
       value: item.value as SmisHazardFactorType
     }))
+  )
+
+  const tagStyleOptions = computed(() =>
+    (getDictMap.value.smisTagStyle ?? []).map((item) => ({
+      label: item.label || item.name,
+      value: item.value
+    }))
+  )
+
+  const tagStyleLabel = computed(
+    () => new Map(tagStyleOptions.value.map((item) => [item.value, item.label]))
   )
 
   const workspaceMetrics = computed<BusinessWorkspaceMetric[]>(() => [
@@ -235,7 +234,7 @@
         label: '标签样式',
         key: 'tagStyle',
         type: 'select',
-        props: { options: tagStyleOptions, clearable: true, placeholder: '全部样式' }
+        props: { options: tagStyleOptions.value, clearable: true, placeholder: '全部样式' }
       }
     ]),
     headerActions
@@ -323,7 +322,7 @@
       formatter: (row) =>
         row.tagStyle ? (
           <ElTag type={row.tagStyle} effect="plain">
-            {tagStyleLabel.get(row.tagStyle)}
+            {tagStyleLabel.value.get(row.tagStyle)}
           </ElTag>
         ) : (
           <span class="hazard-factor-category-page__unset">未设置</span>
@@ -422,6 +421,7 @@
     await Promise.all([
       userStore.ensureDictLoaded('smisHazardFactorCategoryStatus'),
       userStore.ensureDictLoaded('smisHazardFactorType'),
+      userStore.ensureDictLoaded('smisTagStyle'),
       tenantScopeStore.loadTenantOptions()
     ])
   })

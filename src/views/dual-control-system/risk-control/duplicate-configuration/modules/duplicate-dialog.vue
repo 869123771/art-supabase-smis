@@ -182,7 +182,7 @@
       key: 'tagStyle',
       type: 'select',
       options: tagOptions.value,
-      props: { clearable: false }
+      props: { clearable: false, placeholder: '请选择标签样式' }
     },
     {
       label: '状态',
@@ -195,6 +195,8 @@
   const rules: FormRules = {
     menuId: [{ required: true, message: '请选择关联菜单功能', trigger: 'change' }],
     contentItem: [{ required: true, message: '请输入内容事项', trigger: 'blur' }],
+    tagStyle: [{ required: true, message: '请选择标签样式', trigger: 'change' }],
+    status: [{ required: true, message: '请选择状态', trigger: 'change' }],
     repeatFrequency: [
       {
         validator: (_r, _v, cb) =>
@@ -231,14 +233,34 @@
       }
     }
   )
+  const buildSubmitPayload = (): SmisDuplicateConfigurationPayload => {
+    const payload: SmisDuplicateConfigurationPayload = {
+      ...model,
+      contentItem: model.contentItem.trim(),
+      textColor: model.textColor || null
+    }
+
+    if (!model.repeatEnabled) {
+      return {
+        ...payload,
+        repeatFrequency: null,
+        frequencyUnit: null,
+        calendarType: 'none',
+        calendarDays: [],
+        deadlineTime: null
+      }
+    }
+
+    return {
+      ...payload,
+      calendarDays: model.calendarType === 'none' ? [] : [...model.calendarDays],
+      deadlineTime: model.deadlineTime || null
+    }
+  }
   const submit = async () => {
     try {
       await formRef.value?.validate()
-      await saveDuplicateConfiguration({
-        ...model,
-        contentItem: model.contentItem.trim(),
-        textColor: model.textColor || null
-      })
+      await saveDuplicateConfiguration(buildSubmitPayload())
       emit('success', model.id ? 'edit' : 'add')
       return true
     } catch {

@@ -15,68 +15,85 @@
       </div>
 
       <ArtSectionTitle title="任务计划" subtitle="风险对象、管控责任与执行时限" />
-      <ElDescriptions class="task-detail-drawer__descriptions" :column="2" border>
-        <ElDescriptionsItem label="风险点类型"
-          ><ArtDictDisplay dict-code="smisRiskPointType" :value="detail.riskPointType"
-        /></ElDescriptionsItem>
-        <ElDescriptionsItem label="风险等级"
-          ><span class="task-detail-drawer__risk" :style="{ color: detail.riskLevelColor }">{{
-            detail.riskLevelName
-          }}</span></ElDescriptionsItem
-        >
-        <ElDescriptionsItem label="管控层级"
-          ><ArtDictDisplay dict-code="smisRiskControlLevel" :value="detail.controlLevel"
-        /></ElDescriptionsItem>
-        <ElDescriptionsItem label="管控责任人"
-          >{{ detail.responsibleEmployeeName }} ·
-          {{ detail.responsibleEmployeeNo }}</ElDescriptionsItem
-        >
-        <ElDescriptionsItem label="当前接收人"
-          >{{ detail.assigneeEmployeeName }} · {{ detail.assigneeEmployeeNo }}</ElDescriptionsItem
-        >
-        <ElDescriptionsItem label="实际执行人">{{
-          detail.actualExecutorEmployeeName || '尚未执行'
-        }}</ElDescriptionsItem>
-        <ElDescriptionsItem label="计划开始">{{
-          formatDate(detail.plannedStartAt)
-        }}</ElDescriptionsItem>
-        <ElDescriptionsItem label="计划完成">{{
-          formatDate(detail.plannedEndAt)
-        }}</ElDescriptionsItem>
-        <ElDescriptionsItem label="实际开始">{{
-          formatDate(detail.actualStartAt)
-        }}</ElDescriptionsItem>
-        <ElDescriptionsItem label="完成时间">{{
-          formatDate(detail.completedAt)
-        }}</ElDescriptionsItem>
-      </ElDescriptions>
+      <dl class="task-detail-drawer__plan-grid">
+        <div>
+          <dt>风险点类型</dt>
+          <dd><ArtDictDisplay dict-code="smisRiskPointType" :value="detail.riskPointType" /></dd>
+        </div>
+        <div>
+          <dt>风险等级</dt>
+          <dd>
+            <span
+              class="task-detail-drawer__risk"
+              :style="{ '--risk-color': detail.riskLevelColor }"
+            >
+              {{ detail.riskLevelName || '待评价' }}
+            </span>
+          </dd>
+        </div>
+        <div>
+          <dt>管控层级</dt>
+          <dd><ArtDictDisplay dict-code="smisRiskControlLevel" :value="detail.controlLevel" /></dd>
+        </div>
+        <div>
+          <dt>管控责任人</dt>
+          <dd>{{ detail.responsibleEmployeeName }} · {{ detail.responsibleEmployeeNo }}</dd>
+        </div>
+        <div>
+          <dt>当前接收人</dt>
+          <dd>{{ detail.assigneeEmployeeName }} · {{ detail.assigneeEmployeeNo }}</dd>
+        </div>
+        <div>
+          <dt>实际执行人</dt>
+          <dd>{{ detail.actualExecutorEmployeeName || '尚未执行' }}</dd>
+        </div>
+        <div>
+          <dt>计划开始</dt>
+          <dd>{{ formatDate(detail.plannedStartAt) }}</dd>
+        </div>
+        <div>
+          <dt>计划完成</dt>
+          <dd>{{ formatDate(detail.plannedEndAt) }}</dd>
+        </div>
+        <div>
+          <dt>实际开始</dt>
+          <dd>{{ formatDate(detail.actualStartAt) }}</dd>
+        </div>
+        <div>
+          <dt>完成时间</dt>
+          <dd>{{ formatDate(detail.completedAt) }}</dd>
+        </div>
+      </dl>
 
       <ArtSectionTitle
         title="巡查项目"
         :subtitle="`共 ${detail.items.length} 项，异常 ${abnormalCount} 项`"
       />
-      <ElTable :data="detail.items" border table-layout="fixed" empty-text="暂无巡查项目">
-        <ElTableColumn type="index" label="序号" width="62" align="center" />
-        <ElTableColumn label="危险源" min-width="150"
-          ><template #default="{ row }"
-            ><div class="task-detail-drawer__item"
-              ><strong>{{ row.hazardSource || '关联风险项已删除' }}</strong
-              ><small>{{ row.hazardNo || '历史快照' }}</small></div
-            ></template
-          ></ElTableColumn
-        >
-        <ElTableColumn prop="inspectionContent" label="排查内容 / 控制措施" min-width="260" />
-        <ElTableColumn label="结果" width="96" align="center"
-          ><template #default="{ row }"
-            ><ArtDictDisplay
+      <ul v-if="detail.items.length" class="task-detail-drawer__inspection-list">
+        <li v-for="(item, index) in detail.items" :key="item.id" :data-result="item.result">
+          <span class="task-detail-drawer__item-index">{{ index + 1 }}</span>
+          <div class="task-detail-drawer__item-identity">
+            <strong>{{ item.hazardSource || '关联风险项已删除' }}</strong>
+            <small>{{ item.hazardNo || '历史快照' }}</small>
+          </div>
+          <div class="task-detail-drawer__item-content">
+            <small>排查内容 / 控制措施</small>
+            <p>{{ item.inspectionContent || '暂无排查内容' }}</p>
+          </div>
+          <div class="task-detail-drawer__item-result">
+            <ArtDictDisplay
               dict-code="smisRiskInspectionResult"
-              :value="row.result"
-              display="tag" /></template
-        ></ElTableColumn>
-        <ElTableColumn prop="remark" label="执行备注" min-width="180"
-          ><template #default="{ row }">{{ row.remark || '—' }}</template></ElTableColumn
-        >
-      </ElTable>
+              :value="item.result"
+              display="tag"
+            />
+            <small>{{ item.remark || '暂无执行备注' }}</small>
+          </div>
+        </li>
+      </ul>
+      <div v-else class="task-detail-drawer__empty">
+        <ArtSvgIcon icon="ri:file-list-3-line" />
+        <span>暂无巡查项目</span>
+      </div>
 
       <ArtSectionTitle title="执行记录" subtitle="任务生成、转交、进度保存与完成事件" />
       <ElTimeline class="task-detail-drawer__timeline">
@@ -210,23 +227,159 @@
     font-size: 16px;
   }
 
-  .task-detail-drawer__descriptions {
-    margin-top: -8px;
+  .task-detail-drawer__plan-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin: -8px 0 0;
+    overflow: hidden;
+    background: var(--default-box-color);
+    border: 1px solid var(--el-border-color-lighter);
+    border-radius: var(--el-border-radius-base);
+  }
+
+  .task-detail-drawer__plan-grid > div {
+    display: grid;
+    grid-template-columns: 126px minmax(0, 1fr);
+    min-width: 0;
+    border-bottom: 1px solid var(--el-border-color-lighter);
+  }
+
+  .task-detail-drawer__plan-grid > div:nth-child(odd) {
+    border-right: 1px solid var(--el-border-color-lighter);
+  }
+
+  .task-detail-drawer__plan-grid > div:nth-last-child(-n + 2) {
+    border-bottom: 0;
+  }
+
+  .task-detail-drawer__plan-grid dt,
+  .task-detail-drawer__plan-grid dd {
+    min-width: 0;
+    padding: 11px 12px;
+    margin: 0;
+  }
+
+  .task-detail-drawer__plan-grid dt {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--el-text-color-secondary);
+    background: var(--el-fill-color-light);
+  }
+
+  .task-detail-drawer__plan-grid dd {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--el-text-color-regular);
+    white-space: nowrap;
   }
 
   .task-detail-drawer__risk {
+    display: inline-flex;
+    gap: 7px;
+    align-items: center;
     font-weight: 600;
   }
 
-  .task-detail-drawer__item strong,
-  .task-detail-drawer__item small {
-    display: block;
+  .task-detail-drawer__risk::before {
+    width: 8px;
+    height: 8px;
+    content: '';
+    background: var(--risk-color, var(--el-color-warning));
+    border-radius: 50%;
   }
 
-  .task-detail-drawer__item small {
-    margin-top: 2px;
+  .task-detail-drawer__inspection-list {
+    display: grid;
+    gap: 8px;
+    padding: 0;
+    margin: -8px 0 0;
+    list-style: none;
+  }
+
+  .task-detail-drawer__inspection-list > li {
+    display: grid;
+    grid-template-columns: 34px minmax(140px, 0.55fr) minmax(240px, 1fr) minmax(140px, 0.5fr);
+    gap: 12px;
+    align-items: center;
+    padding: 12px 14px;
+    background: var(--el-fill-color-extra-light);
+    border: 1px solid var(--el-border-color-lighter);
+    border-left: 3px solid var(--el-border-color);
+    border-radius: var(--el-border-radius-base);
+  }
+
+  .task-detail-drawer__inspection-list > li[data-result='abnormal'] {
+    border-left-color: var(--el-color-danger);
+  }
+
+  .task-detail-drawer__inspection-list > li[data-result='normal'] {
+    border-left-color: var(--el-color-success);
+  }
+
+  .task-detail-drawer__item-index {
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    font-family: var(--art-font-family-mono, Consolas, monospace);
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--theme-color);
+    background: color-mix(in srgb, var(--theme-color) 9%, var(--el-bg-color));
+    border-radius: var(--el-border-radius-small);
+  }
+
+  .task-detail-drawer__item-identity,
+  .task-detail-drawer__item-content,
+  .task-detail-drawer__item-result {
+    min-width: 0;
+  }
+
+  .task-detail-drawer__item-identity strong,
+  .task-detail-drawer__item-identity small,
+  .task-detail-drawer__item-content small,
+  .task-detail-drawer__item-content p,
+  .task-detail-drawer__item-result small {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .task-detail-drawer__item-identity small,
+  .task-detail-drawer__item-content small,
+  .task-detail-drawer__item-result small {
+    margin-top: 3px;
     font-size: 11px;
     color: var(--el-text-color-secondary);
+  }
+
+  .task-detail-drawer__item-content p {
+    margin: 3px 0 0;
+    color: var(--el-text-color-regular);
+  }
+
+  .task-detail-drawer__item-result {
+    display: grid;
+    gap: 4px;
+    justify-items: start;
+  }
+
+  .task-detail-drawer__empty {
+    display: grid;
+    gap: 8px;
+    place-items: center;
+    min-height: 120px;
+    margin-top: -8px;
+    font-size: 13px;
+    color: var(--el-text-color-placeholder);
+    background: var(--el-fill-color-extra-light);
+    border: 1px dashed var(--el-border-color);
+    border-radius: var(--el-border-radius-base);
+  }
+
+  .task-detail-drawer__empty .art-svg-icon {
+    font-size: 28px;
   }
 
   .task-detail-drawer__timeline {
@@ -261,5 +414,28 @@
     display: grid;
     grid-template-columns: 110px minmax(0, 1fr);
     margin: 0;
+  }
+
+  @media (width <= 900px) {
+    .task-detail-drawer__plan-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .task-detail-drawer__plan-grid > div:nth-child(odd) {
+      border-right: 0;
+    }
+
+    .task-detail-drawer__plan-grid > div:nth-last-child(2) {
+      border-bottom: 1px solid var(--el-border-color-lighter);
+    }
+
+    .task-detail-drawer__inspection-list > li {
+      grid-template-columns: 34px minmax(0, 1fr);
+    }
+
+    .task-detail-drawer__item-content,
+    .task-detail-drawer__item-result {
+      grid-column: 2;
+    }
   }
 </style>

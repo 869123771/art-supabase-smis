@@ -3,18 +3,21 @@
     <div class="hazard-statistics">
       <ArtSectionCard title="查询条件" subtitle="按系统组织部门统计已提交危险源">
         <div class="hazard-statistics__query">
-          <ElTreeSelect
-            v-model="organizationId"
-            :data="organizations"
-            :props="treeProps"
-            node-key="id"
-            value-key="id"
-            check-strictly
-            filterable
-            clearable
-            default-expand-all
-            placeholder="全部组织部门"
-          />
+          <label class="hazard-statistics__field">
+            <span>系统组织部门</span>
+            <ElTreeSelect
+              v-model="organizationId"
+              :data="organizations"
+              :props="treeProps"
+              node-key="id"
+              value-key="id"
+              check-strictly
+              filterable
+              clearable
+              default-expand-all
+              placeholder="全部组织部门"
+            />
+          </label>
           <ElButton type="primary" :loading="loading" @click="loadStatistics"
             ><ArtSvgIcon icon="ri:search-line" /> 查询</ElButton
           >
@@ -119,7 +122,19 @@
     display: grid;
     grid-template-columns: minmax(260px, 1fr) auto;
     gap: 12px;
-    align-items: center;
+    align-items: end;
+  }
+
+  .hazard-statistics__field {
+    display: grid;
+    gap: 8px;
+    min-width: 0;
+    font-size: 13px;
+    color: var(--el-text-color-regular);
+  }
+
+  .hazard-statistics__field :deep(.el-select) {
+    width: 100%;
   }
 
   .hazard-statistics__summary {

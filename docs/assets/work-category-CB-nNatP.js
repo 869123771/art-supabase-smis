@@ -1,1 +1,0 @@
-import{an as e,gn as t,tr as n}from"./style-D3Duppxh.js";import{t as r}from"./qualification-catalog-page-DIgBUA_o.js";var i=t({name:`SmisWorkCategory`,__name:`index`,setup(t){return(t,i)=>(n(),e(r,{"catalog-type":`work_category`}))}});export{i as default};

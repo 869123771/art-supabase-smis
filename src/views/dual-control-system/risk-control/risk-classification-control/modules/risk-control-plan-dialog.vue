@@ -10,10 +10,17 @@
       </div>
 
       <ElForm ref="formRef" :model="form" :rules="rules" label-position="top">
-        <ArtSectionTitle title="管控对象" subtitle="仅可选择已完成定量评价的有效风险点" />
+        <ArtSectionTitle title="管控对象" subtitle="可选择已维护有效危险源的风险点" />
         <div class="risk-control-dialog__grid">
           <ElFormItem label="风险点" prop="riskPointId">
-            <ElSelect v-model="form.riskPointId" class="w-full" filterable :disabled="Boolean(row)">
+            <ElSelect
+              v-model="form.riskPointId"
+              class="w-full"
+              filterable
+              placeholder="请选择风险点"
+              no-data-text="暂无已维护有效危险源的风险点"
+              :disabled="Boolean(row)"
+            >
               <ElOption
                 v-for="item in options.riskPoints"
                 :key="item.id"
@@ -290,7 +297,7 @@
       title: data.row?.planId ? '编辑风险管控设置' : '新增风险管控设置',
       subtitle: data.row
         ? `${data.row.riskPointNo} · ${data.row.riskPointName}`
-        : '选择已评价风险点并落实分级责任',
+        : '选择已维护危险源的风险点并落实分级责任',
       contentMaxHeight: 'calc(100vh - 150px)'
     })
     await nextTick()

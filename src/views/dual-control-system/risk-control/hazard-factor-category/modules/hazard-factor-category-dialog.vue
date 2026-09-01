@@ -28,7 +28,7 @@
           <i :style="{ backgroundColor: form.model.textColor || 'var(--el-color-info)' }" />
           {{ previewName }}
         </span>
-        <small>设置标签样式时优先显示标签；未设置时使用文字颜色。</small>
+        <small>标签样式用于统一业务状态呈现；文字颜色用于列表与看板中的辅助识别。</small>
       </div>
 
       <ArtForm
@@ -47,22 +47,6 @@
             <ElColorPicker v-model="form.model.textColor" :predefine="presetColors" />
             <span>{{ form.model.textColor?.toUpperCase() || '未设置颜色' }}</span>
           </div>
-        </template>
-
-        <template #tagStyle>
-          <ElSelect v-model="form.model.tagStyle" clearable placeholder="请选择标签样式">
-            <ElOption
-              v-for="option in tagStyleOptions"
-              :key="option.value"
-              :label="option.label"
-              :value="option.value"
-            >
-              <div class="hazard-factor-category-dialog__tag-option">
-                <span>{{ option.label }}</span>
-                <ElTag :type="option.value">{{ option.example }}</ElTag>
-              </div>
-            </ElOption>
-          </ElSelect>
         </template>
       </ArtForm>
     </div>
@@ -114,17 +98,6 @@
   }
 
   const presetColors = ['#409EFF', '#67C23A', '#E6A23C', '#F56C6C', '#909399']
-  const tagStyleOptions: Array<{
-    label: string
-    example: string
-    value: Exclude<SmisHazardFactorCategoryTagStyle, ''>
-  }> = [
-    { label: '主要', example: '主要因素', value: 'primary' },
-    { label: '成功', example: '受控因素', value: 'success' },
-    { label: '信息', example: '一般因素', value: 'info' },
-    { label: '警告', example: '关注因素', value: 'warning' },
-    { label: '危险', example: '重点因素', value: 'danger' }
-  ]
   const emit = defineEmits<{ success: [type: 'add' | 'edit'] }>()
   const userStore = useUserStore()
   const tenantScopeStore = useTenantScopeStore()
@@ -143,7 +116,7 @@
     categoryName: '',
     sort: 1,
     textColor: '',
-    tagStyle: '',
+    tagStyle: 'primary',
     status: 'enabled'
   })
 
@@ -156,6 +129,13 @@
 
   const factorTypeOptions = computed<FormItemOption[]>(() =>
     (getDictMap.value.smisHazardFactorType ?? []).map((item) => ({
+      label: item.label || item.name,
+      value: item.value
+    }))
+  )
+
+  const tagStyleOptions = computed<FormItemOption[]>(() =>
+    (getDictMap.value.smisTagStyle ?? []).map((item) => ({
       label: item.label || item.name,
       value: item.value
     }))
@@ -221,7 +201,13 @@
         options: statusOptions.value
       },
       { label: '文字颜色', key: 'textColor' },
-      { label: '标签样式', key: 'tagStyle' }
+      {
+        label: '标签样式',
+        key: 'tagStyle',
+        type: 'select',
+        options: tagStyleOptions.value,
+        props: { clearable: false, placeholder: '请选择标签样式' }
+      }
     ]),
     rules: {
       tenantId: [{ required: true, message: '请选择所属租户', trigger: 'change' }],
@@ -246,6 +232,7 @@
           trigger: 'change'
         }
       ],
+      tagStyle: [{ required: true, message: '请选择标签样式', trigger: 'change' }],
       status: [{ required: true, message: '请选择状态', trigger: 'change' }]
     }
   })
@@ -317,6 +304,7 @@
           await Promise.all([
             userStore.ensureDictLoaded('smisHazardFactorCategoryStatus'),
             userStore.ensureDictLoaded('smisHazardFactorType'),
+            userStore.ensureDictLoaded('smisTagStyle'),
             isPlatformSuper.value ? tenantScopeStore.loadTenantOptions() : Promise.resolve()
           ])
         } finally {
@@ -415,14 +403,6 @@
         font-size: 12px;
         color: var(--el-text-color-secondary);
       }
-    }
-
-    &__tag-option {
-      display: flex;
-      gap: 16px;
-      align-items: center;
-      justify-content: space-between;
-      width: 100%;
     }
 
     @media only screen and (width <= 720px) {

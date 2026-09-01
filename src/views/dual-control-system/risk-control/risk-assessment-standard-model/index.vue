@@ -21,7 +21,7 @@
 
       <ElScrollbar class="risk-model-page__scrollbar">
         <div class="risk-model-page__content">
-          <div class="risk-model-page__method-switch" role="tablist" aria-label="风险评估方法">
+          <nav class="risk-model-page__method-switch" role="tablist" aria-label="风险评估方法">
             <button
               v-for="model in models"
               :key="model.id"
@@ -29,105 +29,163 @@
               role="tab"
               :aria-selected="activeMethod === model.methodCode"
               :class="{ 'is-active': activeMethod === model.methodCode }"
+              :disabled="loading"
               @click="activeMethod = model.methodCode"
             >
-              <span>{{ model.methodCode }}</span
-              ><div
+              <span class="risk-model-page__method-code">{{ model.methodCode }}</span
+              ><div class="risk-model-page__method-copy"
                 ><strong>{{ model.modelName }}</strong
-                ><small>{{ model.description }}</small></div
-              ><ArtSvgIcon icon="ri:arrow-right-s-line" />
+                ><small>{{ model.description || '暂无方法说明' }}</small></div
+              ><span class="risk-model-page__method-meta"
+                >{{ model.dimensions.length }} 个维度 · {{ criteriaCount(model) }} 条标准</span
+              ><ArtSvgIcon
+                :icon="
+                  activeMethod === model.methodCode
+                    ? 'ri:checkbox-circle-fill'
+                    : 'ri:arrow-right-s-line'
+                "
+              />
             </button>
-          </div>
+          </nav>
 
           <ArtSectionCard
-            v-if="activeModel"
-            class="risk-model-page__formula"
-            :title="activeModel.modelName"
-            :subtitle="activeModel.description || ''"
+            class="risk-model-page__decision-card"
+            title="模型判定逻辑"
+            subtitle="核对计算公式与风险等级阈值，确保量化结果和分级规则保持一致。"
             :loading="loading"
             :error="error"
+            :empty="!loading && !error && !activeModel"
+            empty-title="暂无评估模型"
+            empty-description="请先初始化风险评估模型数据。"
             @retry="loadModels"
           >
-            <div class="risk-model-page__equation"
-              ><span
-                v-for="(part, index) in equationParts"
-                :key="`${part}-${index}`"
-                :class="{ 'is-operator': ['×', '='].includes(part) }"
-                >{{ part }}</span
-              ></div
-            >
-            <p>{{
-              activeMethod === 'LEC'
-                ? 'D = L × E × C，系统依据 D 值自动匹配风险等级。'
-                : 'R = L × S，矩阵交叉结果自动映射风险等级。'
-            }}</p>
-          </ArtSectionCard>
-
-          <div v-if="activeModel" class="risk-model-page__dimension-grid">
-            <ArtSectionCard
-              v-for="dimension in activeModel.dimensions"
-              :key="dimension.id"
-              :title="`${dimension.dimensionCode} · ${dimension.dimensionName}`"
-              :subtitle="dimension.description || '配置该维度的量化判定标准'"
-            >
-              <template #actions
-                ><ArtIconButton
-                  icon="ri:add-line"
-                  label="新增判定标准"
-                  permission="SmisDualControlRiskAssessmentStandardModel:Add"
-                  @click="openCriterion(dimension)"
-              /></template>
-              <ElTable :data="dimension.criteria" table-layout="fixed" max-height="330">
-                <ElTableColumn prop="score" label="分值" width="86" align="center"
-                  ><template #default="{ row }"
-                    ><strong class="risk-model-page__score">{{ row.score }}</strong></template
-                  ></ElTableColumn
+            <div v-if="activeModel" class="risk-model-page__decision-layout">
+              <section class="risk-model-page__formula-panel" aria-labelledby="formula-title">
+                <span class="risk-model-page__kicker">计算公式</span>
+                <h3 id="formula-title">{{ activeModel.modelName }}</h3>
+                <div class="risk-model-page__equation" aria-label="风险计算公式"
+                  ><span
+                    v-for="(part, index) in equationParts"
+                    :key="`${part}-${index}`"
+                    :class="{ 'is-operator': ['×', '='].includes(part) }"
+                    >{{ part }}</span
+                  ></div
                 >
-                <ElTableColumn
-                  prop="criterionText"
-                  label="判定标准"
-                  min-width="230"
-                  show-overflow-tooltip
-                />
-                <ElTableColumn label="操作" width="88" align="right"
-                  ><template #default="{ row }"
-                    ><ArtButtonTable
-                      type="edit"
-                      permission="SmisDualControlRiskAssessmentStandardModel:Edit"
-                      label="编辑判定标准"
-                      @click="openCriterionRow(dimension, row)" /><ArtButtonTable
-                      type="delete"
-                      permission="SmisDualControlRiskAssessmentStandardModel:Delete"
-                      label="删除判定标准"
-                      @click="deleteCriterionRow(row)" /></template
-                ></ElTableColumn>
-              </ElTable>
-            </ArtSectionCard>
-          </div>
+                <p>{{
+                  activeMethod === 'LEC'
+                    ? 'D = L × E × C，系统依据 D 值自动匹配风险等级。'
+                    : 'R = L × S，矩阵交叉结果自动映射风险等级。'
+                }}</p>
+              </section>
 
-          <ArtSectionCard
-            v-if="activeModel"
-            title="风险等级映射"
-            subtitle="分值达到最低值且低于最高值时匹配对应等级；最高等级可无上限。"
-          >
-            <div class="risk-model-page__levels">
-              <button
-                v-for="level in activeModel.levels"
-                :key="level.id"
-                v-auth="'SmisDualControlRiskAssessmentStandardModel:Edit'"
-                type="button"
-                :style="{ '--level-color': level.color }"
-                @click="openLevel(level)"
-              >
-                <span>{{ level.levelCode }}</span
-                ><strong>{{ level.levelName }}</strong
-                ><small
-                  >{{ level.minScore }} ≤ {{ activeMethod === 'LEC' ? 'D' : 'R' }}
-                  {{ level.maxScore == null ? '' : `< ${level.maxScore}` }}</small
-                ><ArtSvgIcon icon="ri:edit-line" />
-              </button>
+              <section class="risk-model-page__spectrum" aria-labelledby="spectrum-title">
+                <div class="risk-model-page__spectrum-heading">
+                  <div>
+                    <span class="risk-model-page__kicker">结果分级</span>
+                    <h3 id="spectrum-title">风险等级谱</h3>
+                  </div>
+                  <span class="risk-model-page__result-code">计算结果 {{ resultCode }}</span>
+                </div>
+                <div class="risk-model-page__levels">
+                  <article
+                    v-for="level in activeModel.levels"
+                    :key="level.id"
+                    :style="{ '--level-color': level.color }"
+                  >
+                    <div class="risk-model-page__level-copy">
+                      <span>
+                        <span class="risk-model-page__level-dot" aria-hidden="true"></span>
+                        <strong>{{ level.levelName }}</strong>
+                      </span>
+                      <small>{{ levelRange(level) }} · {{ level.levelCode }}</small>
+                    </div>
+                    <ArtIconButton
+                      icon="ri:edit-line"
+                      :label="`编辑${level.levelName}阈值`"
+                      :disabled="isCrossTenantReadOnly"
+                      permission="SmisDualControlRiskAssessmentStandardModel:Edit"
+                      @click="openLevel(level)"
+                    />
+                  </article>
+                </div>
+              </section>
             </div>
           </ArtSectionCard>
+
+          <section
+            v-if="activeModel"
+            class="risk-model-page__criteria-workspace"
+            aria-labelledby="criteria-workspace-title"
+          >
+            <header class="risk-model-page__criteria-heading">
+              <div>
+                <ArtSectionTitle id="criteria-workspace-title" :show-line="false">
+                  判定维度与评分标准
+                </ArtSectionTitle>
+                <p>
+                  当前模型包含 {{ activeModel.dimensions.length }} 个判定维度、
+                  {{ activeCriteriaCount }} 条评分标准。
+                </p>
+              </div>
+            </header>
+
+            <div class="risk-model-page__dimension-grid">
+              <ArtSectionCard
+                v-for="dimension in activeModel.dimensions"
+                :key="dimension.id"
+                class="risk-model-page__dimension-card"
+                :title="`${dimension.dimensionCode} · ${dimension.dimensionName}`"
+                :subtitle="dimension.description || '配置该维度的量化判定标准'"
+                :empty="dimension.criteria.length === 0"
+                empty-title="暂无判定标准"
+                empty-description="使用右上角新增按钮补充该维度的分值与判断依据。"
+                :empty-visual-size="72"
+                :min-height="280"
+              >
+                <template #actions>
+                  <span class="risk-model-page__dimension-count">
+                    {{ dimension.criteria.length }} 项
+                  </span>
+                  <ArtIconButton
+                    icon="ri:add-line"
+                    :label="`新增${dimension.dimensionName}判定标准`"
+                    :disabled="isCrossTenantReadOnly"
+                    permission="SmisDualControlRiskAssessmentStandardModel:Add"
+                    @click="openCriterion(dimension)"
+                  />
+                </template>
+
+                <div class="risk-model-page__criterion-legend" aria-hidden="true">
+                  <span>分值</span>
+                  <span>判定说明</span>
+                  <span>操作</span>
+                </div>
+                <ol class="risk-model-page__criterion-list">
+                  <li v-for="criterion in dimension.criteria" :key="criterion.id">
+                    <strong class="risk-model-page__score">{{ criterion.score }}</strong>
+                    <p :title="criterion.criterionText">{{ criterion.criterionText }}</p>
+                    <span class="risk-model-page__row-actions">
+                      <ArtIconButton
+                        icon="ri:pencil-line"
+                        :label="`编辑分值 ${criterion.score} 的判定标准`"
+                        :disabled="isCrossTenantReadOnly"
+                        permission="SmisDualControlRiskAssessmentStandardModel:Edit"
+                        @click="openCriterion(dimension, criterion)"
+                      />
+                      <ArtIconButton
+                        icon="ri:delete-bin-5-line"
+                        tone="danger"
+                        :label="`删除分值 ${criterion.score} 的判定标准`"
+                        :disabled="isCrossTenantReadOnly"
+                        permission="SmisDualControlRiskAssessmentStandardModel:Delete"
+                        @click="deleteCriterion(criterion)"
+                      />
+                    </span>
+                  </li>
+                </ol>
+              </ArtSectionCard>
+            </div>
+          </section>
 
           <ArtSectionCard
             v-if="activeModel && activeMethod === 'LS'"
@@ -165,14 +223,15 @@
   </ArtPermissionGuard>
 </template>
 <script setup lang="ts">
-  import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import ArtIconButton from '@/components/core/widget/art-icon-button/index.vue'
   import ArtSectionCard from '@/components/core/surfaces/art-section-card/index.vue'
+  import ArtSectionTitle from '@/components/core/surfaces/art-section-title/index.vue'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
   import BusinessWorkspaceHeader, {
     type BusinessWorkspaceMetric
   } from '@/components/business/business-workspace-header/index.vue'
   import { useArtFeedback } from '@/hooks/core/useArtFeedback'
+  import { useTenantScopeAccessPolicy } from '@/hooks/core/useTenantScopeAccessPolicy'
   import { useTenantScopeStore } from '@/store/modules/tenantScope'
   import {
     deleteRiskAssessmentCriteria,
@@ -193,6 +252,7 @@
     handleOpen: (data: LevelDialogOpenData) => Promise<void>
   }
   const { confirmDelete } = useArtFeedback()
+  const { isCrossTenantReadOnly } = useTenantScopeAccessPolicy()
   const tenantScopeStore = useTenantScopeStore()
   const { effectiveTenantId, revision } = storeToRefs(tenantScopeStore)
   const criterionDialogRef = ref<CriterionDialogExpose>()
@@ -205,6 +265,16 @@
   const equationParts = computed(() =>
     activeMethod.value === 'LEC' ? ['L', '×', 'E', '×', 'C', '=', 'D'] : ['L', '×', 'S', '=', 'R']
   )
+  const resultCode = computed(() => (activeMethod.value === 'LEC' ? 'D' : 'R'))
+  const criteriaCount = (model: SmisRiskAssessmentModel) =>
+    model.dimensions.reduce((total, dimension) => total + dimension.criteria.length, 0)
+  const activeCriteriaCount = computed(() =>
+    activeModel.value ? criteriaCount(activeModel.value) : 0
+  )
+  const levelRange = (level: SmisRiskAssessmentLevel) =>
+    level.maxScore == null
+      ? `${resultCode.value} ≥ ${level.minScore}`
+      : `${level.minScore} ≤ ${resultCode.value} < ${level.maxScore}`
   const metrics = computed<BusinessWorkspaceMetric[]>(() => [
     {
       label: '评估模型',
@@ -259,8 +329,8 @@
       models.value = result.data ?? []
       if (!models.value.some((m) => m.methodCode === activeMethod.value))
         activeMethod.value = models.value[0]?.methodCode || 'LEC'
-    } catch (e) {
-      error.value = e instanceof Error ? e.message : '评估模型加载失败'
+    } catch {
+      error.value = '评估模型加载失败，请稍后重试。'
     } finally {
       loading.value = false
     }
@@ -275,10 +345,6 @@
       tenantId: activeModel.value?.tenantId || effectiveTenantId.value || ''
     })
   const openLevel = (row: SmisRiskAssessmentLevel) => void levelDialogRef.value?.handleOpen({ row })
-  const openCriterionRow = (dimension: SmisRiskAssessmentDimension, row: unknown) =>
-    openCriterion(dimension, row as SmisRiskAssessmentCriterion)
-  const deleteCriterionRow = (row: unknown) =>
-    void deleteCriterion(row as SmisRiskAssessmentCriterion)
   const deleteCriterion = async (row: SmisRiskAssessmentCriterion) => {
     try {
       await confirmDelete(`确定删除分值 ${row.score} 的判定标准吗？`)
@@ -311,7 +377,7 @@
       gap: 12px;
       min-width: 0;
       padding-right: 2px;
-      padding-bottom: 2px;
+      padding-bottom: 12px;
     }
 
     &__method-switch {
@@ -321,16 +387,16 @@
 
       button {
         display: grid;
-        grid-template-columns: 52px minmax(0, 1fr) 24px;
+        grid-template-columns: 44px minmax(0, 1fr) auto 20px;
         gap: 12px;
         align-items: center;
-        min-height: 76px;
-        padding: 12px 14px;
+        min-height: 68px;
+        padding: 10px 12px;
         color: var(--el-text-color-regular);
         text-align: left;
         cursor: pointer;
-        background: var(--art-gray-100);
-        border: 1px solid transparent;
+        background: var(--default-box-color);
+        border: 1px solid var(--el-border-color-lighter);
         border-radius: var(--el-border-radius-base);
         transition:
           background-color var(--art-motion-duration-fast),
@@ -352,23 +418,28 @@
           outline-offset: 2px;
         }
 
-        > span {
-          display: grid;
-          place-items: center;
-          width: 52px;
-          height: 44px;
-          font-weight: 800;
-          color: var(--theme-color);
-          background: var(--default-box-color);
-          border-radius: var(--el-border-radius-base);
-        }
-
-        div {
-          display: flex;
-          flex-direction: column;
-          min-width: 0;
+        &:disabled {
+          cursor: wait;
+          opacity: 0.65;
         }
       }
+    }
+
+    &__method-code {
+      display: grid;
+      place-items: center;
+      width: 44px;
+      height: 40px;
+      font-weight: 800;
+      color: var(--theme-color);
+      background: color-mix(in srgb, var(--theme-color) 9%, var(--el-bg-color));
+      border-radius: var(--el-border-radius-base);
+    }
+
+    &__method-copy {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
 
       small {
         overflow: hidden;
@@ -378,29 +449,68 @@
       }
     }
 
-    &__formula {
+    &__method-meta,
+    &__result-code,
+    &__dimension-count {
+      font-size: 12px;
+      color: var(--el-text-color-secondary);
+      white-space: nowrap;
+    }
+
+    &__decision-card {
       :deep(.art-section-card__body) {
-        display: flex;
-        gap: 18px;
-        align-items: center;
+        padding-top: 14px;
+      }
+    }
+
+    &__decision-layout {
+      display: grid;
+      grid-template-columns: minmax(260px, 0.65fr) minmax(0, 1.8fr);
+      gap: 16px;
+    }
+
+    &__formula-panel {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      min-width: 0;
+      padding: 16px;
+      background: var(--art-gray-100);
+      border: 1px solid var(--el-border-color-lighter);
+      border-radius: var(--el-border-radius-base);
+
+      h3,
+      p {
+        margin: 0;
       }
 
       p {
-        margin: 0;
+        margin-top: 10px;
+        font-size: 12px;
+        line-height: 1.6;
         color: var(--el-text-color-secondary);
       }
+    }
+
+    &__kicker {
+      margin-bottom: 3px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--theme-color);
+      letter-spacing: 0.08em;
     }
 
     &__equation {
       display: flex;
       gap: 6px;
       align-items: center;
+      margin-top: 12px;
 
       span {
         display: grid;
         place-items: center;
-        min-width: 38px;
-        height: 38px;
+        min-width: 36px;
+        height: 36px;
         font-weight: 800;
         color: var(--theme-color);
         background: color-mix(in srgb, var(--theme-color) 9%, var(--el-bg-color));
@@ -414,76 +524,187 @@
       }
     }
 
-    &__dimension-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
-      gap: 12px;
+    &__spectrum {
+      min-width: 0;
+      padding: 4px 0;
     }
 
-    &__score {
+    &__spectrum-heading {
+      display: flex;
+      gap: 12px;
+      align-items: flex-end;
+      justify-content: space-between;
+      margin-bottom: 12px;
+
+      h3 {
+        margin: 0;
+      }
+    }
+
+    &__result-code {
+      padding-bottom: 2px;
       font-family: var(--art-font-family-mono, Consolas, monospace);
-      color: var(--theme-color);
     }
 
     &__levels {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-      gap: 10px;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: var(--art-space-2);
 
-      button {
-        position: relative;
+      article {
         display: grid;
-        grid-template-columns: 42px minmax(0, 1fr) 18px;
-        gap: 10px;
+        grid-template-columns: minmax(0, 1fr) 34px;
+        gap: var(--art-space-2);
         align-items: center;
-        min-height: 72px;
-        padding: 12px;
-        text-align: left;
-        cursor: pointer;
-        background: color-mix(in srgb, var(--level-color) 7%, var(--default-box-color));
-        border: 1px solid color-mix(in srgb, var(--level-color) 35%, var(--el-border-color));
-        border-left: 4px solid var(--level-color);
+        min-width: 0;
+        min-height: 68px;
+        padding: var(--art-space-3) var(--art-space-3) var(--art-space-3) var(--art-space-4);
+        background: color-mix(in srgb, var(--level-color) 4%, var(--default-box-color));
+        border: 1px solid color-mix(in srgb, var(--level-color) 24%, var(--el-border-color));
+        border-top: 3px solid var(--level-color);
         border-radius: var(--el-border-radius-base);
-        transition:
-          background-color var(--art-motion-duration-fast),
-          box-shadow var(--art-motion-duration-fast);
+      }
+    }
+
+    &__level-copy {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+
+      > span {
+        display: flex;
+        gap: var(--art-space-2);
+        align-items: center;
+        min-width: 0;
+      }
+
+      .risk-model-page__level-dot {
+        flex: none;
+        width: 8px;
+        height: 8px;
+        background: var(--level-color);
+        border-radius: 50%;
+      }
+
+      strong,
+      small {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      small {
+        margin-top: var(--art-space-1);
+        font-size: 11px;
+        font-variant-numeric: tabular-nums;
+        color: var(--el-text-color-secondary);
+      }
+    }
+
+    &__criteria-workspace {
+      display: flex;
+      flex-direction: column;
+      gap: var(--art-space-4);
+      min-width: 0;
+      padding: var(--art-space-2) var(--art-space-1) var(--art-space-3);
+    }
+
+    &__criteria-heading {
+      padding: 0 var(--art-space-2);
+
+      :deep(.art-section-title) {
+        margin: 0;
+        font-size: var(--art-font-size-section-title);
+      }
+
+      p {
+        margin: var(--art-space-1) 0 0 11px;
+        font-size: var(--art-font-size-caption);
+        line-height: 20px;
+        color: var(--el-text-color-secondary);
+      }
+    }
+
+    &__dimension-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+      gap: var(--art-space-4);
+      align-items: stretch;
+    }
+
+    &__dimension-card {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+
+      :deep(.art-section-card__body) {
+        flex: 1;
+        min-width: 0;
+      }
+    }
+
+    &__criterion-legend,
+    &__criterion-list li {
+      display: grid;
+      grid-template-columns: 64px minmax(0, 1fr) 76px;
+      gap: var(--art-space-3);
+      align-items: center;
+      min-width: 0;
+    }
+
+    &__criterion-legend {
+      padding: 0 var(--art-space-3) var(--art-space-2);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--el-text-color-secondary);
+      border-bottom: 1px solid var(--el-border-color-lighter);
+
+      span:last-child {
+        text-align: right;
+      }
+    }
+
+    &__criterion-list {
+      padding: 0;
+      margin: 0;
+      list-style: none;
+
+      li {
+        min-height: 56px;
+        padding: var(--art-space-2) var(--art-space-3);
+        border-bottom: 1px solid var(--el-border-color-lighter);
+        transition: background-color var(--art-motion-duration-fast);
+
+        &:last-child {
+          border-bottom: 0;
+        }
 
         &:hover {
-          background: color-mix(in srgb, var(--level-color) 12%, var(--default-box-color));
+          background: color-mix(in srgb, var(--theme-color) 3%, transparent);
         }
 
-        &:focus-visible {
-          outline: 2px solid var(--level-color);
-          outline-offset: 2px;
-        }
-
-        > span {
-          display: grid;
-          place-items: center;
-          width: 38px;
-          height: 38px;
-          font-weight: 800;
-          color: #fff;
-          background: var(--level-color);
-          border-radius: var(--el-border-radius-base);
-        }
-
-        strong,
-        small {
-          grid-column: 2;
-        }
-
-        small {
-          margin-top: -8px;
-          color: var(--el-text-color-secondary);
-        }
-
-        svg {
-          grid-row: 1/3;
-          grid-column: 3;
-          color: var(--el-text-color-secondary);
+        p {
+          min-width: 0;
+          margin: 0;
+          line-height: 1.55;
+          color: var(--el-text-color-regular);
+          overflow-wrap: anywhere;
         }
       }
+    }
+
+    &__score {
+      font-family: var(--art-font-family-mono, Consolas, monospace);
+      font-size: 15px;
+      font-variant-numeric: tabular-nums;
+      color: var(--theme-color);
+    }
+
+    &__row-actions {
+      display: flex;
+      gap: var(--art-space-1);
+      align-items: center;
+      justify-content: flex-end;
     }
 
     &__matrix-scrollbar {
@@ -525,14 +746,35 @@
     }
 
     @media (width <= 900px) {
-      &__dimension-grid,
       &__method-switch {
         grid-template-columns: 1fr;
       }
 
-      &__formula :deep(.art-section-card__body) {
-        flex-direction: column;
-        align-items: flex-start;
+      &__decision-layout {
+        grid-template-columns: 1fr;
+      }
+
+      &__levels {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      &__method-meta {
+        display: none;
+      }
+    }
+
+    @media (width <= 560px) {
+      &__dimension-grid,
+      &__levels {
+        grid-template-columns: 1fr;
+      }
+
+      &__method-switch button {
+        grid-template-columns: 44px minmax(0, 1fr) 20px;
+
+        > svg {
+          grid-column: 3;
+        }
       }
     }
   }

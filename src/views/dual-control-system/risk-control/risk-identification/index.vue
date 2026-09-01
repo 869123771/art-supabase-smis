@@ -414,7 +414,8 @@
             onClick={() => void openDialog(row)}
           />
           <ArtButtonTable
-            type="view"
+            type="edit"
+            icon="ri:git-merge-line"
             permission="SmisDualControlRiskIdentification:MaintainHazards"
             label="维护危害因素"
             onClick={() => void openHazardWorkspace(row)}
@@ -574,7 +575,8 @@
       loadOptions(),
       userStore.ensureDictLoaded('smisHazardSourceRiskLevel'),
       userStore.ensureDictLoaded('smisAccidentCategory'),
-      userStore.ensureDictLoaded('smisRiskPointType')
+      userStore.ensureDictLoaded('smisRiskPointType'),
+      userStore.ensureDictLoaded('smisSiteCategory')
     ])
   })
 </script>

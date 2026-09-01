@@ -124,7 +124,7 @@
       key: 'tagStyle',
       type: 'select',
       options: tagOptions.value,
-      props: { clearable: false }
+      props: { clearable: false, placeholder: '请选择标签样式' }
     },
     {
       label: '状态',

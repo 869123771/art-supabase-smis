@@ -21,9 +21,13 @@
       </BusinessWorkspaceHeader>
 
       <div class="course-page__body art-card-xs">
-        <ElTabs v-model="activeTab" class="course-page__tabs">
+        <ElTabs v-model="activeTab" class="course-page__tabs" stretch>
           <ElTabPane label="课程库" name="course" />
-          <ElTabPane label="学习记录" name="record" />
+          <ElTabPane
+            v-if="hasAuth('SmisCourseManagement:ViewLearningRecord')"
+            label="学习记录"
+            name="record"
+          />
         </ElTabs>
         <ArtTableQuery
           v-show="activeTab === 'course'"
@@ -46,6 +50,7 @@
           focusable
         />
         <ArtTableQuery
+          v-if="hasAuth('SmisCourseManagement:ViewLearningRecord')"
           v-show="activeTab === 'record'"
           ref="recordTableRef"
           v-model="recordQuery"
@@ -88,9 +93,16 @@
           /></template>
           <template #employeeIds
             ><TrainingEmployeeMultipleSelect
+              v-if="hasAuth('SmisCourseManagement:Assign')"
               v-model="courseForm.employeeIds"
               v-model:selected-data="employeeSelection"
               title="选择学习人员"
+            /><ElAlert
+              v-else
+              title="当前账号可维护课程内容，但没有分配学习人员的权限。"
+              type="info"
+              :closable="false"
+              show-icon
             /><small class="course-page__helper"
               >已选择 {{ courseForm.employeeIds.length }} 人，保存后生成个人学习任务。</small
             ></template
@@ -163,6 +175,7 @@
   import type { ColumnOption } from '@/types'
   import { pageInfoHandler } from '@/utils/table/tableUtils'
   import { useArtFeedback } from '@/hooks/core/useArtFeedback'
+  import { useAuth } from '@/hooks/core/useAuth'
   import { useUserStore } from '@/store/modules/user'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import ArtButtonMore, {
@@ -202,6 +215,7 @@
   type RecordParams = SmisCourseLearningSearchParams &
     Pick<Api.Common.PaginationParams, 'current' | 'size'>
   const userStore = useUserStore()
+  const { hasAuth } = useAuth()
   const { getDictMap } = storeToRefs(userStore)
   const { confirmDelete } = useArtFeedback()
   const activeTab = ref<'course' | 'record'>('course')

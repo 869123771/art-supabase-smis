@@ -60,7 +60,12 @@
       </template>
     </ArtPageHeader>
 
-    <ElTabs v-if="equipment" v-model="activeTab" class="equipment-archive-detail__tabs art-card-xs">
+    <ElTabs
+      v-if="equipment"
+      v-model="activeTab"
+      class="equipment-archive-detail__tabs art-card-xs"
+      stretch
+    >
       <ElTabPane label="设备档案信息" name="archive">
         <div class="equipment-archive-detail__sections">
           <ArtSectionCard title="基础信息" subtitle="设备识别、分类、位置与技术参数">

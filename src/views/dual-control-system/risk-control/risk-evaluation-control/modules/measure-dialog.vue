@@ -41,56 +41,62 @@
             ></ElSelect
           ></div
         >
-        <ElTable
-          :data="model.positions"
-          table-layout="fixed"
-          max-height="260"
-          empty-text="请选择防控岗位"
-        >
-          <ElTableColumn label="防控岗位" min-width="230"
-            ><template #default="{ row }"
-              ><strong>{{ positionOf(row.positionId)?.positionName }}</strong
-              ><small class="measure-dialog__position-code">{{
-                positionOf(row.positionId)?.positionCode
-              }}</small></template
-            ></ElTableColumn
-          >
-          <ElTableColumn label="排查频次" width="150"
-            ><template #default="{ row }"
-              ><ElInputNumber
-                v-model="row.frequencyCount"
-                :min="1"
-                :max="999"
-                controls-position="right" /></template
-          ></ElTableColumn>
-          <ElTableColumn label="频次单位" width="180"
-            ><template #default="{ row }"
-              ><ElSelect v-model="row.frequencyUnit" placeholder="请选择"
-                ><ElOption
-                  v-for="option in frequencyOptions"
-                  :key="option.value"
-                  :label="option.label"
-                  :value="option.value" /></ElSelect></template
-          ></ElTableColumn>
-          <ElTableColumn label="周期预览" min-width="140"
-            ><template #default="{ row }"
-              ><ElTag type="primary" effect="plain"
-                >每 {{ row.frequencyCount }}
-                {{
-                  frequencyOptions.find((i) => i.value === row.frequencyUnit)?.label || '—'
-                }}</ElTag
-              ></template
-            ></ElTableColumn
-          >
-          <ElTableColumn label="操作" width="70" align="right"
-            ><template #default="{ row }"
-              ><ArtIconButton
+        <ElScrollbar v-if="model.positions.length" class="measure-dialog__position-scroll">
+          <ul class="measure-dialog__position-list">
+            <li v-for="binding in model.positions" :key="binding.positionId">
+              <div class="measure-dialog__position-identity">
+                <span><ArtSvgIcon icon="ri:briefcase-4-line" /></span>
+                <div>
+                  <strong>{{ positionOf(binding.positionId)?.positionName }}</strong>
+                  <small>{{ positionOf(binding.positionId)?.positionCode }}</small>
+                </div>
+              </div>
+              <label>
+                <span>排查频次</span>
+                <ElInputNumber
+                  v-model="binding.frequencyCount"
+                  :min="1"
+                  :max="999"
+                  controls-position="right"
+                />
+              </label>
+              <label>
+                <span>频次单位</span>
+                <ElSelect v-model="binding.frequencyUnit" placeholder="请选择">
+                  <ElOption
+                    v-for="option in frequencyOptions"
+                    :key="option.value"
+                    :label="option.label"
+                    :value="option.value"
+                  />
+                </ElSelect>
+              </label>
+              <div class="measure-dialog__period-preview">
+                <small>周期预览</small>
+                <ElTag type="primary" effect="plain">
+                  每 {{ binding.frequencyCount }}
+                  {{
+                    frequencyOptions.find((item) => item.value === binding.frequencyUnit)?.label ||
+                    '—'
+                  }}
+                </ElTag>
+              </div>
+              <ArtIconButton
                 icon="ri:close-line"
                 label="移除防控岗位"
                 tone="danger"
-                @click="removePosition(row.positionId)" /></template
-          ></ElTableColumn>
-        </ElTable>
+                @click="removePosition(binding.positionId)"
+              />
+            </li>
+          </ul>
+        </ElScrollbar>
+        <div v-else class="measure-dialog__position-empty">
+          <ArtSvgIcon icon="ri:briefcase-4-line" />
+          <div>
+            <strong>尚未选择防控岗位</strong>
+            <small>从上方选择岗位后，可分别配置对应的排查频次。</small>
+          </div>
+        </div>
       </div>
     </div>
   </ArtDialog>
@@ -319,7 +325,7 @@
   .measure-dialog__flow i {
     flex: 1;
     height: 1px;
-    background: linear-gradient(90deg, var(--el-color-success), var(--theme-color));
+    background: var(--el-border-color);
   }
 
   .measure-dialog__positions {
@@ -357,15 +363,148 @@
     color: var(--el-text-color-secondary);
   }
 
-  .measure-dialog__position-code {
+  .measure-dialog__position-scroll {
+    max-height: 280px;
+  }
+
+  .measure-dialog__position-list {
+    display: grid;
+    gap: 8px;
+    padding: 0 4px 0 0;
+    margin: 0;
+    list-style: none;
+  }
+
+  .measure-dialog__position-list > li {
+    display: grid;
+    grid-template-columns: minmax(210px, 1.2fr) 142px 170px 130px 34px;
+    gap: 12px;
+    align-items: end;
+    padding: 11px 12px;
+    background: var(--default-box-color);
+    border: 1px solid var(--el-border-color-lighter);
+    border-radius: var(--el-border-radius-base);
+  }
+
+  .measure-dialog__position-identity {
+    display: grid;
+    grid-template-columns: 36px minmax(0, 1fr);
+    gap: 10px;
+    align-items: center;
+    min-width: 0;
+  }
+
+  .measure-dialog__position-identity > span {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    color: var(--theme-color);
+    background: color-mix(in srgb, var(--theme-color) 8%, var(--el-bg-color));
+    border-radius: var(--el-border-radius-base);
+  }
+
+  .measure-dialog__position-identity strong,
+  .measure-dialog__position-identity small {
     display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .measure-dialog__position-identity small {
+    margin-top: 3px;
     font-family: var(--art-font-family-mono, Consolas, monospace);
+    font-size: 11px;
     color: var(--el-text-color-secondary);
+  }
+
+  .measure-dialog__position-list label,
+  .measure-dialog__period-preview {
+    display: grid;
+    gap: 5px;
+    min-width: 0;
+  }
+
+  .measure-dialog__position-list label > span,
+  .measure-dialog__period-preview > small {
+    font-size: 11px;
+    color: var(--el-text-color-secondary);
+  }
+
+  .measure-dialog__position-list :deep(.el-input-number),
+  .measure-dialog__position-list :deep(.el-select) {
+    width: 100%;
+  }
+
+  .measure-dialog__period-preview {
+    align-content: end;
+    align-self: stretch;
+  }
+
+  .measure-dialog__period-preview .el-tag {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .measure-dialog__position-list .art-icon-button {
+    align-self: end;
+  }
+
+  .measure-dialog__position-empty {
+    display: grid;
+    grid-template-columns: 38px minmax(0, 1fr);
+    gap: 11px;
+    align-items: center;
+    min-height: 78px;
+    padding: 12px 14px;
+    color: var(--el-text-color-secondary);
+    background: var(--default-box-color);
+    border: 1px dashed var(--el-border-color);
+    border-radius: var(--el-border-radius-base);
+  }
+
+  .measure-dialog__position-empty > .art-svg-icon {
+    font-size: 24px;
+    color: var(--el-text-color-placeholder);
+  }
+
+  .measure-dialog__position-empty strong,
+  .measure-dialog__position-empty small {
+    display: block;
+  }
+
+  .measure-dialog__position-empty small {
+    margin-top: 3px;
+    font-size: 11px;
+  }
+
+  @media (width <= 1080px) {
+    .measure-dialog__position-list > li {
+      grid-template-columns: minmax(210px, 1fr) 142px 170px 34px;
+    }
+
+    .measure-dialog__period-preview {
+      display: none;
+    }
   }
 
   @media (width <= 760px) {
     .measure-dialog__positions-head {
       grid-template-columns: 1fr;
+    }
+
+    .measure-dialog__position-list > li {
+      grid-template-columns: minmax(0, 1fr) 34px;
+    }
+
+    .measure-dialog__position-list label {
+      grid-column: 1;
+    }
+
+    .measure-dialog__position-list .art-icon-button {
+      grid-row: 1;
+      grid-column: 2;
     }
   }
 </style>

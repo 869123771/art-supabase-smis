@@ -20,26 +20,32 @@
         :show-submit="false"
       >
         <template #applicableOrganizationId>
-          <ElTreeSelect
-            v-model="form.applicableOrganizationId"
-            class="plan-dialog__control"
-            :data="organizations"
-            :props="{ label: 'organizationName', children: 'children' }"
-            node-key="id"
-            value-key="id"
-            check-strictly
-            filterable
-            default-expand-all
-            placeholder="请选择适用单位"
-          />
+          <div class="plan-dialog__field-stack">
+            <ElTreeSelect
+              v-model="form.applicableOrganizationId"
+              class="plan-dialog__control"
+              :data="organizations"
+              :props="{ label: 'organizationName', children: 'children' }"
+              node-key="id"
+              value-key="id"
+              check-strictly
+              filterable
+              default-expand-all
+              placeholder="请选择适用单位"
+            />
+            <small v-if="isPublicScope">公共单位预案对本公司所有人员可见、可选</small>
+          </div>
         </template>
-        <template #applicablePositionId>
+        <template #applicablePositionIds>
           <ElSelect
-            v-model="form.applicablePositionId"
+            v-model="form.applicablePositionIds"
             class="plan-dialog__control"
             filterable
             clearable
-            placeholder="请选择适用岗位"
+            multiple
+            collapse-tags
+            collapse-tags-tooltip
+            placeholder="请选择适用岗位；不选表示全部岗位"
           >
             <ElOption
               v-for="position in positionOptions"
@@ -48,6 +54,24 @@
               :value="position.id"
             />
           </ElSelect>
+        </template>
+        <template #planAttachmentUrls>
+          <ArtUploadFile
+            v-model="form.planAttachmentUrls"
+            multiple
+            :limit="10"
+            accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar,image/*"
+            tip="支持文档、压缩包和图片，最多 10 个，单个文件不超过 20 MB"
+          />
+        </template>
+        <template #filingAttachmentUrls>
+          <ArtUploadFile
+            v-model="form.filingAttachmentUrls"
+            multiple
+            :limit="10"
+            accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar,image/*"
+            tip="支持备案表文档、压缩包和图片，最多 10 个，单个文件不超过 20 MB"
+          />
         </template>
         <template #planLevel>
           <div class="plan-dialog__derived">
@@ -91,6 +115,7 @@
   import ArtDialog from '@/components/core/dialogs/art-dialog/index.vue'
   import type { ArtDialogExpose } from '@/components/core/dialogs/art-dialog/types'
   import ArtForm, { type FormItem } from '@/components/core/forms/art-form/index.vue'
+  import ArtUploadFile from '@/components/core/forms/art-upload-file/index.vue'
   import ArtDictDisplay from '@/components/core/base/art-dict-display/index.vue'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
   import { useDocumentNumberRule } from '@/hooks/core/useDocumentNumberRule'
@@ -103,7 +128,6 @@
     type SmisEmergencyPlanCategory,
     type SmisEmergencyPlanFrequency,
     type SmisEmergencyPlanLevel,
-    type SmisEmergencyPlanWarningStatus,
     type SmisTreeOrganization
   } from '@smis/api'
 
@@ -116,12 +140,16 @@
     id?: string
     planNo: string
     planName: string
+    planVersion: string
     applicableOrganizationId: string
     planCategory: SmisEmergencyPlanCategory | ''
-    applicablePositionId?: string
+    applicablePositionIds: string[]
     frequency: SmisEmergencyPlanFrequency | ''
+    reviewDate: string
+    reviewExperts: string
+    planAttachmentUrls: string[]
+    filingAttachmentUrls: string[]
     isSpecialEquipmentDrill: boolean
-    warningStatus: SmisEmergencyPlanWarningStatus
     description: string
   }
   interface FormExpose {
@@ -143,12 +171,16 @@
   const initialForm = (): PlanForm => ({
     planNo: '',
     planName: '',
+    planVersion: '',
     applicableOrganizationId: '',
     planCategory: '',
-    applicablePositionId: undefined,
+    applicablePositionIds: [],
     frequency: '',
+    reviewDate: '',
+    reviewExperts: '',
+    planAttachmentUrls: [],
+    filingAttachmentUrls: [],
     isSpecialEquipmentDrill: false,
-    warningStatus: 'normal',
     description: ''
   })
   const form = reactive<PlanForm>(initialForm())
@@ -163,13 +195,11 @@
   const selectedOrganization = computed(() =>
     flatOrganizations.value.find((item) => item.id === form.applicableOrganizationId)
   )
-  const positionOptions = computed(() =>
-    positions.value.filter(
-      (item) =>
-        !form.applicableOrganizationId ||
-        !item.organizationId ||
-        item.organizationId === form.applicableOrganizationId
-    )
+  const positionOptions = computed(() => positions.value)
+  const isPublicScope = computed(
+    () =>
+      ['00'].includes(selectedOrganization.value?.organizationCode || '') ||
+      Boolean(selectedOrganization.value?.organizationCode?.endsWith('-00'))
   )
   const derivedPlanLevel = computed<SmisEmergencyPlanLevel>(() => {
     const organization = selectedOrganization.value
@@ -202,6 +232,12 @@
       props: { maxlength: 160, placeholder: '请输入预案名称' }
     },
     {
+      label: '预案版本号',
+      key: 'planVersion',
+      type: 'input',
+      props: { maxlength: 60, placeholder: '例如：V1.0' }
+    },
+    {
       label: '预案类别',
       key: 'planCategory',
       type: 'select',
@@ -218,21 +254,34 @@
     { label: '适用范围', key: 'scope', type: 'divider', span: 24 },
     { label: '适用单位', key: 'applicableOrganizationId', type: 'text' },
     { label: '预案级别', key: 'planLevel', type: 'text' },
-    { label: '适用岗位', key: 'applicablePositionId', type: 'text' },
+    { label: '适用岗位', key: 'applicablePositionIds', type: 'text', span: 24 },
     {
       label: '是否特种设备演练',
       key: 'isSpecialEquipmentDrill',
       type: 'radioGroup',
       options: booleanOptions.value
     },
+    { label: '评审与附件', key: 'review', type: 'divider', span: 24 },
+    {
+      label: '评审时间',
+      key: 'reviewDate',
+      type: 'date',
+      props: {
+        valueFormat: 'YYYY-MM-DD',
+        clearable: true,
+        disabledDate: (date: Date) => date.getTime() > Date.now()
+      }
+    },
+    {
+      label: '评审专家',
+      key: 'reviewExperts',
+      type: 'input',
+      props: { maxlength: 500, placeholder: '请输入评审专家姓名，多人可用顿号分隔' }
+    },
+    { label: '预案附件', key: 'planAttachmentUrls', type: 'text', span: 24 },
+    { label: '备案表附件', key: 'filingAttachmentUrls', type: 'text', span: 24 },
     { label: '状态与说明', key: 'state', type: 'divider', span: 24 },
     { label: '是否有效', key: 'isValid', type: 'text' },
-    {
-      label: '预警状态',
-      key: 'warningStatus',
-      type: 'radioGroup',
-      options: dictOptions('smisEmergencyPlanWarningStatus')
-    },
     {
       label: '预案描述',
       key: 'description',
@@ -249,20 +298,13 @@
   ])
   const rules: FormRules<PlanForm> = {
     planName: [{ required: true, message: '请输入预案名称', trigger: 'blur' }],
+    planVersion: [{ required: true, message: '请输入预案版本号', trigger: 'blur' }],
     planCategory: [{ required: true, message: '请选择预案类别', trigger: 'change' }],
     frequency: [{ required: true, message: '请选择周期频次', trigger: 'change' }],
-    applicableOrganizationId: [{ required: true, message: '请选择适用单位', trigger: 'change' }]
+    applicableOrganizationId: [{ required: true, message: '请选择适用单位', trigger: 'change' }],
+    reviewDate: [{ required: true, message: '请选择评审时间', trigger: 'change' }],
+    reviewExperts: [{ required: true, message: '请输入评审专家', trigger: 'blur' }]
   }
-  watch(
-    () => form.applicableOrganizationId,
-    () => {
-      if (
-        form.applicablePositionId &&
-        !positionOptions.value.some((item) => item.id === form.applicablePositionId)
-      )
-        form.applicablePositionId = undefined
-    }
-  )
   const handleSave = async (submit: boolean): Promise<void> => {
     if (submitting.value) return
     try {
@@ -272,8 +314,7 @@
         {
           ...toRaw(form),
           planCategory: form.planCategory as SmisEmergencyPlanCategory,
-          frequency: form.frequency as SmisEmergencyPlanFrequency,
-          applicablePositionId: form.applicablePositionId || null
+          frequency: form.frequency as SmisEmergencyPlanFrequency
         },
         submit
       )
@@ -295,19 +336,23 @@
         id: data.row.id,
         planNo: data.row.planNo,
         planName: data.row.planName,
+        planVersion: data.row.planVersion || '',
         applicableOrganizationId: data.row.applicableOrganizationId,
         planCategory: data.row.planCategory,
-        applicablePositionId: data.row.applicablePositionId || undefined,
+        applicablePositionIds: [...data.row.applicablePositionIds],
         frequency: data.row.frequency,
+        reviewDate: data.row.reviewDate || '',
+        reviewExperts: data.row.reviewExperts || '',
+        planAttachmentUrls: [...data.row.planAttachmentUrls],
+        filingAttachmentUrls: [...data.row.filingAttachmentUrls],
         isSpecialEquipmentDrill: data.row.isSpecialEquipmentDrill,
-        warningStatus: data.row.warningStatus,
         description: data.row.description || ''
       })
     await nextTick()
     formRef.value?.clearValidate()
     await dialogRef.value?.handleOpen(data, {
       title: data.row ? '编辑应急救援预案' : '新增应急救援预案',
-      subtitle: '维护预案适用范围、类别、演练频次与预警状态',
+      subtitle: '维护预案版本、适用范围、评审周期与归档附件',
       contentMaxHeight: 'calc(100vh - 150px)',
       loading: true,
       onOpen: async (_data, api) => {
@@ -318,8 +363,7 @@
               'commonBoolean',
               'smisEmergencyPlanCategory',
               'smisEmergencyPlanFrequency',
-              'smisEmergencyPlanLevel',
-              'smisEmergencyPlanWarningStatus'
+              'smisEmergencyPlanLevel'
             ].map((code) => userStore.ensureDictLoaded(code))
           ])
         } finally {
@@ -363,6 +407,15 @@
 
     &__control {
       width: 100%;
+    }
+
+    &__field-stack {
+      display: grid;
+      gap: 6px;
+
+      small {
+        color: var(--el-color-success);
+      }
     }
 
     &__derived {

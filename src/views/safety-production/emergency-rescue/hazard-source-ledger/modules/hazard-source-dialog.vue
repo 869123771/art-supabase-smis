@@ -123,6 +123,13 @@
     riskLevel: SmisHazardSourceRiskLevel
     controlOrganizationId: string
     responsibleEmployeeId?: string
+    quantity?: number
+    location: string
+    evaluationDate: string
+    evaluationOrganization: string
+    filingDate: string
+    filingOrganization: string
+    filingNo: string
     imageUrls: string[]
     remark: string
   }
@@ -149,6 +156,13 @@
     riskLevel: 'unidentified',
     controlOrganizationId: '',
     responsibleEmployeeId: undefined,
+    quantity: undefined,
+    location: '',
+    evaluationDate: '',
+    evaluationOrganization: '',
+    filingDate: '',
+    filingOrganization: '',
+    filingNo: '',
     imageUrls: [],
     remark: ''
   })
@@ -175,6 +189,25 @@
     },
     { label: '所在场所', key: 'siteId', type: 'text' },
     {
+      label: '数量',
+      key: 'quantity',
+      type: 'number',
+      props: {
+        min: 0.001,
+        precision: 3,
+        step: 1,
+        controlsPosition: 'right',
+        class: '!w-full',
+        placeholder: '请输入数量'
+      }
+    },
+    {
+      label: '地点',
+      key: 'location',
+      type: 'input',
+      props: { maxlength: 200, placeholder: '请输入危险源具体地点' }
+    },
+    {
       label: '危险等级',
       key: 'hazardLevel',
       type: 'select',
@@ -191,6 +224,48 @@
     },
     { label: '管控部门', key: 'controlOrganizationId', type: 'text' },
     { label: '责任人', key: 'responsibleEmployeeId', type: 'text' },
+    { label: '评价与备案', key: 'archive', type: 'divider', span: 24 },
+    {
+      label: '评价时间',
+      key: 'evaluationDate',
+      type: 'date',
+      props: {
+        valueFormat: 'YYYY-MM-DD',
+        clearable: true,
+        class: '!w-full',
+        placeholder: '请选择评价时间'
+      }
+    },
+    {
+      label: '评价单位',
+      key: 'evaluationOrganization',
+      type: 'input',
+      props: { maxlength: 200, placeholder: '请输入评价单位' }
+    },
+    {
+      label: '备案时间',
+      key: 'filingDate',
+      type: 'date',
+      props: {
+        valueFormat: 'YYYY-MM-DD',
+        clearable: true,
+        class: '!w-full',
+        placeholder: '请选择备案时间'
+      }
+    },
+    {
+      label: '备案单位',
+      key: 'filingOrganization',
+      type: 'input',
+      props: { maxlength: 200, placeholder: '请输入备案单位' }
+    },
+    {
+      label: '备案号',
+      key: 'filingNo',
+      type: 'input',
+      span: 24,
+      props: { maxlength: 100, placeholder: '请输入备案号' }
+    },
     { label: '照片与说明', key: 'evidence', type: 'divider', span: 24 },
     { label: '危险源照片', key: 'imageUrls', type: 'text', span: 24 },
     {
@@ -244,7 +319,14 @@
         {
           ...toRaw(form),
           hazardLevel: form.hazardLevel as SmisHazardSourceLevel,
-          responsibleEmployeeId: form.responsibleEmployeeId || null
+          responsibleEmployeeId: form.responsibleEmployeeId || null,
+          quantity: form.quantity ?? null,
+          location: form.location || null,
+          evaluationDate: form.evaluationDate || null,
+          evaluationOrganization: form.evaluationOrganization || null,
+          filingDate: form.filingDate || null,
+          filingOrganization: form.filingOrganization || null,
+          filingNo: form.filingNo || null
         },
         submit
       )
@@ -271,6 +353,13 @@
         riskLevel: data.row.riskLevel,
         controlOrganizationId: data.row.controlOrganizationId,
         responsibleEmployeeId: data.row.responsibleEmployeeId || undefined,
+        quantity: data.row.quantity ?? undefined,
+        location: data.row.location || '',
+        evaluationDate: data.row.evaluationDate || '',
+        evaluationOrganization: data.row.evaluationOrganization || '',
+        filingDate: data.row.filingDate || '',
+        filingOrganization: data.row.filingOrganization || '',
+        filingNo: data.row.filingNo || '',
         imageUrls: [...data.row.imageUrls],
         remark: data.row.remark || ''
       })

@@ -40,7 +40,7 @@
             ><div
               ><small>应急救援预案</small><strong>{{ selectedPlan.sourcePlanName }}</strong></div
             ><div
-              ><small>演练组织</small
+              ><small>演练单位</small
               ><strong>{{ selectedPlan.applicableOrganizationName }}</strong></div
             ><div
               ><small>计划周期</small

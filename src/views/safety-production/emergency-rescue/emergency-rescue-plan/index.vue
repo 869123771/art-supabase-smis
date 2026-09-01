@@ -34,6 +34,7 @@
         focusable
       />
       <EmergencyPlanDialog ref="dialogRef" @success="handleSaveSuccess" />
+      <EmergencyRecordDetailDialog ref="detailDialogRef" />
     </div>
   </ArtPermissionGuard>
 </template>
@@ -74,6 +75,9 @@
   import EmergencyPlanDialog, {
     type EmergencyPlanDialogOpenData
   } from './modules/emergency-plan-dialog.vue'
+  import EmergencyRecordDetailDialog, {
+    type EmergencyRecordDetailOpenData
+  } from '../shared/emergency-record-detail-dialog.vue'
 
   defineOptions({ name: 'SmisEmergencyRescuePlan' })
   type TableParams = SmisEmergencyRescuePlanSearchParams &
@@ -81,12 +85,16 @@
   interface DialogExpose {
     handleOpen: (data: EmergencyPlanDialogOpenData) => Promise<void>
   }
+  interface DetailDialogExpose {
+    handleOpen: (data: EmergencyRecordDetailOpenData) => Promise<void>
+  }
 
   const userStore = useUserStore()
   const { getDictMap } = storeToRefs(userStore)
   const { confirm, confirmDelete } = useArtFeedback()
   const tableRef = ref<ArtTableQueryExpose>()
   const dialogRef = ref<DialogExpose>()
+  const detailDialogRef = ref<DetailDialogExpose>()
   const searchQuery = ref<SmisEmergencyRescuePlanSearchParams>({})
   const organizations = shallowRef<SmisTreeOrganization[]>([])
   const positions = shallowRef<SmisEmergencyPosition[]>([])
@@ -172,6 +180,9 @@
       positions: positions.value
     })
   }
+  const openDetail = (row: SmisEmergencyRescuePlan): void => {
+    void detailDialogRef.value?.handleOpen({ kind: 'rescue', row })
+  }
   const handleMoreAction = (item: ButtonMoreItem, row: SmisEmergencyRescuePlan): void => {
     if (item.key === 'push') void handlePush(row)
     if (item.key === 'void') void handleValidity([row.id], false, row.planName)
@@ -232,11 +243,24 @@
             />
           </span>
           <span>
-            <strong title={row.planName}>{row.planName}</strong>
+            <button
+              type="button"
+              class="emergency-plan-page__record-link"
+              title={`查看应急救援预案：${row.planName}`}
+              onClick={() => openDetail(row)}
+            >
+              {row.planName}
+            </button>
             <small>{row.planNo}</small>
           </span>
         </div>
       )
+    },
+    {
+      prop: 'planVersion',
+      label: '版本号',
+      width: 100,
+      formatter: (row) => row.planVersion || '—'
     },
     {
       prop: 'planCategory',
@@ -268,7 +292,11 @@
       prop: 'applicablePositionName',
       label: '适用岗位',
       minWidth: 140,
-      formatter: (row) => row.applicablePositionName || '全部岗位'
+      showOverflowTooltip: true,
+      formatter: (row) =>
+        row.applicablePositions.length
+          ? row.applicablePositions.map((item) => item.positionName).join('、')
+          : '全部岗位'
     },
     {
       prop: 'frequency',
@@ -277,6 +305,12 @@
       formatter: (row) => (
         <ArtDictDisplay dictCode="smisEmergencyPlanFrequency" value={row.frequency} />
       )
+    },
+    {
+      prop: 'nextReviewDate',
+      label: '下次评审',
+      width: 112,
+      formatter: (row) => row.nextReviewDate || '—'
     },
     {
       prop: 'isSpecialEquipmentDrill',
@@ -333,10 +367,16 @@
     {
       prop: 'operation',
       label: '操作',
-      width: 120,
+      width: 162,
       fixed: 'right',
       formatter: (row) => (
         <div class="flex">
+          <ArtButtonTable
+            type="view"
+            permission="SmisEmergencyRescuePlan:View"
+            label="查看应急预案"
+            onClick={() => openDetail(row)}
+          />
           <ArtButtonTable
             type="edit"
             permission="SmisEmergencyRescuePlan:Edit"
@@ -488,10 +528,35 @@
   }
 
   :deep(.emergency-plan-page__identity strong),
+  :deep(.emergency-plan-page__record-link),
   :deep(.emergency-plan-page__identity small) {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  :deep(.emergency-plan-page__record-link) {
+    width: fit-content;
+    max-width: 100%;
+    padding: 0;
+    font: inherit;
+    font-weight: 600;
+    color: var(--theme-color);
+    text-align: left;
+    cursor: pointer;
+    background: transparent;
+    border: 0;
+    border-radius: var(--el-border-radius-small);
+
+    &:hover {
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    &:focus-visible {
+      outline: 2px solid color-mix(in srgb, var(--theme-color) 42%, transparent);
+      outline-offset: 2px;
+    }
   }
 
   :deep(.emergency-plan-page__identity small) {

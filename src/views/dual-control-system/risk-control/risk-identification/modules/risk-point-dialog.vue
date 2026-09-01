@@ -299,6 +299,10 @@
   const handleOpen = async (data: RiskPointDialogOpenData): Promise<void> => {
     row.value = data.row
     options.value = data.options
+    await Promise.all([
+      userStore.ensureDictLoaded('smisRiskPointType'),
+      userStore.ensureDictLoaded('smisSiteCategory')
+    ])
     Object.assign(form, initial())
     if (data.row) {
       Object.assign(form, {

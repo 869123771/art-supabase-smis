@@ -102,8 +102,11 @@ export async function fetchActiveEmergencyRescuePlanOptions() {
       id: string
       planNo: string
       planName: string
+      planVersion?: string | null
       planCategory: string
       applicableOrganizationId: string
+      applicableOrganizationName: string
+      isPublicScope: boolean
     }>
   >(() => supabase.rpc('smis_list_active_emergency_rescue_plan_options_secure'), {
     showErrorMessage: true

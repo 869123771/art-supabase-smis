@@ -1231,6 +1231,7 @@ export type SmisBusinessRecordStatus = 'draft' | 'submitted'
 export interface SmisTreeOrganization {
   id: string
   parentId?: string | null
+  organizationCode?: string
   organizationName: string
   organizationType: string
   sort: number
@@ -1259,6 +1260,13 @@ export interface SmisHazardSource {
   responsibleEmployeeId?: string | null
   responsibleEmployeeName?: string | null
   responsibleEmployeeNo?: string | null
+  quantity?: number | null
+  location?: string | null
+  evaluationDate?: string | null
+  evaluationOrganization?: string | null
+  filingDate?: string | null
+  filingOrganization?: string | null
+  filingNo?: string | null
   imageUrls: string[]
   recordStatus: SmisBusinessRecordStatus
   remark?: string | null
@@ -1300,6 +1308,13 @@ export interface SmisHazardSourceSavePayload {
   riskLevel: SmisHazardSourceRiskLevel
   controlOrganizationId: string
   responsibleEmployeeId?: string | null
+  quantity?: number | null
+  location?: string | null
+  evaluationDate?: string | null
+  evaluationOrganization?: string | null
+  filingDate?: string | null
+  filingOrganization?: string | null
+  filingNo?: string | null
   imageUrls: string[]
   remark?: string
 }
@@ -1339,12 +1354,24 @@ export interface SmisEmergencyRescuePlan {
   id: string
   planNo: string
   planName: string
+  planVersion?: string | null
   applicableOrganizationId: string
   applicableOrganizationName: string
+  applicableOrganizationCode?: string | null
+  isPublicScope: boolean
   planCategory: SmisEmergencyPlanCategory
   applicablePositionId?: string | null
   applicablePositionName?: string | null
+  applicablePositionIds: string[]
+  applicablePositions: SmisEmergencyPosition[]
   frequency: SmisEmergencyPlanFrequency
+  reviewDate?: string | null
+  reviewExperts?: string | null
+  nextReviewDate?: string | null
+  lastDrillDate?: string | null
+  reviewRequiredAfterDrill?: boolean | null
+  planAttachmentUrls: string[]
+  filingAttachmentUrls: string[]
   isSpecialEquipmentDrill: boolean
   planLevel: SmisEmergencyPlanLevel
   isValid: boolean
@@ -1385,12 +1412,16 @@ export interface SmisEmergencyRescuePlanSavePayload {
   id?: string
   planNo?: string
   planName: string
+  planVersion: string
   applicableOrganizationId: string
   planCategory: SmisEmergencyPlanCategory
-  applicablePositionId?: string | null
+  applicablePositionIds: string[]
   frequency: SmisEmergencyPlanFrequency
+  reviewDate: string
+  reviewExperts: string
+  planAttachmentUrls: string[]
+  filingAttachmentUrls: string[]
   isSpecialEquipmentDrill: boolean
-  warningStatus: SmisEmergencyPlanWarningStatus
   description?: string
 }
 
@@ -1605,6 +1636,9 @@ export interface SmisEmergencyDrillReportRow {
   organizationName: string
   planCategory: SmisEmergencyPlanCategory
   planLevel: SmisEmergencyPlanLevel
+  planCount: number
+  completedCount: number
+  sprintRate: number
   drillCount: number
   lateCount: number
   averageIntervalDays?: number | null

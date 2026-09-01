@@ -83,7 +83,7 @@
       key: 'tagStyle',
       type: 'select',
       options: tagOptions.value,
-      props: { clearable: false }
+      props: { clearable: false, placeholder: '请选择标签样式' }
     },
     {
       label: '排序',
@@ -122,7 +122,7 @@
     await nextTick()
     formRef.value?.clearValidate()
     await dialogRef.value?.handleOpen(data, {
-      title: `编辑${data.row.levelCode}风险等级`,
+      title: `编辑“${data.row.levelName}”等级`,
       subtitle: '调整分值区间、颜色与标签样式',
       confirmText: '保存风险等级',
       onOpen: async (_d, api) => {

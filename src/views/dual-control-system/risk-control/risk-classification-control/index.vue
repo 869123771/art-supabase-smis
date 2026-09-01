@@ -7,7 +7,7 @@
       <BusinessWorkspaceHeader
         eyebrow="HIERARCHICAL RISK CONTROL"
         title="风险分级管控"
-        description="将已评价风险点落实到公司、车间、班组与岗位，绑定责任人和巡查频率，驱动后续任务自动生成。"
+        description="将已维护危险源的风险点落实到公司、车间、班组与岗位，绑定责任人和巡查频率，驱动后续任务自动生成。"
         icon="ri:git-merge-line"
         density="compact"
         :tags="[
@@ -20,22 +20,23 @@
         <template #actions><BusinessTableWorkspaceActions :table="tableQueryRef" /></template>
       </BusinessWorkspaceHeader>
 
-      <div class="risk-control-page__status-strip" role="group" aria-label="管控状态快捷筛选">
-        <button :class="{ active: !searchQuery.controlStatus }" type="button" @click="setStatus()"
-          ><span>全部风险点</span><strong>{{ overview.total }}</strong></button
+      <div class="risk-control-page__status-filter art-card-xs">
+        <ElSegmented
+          class="risk-control-page__status-segment"
+          :model-value="searchQuery.controlStatus || ''"
+          :options="statusSegments"
+          aria-label="管控状态快捷筛选"
+          block
+          @update:model-value="handleStatusSegmentChange"
         >
-        <button
-          :class="{ active: searchQuery.controlStatus === 'uncontrolled' }"
-          type="button"
-          @click="setStatus('uncontrolled')"
-          ><span>待管控</span><strong>{{ overview.uncontrolled }}</strong></button
-        >
-        <button
-          :class="{ active: searchQuery.controlStatus === 'active' }"
-          type="button"
-          @click="setStatus('active')"
-          ><span>管控中</span><strong>{{ overview.active }}</strong></button
-        >
+          <template #default="{ item }">
+            <span class="risk-control-page__segment-option">
+              <ArtSvgIcon :icon="item.icon" />
+              <span>{{ item.label }}</span>
+              <strong>{{ item.count }}</strong>
+            </span>
+          </template>
+        </ElSegmented>
       </div>
 
       <ArtTableQuery
@@ -52,7 +53,7 @@
           rowKey: 'riskPointId',
           tableLayout: 'fixed',
           emptyText: '暂无可管控风险点',
-          emptyDescription: '请先完成危险有害因素的定量评价。'
+          emptyDescription: '请先在安全风险清单中维护有效危险源。'
         }"
         focusable
       />
@@ -155,9 +156,9 @@
   ]
   const workspaceMetrics = computed<BusinessWorkspaceMetric[]>(() => [
     {
-      label: '已评价风险点',
+      label: '有效风险点',
       value: overview.total,
-      description: '进入分级管控范围',
+      description: '已维护有效危险源',
       icon: 'ri:radar-line'
     },
     {
@@ -180,6 +181,26 @@
       description: '优先关注与复核',
       icon: 'ri:alarm-warning-line',
       tone: 'danger'
+    }
+  ])
+  const statusSegments = computed(() => [
+    {
+      label: '全部风险点',
+      value: '' as const,
+      count: overview.total,
+      icon: 'ri:apps-2-line'
+    },
+    {
+      label: '待管控',
+      value: 'uncontrolled' as const,
+      count: overview.uncontrolled,
+      icon: 'ri:timer-line'
+    },
+    {
+      label: '管控中',
+      value: 'active' as const,
+      count: overview.active,
+      icon: 'ri:shield-check-line'
     }
   ])
   const searchItems = computed<SearchFormItem[]>(() => [
@@ -234,9 +255,17 @@
     if (!options.value.riskPoints.length && !optionsLoading.value) await loadOptions()
     await dialogRef.value?.handleOpen({ row, options: options.value })
   }
-  const setStatus = (status?: SmisRiskControlSearchParams['controlStatus']): void => {
-    searchQuery.value.controlStatus = status
-    void tableQueryRef.value?.refreshData()
+  const setStatus = async (
+    status?: SmisRiskControlSearchParams['controlStatus']
+  ): Promise<void> => {
+    searchQuery.value = { ...searchQuery.value, controlStatus: status }
+    await nextTick()
+    await tableQueryRef.value?.getData()
+  }
+  const handleStatusSegmentChange = (value: string | number | boolean): void => {
+    if (statusSegments.value.some((item) => item.value === value)) {
+      void setStatus(value ? (value as SmisRiskControlSearchParams['controlStatus']) : undefined)
+    }
   }
   const columnsFactory = (): ColumnOption<SmisRiskControlPoint>[] => [
     { type: 'selection', width: 48, fixed: 'left', reserveSelection: true },
@@ -362,7 +391,11 @@
         <div class="risk-control-page__actions">
           <ArtButtonTable
             type="edit"
-            permission="SmisDualControlRiskClassificationControl:Configure"
+            permission={
+              row.planId
+                ? 'SmisDualControlRiskClassificationControl:Edit'
+                : 'SmisDualControlRiskClassificationControl:Configure'
+            }
             label="管控设置"
             onClick={() => void openDialog(row)}
           />
@@ -533,41 +566,50 @@
     gap: 12px;
     min-width: 0;
 
-    &__status-strip {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      overflow: hidden;
-      background: var(--default-box-color);
-      border: 1px solid var(--el-border-color-lighter);
-      border-radius: var(--el-border-radius-base);
+    &__status-filter {
+      padding: 7px;
     }
 
-    &__status-strip button {
+    &__status-segment {
+      width: 100%;
+
+      :deep(.el-segmented__item-label) {
+        min-width: 0;
+        padding-inline: 12px;
+      }
+    }
+
+    &__segment-option {
       display: flex;
-      gap: 10px;
+      gap: 7px;
       align-items: center;
       justify-content: center;
-      min-height: 44px;
-      color: var(--el-text-color-secondary);
-      cursor: pointer;
-      background: transparent;
-      border: 0;
-      border-right: 1px solid var(--el-border-color-lighter);
+      min-width: 0;
+      min-height: 30px;
+      white-space: nowrap;
     }
 
-    &__status-strip button:last-child {
-      border-right: 0;
+    &__segment-option .art-svg-icon {
+      flex: 0 0 auto;
+      font-size: 15px;
     }
 
-    &__status-strip button.active {
-      color: var(--theme-color);
-      background: color-mix(in srgb, var(--theme-color) 7%, var(--default-box-color));
-      box-shadow: inset 0 -2px var(--theme-color);
+    &__segment-option > span {
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
-    &__status-strip strong {
+    &__segment-option strong {
+      display: inline-grid;
+      place-items: center;
+      min-width: 22px;
+      height: 22px;
+      padding: 0 6px;
       font-family: var(--art-font-family-mono, Consolas, monospace);
-      font-size: 16px;
+      font-size: 11px;
+      color: var(--el-text-color-secondary);
+      background: color-mix(in srgb, var(--el-fill-color-darker) 70%, transparent);
+      border-radius: 999px;
     }
 
     &__table {
@@ -669,13 +711,12 @@
   }
 
   @media (width <= 760px) {
-    .risk-control-page__status-strip {
-      grid-template-columns: 1fr;
+    .risk-control-page__segment-option .art-svg-icon {
+      display: none;
     }
 
-    .risk-control-page__status-strip button {
-      border-right: 0;
-      border-bottom: 1px solid var(--el-border-color-lighter);
+    .risk-control-page__status-segment :deep(.el-segmented__item-label) {
+      padding-inline: 6px;
     }
   }
 </style>

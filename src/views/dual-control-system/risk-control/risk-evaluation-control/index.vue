@@ -16,6 +16,47 @@
         :metrics="metrics"
         ><template #actions><BusinessTableWorkspaceActions :table="tableQueryRef" /></template
       ></BusinessWorkspaceHeader>
+
+      <ol class="risk-evaluation-page__workflow" aria-label="风险评价管控流程">
+        <li :class="{ active: selectedItem, completed: selectedItem }">
+          <span class="risk-evaluation-page__step-icon">
+            <ArtSvgIcon :icon="selectedItem ? 'ri:check-line' : 'ri:number-1'" />
+          </span>
+          <div>
+            <strong>选择危险因素</strong>
+            <small>{{ selectedItem ? selectedItem.hazardFactor : '从下方列表选择一条记录' }}</small>
+          </div>
+        </li>
+        <li :class="{ active: selectedItem?.evaluation, completed: selectedItem?.evaluation }">
+          <span class="risk-evaluation-page__step-icon">
+            <ArtSvgIcon :icon="selectedItem?.evaluation ? 'ri:check-line' : 'ri:number-2'" />
+          </span>
+          <div>
+            <strong>完成定量评价</strong>
+            <small>
+              {{
+                selectedItem?.evaluation
+                  ? `${selectedItem.evaluation.methodCode} · ${selectedItem.evaluation.level?.levelName || '已评价'}`
+                  : '按 LEC 或 LS 模型计算风险等级'
+              }}
+            </small>
+          </div>
+        </li>
+        <li :class="{ active: measureState.rows.length, completed: measureState.rows.length }">
+          <span class="risk-evaluation-page__step-icon">
+            <ArtSvgIcon :icon="measureState.rows.length ? 'ri:check-line' : 'ri:number-3'" />
+          </span>
+          <div>
+            <strong>落实防控措施</strong>
+            <small>{{
+              measureState.rows.length
+                ? `已维护 ${measureState.rows.length} 条措施`
+                : '配置措施、岗位与排查周期'
+            }}</small>
+          </div>
+        </li>
+      </ol>
+
       <div class="risk-evaluation-page__workspace">
         <ArtTableQuery
           ref="tableQueryRef"
@@ -65,64 +106,62 @@
               ><ArtSvgIcon icon="ri:add-line" />新增防控措施</ElButton
             ></template
           >
-          <ElTable :data="measureState.rows" row-key="id" table-layout="fixed" height="100%">
-            <ElTableColumn type="index" label="序号" width="62" align="center" />
-            <ElTableColumn
-              prop="controlMeasure"
-              label="防控措施"
-              min-width="280"
-              show-overflow-tooltip
-            />
-            <ElTableColumn prop="controlMeasureCategory" label="措施类别" width="118"
-              ><template #default="{ row }"
-                ><ArtDictDisplay
-                  dict-code="smisControlMeasureCategory"
-                  :value="row.controlMeasureCategory"
-                  display="tag" /></template
-            ></ElTableColumn>
-            <ElTableColumn prop="controlLevel" label="管控层级" width="118"
-              ><template #default="{ row }"
-                ><ArtDictDisplay
-                  dict-code="smisControlLevel"
-                  :value="row.controlLevel"
-                  display="tag" /></template
-            ></ElTableColumn>
-            <ElTableColumn label="防控岗位 / 排查周期" min-width="300"
-              ><template #default="{ row }"
-                ><div class="risk-evaluation-page__position-tags"
-                  ><ElTag
-                    v-for="binding in row.positions"
-                    :key="binding.positionId"
-                    type="primary"
-                    effect="plain"
-                    >{{ binding.position?.positionName || binding.positionId }} · 每
-                    {{ binding.frequencyCount }}
-                    {{ dictLabel('smisFrequencyUnit', binding.frequencyUnit) }}</ElTag
-                  ></div
-                ></template
-              ></ElTableColumn
-            >
-            <ElTableColumn prop="status" label="状态" width="86" align="center"
-              ><template #default="{ row }"
-                ><ElTag :type="row.status === 'enabled' ? 'success' : 'info'" effect="plain">{{
-                  row.status === 'enabled' ? '启用' : '已作废'
-                }}</ElTag></template
-              ></ElTableColumn
-            >
-            <ElTableColumn label="操作" width="142" fixed="right"
-              ><template #default="{ row }"
-                ><ArtButtonTable
-                  type="edit"
-                  permission="SmisDualControlRiskEvaluationControl:EditMeasure"
-                  label="编辑防控措施"
-                  :disabled="row.status === 'voided'"
-                  @click="openMeasureRow(row)" /><ArtButtonTable
-                  type="delete"
-                  permission="SmisDualControlRiskEvaluationControl:DeleteMeasure"
-                  label="删除防控措施"
-                  @click="deleteMeasureRow(row)" /></template
-            ></ElTableColumn>
-          </ElTable>
+          <ElScrollbar v-if="measureState.rows.length" class="risk-evaluation-page__measure-scroll">
+            <ul class="risk-evaluation-page__measure-list">
+              <li v-for="(row, index) in measureState.rows" :key="row.id">
+                <span class="risk-evaluation-page__measure-index">{{ index + 1 }}</span>
+                <div class="risk-evaluation-page__measure-main">
+                  <div class="risk-evaluation-page__measure-heading">
+                    <strong>{{ row.controlMeasure }}</strong>
+                    <div>
+                      <ArtDictDisplay
+                        dict-code="smisControlMeasureCategory"
+                        :value="row.controlMeasureCategory"
+                        display="tag"
+                      />
+                      <ArtDictDisplay
+                        dict-code="smisControlLevel"
+                        :value="row.controlLevel"
+                        display="tag"
+                      />
+                      <ElTag :type="row.status === 'enabled' ? 'success' : 'info'" effect="plain">
+                        {{ row.status === 'enabled' ? '启用' : '已作废' }}
+                      </ElTag>
+                    </div>
+                  </div>
+                  <div v-if="row.positions?.length" class="risk-evaluation-page__position-tags">
+                    <ElTag
+                      v-for="binding in row.positions"
+                      :key="binding.positionId"
+                      type="primary"
+                      effect="plain"
+                    >
+                      <ArtSvgIcon icon="ri:briefcase-4-line" />
+                      {{ binding.position?.positionName || binding.positionId }} · 每
+                      {{ binding.frequencyCount }}
+                      {{ dictLabel('smisFrequencyUnit', binding.frequencyUnit) }}
+                    </ElTag>
+                  </div>
+                  <span v-else class="risk-evaluation-page__position-empty">暂未配置防控岗位</span>
+                </div>
+                <div class="risk-evaluation-page__measure-actions">
+                  <ArtButtonTable
+                    type="edit"
+                    permission="SmisDualControlRiskEvaluationControl:EditMeasure"
+                    label="编辑防控措施"
+                    :disabled="row.status === 'voided'"
+                    @click="openMeasureRow(row)"
+                  />
+                  <ArtButtonTable
+                    type="delete"
+                    permission="SmisDualControlRiskEvaluationControl:DeleteMeasure"
+                    label="删除防控措施"
+                    @click="deleteMeasureRow(row)"
+                  />
+                </div>
+              </li>
+            </ul>
+          </ElScrollbar>
         </ArtSectionCard>
       </div>
       <EvaluationDialog ref="evaluationDialogRef" @success="handleEvaluationSaved" /><MeasureDialog
@@ -293,6 +332,41 @@
         )
         await loadMeasures()
       }
+    },
+    {
+      permission: 'SmisDualControlRiskEvaluationControl:Export',
+      type: 'export',
+      label: '导出评价及措施',
+      exportFilename: '风险评价及管控',
+      exportSheetName: '风险评价及管控',
+      exportColumns: [
+        {
+          key: 'riskPoint',
+          title: '风险点',
+          formatter: (_value, row) => row.riskPointRecord?.pointName || row.riskPoint || '—'
+        },
+        { key: 'itemNo', title: '因素编号' },
+        { key: 'hazardFactor', title: '危险有害因素' },
+        {
+          key: 'factorCategory',
+          title: '因素类别',
+          formatter: (_value, row) => row.factorCategory?.categoryName || '—'
+        },
+        { key: 'status', title: '评价状态' },
+        {
+          key: 'evaluation',
+          title: '评价方法',
+          formatter: (_value, row) => row.evaluation?.methodCode || '—'
+        },
+        {
+          key: 'riskLevel',
+          title: '风险等级',
+          formatter: (_value, row) => row.evaluation?.level?.levelName || '—'
+        }
+      ],
+      exportApi: async () => ({
+        data: (await fetchRiskItems({ ...searchQuery.value, from: 0, to: 4999 })).data
+      })
     }
   ])
   const columnsFactory = (): ColumnOption<SmisRiskItem>[] => [
@@ -462,10 +536,83 @@
     &__workspace {
       display: grid;
       flex: 1 1 auto;
-      grid-template-rows: repeat(2, minmax(0, 1fr));
+      grid-template-rows: minmax(290px, 1.12fr) minmax(230px, 0.88fr);
       gap: 12px;
       min-width: 0;
       min-height: 0;
+    }
+
+    &__workflow {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      padding: 8px;
+      margin: 0;
+      list-style: none;
+      background: var(--default-box-color);
+      border: 1px solid var(--el-border-color-lighter);
+      border-radius: var(--el-border-radius-base);
+    }
+
+    &__workflow li {
+      position: relative;
+      display: grid;
+      grid-template-columns: 36px minmax(0, 1fr);
+      gap: 10px;
+      align-items: center;
+      min-height: 50px;
+      padding: 7px 12px;
+      color: var(--el-text-color-secondary);
+      border-radius: var(--el-border-radius-base);
+    }
+
+    &__workflow li + li::before {
+      position: absolute;
+      top: 50%;
+      left: -7px;
+      width: 6px;
+      height: 1px;
+      content: '';
+      background: var(--el-border-color);
+    }
+
+    &__workflow li.active {
+      color: var(--el-text-color-primary);
+      background: color-mix(in srgb, var(--theme-color) 6%, var(--default-box-color));
+    }
+
+    &__step-icon {
+      display: grid;
+      place-items: center;
+      width: 36px;
+      height: 36px;
+      font-weight: 700;
+      color: var(--el-text-color-secondary);
+      background: var(--el-fill-color-light);
+      border-radius: 50%;
+    }
+
+    &__workflow li.completed &__step-icon {
+      color: var(--el-color-success);
+      background: color-mix(in srgb, var(--el-color-success) 10%, var(--el-bg-color));
+    }
+
+    &__workflow strong,
+    &__workflow small {
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    &__workflow strong {
+      font-size: 13px;
+    }
+
+    &__workflow small {
+      margin-top: 3px;
+      font-size: 11px;
+      color: var(--el-text-color-secondary);
     }
 
     &__table,
@@ -489,11 +636,77 @@
         display: flex;
         flex-direction: column;
       }
+    }
 
-      :deep(.el-table) {
-        flex: 1 1 auto;
-        min-height: 0;
-      }
+    &__measure-scroll {
+      flex: 1 1 auto;
+      min-height: 0;
+    }
+
+    &__measure-list {
+      display: grid;
+      gap: 8px;
+      padding: 0 4px 4px 0;
+      margin: 0;
+      list-style: none;
+    }
+
+    &__measure-list > li {
+      display: grid;
+      grid-template-columns: 32px minmax(0, 1fr) auto;
+      gap: 12px;
+      align-items: start;
+      padding: 13px 14px;
+      background: var(--el-fill-color-extra-light);
+      border: 1px solid var(--el-border-color-lighter);
+      border-radius: var(--el-border-radius-base);
+    }
+
+    &__measure-index {
+      display: grid;
+      place-items: center;
+      width: 30px;
+      height: 30px;
+      font-family: var(--art-font-family-mono, Consolas, monospace);
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--theme-color);
+      background: color-mix(in srgb, var(--theme-color) 9%, var(--el-bg-color));
+      border-radius: var(--el-border-radius-small);
+    }
+
+    &__measure-main {
+      display: grid;
+      gap: 9px;
+      min-width: 0;
+    }
+
+    &__measure-heading {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+      min-width: 0;
+    }
+
+    &__measure-heading > strong {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    &__measure-heading > div,
+    &__measure-actions {
+      display: flex;
+      flex: 0 0 auto;
+      gap: 5px;
+      align-items: center;
+    }
+
+    &__position-empty {
+      font-size: 12px;
+      color: var(--el-text-color-placeholder);
     }
 
     :deep(.risk-evaluation-page__risk-point) {
@@ -556,6 +769,16 @@
         overflow: hidden;
         text-overflow: ellipsis;
       }
+    }
+  }
+
+  @media (width <= 1080px) {
+    .risk-evaluation-page__workflow {
+      grid-template-columns: 1fr;
+    }
+
+    .risk-evaluation-page__workflow li + li::before {
+      display: none;
     }
   }
 </style>

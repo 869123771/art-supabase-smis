@@ -5,7 +5,7 @@
         <span><ArtSvgIcon icon="ri:calendar-check-line" /></span>
         <div
           ><strong>从应急预案制定可兑现的演练计划</strong
-          ><p>计划编号按月自动生成；演练级别随演练组织自动判定，预警状态由系统计算。</p></div
+          ><p>计划编号按月自动生成；演练级别随演练单位自动判定，预警状态由系统计算。</p></div
         >
       </div>
       <ArtForm
@@ -64,7 +64,7 @@
             check-strictly
             filterable
             default-expand-all
-            placeholder="选择演练组织"
+            placeholder="选择演练单位"
             class="w-full"
         /></template>
         <template #responsibleEmployeeId
@@ -81,7 +81,7 @@
               dict-code="smisEmergencyPlanLevel"
               :value="derivedPlanLevel"
               display="tag"
-            /><small>由演练组织自动联动</small></div
+            /><small>由演练单位自动联动</small></div
           ></template
         >
         <template #warningStatus
@@ -274,7 +274,7 @@
     { label: '应急救援预案', key: 'sourcePlanId', type: 'text', span: 24 },
     { label: '组织与责任', key: 'organization', type: 'divider', span: 24 },
     { label: '编制单位', key: 'compilationOrganizationId', type: 'text' },
-    { label: '演练组织', key: 'applicableOrganizationId', type: 'text' },
+    { label: '演练单位', key: 'applicableOrganizationId', type: 'text' },
     { label: '演练负责人', key: 'responsibleEmployeeId', type: 'text' },
     { label: '演练级别', key: 'planLevel', type: 'text' },
     { label: '预警状态', key: 'warningStatus', type: 'text' },
@@ -346,7 +346,7 @@
     drillName: [{ required: true, message: '请输入计划名称', trigger: 'blur' }],
     sourcePlanId: [{ required: true, message: '请选择应急救援预案', trigger: 'change' }],
     compilationOrganizationId: [{ required: true, message: '请选择编制单位', trigger: 'change' }],
-    applicableOrganizationId: [{ required: true, message: '请选择演练组织', trigger: 'change' }],
+    applicableOrganizationId: [{ required: true, message: '请选择演练单位', trigger: 'change' }],
     drillForm: [{ required: true, message: '请选择演练形式', trigger: 'change' }],
     planCategory: [{ required: true, message: '请选择计划类别', trigger: 'change' }]
   }

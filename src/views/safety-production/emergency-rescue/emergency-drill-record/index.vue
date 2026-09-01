@@ -33,12 +33,14 @@
         focusable
       />
       <DrillRecordDialog ref="dialogRef" @success="handleSaveSuccess" />
+      <EmergencyRecordDetailDialog ref="detailDialogRef" />
     </div>
   </ArtPermissionGuard>
 </template>
 
 <script setup lang="tsx">
   import dayjs from 'dayjs'
+  import { ElTag } from 'element-plus'
   import type { SearchFormItem } from '@/components/core/forms/art-search-bar/index.vue'
   import type {
     ArtTableQueryExpose,
@@ -66,6 +68,9 @@
   import DrillRecordDialog, {
     type DrillRecordDialogOpenData
   } from './modules/drill-record-dialog.vue'
+  import EmergencyRecordDetailDialog, {
+    type EmergencyRecordDetailOpenData
+  } from '../shared/emergency-record-detail-dialog.vue'
 
   defineOptions({ name: 'SmisEmergencyDrillRecord' })
   type TableParams = SmisEmergencyDrillRecordSearchParams &
@@ -73,11 +78,15 @@
   interface DialogExpose {
     handleOpen: (data: DrillRecordDialogOpenData) => Promise<void>
   }
+  interface DetailDialogExpose {
+    handleOpen: (data: EmergencyRecordDetailOpenData) => Promise<void>
+  }
   const userStore = useUserStore()
   const { getDictMap } = storeToRefs(userStore)
   const { confirmDelete } = useArtFeedback()
   const tableRef = ref<ArtTableQueryExpose>()
   const dialogRef = ref<DialogExpose>()
+  const detailDialogRef = ref<DetailDialogExpose>()
   const searchQuery = ref<SmisEmergencyDrillRecordSearchParams>({})
   const planOptions = shallowRef<SmisEmergencyDrillPlanOption[]>([])
   const overview = reactive({ total: 0, draft: 0, submitted: 0, late: 0 })
@@ -86,6 +95,15 @@
       label: item.label || item.name,
       value: item.value
     }))
+  const recordStatusOptions = computed(() => {
+    const options = dictOptions('smisEmergencyDrillRecordStatus')
+    return options.length
+      ? options
+      : [
+          { label: '草稿', value: 'draft' },
+          { label: '已提交', value: 'submitted' }
+        ]
+  })
   const metrics = computed<BusinessWorkspaceMetric[]>(() => [
     {
       label: '记录总数',
@@ -121,7 +139,7 @@
       key: 'status',
       type: 'select',
       props: {
-        options: dictOptions('smisEmergencyDrillRecordStatus'),
+        options: recordStatusOptions.value,
         clearable: true,
         placeholder: '全部状态'
       }
@@ -162,6 +180,9 @@
       : planOptions.value
     void dialogRef.value?.handleOpen({ row, planOptions: availablePlans })
   }
+  const openDetail = (row: SmisEmergencyDrillRecord): void => {
+    void detailDialogRef.value?.handleOpen({ kind: 'record', row })
+  }
   const handleDelete = async (row: SmisEmergencyDrillRecord) => {
     try {
       await confirmDelete(`确定删除草稿记录“${row.drillName}”吗？`)
@@ -185,7 +206,14 @@
             <ArtSvgIcon icon="ri:clipboard-check-line" />
           </span>
           <span>
-            <strong title={row.drillName}>{row.drillName}</strong>
+            <button
+              type="button"
+              class="drill-record-page__record-link"
+              title={`查看演练记录：${row.drillName}`}
+              onClick={() => openDetail(row)}
+            >
+              {row.drillName}
+            </button>
             <small>{row.planNo}</small>
           </span>
         </div>
@@ -200,7 +228,7 @@
     },
     {
       prop: 'applicableOrganizationName',
-      label: '演练组织',
+      label: '演练单位',
       minWidth: 160,
       showOverflowTooltip: true
     },
@@ -247,11 +275,9 @@
       label: '记录状态',
       width: 100,
       formatter: (row) => (
-        <ArtDictDisplay
-          dictCode="smisEmergencyDrillRecordStatus"
-          value={row.status}
-          display="tag"
-        />
+        <ElTag type={row.status === 'submitted' ? 'success' : 'info'} effect="light">
+          {row.status === 'submitted' ? '已提交' : '草稿'}
+        </ElTag>
       )
     },
     {
@@ -263,10 +289,16 @@
     {
       prop: 'operation',
       label: '操作',
-      width: 112,
+      width: 162,
       fixed: 'right',
       formatter: (row) => (
         <div class="flex">
+          <ArtButtonTable
+            type="view"
+            permission="SmisEmergencyDrillRecord:View"
+            label="查看演练记录"
+            onClick={() => openDetail(row)}
+          />
           <ArtButtonTable
             type="edit"
             permission="SmisEmergencyDrillRecord:Edit"
@@ -356,10 +388,35 @@
       }
 
       strong,
+      .drill-record-page__record-link,
       small {
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+      }
+
+      .drill-record-page__record-link {
+        width: fit-content;
+        max-width: 100%;
+        padding: 0;
+        font: inherit;
+        font-weight: 600;
+        color: var(--theme-color);
+        text-align: left;
+        cursor: pointer;
+        background: transparent;
+        border: 0;
+        border-radius: var(--el-border-radius-small);
+
+        &:hover {
+          text-decoration: underline;
+          text-underline-offset: 3px;
+        }
+
+        &:focus-visible {
+          outline: 2px solid color-mix(in srgb, var(--theme-color) 42%, transparent);
+          outline-offset: 2px;
+        }
       }
 
       small {

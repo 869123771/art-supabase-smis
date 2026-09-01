@@ -1,5 +1,5 @@
 <template>
-  <ArtPermissionGuard :permission="`${config.permission}:View`" :resource-name="config.title">
+  <ArtPermissionGuard :permission="config.permissions.view" :resource-name="config.title">
     <div class="qualification-catalog-page business-workspace-page art-full-height">
       <BusinessWorkspaceHeader
         :eyebrow="config.eyebrow"
@@ -217,7 +217,7 @@
     })
   const headerActions = computed<ArtTableQueryHeaderAction[]>(() => [
     {
-      permission: `${config.value.permission}:Add`,
+      permission: config.value.permissions.add,
       type: 'add',
       label:
         selectedNode.value?.nodeKind === 'category'
@@ -228,7 +228,7 @@
       onClick: () => openDialog()
     },
     {
-      permission: `${config.value.permission}:Delete`,
+      permission: config.value.permissions.delete,
       type: 'delete',
       content: ({ selectedCount }: ArtTableQueryHeaderActionContext) =>
         `确定删除选中的 ${selectedCount} 个${config.value.title}吗？存在下级或证件引用时将无法删除。`,
@@ -242,7 +242,7 @@
       }
     },
     {
-      permission: `${config.value.permission}:Export`,
+      permission: config.value.permissions.export,
       type: 'export',
       label: '导出',
       exportFilename: config.value.title,
@@ -332,12 +332,12 @@
       formatter: (row) => (
         <div class="qualification-catalog-page__actions">
           <ArtButtonTable
-            permission={`${config.value.permission}:Edit`}
+            permission={config.value.permissions.edit}
             type="edit"
             onClick={() => openDialog(row)}
           />
           <ArtButtonTable
-            permission={`${config.value.permission}:Delete`}
+            permission={config.value.permissions.delete}
             type="delete"
             onClick={() => void handleDelete(row)}
           />

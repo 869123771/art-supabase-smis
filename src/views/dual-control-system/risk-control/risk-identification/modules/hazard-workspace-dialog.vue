@@ -1,21 +1,23 @@
 <template>
-  <ArtDialog ref="dialogRef" size="xl">
+  <ArtDialog ref="dialogRef" size="xl" @close="closeEditors">
     <div class="hazard-workspace">
       <div class="hazard-workspace__summary">
-        <span aria-hidden="true"><ArtSvgIcon icon="ri:links-line" /></span>
-        <div>
+        <span class="hazard-workspace__summary-icon" aria-hidden="true">
+          <ArtSvgIcon icon="ri:git-merge-line" />
+        </span>
+        <div class="hazard-workspace__summary-copy">
           <strong>{{ riskPoint?.pointName }}</strong>
-          <p>{{ riskPoint?.pointNo }} · 作业活动与危害因素可多对多关联</p>
+          <p>{{ riskPoint?.pointNo }} · 建立作业活动与危害因素的多对多关系</p>
         </div>
-        <div class="hazard-workspace__counts">
-          <span
-            ><strong>{{ activities.length }}</strong
-            ><small>作业活动</small></span
-          >
-          <span
-            ><strong>{{ hazards.length }}</strong
-            ><small>危害因素</small></span
-          >
+        <div class="hazard-workspace__counts" aria-label="维护数量概览">
+          <span>
+            <strong>{{ activities.length }}</strong>
+            <small>作业活动</small>
+          </span>
+          <span>
+            <strong>{{ hazards.length }}</strong>
+            <small>危害因素</small>
+          </span>
         </div>
       </div>
 
@@ -25,10 +27,10 @@
           subtitle="维护作业活动与必经作业步骤"
           :loading="loading"
           :error="error"
-          :empty="!loading && !error && !activities.length && !activityEditor.visible"
+          :empty="!loading && !error && !activities.length"
           empty-title="暂无作业活动"
-          empty-description="先新增作业活动，再与一个或多个危害因素关联。"
-          :min-height="460"
+          empty-description="先新增作业活动，再与一个或多个危害因素建立关联。"
+          :min-height="430"
           @retry="loadWorkspace"
         >
           <template #actions>
@@ -38,94 +40,56 @@
               plain
               :icon="Plus"
               @click="openActivityEditor()"
-              >新增作业活动</ElButton
             >
+              新增作业活动
+            </ElButton>
           </template>
 
-          <div v-if="activityEditor.visible" class="hazard-workspace__editor">
-            <ElForm label-position="top">
-              <ElFormItem label="作业活动" required>
-                <ElInput
-                  v-model="activityEditor.form.activityName"
-                  maxlength="300"
-                  placeholder="请输入作业活动名称"
-                />
-              </ElFormItem>
-              <ElFormItem label="作业步骤" required>
-                <ElInput
-                  v-model="activityEditor.form.workStep"
-                  type="textarea"
-                  :rows="3"
-                  maxlength="1000"
-                  show-word-limit
-                  resize="none"
-                  placeholder="描述该活动的关键作业步骤"
-                />
-              </ElFormItem>
-              <div class="hazard-workspace__editor-actions">
-                <ElButton @click="activityEditor.visible = false">取消</ElButton>
-                <ElButton
-                  v-auth="'SmisDualControlRiskIdentification:MaintainHazards'"
-                  type="primary"
-                  :loading="activityEditor.submitting"
-                  @click="submitActivity"
-                  >保存活动</ElButton
-                >
-              </div>
-            </ElForm>
-          </div>
-
           <ElScrollbar class="hazard-workspace__scrollbar">
-            <ElTable :data="activities" row-key="id" table-layout="fixed">
-              <ElTableColumn type="index" label="序号" width="58" />
-              <ElTableColumn
-                prop="activityName"
-                label="作业活动"
-                min-width="150"
-                show-overflow-tooltip
-              />
-              <ElTableColumn
-                prop="workStep"
-                label="作业步骤"
-                min-width="180"
-                show-overflow-tooltip
-              />
-              <ElTableColumn label="关联危害" width="88" align="center">
-                <template #default="{ row }"
-                  ><ElTag effect="plain">{{ row.hazardCount }} 条</ElTag></template
-                >
-              </ElTableColumn>
-              <ElTableColumn label="操作" width="92" fixed="right">
-                <template #default="{ row }">
+            <ol class="hazard-workspace__list" aria-label="作业活动列表">
+              <li v-for="(activity, index) in activities" :key="activity.id">
+                <article class="hazard-workspace__item">
+                  <span class="hazard-workspace__sequence" aria-hidden="true">
+                    {{ String(index + 1).padStart(2, '0') }}
+                  </span>
+                  <div class="hazard-workspace__item-copy">
+                    <div class="hazard-workspace__item-title">
+                      <strong>{{ activity.activityName }}</strong>
+                      <ElTag size="small" effect="plain"
+                        >关联 {{ activity.hazardCount }} 条危害</ElTag
+                      >
+                    </div>
+                    <p>{{ activity.workStep }}</p>
+                  </div>
                   <div class="hazard-workspace__row-actions">
                     <ArtButtonTable
                       type="edit"
                       permission="SmisDualControlRiskIdentification:MaintainHazards"
                       label="编辑作业活动"
-                      @click="openActivityEditorRow(row)"
+                      @click="openActivityEditor(activity)"
                     />
                     <ArtButtonTable
                       type="delete"
                       permission="SmisDualControlRiskIdentification:MaintainHazards"
                       label="删除作业活动"
-                      @click="removeActivityRow(row)"
+                      @click="removeActivity(activity)"
                     />
                   </div>
-                </template>
-              </ElTableColumn>
-            </ElTable>
+                </article>
+              </li>
+            </ol>
           </ElScrollbar>
         </ArtSectionCard>
 
         <ArtSectionCard
           title="危害因素"
-          subtitle="维护类别、事故类型、后果及关联作业活动"
+          subtitle="维护因素类别、事故类型、后果及关联活动"
           :loading="loading"
           :error="error"
-          :empty="!loading && !error && !hazards.length && !hazardEditor.visible"
+          :empty="!loading && !error && !hazards.length"
           empty-title="暂无危害因素"
           empty-description="新增后系统会按风险点编号生成 -WHYS- 三位流水码。"
-          :min-height="460"
+          :min-height="430"
           @retry="loadWorkspace"
         >
           <template #actions>
@@ -135,177 +99,192 @@
               plain
               :icon="Plus"
               @click="openHazardEditor()"
-              >新增危害因素</ElButton
             >
+              新增危害因素
+            </ElButton>
           </template>
 
-          <div v-if="hazardEditor.visible" class="hazard-workspace__editor">
-            <ElForm label-position="top">
-              <div class="hazard-workspace__editor-grid">
-                <ElFormItem label="危害编号">
-                  <ElInput
-                    :model-value="hazardEditor.form.hazardNo"
-                    disabled
-                    placeholder="保存后自动生成"
-                  />
-                </ElFormItem>
-                <ElFormItem label="危害因素类别" required>
-                  <ElSelect
-                    v-model="hazardEditor.form.factorCategoryId"
-                    filterable
-                    class="w-full"
-                    placeholder="选择危害因素类别"
-                  >
-                    <ElOption
-                      v-for="item in options.hazardCategories"
-                      :key="item.id"
-                      :label="`${item.categoryName} · ${item.categoryCode}`"
-                      :value="item.id"
-                    />
-                  </ElSelect>
-                </ElFormItem>
-              </div>
-              <ElFormItem label="危害因素" required>
-                <ElInput
-                  v-model="hazardEditor.form.hazardFactor"
-                  type="textarea"
-                  :rows="3"
-                  maxlength="1500"
-                  show-word-limit
-                  resize="none"
-                  placeholder="描述人的、物的、环境或管理方面的危害因素"
-                />
-              </ElFormItem>
-              <ElFormItem label="事故类型（可多选）">
-                <ElSelect
-                  v-model="hazardEditor.form.accidentTypes"
-                  multiple
-                  filterable
-                  collapse-tags
-                  collapse-tags-tooltip
-                  class="w-full"
-                  placeholder="选择可能导致的事故类型"
-                >
-                  <ElOption v-for="item in accidentTypeOptions" :key="item.value" v-bind="item" />
-                </ElSelect>
-              </ElFormItem>
-              <ElFormItem label="关联作业活动（可多选）">
-                <ElSelect
-                  v-model="hazardEditor.form.activityIds"
-                  multiple
-                  filterable
-                  collapse-tags
-                  collapse-tags-tooltip
-                  class="w-full"
-                  placeholder="选择与该危害因素相关的作业活动"
-                >
-                  <ElOption
-                    v-for="item in activities"
-                    :key="item.id"
-                    :label="`${item.activityName} · ${item.workStep}`"
-                    :value="item.id"
-                  />
-                </ElSelect>
-              </ElFormItem>
-              <ElFormItem label="后果及影响">
-                <ElInput
-                  v-model="hazardEditor.form.consequence"
-                  type="textarea"
-                  :rows="3"
-                  maxlength="2000"
-                  show-word-limit
-                  resize="none"
-                  placeholder="说明可能造成的人员、设备、环境或经营影响"
-                />
-              </ElFormItem>
-              <div class="hazard-workspace__editor-actions">
-                <ElButton @click="hazardEditor.visible = false">取消</ElButton>
-                <ElButton
-                  v-auth="'SmisDualControlRiskIdentification:MaintainHazards'"
-                  type="primary"
-                  :loading="hazardEditor.submitting"
-                  @click="submitHazard"
-                  >保存危害因素</ElButton
-                >
-              </div>
-            </ElForm>
-          </div>
-
           <ElScrollbar class="hazard-workspace__scrollbar">
-            <ElTable :data="hazards" row-key="id" table-layout="fixed">
-              <ElTableColumn
-                prop="hazardNo"
-                label="危害编号"
-                min-width="170"
-                show-overflow-tooltip
-              />
-              <ElTableColumn
-                prop="hazardFactor"
-                label="危害因素"
-                min-width="190"
-                show-overflow-tooltip
-              />
-              <ElTableColumn
-                prop="factorCategoryName"
-                label="因素类别"
-                min-width="130"
-                show-overflow-tooltip
-              />
-              <ElTableColumn label="事故类型" min-width="160">
-                <template #default="{ row }">
-                  <div class="hazard-workspace__tags">
-                    <ArtDictDisplay
-                      v-for="value in row.accidentTypes.slice(0, 2)"
-                      :key="value"
-                      dict-code="smisAccidentCategory"
-                      :value="value"
-                      display="tag"
-                    />
-                    <ElTag v-if="row.accidentTypes.length > 2" type="info" effect="plain"
-                      >+{{ row.accidentTypes.length - 2 }}</ElTag
-                    >
-                    <span v-if="!row.accidentTypes.length">—</span>
+            <ul class="hazard-workspace__list" aria-label="危害因素列表">
+              <li v-for="hazard in hazards" :key="hazard.id">
+                <article class="hazard-workspace__item hazard-workspace__item--hazard">
+                  <span class="hazard-workspace__hazard-icon" aria-hidden="true">
+                    <ArtSvgIcon icon="ri:alert-line" />
+                  </span>
+                  <div class="hazard-workspace__item-copy">
+                    <div class="hazard-workspace__item-title">
+                      <strong>{{ hazard.hazardFactor }}</strong>
+                      <ElTag size="small" type="warning" effect="plain">
+                        {{ hazard.factorCategoryName || '类别未维护' }}
+                      </ElTag>
+                    </div>
+                    <p class="hazard-workspace__code">{{ hazard.hazardNo }}</p>
+                    <div class="hazard-workspace__meta">
+                      <span>
+                        <ArtSvgIcon icon="ri:links-line" />
+                        关联 {{ hazard.activityIds.length }} 项活动
+                      </span>
+                      <div class="hazard-workspace__tags">
+                        <ArtDictDisplay
+                          v-for="value in hazard.accidentTypes.slice(0, 2)"
+                          :key="value"
+                          dict-code="smisAccidentCategory"
+                          :value="value"
+                          display="tag"
+                        />
+                        <ElTag v-if="hazard.accidentTypes.length > 2" size="small" type="info">
+                          +{{ hazard.accidentTypes.length - 2 }}
+                        </ElTag>
+                        <small v-if="!hazard.accidentTypes.length">事故类型未维护</small>
+                      </div>
+                    </div>
+                    <p v-if="hazard.consequence" class="hazard-workspace__consequence">
+                      后果及影响：{{ hazard.consequence }}
+                    </p>
                   </div>
-                </template>
-              </ElTableColumn>
-              <ElTableColumn label="关联活动" width="88" align="center">
-                <template #default="{ row }"
-                  ><ElTag effect="plain">{{ row.activityIds.length }} 项</ElTag></template
-                >
-              </ElTableColumn>
-              <ElTableColumn label="操作" width="92" fixed="right">
-                <template #default="{ row }">
                   <div class="hazard-workspace__row-actions">
                     <ArtButtonTable
                       type="edit"
                       permission="SmisDualControlRiskIdentification:MaintainHazards"
                       label="编辑危害因素"
-                      @click="openHazardEditorRow(row)"
+                      @click="openHazardEditor(hazard)"
                     />
                     <ArtButtonTable
                       type="delete"
                       permission="SmisDualControlRiskIdentification:MaintainHazards"
                       label="删除危害因素"
-                      @click="removeHazardRow(row)"
+                      @click="removeHazard(hazard)"
                     />
                   </div>
-                </template>
-              </ElTableColumn>
-            </ElTable>
+                </article>
+              </li>
+            </ul>
           </ElScrollbar>
         </ArtSectionCard>
       </div>
     </div>
+  </ArtDialog>
 
-    <template #footer="{ api }">
-      <span class="hazard-workspace__footer-note">所有新增、编辑和删除操作均实时保存</span>
-      <ElButton type="primary" @click="api.handleClose(true)">完成维护</ElButton>
-    </template>
+  <ArtDialog ref="activityDialogRef" size="sm">
+    <div class="hazard-editor">
+      <div class="hazard-editor__context">
+        <span aria-hidden="true"><ArtSvgIcon icon="ri:route-line" /></span>
+        <p>用清晰的动作名称和关键步骤描述本项作业，便于后续准确关联危害因素。</p>
+      </div>
+      <ElForm label-position="top">
+        <ElFormItem label="作业活动" required>
+          <ElInput
+            v-model="activityForm.activityName"
+            maxlength="300"
+            show-word-limit
+            placeholder="例如：设备停机检修"
+          />
+        </ElFormItem>
+        <ElFormItem label="关键作业步骤" required>
+          <ElInput
+            v-model="activityForm.workStep"
+            type="textarea"
+            :rows="5"
+            maxlength="1000"
+            show-word-limit
+            resize="none"
+            placeholder="按实际顺序描述关键操作步骤"
+          />
+        </ElFormItem>
+      </ElForm>
+    </div>
+  </ArtDialog>
+
+  <ArtDialog ref="hazardDialogRef" size="md">
+    <div class="hazard-editor">
+      <div class="hazard-editor__context">
+        <span aria-hidden="true"><ArtSvgIcon icon="ri:alert-line" /></span>
+        <p>先明确危害来源，再补充可能导致的事故、影响后果及相关作业活动。</p>
+      </div>
+      <ElForm label-position="top">
+        <div class="hazard-editor__grid">
+          <ElFormItem label="危害编号">
+            <ElInput :model-value="hazardForm.hazardNo" disabled placeholder="保存后自动生成" />
+          </ElFormItem>
+          <ElFormItem label="危害因素类别" required>
+            <ElSelect
+              v-model="hazardForm.factorCategoryId"
+              filterable
+              class="w-full"
+              placeholder="选择危害因素类别"
+            >
+              <ElOption
+                v-for="item in options.hazardCategories"
+                :key="item.id"
+                :label="`${item.categoryName} · ${item.categoryCode}`"
+                :value="item.id"
+              />
+            </ElSelect>
+          </ElFormItem>
+        </div>
+        <ElFormItem label="危害因素" required>
+          <ElInput
+            v-model="hazardForm.hazardFactor"
+            type="textarea"
+            :rows="4"
+            maxlength="1500"
+            show-word-limit
+            resize="none"
+            placeholder="描述人的、物的、环境或管理方面的危害因素"
+          />
+        </ElFormItem>
+        <div class="hazard-editor__grid">
+          <ElFormItem label="事故类型">
+            <ElSelect
+              v-model="hazardForm.accidentTypes"
+              multiple
+              filterable
+              collapse-tags
+              collapse-tags-tooltip
+              class="w-full"
+              placeholder="选择可能导致的事故类型"
+            >
+              <ElOption v-for="item in accidentTypeOptions" :key="item.value" v-bind="item" />
+            </ElSelect>
+          </ElFormItem>
+          <ElFormItem label="关联作业活动">
+            <ElSelect
+              v-model="hazardForm.activityIds"
+              multiple
+              filterable
+              collapse-tags
+              collapse-tags-tooltip
+              class="w-full"
+              placeholder="选择相关作业活动"
+            >
+              <ElOption
+                v-for="item in activities"
+                :key="item.id"
+                :label="item.activityName"
+                :value="item.id"
+              />
+            </ElSelect>
+          </ElFormItem>
+        </div>
+        <ElFormItem label="后果及影响">
+          <ElInput
+            v-model="hazardForm.consequence"
+            type="textarea"
+            :rows="4"
+            maxlength="2000"
+            show-word-limit
+            resize="none"
+            placeholder="说明可能造成的人员、设备、环境或经营影响"
+          />
+        </ElFormItem>
+      </ElForm>
+    </div>
   </ArtDialog>
 </template>
 
 <script setup lang="ts">
   import { Plus } from '@element-plus/icons-vue'
+  import { ElMessage } from 'element-plus'
   import ArtDialog from '@/components/core/dialogs/art-dialog/index.vue'
   import type { ArtDialogExpose } from '@/components/core/dialogs/art-dialog/types'
   import ArtSectionCard from '@/components/core/surfaces/art-section-card/index.vue'
@@ -313,6 +292,7 @@
   import ArtDictDisplay from '@/components/core/base/art-dict-display/index.vue'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
   import { useArtFeedback } from '@/hooks/core/useArtFeedback'
+  import { useAuth } from '@/hooks/core/useAuth'
   import { useUserStore } from '@/store/modules/user'
   import {
     deleteRiskActivities,
@@ -320,6 +300,7 @@
     fetchRiskHazardWorkspace,
     saveRiskActivity,
     saveRiskHazard,
+    voidRiskItems,
     type SmisRiskActivity,
     type SmisRiskHazard,
     type SmisRiskIdentificationOptions,
@@ -349,9 +330,12 @@
 
   const emit = defineEmits<{ changed: [] }>()
   const dialogRef = ref<ArtDialogExpose<HazardWorkspaceDialogOpenData>>()
+  const activityDialogRef = ref<ArtDialogExpose<SmisRiskActivity | undefined>>()
+  const hazardDialogRef = ref<ArtDialogExpose<SmisRiskHazard | undefined>>()
   const userStore = useUserStore()
   const { getDictMap } = storeToRefs(userStore)
-  const { confirmDelete } = useArtFeedback()
+  const { confirmAction, confirmDelete } = useArtFeedback()
+  const { hasAuth } = useAuth()
   const riskPoint = shallowRef<SmisRiskPoint>()
   const options = shallowRef<SmisRiskIdentificationOptions>({
     sites: [],
@@ -363,23 +347,15 @@
   const hazards = shallowRef<SmisRiskHazard[]>([])
   const loading = ref(false)
   const error = ref<string | null>(null)
-  const activityEditor = reactive({
-    visible: false,
-    submitting: false,
-    form: { activityName: '', workStep: '', sort: 0 } as ActivityForm
-  })
-  const hazardEditor = reactive({
-    visible: false,
-    submitting: false,
-    form: {
-      hazardNo: '',
-      hazardFactor: '',
-      factorCategoryId: '',
-      accidentTypes: [],
-      consequence: '',
-      activityIds: [],
-      sort: 0
-    } as HazardForm
+  const activityForm = reactive<ActivityForm>({ activityName: '', workStep: '', sort: 0 })
+  const hazardForm = reactive<HazardForm>({
+    hazardNo: '',
+    hazardFactor: '',
+    factorCategoryId: '',
+    accidentTypes: [],
+    consequence: '',
+    activityIds: [],
+    sort: 0
   })
   const accidentTypeOptions = computed(() =>
     (getDictMap.value.smisAccidentCategory ?? []).map((item) => ({
@@ -402,36 +378,35 @@
       loading.value = false
     }
   }
-  const openActivityEditor = (row?: SmisRiskActivity): void => {
-    Object.assign(activityEditor.form, {
+  const submitActivity = async (): Promise<boolean> => {
+    if (!riskPoint.value) return false
+    if (!activityForm.activityName.trim() || !activityForm.workStep.trim()) {
+      ElMessage.warning('请完整填写作业活动和关键作业步骤')
+      return false
+    }
+    await saveRiskActivity({
+      ...toRaw(activityForm),
+      riskPointId: riskPoint.value.id,
+      activityName: activityForm.activityName.trim(),
+      workStep: activityForm.workStep.trim()
+    })
+    await loadWorkspace()
+    emit('changed')
+    return true
+  }
+  const openActivityEditor = async (row?: SmisRiskActivity): Promise<void> => {
+    Object.assign(activityForm, {
       id: row?.id,
       activityName: row?.activityName ?? '',
       workStep: row?.workStep ?? '',
       sort: row?.sort ?? activities.value.length * 10
     })
-    activityEditor.visible = true
-  }
-  const openActivityEditorRow = (row: unknown): void => openActivityEditor(row as SmisRiskActivity)
-  const submitActivity = async (): Promise<void> => {
-    if (!riskPoint.value || activityEditor.submitting) return
-    if (!activityEditor.form.activityName.trim() || !activityEditor.form.workStep.trim()) {
-      ElMessage.warning('请完整填写作业活动和作业步骤')
-      return
-    }
-    try {
-      activityEditor.submitting = true
-      await saveRiskActivity({
-        ...toRaw(activityEditor.form),
-        riskPointId: riskPoint.value.id,
-        activityName: activityEditor.form.activityName.trim(),
-        workStep: activityEditor.form.workStep.trim()
-      })
-      activityEditor.visible = false
-      await loadWorkspace()
-      emit('changed')
-    } finally {
-      activityEditor.submitting = false
-    }
+    await activityDialogRef.value?.handleOpen(row, {
+      title: row ? '编辑作业活动' : '新增作业活动',
+      subtitle: row ? row.activityName : '维护活动名称与关键作业步骤',
+      confirmText: row ? '保存修改' : '新增活动',
+      onConfirm: submitActivity
+    })
   }
   const removeActivity = async (row: SmisRiskActivity): Promise<void> => {
     try {
@@ -443,9 +418,28 @@
       /* 用户取消 */
     }
   }
-  const removeActivityRow = (row: unknown): void => void removeActivity(row as SmisRiskActivity)
-  const openHazardEditor = (row?: SmisRiskHazard): void => {
-    Object.assign(hazardEditor.form, {
+  const submitHazard = async (): Promise<boolean> => {
+    if (!riskPoint.value) return false
+    if (!hazardForm.hazardFactor.trim() || !hazardForm.factorCategoryId) {
+      ElMessage.warning('请完整填写危害因素和危害因素类别')
+      return false
+    }
+    await saveRiskHazard({
+      id: hazardForm.id,
+      riskPointId: riskPoint.value.id,
+      hazardFactor: hazardForm.hazardFactor.trim(),
+      factorCategoryId: hazardForm.factorCategoryId,
+      accidentTypes: [...hazardForm.accidentTypes],
+      consequence: hazardForm.consequence.trim() || null,
+      activityIds: [...hazardForm.activityIds],
+      sort: hazardForm.sort
+    })
+    await loadWorkspace()
+    emit('changed')
+    return true
+  }
+  const openHazardEditor = async (row?: SmisRiskHazard): Promise<void> => {
+    Object.assign(hazardForm, {
       id: row?.id,
       hazardNo: row?.hazardNo ?? '',
       hazardFactor: row?.hazardFactor ?? '',
@@ -455,56 +449,50 @@
       activityIds: [...(row?.activityIds ?? [])],
       sort: row?.sort ?? hazards.value.length * 10
     })
-    hazardEditor.visible = true
-  }
-  const openHazardEditorRow = (row: unknown): void => openHazardEditor(row as SmisRiskHazard)
-  const submitHazard = async (): Promise<void> => {
-    if (!riskPoint.value || hazardEditor.submitting) return
-    if (!hazardEditor.form.hazardFactor.trim() || !hazardEditor.form.factorCategoryId) {
-      ElMessage.warning('请完整填写危害因素和危害因素类别')
-      return
-    }
-    try {
-      hazardEditor.submitting = true
-      await saveRiskHazard({
-        id: hazardEditor.form.id,
-        riskPointId: riskPoint.value.id,
-        hazardFactor: hazardEditor.form.hazardFactor.trim(),
-        factorCategoryId: hazardEditor.form.factorCategoryId,
-        accidentTypes: [...hazardEditor.form.accidentTypes],
-        consequence: hazardEditor.form.consequence.trim() || null,
-        activityIds: [...hazardEditor.form.activityIds],
-        sort: hazardEditor.form.sort
-      })
-      hazardEditor.visible = false
-      await loadWorkspace()
-      emit('changed')
-    } finally {
-      hazardEditor.submitting = false
-    }
+    await hazardDialogRef.value?.handleOpen(row, {
+      title: row ? '编辑危害因素' : '新增危害因素',
+      subtitle: row?.hazardNo || '完善危害来源、事故类型与关联活动',
+      confirmText: row ? '保存修改' : '新增危害因素',
+      contentMaxHeight: 'calc(100vh - 170px)',
+      onConfirm: submitHazard
+    })
   }
   const removeHazard = async (row: SmisRiskHazard): Promise<void> => {
     try {
       await confirmDelete(`确定删除危害因素“${row.hazardNo}”吗？已完成评价的危害因素不会被删除。`)
-      await deleteRiskHazards([row.id])
+      const deletedCount = await deleteRiskHazards([row.id])
+      if (!deletedCount) {
+        if (!hasAuth('SmisDualControlRiskIdentification:Void')) {
+          ElMessage.warning('该危害因素已进入评价流程，需要作废权限才能继续处理。')
+          return
+        }
+        await confirmAction(
+          `危害因素“${row.hazardNo}”已有评价记录，无法物理删除。是否改为作废并保留审计链？`,
+          '作废危害因素'
+        )
+        await voidRiskItems([row.id])
+      }
       await loadWorkspace()
       emit('changed')
     } catch {
       /* 用户取消 */
     }
   }
-  const removeHazardRow = (row: unknown): void => void removeHazard(row as SmisRiskHazard)
+  const closeEditors = (): void => {
+    activityDialogRef.value?.handleClose()
+    hazardDialogRef.value?.handleClose()
+  }
   const handleOpen = async (data: HazardWorkspaceDialogOpenData): Promise<void> => {
     riskPoint.value = data.riskPoint
     options.value = data.options
-    activityEditor.visible = false
-    hazardEditor.visible = false
     await dialogRef.value?.handleOpen(data, {
       title: '维护危害因素',
       subtitle: `${data.riskPoint.pointNo} · ${data.riskPoint.pointName}`,
-      contentMaxHeight: 'calc(100vh - 130px)',
-      loading: true,
+      confirmText: '完成维护',
+      contentMaxHeight: 'calc(100vh - 150px)',
+      onConfirm: () => true,
       onOpen: async (_data, api) => {
+        api.setLoading(true)
         try {
           await Promise.all([loadWorkspace(), userStore.ensureDictLoaded('smisAccidentCategory')])
         } finally {
@@ -513,7 +501,10 @@
       }
     })
   }
-  onDeactivated(() => dialogRef.value?.handleClose())
+  onDeactivated(() => {
+    closeEditors()
+    dialogRef.value?.handleClose()
+  })
   defineExpose({ handleOpen })
 </script>
 
@@ -523,42 +514,53 @@
 
     &__summary {
       display: grid;
-      grid-template-columns: 44px minmax(0, 1fr) auto;
-      gap: 12px;
+      grid-template-columns: 48px minmax(0, 1fr) auto;
+      gap: var(--art-space-3);
       align-items: center;
-      padding: 14px 16px;
-      margin-bottom: 14px;
-      background: color-mix(in srgb, var(--theme-color) 7%, var(--default-box-color));
-      border-left: 3px solid var(--theme-color);
+      padding: var(--art-space-3) var(--art-space-4);
+      margin-bottom: var(--art-space-4);
+      background: color-mix(in srgb, var(--theme-color) 6%, var(--el-fill-color-blank));
+      border: 1px solid color-mix(in srgb, var(--theme-color) 16%, var(--el-border-color-light));
       border-radius: var(--el-border-radius-base);
+    }
 
-      > span:first-child {
-        display: grid;
-        place-items: center;
-        width: 44px;
-        height: 44px;
-        color: var(--theme-color);
-        background: var(--default-box-color);
-        border-radius: var(--el-border-radius-base);
+    &__summary-icon {
+      display: grid;
+      place-items: center;
+      width: 48px;
+      height: 48px;
+      font-size: 22px;
+      color: var(--theme-color);
+      background: var(--el-fill-color-blank);
+      border-radius: var(--el-border-radius-base);
+      box-shadow: var(--art-card-shadow);
+    }
+
+    &__summary-copy {
+      min-width: 0;
+
+      strong {
+        font-size: var(--art-font-size-section-title);
       }
 
       p {
-        margin: 3px 0 0;
-        font-size: 12px;
+        margin: var(--art-space-1) 0 0;
+        font-size: var(--art-font-size-caption);
         color: var(--el-text-color-secondary);
       }
     }
 
     &__counts {
       display: flex;
-      gap: 8px;
+      gap: var(--art-space-2);
 
       span {
         display: grid;
-        min-width: 78px;
-        padding: 7px 10px;
+        min-width: 84px;
+        padding: var(--art-space-2) var(--art-space-3);
         text-align: center;
-        background: var(--default-box-color);
+        background: var(--el-fill-color-blank);
+        border: 1px solid var(--el-border-color-lighter);
         border-radius: var(--el-border-radius-base);
       }
 
@@ -573,76 +575,215 @@
 
     &__grid {
       display: grid;
-      grid-template-columns: minmax(360px, 0.9fr) minmax(500px, 1.25fr);
-      gap: 14px;
+      grid-template-columns: minmax(360px, 0.9fr) minmax(520px, 1.25fr);
+      gap: var(--art-space-4);
       min-width: 0;
     }
 
-    &__editor {
-      padding: 14px;
-      margin-bottom: 12px;
-      background: color-mix(in srgb, var(--theme-color) 4%, var(--el-fill-color-extra-light));
-      border: 1px solid color-mix(in srgb, var(--theme-color) 16%, var(--el-border-color-light));
+    &__scrollbar {
+      height: min(450px, calc(100vh - 360px));
+    }
+
+    &__list {
+      display: grid;
+      gap: var(--art-space-2);
+      padding: 0;
+      margin: 0;
+      list-style: none;
+    }
+
+    &__item {
+      display: grid;
+      grid-template-columns: 40px minmax(0, 1fr) auto;
+      gap: var(--art-space-3);
+      align-items: start;
+      padding: var(--art-space-3);
+      background: var(--el-fill-color-blank);
+      border: 1px solid var(--el-border-color-lighter);
+      border-radius: var(--el-border-radius-base);
+      transition:
+        border-color var(--art-motion-duration-fast) ease,
+        box-shadow var(--art-motion-duration-fast) ease;
+
+      &:hover {
+        border-color: color-mix(in srgb, var(--theme-color) 28%, var(--el-border-color));
+        box-shadow: var(--art-card-shadow);
+      }
+    }
+
+    &__sequence,
+    &__hazard-icon {
+      display: grid;
+      place-items: center;
+      width: 40px;
+      height: 40px;
+      font-weight: 600;
+      color: var(--theme-color);
+      background: color-mix(in srgb, var(--theme-color) 8%, var(--el-fill-color-blank));
       border-radius: var(--el-border-radius-base);
     }
 
-    &__editor-grid {
+    &__hazard-icon {
+      color: var(--el-color-warning);
+      background: color-mix(in srgb, var(--el-color-warning) 10%, var(--el-fill-color-blank));
+    }
+
+    &__item-copy {
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 16px;
+      gap: var(--art-space-1);
+      min-width: 0;
+
+      > p {
+        display: -webkit-box;
+        margin: 0;
+        overflow: hidden;
+        -webkit-line-clamp: 2;
+        font-size: var(--art-font-size-caption);
+        line-height: 20px;
+        color: var(--el-text-color-secondary);
+        -webkit-box-orient: vertical;
+      }
     }
 
-    &__editor-actions {
+    &__item-title {
       display: flex;
-      gap: 8px;
-      justify-content: flex-end;
+      gap: var(--art-space-2);
+      align-items: center;
+      justify-content: space-between;
+      min-width: 0;
+
+      strong {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
     }
 
-    &__scrollbar {
-      height: 390px;
+    &__code {
+      font-family: var(--art-font-family-mono, monospace);
+      color: var(--theme-color) !important;
     }
 
-    &__row-actions,
-    &__tags {
+    &__meta,
+    &__tags,
+    &__row-actions {
       display: flex;
-      gap: 4px;
+      gap: var(--art-space-2);
       align-items: center;
       min-width: 0;
     }
 
-    &__tags {
+    &__meta {
       flex-wrap: wrap;
+      justify-content: space-between;
+      margin-top: var(--art-space-1);
+
+      > span {
+        display: inline-flex;
+        gap: var(--art-space-1);
+        align-items: center;
+        font-size: var(--art-font-size-caption);
+        color: var(--el-text-color-secondary);
+      }
     }
 
-    &__footer-note {
-      flex: 1;
-      font-size: 12px;
-      color: var(--el-text-color-secondary);
-      text-align: left;
+    &__tags {
+      flex-wrap: wrap;
+
+      small {
+        color: var(--el-text-color-placeholder);
+      }
+    }
+
+    &__consequence {
+      padding-top: var(--art-space-2);
+      margin-top: var(--art-space-1) !important;
+      border-top: 1px dashed var(--el-border-color-lighter);
+    }
+
+    &__row-actions {
+      gap: var(--art-space-1);
+
+      :deep(.art-button-table) {
+        margin-right: 0;
+      }
+    }
+  }
+
+  .hazard-editor {
+    display: grid;
+    gap: var(--art-space-4);
+
+    &__context {
+      display: grid;
+      grid-template-columns: 40px minmax(0, 1fr);
+      gap: var(--art-space-3);
+      align-items: center;
+      padding: var(--art-space-3);
+      background: color-mix(in srgb, var(--theme-color) 6%, var(--el-fill-color-blank));
+      border: 1px solid color-mix(in srgb, var(--theme-color) 15%, var(--el-border-color-light));
+      border-radius: var(--el-border-radius-base);
+
+      span {
+        display: grid;
+        place-items: center;
+        width: 40px;
+        height: 40px;
+        color: var(--theme-color);
+        background: var(--el-fill-color-blank);
+        border-radius: var(--el-border-radius-base);
+      }
+
+      p {
+        margin: 0;
+        font-size: var(--art-font-size-caption);
+        line-height: 20px;
+        color: var(--el-text-color-secondary);
+      }
+    }
+
+    &__grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--art-space-4);
     }
   }
 
   @media (width <= 1080px) {
-    .hazard-workspace__grid {
-      grid-template-columns: minmax(0, 1fr);
-    }
+    .hazard-workspace {
+      &__grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
 
-    .hazard-workspace__scrollbar {
-      height: 320px;
+      &__scrollbar {
+        height: 340px;
+      }
     }
   }
 
   @media (width <= 680px) {
-    .hazard-workspace__summary {
-      grid-template-columns: 40px minmax(0, 1fr);
+    .hazard-workspace {
+      &__summary {
+        grid-template-columns: 40px minmax(0, 1fr);
+      }
+
+      &__counts {
+        grid-column: 1 / -1;
+      }
+
+      &__item,
+      &__item--hazard {
+        grid-template-columns: 36px minmax(0, 1fr);
+      }
+
+      &__row-actions {
+        grid-column: 2;
+      }
     }
 
-    .hazard-workspace__counts {
-      grid-column: 1 / -1;
-    }
-
-    .hazard-workspace__editor-grid {
+    .hazard-editor__grid {
       grid-template-columns: minmax(0, 1fr);
+      gap: 0;
     }
   }
 </style>

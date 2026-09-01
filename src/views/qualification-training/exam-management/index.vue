@@ -21,8 +21,11 @@
       </BusinessWorkspaceHeader>
 
       <div class="exam-page__body art-card-xs">
-        <ElTabs v-model="activeTab" class="exam-page__tabs"
-          ><ElTabPane label="试卷管理" name="paper" /><ElTabPane label="考试记录" name="record"
+        <ElTabs v-model="activeTab" class="exam-page__tabs" stretch
+          ><ElTabPane label="试卷管理" name="paper" /><ElTabPane
+            v-if="hasAuth('SmisExamManagement:ViewRecord')"
+            label="考试记录"
+            name="record"
         /></ElTabs>
         <ArtTableQuery
           v-show="activeTab === 'paper'"
@@ -45,6 +48,7 @@
           focusable
         />
         <ArtTableQuery
+          v-if="hasAuth('SmisExamManagement:ViewRecord')"
           v-show="activeTab === 'record'"
           ref="recordTableRef"
           v-model="recordQuery"
@@ -266,9 +270,17 @@
                 </ElTag>
               </header>
               <TrainingEmployeeMultipleSelect
+                v-if="hasAuth('SmisExamManagement:Assign')"
                 v-model="paperForm.employeeIds"
                 v-model:selected-data="employeeSelection"
                 title="选择考试人员"
+              />
+              <ElAlert
+                v-else
+                title="当前账号可维护试卷内容，但没有分配考试人员的权限。"
+                type="info"
+                :closable="false"
+                show-icon
               />
               <small class="exam-page__helper">
                 暂不分配人员也可保存草稿，发布前再补充考试范围。
@@ -422,6 +434,7 @@
   import type { ColumnOption } from '@/types'
   import { pageInfoHandler } from '@/utils/table/tableUtils'
   import { useArtFeedback } from '@/hooks/core/useArtFeedback'
+  import { useAuth } from '@/hooks/core/useAuth'
   import { useUserStore } from '@/store/modules/user'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import ArtButtonMore, {
@@ -469,6 +482,7 @@
   type RecordParams = SmisExamRecordSearchParams &
     Pick<Api.Common.PaginationParams, 'current' | 'size'>
   const userStore = useUserStore()
+  const { hasAuth } = useAuth()
   const { getDictMap } = storeToRefs(userStore)
   const { confirm, confirmDelete } = useArtFeedback()
   const activeTab = ref<'paper' | 'record'>('paper')

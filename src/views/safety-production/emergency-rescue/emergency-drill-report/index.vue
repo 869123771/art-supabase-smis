@@ -16,7 +16,21 @@
           { label: '未兑现计划可追溯', type: 'warning', effect: 'plain' }
         ]"
         :metrics="metrics"
-      />
+      >
+        <template #actions>
+          <ElButton
+            v-auth="'SmisEmergencyDrillReport:Export'"
+            type="primary"
+            plain
+            :loading="exportLoading"
+            :disabled="loading"
+            @click="handleExport"
+          >
+            <ArtSvgIcon icon="ri:file-excel-2-line" />
+            导出 Excel
+          </ElButton>
+        </template>
+      </BusinessWorkspaceHeader>
       <ElScrollbar class="drill-report-page__scroll">
         <div class="drill-report-page__body">
           <ArtSearchBar
@@ -37,8 +51,8 @@
               :loading="loading"
               :error="loadError"
               :empty="!loading && !loadError && rows.length === 0"
-              empty-title="暂无已提交演练记录"
-              empty-description="调整日期或组织范围后重新查询。"
+              empty-title="暂无演练计划统计"
+              empty-description="调整日期或演练单位范围后重新查询。"
               :min-height="320"
               @retry="loadReport"
             >
@@ -47,9 +61,9 @@
               >
               <div class="drill-report-page__analysis-summary" aria-label="演练执行摘要">
                 <div class="drill-report-page__analysis-item">
-                  <span>计划兑现率</span>
-                  <strong>{{ completionRate }}%</strong>
-                  <small>已形成正式记录的计划占比</small>
+                  <span>冲刺率</span>
+                  <strong>{{ sprintRate }}%</strong>
+                  <small>兑现数 ÷ 计划数</small>
                 </div>
                 <div class="drill-report-page__analysis-item">
                   <span>实际演练</span>
@@ -67,11 +81,11 @@
                 :pagination="false"
                 class="drill-report-page__table"
                 table-layout="fixed"
-                empty-text="当前筛选范围暂无已提交演练记录"
+                empty-text="当前筛选范围暂无演练计划统计"
               >
                 <ElTableColumn
                   prop="organizationName"
-                  label="演练组织"
+                  label="演练单位"
                   min-width="180"
                   show-overflow-tooltip
                 />
@@ -88,6 +102,15 @@
                       dict-code="smisEmergencyPlanLevel"
                       :value="row.planLevel" /></template
                 ></ElTableColumn>
+                <ElTableColumn prop="planCount" label="计划数" width="88" align="center" />
+                <ElTableColumn prop="completedCount" label="兑现数" width="88" align="center" />
+                <ElTableColumn prop="sprintRate" label="冲刺率" width="96" align="center"
+                  ><template #default="{ row }"
+                    ><strong class="drill-report-page__rate"
+                      >{{ row.sprintRate }}%</strong
+                    ></template
+                  ></ElTableColumn
+                >
                 <ElTableColumn prop="drillCount" label="实际演练次数" width="130" align="center"
                   ><template #default="{ row }"
                     ><strong class="drill-report-page__number">{{
@@ -152,7 +175,7 @@
                   >
                   <ElTableColumn
                     prop="organizationName"
-                    label="演练组织"
+                    label="演练单位"
                     min-width="150"
                     show-overflow-tooltip
                   />
@@ -210,6 +233,7 @@
   import { ElMessage } from 'element-plus'
   import { fetchGetEnableOrganizationTree } from '@/api/system-manage'
   import { useUserStore } from '@/store/modules/user'
+  import { exportExcel, type ExcelColumn } from '@/utils/file'
   import ArtSearchBar, {
     type SearchFormItem
   } from '@/components/core/forms/art-search-bar/index.vue'
@@ -232,10 +256,27 @@
     endDate?: string
     organizationId?: string
   }
+  interface ReportExportRow extends Record<string, unknown> {
+    recordType: string
+    organizationName: string
+    planCategory: string
+    planLevel: string
+    planCount: number | string
+    completedCount: number | string
+    sprintRate: string
+    drillCount: number | string
+    lateCount: number | string
+    averageIntervalDays: number | string
+    planNo: string
+    drillName: string
+    planEndDate: string
+    warningStatus: string
+  }
   const userStore = useUserStore()
-  const { getUserInfo } = storeToRefs(userStore)
+  const { getDictMap, getUserInfo } = storeToRefs(userStore)
   const query = reactive<ReportQuery>({})
   const loading = ref(false)
+  const exportLoading = ref(false)
   const loadError = shallowRef<Error | null>(null)
   const organizations = shallowRef<SmisTreeOrganization[]>([])
   const rows = shallowRef<SmisEmergencyDrillReportRow[]>([])
@@ -276,8 +317,10 @@
       tone: 'danger'
     }
   ])
-  const completionRate = computed(() =>
-    overview.planCount ? Math.round((overview.completedCount / overview.planCount) * 100) : 0
+  const calculateSprintRate = (completedCount: number, planCount: number): number =>
+    planCount ? Math.round((completedCount / planCount) * 1000) / 10 : 0
+  const sprintRate = computed(() =>
+    calculateSprintRate(overview.completedCount, overview.planCount)
   )
   const totalDrillCount = computed(() =>
     rows.value.reduce((total, row) => total + row.drillCount, 0)
@@ -285,6 +328,27 @@
   const coveredOrganizationCount = computed(
     () => new Set(rows.value.map((row) => row.organizationName).filter(Boolean)).size
   )
+  const dictLabel = (code: string, value: unknown): string => {
+    const normalizedValue = String(value ?? '')
+    const item = getDictMap.value[code]?.find((option) => option.value === normalizedValue)
+    return item?.label || item?.name || normalizedValue || '—'
+  }
+  const exportColumns: ExcelColumn<ReportExportRow>[] = [
+    { key: 'recordType', title: '报表分区', width: 14 },
+    { key: 'organizationName', title: '演练单位', width: 24 },
+    { key: 'planCategory', title: '计划类别', width: 16 },
+    { key: 'planLevel', title: '演练级别', width: 14 },
+    { key: 'planCount', title: '计划数', width: 10 },
+    { key: 'completedCount', title: '兑现数', width: 10 },
+    { key: 'sprintRate', title: '冲刺率', width: 12 },
+    { key: 'drillCount', title: '实际演练次数', width: 14 },
+    { key: 'lateCount', title: '延迟完成数', width: 12 },
+    { key: 'averageIntervalDays', title: '平均间隔（天）', width: 16 },
+    { key: 'planNo', title: '未兑现计划编号', width: 20 },
+    { key: 'drillName', title: '未兑现演练计划', width: 28 },
+    { key: 'planEndDate', title: '计划完成日', width: 14 },
+    { key: 'warningStatus', title: '预警状态', width: 12 }
+  ]
   const searchItems = computed<SearchFormItem[]>(() => [
     {
       label: '开始日期',
@@ -299,7 +363,7 @@
       props: { valueFormat: 'YYYY-MM-DD', clearable: true, placeholder: '选择结束日期' }
     },
     {
-      label: '演练组织',
+      label: '演练单位',
       key: 'organizationId',
       type: 'treeSelect',
       props: {
@@ -344,6 +408,75 @@
   const resetQuery = () => {
     Object.assign(query, { startDate: undefined, endDate: undefined, organizationId: undefined })
     void loadReport()
+  }
+  const handleExport = async (): Promise<void> => {
+    if (!overview.planCount && !rows.value.length && !outstanding.value.length) {
+      ElMessage.warning('当前筛选范围暂无可导出的演练报表数据')
+      return
+    }
+    exportLoading.value = true
+    try {
+      const summary: ReportExportRow = {
+        recordType: '汇总',
+        organizationName: query.organizationId ? '当前所选组织' : '全部组织',
+        planCategory: '',
+        planLevel: '',
+        planCount: overview.planCount,
+        completedCount: overview.completedCount,
+        sprintRate: `${sprintRate.value}%`,
+        drillCount: overview.completedCount,
+        lateCount: overview.lateCount,
+        averageIntervalDays: '',
+        planNo: '',
+        drillName: '',
+        planEndDate: '',
+        warningStatus: ''
+      }
+      const groupedRows: ReportExportRow[] = rows.value.map((row) => ({
+        recordType: '执行分析',
+        organizationName: row.organizationName,
+        planCategory: dictLabel('smisEmergencyPlanCategory', row.planCategory),
+        planLevel: dictLabel('smisEmergencyPlanLevel', row.planLevel),
+        planCount: row.planCount,
+        completedCount: row.completedCount,
+        sprintRate: `${row.sprintRate}%`,
+        drillCount: row.drillCount,
+        lateCount: row.lateCount,
+        averageIntervalDays: row.averageIntervalDays ?? '',
+        planNo: '',
+        drillName: '',
+        planEndDate: '',
+        warningStatus: ''
+      }))
+      const outstandingRows: ReportExportRow[] = outstanding.value.map((row) => ({
+        recordType: '未兑现计划',
+        organizationName: row.organizationName,
+        planCategory: dictLabel('smisEmergencyPlanCategory', row.planCategory),
+        planLevel: dictLabel('smisEmergencyPlanLevel', row.planLevel),
+        planCount: '',
+        completedCount: '',
+        sprintRate: '',
+        drillCount: '',
+        lateCount: '',
+        averageIntervalDays: '',
+        planNo: row.planNo,
+        drillName: row.drillName,
+        planEndDate: row.planEndDate || '',
+        warningStatus: dictLabel('smisEmergencyPlanWarningStatus', row.warningStatus)
+      }))
+      await exportExcel({
+        data: [summary, ...groupedRows, ...outstandingRows],
+        columns: exportColumns,
+        filename: '应急演练报表',
+        sheetName: '演练统计',
+        autoIndex: true
+      })
+      ElMessage.success('应急演练报表已导出')
+    } catch (error) {
+      ElMessage.error(error instanceof Error ? error.message : '报表导出失败，请重试')
+    } finally {
+      exportLoading.value = false
+    }
   }
   onMounted(async () => {
     loading.value = true
@@ -568,6 +701,10 @@
     &__number {
       font-size: 18px;
       color: var(--theme-color);
+    }
+
+    &__rate {
+      color: var(--el-color-success);
     }
 
     &__plan {

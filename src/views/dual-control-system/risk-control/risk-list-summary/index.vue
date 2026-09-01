@@ -17,23 +17,55 @@
         <template #actions><BusinessTableWorkspaceActions :table="tableQueryRef" /></template>
       </BusinessWorkspaceHeader>
 
-      <div class="risk-summary-page__insight">
-        <div
-          ><span>评价覆盖率</span><strong>{{ evaluationRate }}%</strong
-          ><ElProgress :percentage="evaluationRate" :stroke-width="6" :show-text="false"
-        /></div>
-        <div
-          ><span>管控覆盖率</span><strong>{{ controlRate }}%</strong
-          ><ElProgress
-            :percentage="controlRate"
-            :stroke-width="6"
-            :show-text="false"
-            status="success"
-        /></div>
-        <p
-          ><ArtSvgIcon icon="ri:information-line" />
-          汇总表沿用安全风险清单口径，横向滚动可查看五类措施、责任人和责任部门。</p
-        >
+      <div class="risk-summary-page__coverage art-card-xs" aria-label="风险治理覆盖概览">
+        <article>
+          <span class="risk-summary-page__coverage-icon is-evaluation">
+            <ArtSvgIcon icon="ri:calculator-line" />
+          </span>
+          <div class="risk-summary-page__coverage-main">
+            <div>
+              <span>评价覆盖率</span>
+              <strong>{{ evaluationRate }}%</strong>
+            </div>
+            <ElProgress :percentage="evaluationRate" :stroke-width="7" :show-text="false" />
+            <small>{{ overview.evaluated }} / {{ overview.total }} 项已完成定量评价</small>
+          </div>
+        </article>
+        <article>
+          <span class="risk-summary-page__coverage-icon is-control">
+            <ArtSvgIcon icon="ri:shield-check-line" />
+          </span>
+          <div class="risk-summary-page__coverage-main">
+            <div>
+              <span>管控覆盖率</span>
+              <strong>{{ controlRate }}%</strong>
+            </div>
+            <ElProgress
+              :percentage="controlRate"
+              :stroke-width="7"
+              :show-text="false"
+              status="success"
+            />
+            <small>{{ overview.controlled }} / {{ overview.total }} 项已落实管控责任</small>
+          </div>
+        </article>
+        <aside :class="{ 'is-complete': !pendingEvaluation && !pendingControl }">
+          <span>
+            <ArtSvgIcon
+              :icon="
+                !pendingEvaluation && !pendingControl
+                  ? 'ri:checkbox-circle-line'
+                  : 'ri:focus-3-line'
+              "
+            />
+          </span>
+          <div>
+            <strong>{{
+              !pendingEvaluation && !pendingControl ? '治理链路完整' : '治理缺口提示'
+            }}</strong>
+            <small>{{ coverageGuidance }}</small>
+          </div>
+        </aside>
       </div>
 
       <ArtTableQuery
@@ -110,6 +142,15 @@
   const controlRate = computed(() =>
     overview.total ? Math.round((overview.controlled / overview.total) * 100) : 0
   )
+  const pendingEvaluation = computed(() => Math.max(overview.total - overview.evaluated, 0))
+  const pendingControl = computed(() => Math.max(overview.total - overview.controlled, 0))
+  const coverageGuidance = computed(() => {
+    if (!overview.total) return '完成风险辨识后，可在此持续跟踪评价和管控覆盖情况。'
+    if (!pendingEvaluation.value && !pendingControl.value) {
+      return '当前风险均已完成评价并落实管控责任，请持续跟踪执行效果。'
+    }
+    return `还有 ${pendingEvaluation.value} 项待评价、${pendingControl.value} 项待落实管控。`
+  })
   const workspaceMetrics = computed<BusinessWorkspaceMetric[]>(() => [
     {
       label: '风险总数',
@@ -180,17 +221,22 @@
     { key: 'identifiedBy', title: '辨识人' },
     { key: 'identifiedAt', title: '辨识时间' }
   ]
-  const textColumn = (
-    prop: keyof SmisSafetyRiskRecord,
-    label: string,
-    minWidth = 200
-  ): ColumnOption<SmisSafetyRiskRecord> => ({
-    prop: String(prop),
-    label,
-    minWidth,
-    showOverflowTooltip: true,
-    formatter: (row) => String(row[prop] || '—')
-  })
+  const accidentTypeText = (row: SmisSafetyRiskRecord): string =>
+    row.accidentTypes
+      .map(
+        (item) =>
+          (getDictMap.value.smisAccidentCategory ?? []).find((dict) => dict.value === item)
+            ?.label || item
+      )
+      .join('、') || '暂无事故类型'
+  const measureItems = (row: SmisSafetyRiskRecord) =>
+    [
+      { label: '工程', value: row.engineeringMeasures },
+      { label: '管理', value: row.managementMeasures },
+      { label: '培训', value: row.educationMeasures },
+      { label: '个防', value: row.personalProtectionMeasures },
+      { label: '应急', value: row.emergencyMeasures }
+    ].filter((item) => Boolean(item.value))
   const columnsFactory = (): ColumnOption<SmisSafetyRiskRecord>[] => [
     { type: 'globalIndex', label: '序号', width: 68 },
     {
@@ -203,7 +249,7 @@
     {
       prop: 'riskName',
       label: '风险点 / 危险源',
-      minWidth: 260,
+      minWidth: 250,
       fixed: 'left',
       formatter: (row) => (
         <div class="risk-summary-page__identity">
@@ -213,71 +259,74 @@
       )
     },
     {
-      prop: 'riskPointType',
-      label: '风险点类型',
-      width: 116,
-      formatter: (row) => (
-        <ArtDictDisplay dictCode="smisRiskPointType" value={row.riskPointType} display="tag" />
-      )
-    },
-    {
       prop: 'siteName',
-      label: '环节 / 单位',
-      minWidth: 180,
+      label: '风险场景',
+      minWidth: 210,
       formatter: (row) => (
-        <div class="risk-summary-page__identity">
+        <div class="risk-summary-page__context">
+          <ArtDictDisplay dictCode="smisRiskPointType" value={row.riskPointType} display="tag" />
           <strong>{row.siteName}</strong>
-          <small>{row.organizationName || '—'}</small>
+          <small>{row.organizationName || '未关联责任单位'}</small>
         </div>
       )
     },
     {
       prop: 'accidentTypes',
-      label: '事故类型',
-      minWidth: 180,
-      formatter: (row) =>
-        row.accidentTypes
-          .map(
-            (item) =>
-              (getDictMap.value.smisAccidentCategory ?? []).find((dict) => dict.value === item)
-                ?.label || item
-          )
-          .join('、') || '—'
-    },
-    textColumn('riskDescription', '风险描述', 240),
-    textColumn('engineeringMeasures', '工程技术措施', 220),
-    textColumn('managementMeasures', '管理措施', 220),
-    textColumn('educationMeasures', '教育培训措施', 220),
-    textColumn('personalProtectionMeasures', '个体防护措施', 220),
-    textColumn('emergencyMeasures', '应急处置措施', 220),
-    {
-      prop: 'riskAssessmentMethod',
-      label: '评价方法 / 等级',
-      width: 148,
+      label: '风险信息',
+      minWidth: 240,
       formatter: (row) => (
-        <div class="risk-summary-page__identity">
-          <strong>{row.riskAssessmentMethod || '待评价'}</strong>
-          <small style={{ color: row.riskLevelColor || undefined }}>
-            {row.riskLevelName || '暂无等级'}
-          </small>
+        <div class="risk-summary-page__risk-detail">
+          <strong>{accidentTypeText(row)}</strong>
+          <small>{row.riskDescription || '暂无风险描述'}</small>
         </div>
       )
     },
     {
-      prop: 'controlLevels',
-      label: '管控层级',
-      minWidth: 210,
-      formatter: (row) =>
-        row.controlLevels.map((item) => controlLevelLabel.get(item)).join('、') || '未管控'
+      prop: 'riskAssessmentMethod',
+      label: '评价结果',
+      width: 170,
+      formatter: (row) => (
+        <div class="risk-summary-page__assessment">
+          <span style={{ '--risk-color': row.riskLevelColor || 'var(--el-color-warning)' }} />
+          <div>
+            <strong>{row.riskLevelName || '待评价'}</strong>
+            <small>{row.riskAssessmentMethod || '尚未完成定量评价'}</small>
+          </div>
+        </div>
+      )
+    },
+    {
+      prop: 'engineeringMeasures',
+      label: '控制措施',
+      minWidth: 360,
+      formatter: (row) => {
+        const items = measureItems(row)
+        return items.length ? (
+          <div class="risk-summary-page__measures">
+            {items.map((item) => (
+              <span key={item.label}>
+                <b>{item.label}</b>
+                <em>{item.value}</em>
+              </span>
+            ))}
+          </div>
+        ) : (
+          <span class="risk-summary-page__empty-value">暂无控制措施</span>
+        )
+      }
     },
     {
       prop: 'responsibleNames',
-      label: '责任人 / 部门',
-      minWidth: 190,
+      label: '管控责任',
+      minWidth: 230,
       formatter: (row) => (
-        <div class="risk-summary-page__identity">
+        <div class="risk-summary-page__responsibility">
+          <span>
+            {row.controlLevels.map((item) => controlLevelLabel.get(item)).join('、') ||
+              '未配置层级'}
+          </span>
           <strong>{row.responsibleNames || '待落实'}</strong>
-          <small>{row.responsibleDepartments || '—'}</small>
+          <small>{row.responsibleDepartments || '未关联责任部门'}</small>
         </div>
       )
     },
@@ -331,40 +380,105 @@
     gap: 12px;
     min-width: 0;
 
-    &__insight {
+    &__coverage {
       display: grid;
-      grid-template-columns: 220px 220px minmax(0, 1fr);
-      gap: 18px;
+      grid-template-columns: minmax(260px, 0.85fr) minmax(260px, 0.85fr) minmax(320px, 1.3fr);
+      gap: 0;
+      padding: 8px;
+    }
+
+    &__coverage article {
+      display: grid;
+      grid-template-columns: 40px minmax(0, 1fr);
+      gap: 11px;
       align-items: center;
-      padding: 12px 16px;
-      background: var(--default-box-color);
-      border: 1px solid var(--el-border-color-lighter);
+      padding: 7px 14px;
+    }
+
+    &__coverage article + article {
+      border-left: 1px solid var(--el-border-color-lighter);
+    }
+
+    &__coverage-icon {
+      display: grid;
+      place-items: center;
+      width: 40px;
+      height: 40px;
+      font-size: 18px;
+      color: var(--theme-color);
+      background: color-mix(in srgb, var(--theme-color) 9%, var(--el-bg-color));
       border-radius: var(--el-border-radius-base);
     }
 
-    &__insight > div {
+    &__coverage-icon.is-control {
+      color: var(--el-color-success);
+      background: color-mix(in srgb, var(--el-color-success) 9%, var(--el-bg-color));
+    }
+
+    &__coverage-main {
       display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 6px 12px;
+      gap: 5px;
+      min-width: 0;
+    }
+
+    &__coverage-main > div {
+      display: flex;
       align-items: center;
+      justify-content: space-between;
     }
 
-    &__insight .el-progress {
-      grid-column: 1 / -1;
-    }
-
-    &__insight strong {
+    &__coverage-main strong {
       font-family: var(--art-font-family-mono, Consolas, monospace);
       color: var(--theme-color);
     }
 
-    &__insight p {
-      display: flex;
-      gap: 8px;
+    &__coverage-main small {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-size: 11px;
+      color: var(--el-text-color-secondary);
+      white-space: nowrap;
+    }
+
+    &__coverage aside {
+      display: grid;
+      grid-template-columns: 42px minmax(0, 1fr);
+      gap: 12px;
       align-items: center;
-      justify-content: flex-end;
-      margin: 0;
-      font-size: 12px;
+      padding: 10px 16px;
+      margin-left: 8px;
+      background: color-mix(in srgb, var(--el-color-warning) 7%, var(--el-bg-color));
+      border-radius: var(--el-border-radius-base);
+    }
+
+    &__coverage aside > span {
+      display: grid;
+      place-items: center;
+      width: 42px;
+      height: 42px;
+      font-size: 19px;
+      color: var(--el-color-warning);
+      background: color-mix(in srgb, var(--el-color-warning) 12%, var(--el-bg-color));
+      border-radius: 50%;
+    }
+
+    &__coverage aside.is-complete {
+      background: color-mix(in srgb, var(--el-color-success) 7%, var(--el-bg-color));
+    }
+
+    &__coverage aside.is-complete > span {
+      color: var(--el-color-success);
+      background: color-mix(in srgb, var(--el-color-success) 12%, var(--el-bg-color));
+    }
+
+    &__coverage aside strong,
+    &__coverage aside small {
+      display: block;
+    }
+
+    &__coverage aside small {
+      margin-top: 4px;
+      font-size: 11px;
       color: var(--el-text-color-secondary);
     }
 
@@ -380,33 +494,127 @@
       color: var(--theme-color);
     }
 
-    :deep(.risk-summary-page__identity) {
+    :deep(.risk-summary-page__identity),
+    :deep(.risk-summary-page__context),
+    :deep(.risk-summary-page__risk-detail),
+    :deep(.risk-summary-page__responsibility) {
       display: grid;
+      gap: 3px;
       min-width: 0;
     }
 
     :deep(.risk-summary-page__identity strong),
-    :deep(.risk-summary-page__identity small) {
+    :deep(.risk-summary-page__identity small),
+    :deep(.risk-summary-page__context strong),
+    :deep(.risk-summary-page__context small),
+    :deep(.risk-summary-page__risk-detail strong),
+    :deep(.risk-summary-page__risk-detail small),
+    :deep(.risk-summary-page__responsibility strong),
+    :deep(.risk-summary-page__responsibility small) {
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
 
-    :deep(.risk-summary-page__identity small) {
+    :deep(.risk-summary-page__identity small),
+    :deep(.risk-summary-page__context small),
+    :deep(.risk-summary-page__risk-detail small),
+    :deep(.risk-summary-page__responsibility small) {
+      font-size: 11px;
+      color: var(--el-text-color-secondary);
+    }
+
+    :deep(.risk-summary-page__context) {
+      grid-template-columns: auto minmax(0, 1fr);
+      align-items: center;
+    }
+
+    :deep(.risk-summary-page__context small) {
+      grid-column: 2;
+    }
+
+    :deep(.risk-summary-page__assessment) {
+      display: grid;
+      grid-template-columns: 9px minmax(0, 1fr);
+      gap: 9px;
+      align-items: center;
+    }
+
+    :deep(.risk-summary-page__assessment > span) {
+      width: 9px;
+      height: 32px;
+      background: var(--risk-color);
+      border-radius: 999px;
+    }
+
+    :deep(.risk-summary-page__assessment strong),
+    :deep(.risk-summary-page__assessment small) {
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    :deep(.risk-summary-page__assessment small) {
       margin-top: 2px;
       font-size: 11px;
       color: var(--el-text-color-secondary);
     }
+
+    :deep(.risk-summary-page__measures) {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 4px 8px;
+    }
+
+    :deep(.risk-summary-page__measures > span) {
+      display: grid;
+      grid-template-columns: 38px minmax(0, 1fr);
+      gap: 5px;
+      min-width: 0;
+    }
+
+    :deep(.risk-summary-page__measures b) {
+      font-size: 11px;
+      color: var(--theme-color);
+    }
+
+    :deep(.risk-summary-page__measures em) {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-size: 12px;
+      font-style: normal;
+      white-space: nowrap;
+    }
+
+    :deep(.risk-summary-page__responsibility > span) {
+      width: fit-content;
+      max-width: 100%;
+      padding: 2px 7px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-size: 11px;
+      color: var(--theme-color);
+      white-space: nowrap;
+      background: color-mix(in srgb, var(--theme-color) 8%, var(--el-bg-color));
+      border-radius: var(--el-border-radius-small);
+    }
+
+    :deep(.risk-summary-page__empty-value) {
+      font-size: 12px;
+      color: var(--el-text-color-placeholder);
+    }
   }
 
-  @media (width <= 900px) {
-    .risk-summary-page__insight {
+  @media (width <= 1180px) {
+    .risk-summary-page__coverage {
       grid-template-columns: 1fr 1fr;
     }
 
-    .risk-summary-page__insight p {
+    .risk-summary-page__coverage aside {
       grid-column: 1 / -1;
-      justify-content: flex-start;
+      margin-top: 8px;
+      margin-left: 0;
     }
   }
 </style>

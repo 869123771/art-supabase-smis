@@ -77,12 +77,62 @@
   import { getCertificateCategoryMeta } from './modules/certificate-category-meta'
 
   defineOptions({ name: 'SmisSpecialEquipmentPersonnelCertificateLedger' })
+  const certificatePermissionSets = {
+    SmisPersonnelCertificateLedger: {
+      View: 'SmisPersonnelCertificateLedger:View',
+      Add: 'SmisPersonnelCertificateLedger:Add',
+      Copy: 'SmisPersonnelCertificateLedger:Copy',
+      Edit: 'SmisPersonnelCertificateLedger:Edit',
+      Delete: 'SmisPersonnelCertificateLedger:Delete',
+      Export: 'SmisPersonnelCertificateLedger:Export',
+      ViewHistory: 'SmisPersonnelCertificateLedger:ViewHistory'
+    },
+    SmisSpecialEquipmentOperatorCertificateLedger: {
+      View: 'SmisSpecialEquipmentOperatorCertificateLedger:View',
+      Add: 'SmisSpecialEquipmentOperatorCertificateLedger:Add',
+      Copy: 'SmisSpecialEquipmentOperatorCertificateLedger:Copy',
+      Edit: 'SmisSpecialEquipmentOperatorCertificateLedger:Edit',
+      Delete: 'SmisSpecialEquipmentOperatorCertificateLedger:Delete',
+      Export: 'SmisSpecialEquipmentOperatorCertificateLedger:Export',
+      ViewHistory: 'SmisSpecialEquipmentOperatorCertificateLedger:ViewHistory'
+    },
+    SmisSpecialOperationCertificate: {
+      View: 'SmisSpecialOperationCertificate:View',
+      Add: 'SmisSpecialOperationCertificate:Add',
+      Copy: 'SmisSpecialOperationCertificate:Copy',
+      Edit: 'SmisSpecialOperationCertificate:Edit',
+      Delete: 'SmisSpecialOperationCertificate:Delete',
+      Export: 'SmisSpecialOperationCertificate:Export',
+      ViewHistory: 'SmisSpecialOperationCertificate:ViewHistory'
+    },
+    SmisSafetyManagerCertificate: {
+      View: 'SmisSafetyManagerCertificate:View',
+      Add: 'SmisSafetyManagerCertificate:Add',
+      Copy: 'SmisSafetyManagerCertificate:Copy',
+      Edit: 'SmisSafetyManagerCertificate:Edit',
+      Delete: 'SmisSafetyManagerCertificate:Delete',
+      Export: 'SmisSafetyManagerCertificate:Export',
+      ViewHistory: 'SmisSafetyManagerCertificate:ViewHistory'
+    },
+    SmisRegisteredSafetyEngineerLedger: {
+      View: 'SmisRegisteredSafetyEngineerLedger:View',
+      Add: 'SmisRegisteredSafetyEngineerLedger:Add',
+      Copy: 'SmisRegisteredSafetyEngineerLedger:Copy',
+      Edit: 'SmisRegisteredSafetyEngineerLedger:Edit',
+      Delete: 'SmisRegisteredSafetyEngineerLedger:Delete',
+      Export: 'SmisRegisteredSafetyEngineerLedger:Export',
+      ViewHistory: 'SmisRegisteredSafetyEngineerLedger:ViewHistory'
+    }
+  } as const
+  type CertificatePermissionPrefix = keyof typeof certificatePermissionSets
+  type CertificatePermissionAction =
+    keyof (typeof certificatePermissionSets)[CertificatePermissionPrefix]
   interface Props {
     category?: SmisCertificateCategory
     pageTitle?: string
     eyebrow?: string
     pageDescription?: string
-    permissionPrefix?: string
+    permissionPrefix?: CertificatePermissionPrefix
     scopeTag?: string
   }
   const props = withDefaults(defineProps<Props>(), {
@@ -121,7 +171,8 @@
     )
   const categoryOptions = dictOptions('smisCertificateCategory')
   const warningOptions = dictOptions('smisCertificateWarningStatus')
-  const permissionCode = (action: string): string => `${permissionPrefix.value}:${action}`
+  const permissionCode = (action: CertificatePermissionAction): string =>
+    certificatePermissionSets[permissionPrefix.value][action]
   const workspaceTags = computed<BusinessWorkspaceTag[]>(() => [
     { label: '员工花名册联动', type: 'primary', effect: 'plain' },
     { label: scopeTag.value || '一证多项目', type: 'success', effect: 'light' },

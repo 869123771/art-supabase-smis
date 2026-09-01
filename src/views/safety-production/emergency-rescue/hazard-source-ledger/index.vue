@@ -4,7 +4,7 @@
       <BusinessWorkspaceHeader
         eyebrow="HAZARD SOURCE CONTROL"
         title="危险源台账"
-        description="以场所树为主线，统一维护危险源识别、分级、管控责任与现场照片。"
+        description="以场所树为主线，统一维护危险源识别、分级、评价备案、管控责任与现场照片。"
         icon="ri:alarm-warning-line"
         :tags="[
           { label: '场所树导航', type: 'primary', effect: 'plain' },
@@ -55,6 +55,7 @@
         </ArtWorkspaceSplitter>
       </div>
       <HazardSourceDialog ref="dialogRef" @success="handleSaveSuccess" />
+      <HazardSourceDetailDrawer ref="detailRef" />
       <HazardStatisticsDialog ref="statisticsRef" />
     </div>
   </ArtPermissionGuard>
@@ -101,6 +102,7 @@
     type HazardSourceDialogOpenData
   } from './modules/hazard-source-dialog.vue'
   import HazardStatisticsDialog from './modules/hazard-statistics-dialog.vue'
+  import HazardSourceDetailDrawer from './modules/hazard-source-detail-drawer.vue'
 
   defineOptions({ name: 'SmisHazardSourceLedger' })
   type TableParams = SmisHazardSourceSearchParams &
@@ -111,6 +113,9 @@
   interface StatisticsExpose {
     handleOpen: (data: { organizations: SmisTreeOrganization[] }) => Promise<void>
   }
+  interface DetailExpose {
+    handleOpen: (row: SmisHazardSource) => Promise<void>
+  }
   interface ImportRow {
     hazardName?: string
     siteName?: string
@@ -118,6 +123,13 @@
     riskLevel?: string
     controlOrganizationName?: string
     responsibleEmployeeNo?: string
+    quantity?: number | string
+    location?: string
+    evaluationDate?: string
+    evaluationOrganization?: string
+    filingDate?: string
+    filingOrganization?: string
+    filingNo?: string
     remark?: string
   }
 
@@ -126,6 +138,7 @@
   const { confirmDelete } = useArtFeedback()
   const tableRef = ref<ArtTableQueryExpose>()
   const dialogRef = ref<DialogExpose>()
+  const detailRef = ref<DetailExpose>()
   const statisticsRef = ref<StatisticsExpose>()
   const siteTree = new TreeUtils({ idKey: 'id', parentKey: 'parentId', childrenKey: 'children' })
   const orgTree = new TreeUtils({ idKey: 'id', parentKey: 'parentId', childrenKey: 'children' })
@@ -183,7 +196,7 @@
       label: '关键字',
       key: 'keyword',
       type: 'input',
-      props: { clearable: true, placeholder: '危险源编号或名称' }
+      props: { clearable: true, placeholder: '编号、名称、地点或备案号' }
     },
     {
       label: '危险等级',
@@ -213,6 +226,13 @@
     { key: 'riskLevel', title: '风险等级', required: true },
     { key: 'controlOrganizationName', title: '管控部门', required: true },
     { key: 'responsibleEmployeeNo', title: '责任人员工号' },
+    { key: 'quantity', title: '数量' },
+    { key: 'location', title: '地点' },
+    { key: 'evaluationDate', title: '评价时间' },
+    { key: 'evaluationOrganization', title: '评价单位' },
+    { key: 'filingDate', title: '备案时间' },
+    { key: 'filingOrganization', title: '备案单位' },
+    { key: 'filingNo', title: '备案号' },
     { key: 'remark', title: '备注' }
   ]
   const openDialog = (row?: SmisHazardSource): void => {
@@ -222,6 +242,9 @@
       organizations: state.organizations,
       presetSiteId: state.selectedSiteId === 'all' ? undefined : state.selectedSiteId
     })
+  }
+  const openDetail = (row: SmisHazardSource): void => {
+    void detailRef.value?.handleOpen(row)
   }
   const columnsFactory = (): ColumnOption<SmisHazardSource>[] => [
     { type: 'selection', width: 48 },
@@ -237,13 +260,34 @@
             <ArtSvgIcon icon="ri:alarm-warning-line" />
           </span>
           <span>
-            <strong title={row.hazardName}>{row.hazardName}</strong>
+            <button
+              type="button"
+              class="hazard-page__name-link"
+              title={`查看${row.hazardName}`}
+              onClick={() => openDetail(row)}
+            >
+              {row.hazardName}
+            </button>
             <small>{row.hazardNo}</small>
           </span>
         </div>
       )
     },
     { prop: 'siteName', label: '场所', minWidth: 160, showOverflowTooltip: true },
+    {
+      prop: 'location',
+      label: '地点',
+      minWidth: 160,
+      showOverflowTooltip: true,
+      formatter: (row) => row.location || '—'
+    },
+    {
+      prop: 'quantity',
+      label: '数量',
+      width: 96,
+      align: 'right',
+      formatter: (row) => row.quantity ?? '—'
+    },
     {
       prop: 'hazardLevel',
       label: '危险等级',
@@ -314,10 +358,15 @@
     {
       prop: 'operation',
       label: '操作',
-      width: 112,
+      width: 152,
       fixed: 'right',
       formatter: (row) => (
         <div>
+          <ArtButtonTable
+            type="view"
+            permission="SmisHazardSourceLedger:View"
+            onClick={() => openDetail(row)}
+          />
           <ArtButtonTable
             type="edit"
             permission="SmisHazardSourceLedger:Edit"
@@ -360,6 +409,11 @@
         raw.riskLevel
       ) as SmisHazardSourceRiskLevel
       if (!hazardLevel || !riskLevel) throw new Error('危险等级或风险等级无法识别')
+      const quantityText = String(raw.quantity ?? '').trim()
+      const quantity = quantityText ? Number(quantityText) : null
+      if (quantity !== null && (!Number.isFinite(quantity) || quantity <= 0)) {
+        throw new Error(`数量必须为大于0的数字：${raw.quantity}`)
+      }
       let employeeId: string | undefined
       if (raw.responsibleEmployeeNo) {
         const employees = await fetchHazardSourceEmployees({
@@ -379,6 +433,13 @@
         riskLevel,
         controlOrganizationId: org.id,
         responsibleEmployeeId: employeeId,
+        quantity,
+        location: String(raw.location || '').trim() || null,
+        evaluationDate: String(raw.evaluationDate || '').trim() || null,
+        evaluationOrganization: String(raw.evaluationOrganization || '').trim() || null,
+        filingDate: String(raw.filingDate || '').trim() || null,
+        filingOrganization: String(raw.filingOrganization || '').trim() || null,
+        filingNo: String(raw.filingNo || '').trim() || null,
         imageUrls: [],
         remark: String(raw.remark || '')
       })
@@ -397,6 +458,13 @@
           riskLevel: '一般风险',
           controlOrganizationName: '请填写系统组织部门名称',
           responsibleEmployeeNo: '可选：员工工号',
+          quantity: 1,
+          location: '示例地点',
+          evaluationDate: '2026-09-01',
+          evaluationOrganization: '示例评价单位',
+          filingDate: '2026-09-01',
+          filingOrganization: '示例备案单位',
+          filingNo: 'BA-2026-001',
           remark: '可选'
         }
       ]
@@ -446,6 +514,13 @@
             )?.label,
             controlOrganizationName: row.controlOrganizationName,
             responsibleEmployeeNo: row.responsibleEmployeeNo || '',
+            quantity: row.quantity ?? '',
+            location: row.location || '',
+            evaluationDate: row.evaluationDate || '',
+            evaluationOrganization: row.evaluationOrganization || '',
+            filingDate: row.filingDate || '',
+            filingOrganization: row.filingOrganization || '',
+            filingNo: row.filingNo || '',
             remark: row.remark || ''
           })
         )
@@ -562,10 +637,36 @@
   }
 
   :deep(.hazard-page__identity strong),
+  :deep(.hazard-page__name-link),
   :deep(.hazard-page__identity small) {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  :deep(.hazard-page__name-link) {
+    width: fit-content;
+    max-width: 100%;
+    padding: 0;
+    font: inherit;
+    font-weight: 600;
+    color: var(--theme-color);
+    text-align: left;
+    cursor: pointer;
+    background: transparent;
+    border: 0;
+  }
+
+  :deep(.hazard-page__name-link:hover),
+  :deep(.hazard-page__name-link:focus-visible) {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  :deep(.hazard-page__name-link:focus-visible) {
+    outline: 2px solid color-mix(in srgb, var(--theme-color) 45%, transparent);
+    outline-offset: 2px;
+    border-radius: 2px;
   }
 
   :deep(.hazard-page__identity small) {

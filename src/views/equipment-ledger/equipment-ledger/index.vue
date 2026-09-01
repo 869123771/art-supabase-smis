@@ -88,7 +88,7 @@
           <small>{{ lifecycle.row?.equipmentCode }} · 设备全生命周期</small>
         </div>
       </div>
-      <ElTabs v-if="lifecycle.row" v-model="lifecycle.active">
+      <ElTabs v-if="lifecycle.row" v-model="lifecycle.active" stretch>
         <ElTabPane name="overview" label="生命周期概览">
           <div class="equipment-ledger-page__lifecycle-grid">
             <article

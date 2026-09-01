@@ -18,27 +18,7 @@
         label-position="top"
         :show-reset="false"
         :show-submit="false"
-      >
-        <template #tagStyle>
-          <ElSelect
-            v-model="model.tagStyle"
-            class="standard-dialog__tag-select"
-            placeholder="请选择标签样式"
-          >
-            <ElOption
-              v-for="option in tagOptions"
-              :key="option.value"
-              :label="option.label"
-              :value="option.value"
-            >
-              <div class="standard-dialog__tag-option">
-                <span>{{ option.label }}</span>
-                <ElTag :type="option.value">{{ option.label }}</ElTag>
-              </div>
-            </ElOption>
-          </ElSelect>
-        </template>
-      </ArtForm>
+      />
     </div>
   </ArtDialog>
 </template>
@@ -52,7 +32,6 @@
   import { useUserStore } from '@/store/modules/user'
   import {
     saveInspectionStandard,
-    type SmisConfigurationTagStyle,
     type SmisInspectionStandard,
     type SmisInspectionStandardPayload
   } from '@smis/api'
@@ -66,10 +45,6 @@
   interface FormExpose {
     validate: () => Promise<boolean>
     clearValidate: () => void
-  }
-  interface TagStyleOption {
-    label: string
-    value: Exclude<SmisConfigurationTagStyle, ''>
   }
   const emit = defineEmits<{ success: [type: 'add' | 'edit'] }>()
   const userStore = useUserStore()
@@ -112,13 +87,11 @@
       .filter((item) => item.value !== 'voided')
       .map((item) => ({ label: item.label || item.name, value: item.value }))
   )
-  const isSupportedTagStyle = (value: unknown): value is Exclude<SmisConfigurationTagStyle, ''> =>
-    typeof value === 'string' &&
-    ['primary', 'success', 'info', 'warning', 'danger'].some((style) => style === value)
-  const tagOptions = computed<TagStyleOption[]>(() =>
-    (getDictMap.value.smisTagStyle ?? []).flatMap((item) =>
-      isSupportedTagStyle(item.value) ? [{ label: item.label || item.name, value: item.value }] : []
-    )
+  const tagOptions = computed(() =>
+    (getDictMap.value.smisTagStyle ?? []).map((item) => ({
+      label: item.label || item.name,
+      value: item.value
+    }))
   )
   const items = computed<FormItem[]>(() => [
     {
@@ -164,7 +137,10 @@
     },
     {
       label: '标签样式',
-      key: 'tagStyle'
+      key: 'tagStyle',
+      type: 'select',
+      options: tagOptions.value,
+      props: { clearable: false, placeholder: '请选择标签样式' }
     },
     {
       label: '状态',
@@ -267,29 +243,6 @@
         margin: 3px 0 0;
         font-size: 12px;
         color: var(--el-text-color-secondary);
-      }
-    }
-
-    &__tag-select {
-      width: 100%;
-    }
-
-    &__tag-option {
-      display: flex;
-      gap: 16px;
-      align-items: center;
-      justify-content: space-between;
-      width: 100%;
-      min-width: 0;
-
-      > span {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-
-      .el-tag {
-        flex: 0 0 auto;
       }
     }
   }

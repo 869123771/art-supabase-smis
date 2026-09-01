@@ -20,17 +20,23 @@
         <template #actions><BusinessTableWorkspaceActions :table="tableQueryRef" /></template>
       </BusinessWorkspaceHeader>
 
-      <div class="risk-task-page__status-strip" role="group" aria-label="任务状态快捷筛选">
-        <button
-          v-for="item in statusTabs"
-          :key="item.value || 'all'"
-          :class="{ active: (searchQuery.status || '') === item.value }"
-          type="button"
-          @click="setStatus(item.value)"
+      <div class="risk-task-page__status-filter art-card-xs">
+        <ElSegmented
+          class="risk-task-page__status-segment"
+          :model-value="searchQuery.status || ''"
+          :options="statusTabs"
+          aria-label="任务状态快捷筛选"
+          block
+          @update:model-value="handleStatusSegmentChange"
         >
-          <span :data-status="item.value">{{ item.label }}</span
-          ><strong>{{ item.count }}</strong>
-        </button>
+          <template #default="{ item }">
+            <span class="risk-task-page__segment-option">
+              <ArtSvgIcon :icon="item.icon" />
+              <span>{{ item.label }}</span>
+              <strong>{{ item.count }}</strong>
+            </span>
+          </template>
+        </ElSegmented>
       </div>
 
       <ArtTableQuery
@@ -136,11 +142,31 @@
     }))
   )
   const statusTabs = computed(() => [
-    { label: '全部任务', value: '' as const, count: overview.total },
-    { label: '未开始', value: 'not_started' as const, count: overview.notStarted },
-    { label: '进行中', value: 'in_progress' as const, count: overview.inProgress },
-    { label: '已过期', value: 'overdue' as const, count: overview.overdue },
-    { label: '已完成', value: 'completed' as const, count: overview.completed }
+    { label: '全部任务', value: '' as const, count: overview.total, icon: 'ri:apps-2-line' },
+    {
+      label: '未开始',
+      value: 'not_started' as const,
+      count: overview.notStarted,
+      icon: 'ri:timer-line'
+    },
+    {
+      label: '进行中',
+      value: 'in_progress' as const,
+      count: overview.inProgress,
+      icon: 'ri:loader-4-line'
+    },
+    {
+      label: '已过期',
+      value: 'overdue' as const,
+      count: overview.overdue,
+      icon: 'ri:alarm-warning-line'
+    },
+    {
+      label: '已完成',
+      value: 'completed' as const,
+      count: overview.completed,
+      icon: 'ri:checkbox-circle-line'
+    }
   ])
   const workspaceMetrics = computed<BusinessWorkspaceMetric[]>(() => [
     { label: '任务总数', value: overview.total, description: '当前查询口径', icon: 'ri:task-line' },
@@ -254,9 +280,15 @@
   const openAction = (row: SmisRiskInspectionTask, mode: 'cancel' | 'transfer'): void => {
     void actionDialogRef.value?.handleOpen({ row, mode })
   }
-  const setStatus = (status: '' | SmisRiskInspectionTaskStatus): void => {
-    searchQuery.value.status = status || undefined
-    void tableQueryRef.value?.refreshData()
+  const setStatus = async (status: '' | SmisRiskInspectionTaskStatus): Promise<void> => {
+    searchQuery.value = { ...searchQuery.value, status: status || undefined }
+    await nextTick()
+    await tableQueryRef.value?.getData()
+  }
+  const handleStatusSegmentChange = (value: string | number | boolean): void => {
+    if (statusTabs.value.some((item) => item.value === value)) {
+      void setStatus(value as '' | SmisRiskInspectionTaskStatus)
+    }
   }
   const columnsFactory = (): ColumnOption<SmisRiskInspectionTask>[] => [
     { type: 'globalIndex', label: '序号', width: 68 },
@@ -387,7 +419,8 @@
                 onClick={() => openExecute(row)}
               />
               <ArtButtonTable
-                type="view"
+                type="edit"
+                icon="ri:user-shared-line"
                 permission="SmisDualControlRiskInspectionTask:Transfer"
                 label="转交"
                 onClick={() => openAction(row, 'transfer')}
@@ -474,41 +507,56 @@
     gap: 12px;
     min-width: 0;
 
-    &__status-strip {
-      display: grid;
-      grid-template-columns: repeat(5, minmax(0, 1fr));
-      overflow: hidden;
-      background: var(--default-box-color);
-      border: 1px solid var(--el-border-color-lighter);
-      border-radius: var(--el-border-radius-base);
+    &__status-filter {
+      padding: 7px;
     }
 
-    &__status-strip button {
+    &__status-segment {
+      width: 100%;
+
+      :deep(.el-segmented__item-label) {
+        min-width: 0;
+        padding-inline: 12px;
+      }
+    }
+
+    &__segment-option {
       display: flex;
-      gap: 10px;
+      gap: 7px;
       align-items: center;
       justify-content: center;
-      min-height: 44px;
-      color: var(--el-text-color-secondary);
-      cursor: pointer;
-      background: transparent;
-      border: 0;
-      border-right: 1px solid var(--el-border-color-lighter);
+      min-width: 0;
+      min-height: 30px;
+      white-space: nowrap;
     }
 
-    &__status-strip button:last-child {
-      border-right: 0;
+    &__segment-option .art-svg-icon {
+      flex: 0 0 auto;
+      font-size: 15px;
     }
 
-    &__status-strip button.active {
-      color: var(--theme-color);
-      background: color-mix(in srgb, var(--theme-color) 7%, var(--default-box-color));
-      box-shadow: inset 0 -2px var(--theme-color);
+    &__segment-option > span {
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
-    &__status-strip strong {
+    &__segment-option strong {
+      display: inline-grid;
+      place-items: center;
+      min-width: 22px;
+      height: 22px;
+      padding: 0 6px;
       font-family: var(--art-font-family-mono, Consolas, monospace);
-      font-size: 16px;
+      font-size: 11px;
+      color: var(--el-text-color-secondary);
+      background: color-mix(in srgb, var(--el-fill-color-darker) 70%, transparent);
+      border-radius: 999px;
+    }
+
+    &__status-segment :deep(.el-segmented__item-selected) + &__segment-option strong,
+    &__status-segment :deep(.el-segmented__item.is-selected) &__segment-option strong {
+      color: var(--theme-color);
+      background: color-mix(in srgb, var(--theme-color) 10%, var(--el-bg-color));
     }
 
     &__table {
@@ -603,8 +651,12 @@
   }
 
   @media (width <= 960px) {
-    .risk-task-page__status-strip {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+    .risk-task-page__segment-option .art-svg-icon {
+      display: none;
+    }
+
+    .risk-task-page__status-segment :deep(.el-segmented__item-label) {
+      padding-inline: 6px;
     }
   }
 </style>

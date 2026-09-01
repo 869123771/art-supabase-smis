@@ -74,6 +74,8 @@ export {
 
 export * from '@smis/api/modules/inspection-risk'
 export * from '@smis/api/modules/risk-control'
+export * from '@smis/api/modules/safety-inspection'
+export * from '@smis/api/modules/risk-four-color-map'
 
 export {
   deleteEquipmentCategories,

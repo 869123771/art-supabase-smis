@@ -34,6 +34,7 @@
         focusable
       />
       <DrillPlanDialog ref="dialogRef" @success="handleSaveSuccess" />
+      <EmergencyRecordDetailDialog ref="detailDialogRef" />
     </div>
   </ArtPermissionGuard>
 </template>
@@ -69,6 +70,9 @@
     type SmisTreeOrganization
   } from '@smis/api'
   import DrillPlanDialog, { type DrillPlanDialogOpenData } from './modules/drill-plan-dialog.vue'
+  import EmergencyRecordDetailDialog, {
+    type EmergencyRecordDetailOpenData
+  } from '../shared/emergency-record-detail-dialog.vue'
 
   defineOptions({ name: 'SmisEmergencyDrillPlan' })
   type TableParams = SmisEmergencyDrillPlanSearchParams &
@@ -76,11 +80,15 @@
   interface DialogExpose {
     handleOpen: (data: DrillPlanDialogOpenData) => Promise<void>
   }
+  interface DetailDialogExpose {
+    handleOpen: (data: EmergencyRecordDetailOpenData) => Promise<void>
+  }
   const userStore = useUserStore()
   const { getDictMap } = storeToRefs(userStore)
   const { confirm, confirmDelete } = useArtFeedback()
   const tableRef = ref<ArtTableQueryExpose>()
   const dialogRef = ref<DialogExpose>()
+  const detailDialogRef = ref<DetailDialogExpose>()
   const searchQuery = ref<SmisEmergencyDrillPlanSearchParams>({})
   const organizations = shallowRef<SmisTreeOrganization[]>([])
   const overview = reactive({ total: 0, planned: 0, completed: 0, warning: 0 })
@@ -157,6 +165,9 @@
   ])
   const openDialog = (row?: SmisEmergencyDrillPlan) =>
     void dialogRef.value?.handleOpen({ row, organizations: organizations.value })
+  const openDetail = (row: SmisEmergencyDrillPlan): void => {
+    void detailDialogRef.value?.handleOpen({ kind: 'drill', row })
+  }
   const handlePush = async (row: SmisEmergencyDrillPlan) => {
     try {
       await confirm(`确定将计划“${row.drillName}”下推为演练记录草稿吗？`)
@@ -210,7 +221,14 @@
             />
           </span>
           <span>
-            <strong title={row.drillName}>{row.drillName}</strong>
+            <button
+              type="button"
+              class="drill-plan-page__record-link"
+              title={`查看演练计划：${row.drillName}`}
+              onClick={() => openDetail(row)}
+            >
+              {row.drillName}
+            </button>
             <small>{row.planNo}</small>
           </span>
         </div>
@@ -241,7 +259,7 @@
     },
     {
       prop: 'applicableOrganizationName',
-      label: '演练组织',
+      label: '演练单位',
       minWidth: 160,
       showOverflowTooltip: true
     },
@@ -295,10 +313,16 @@
     {
       prop: 'operation',
       label: '操作',
-      width: 120,
+      width: 162,
       fixed: 'right',
       formatter: (row) => (
         <div class="flex">
+          <ArtButtonTable
+            type="view"
+            permission="SmisEmergencyDrillPlan:View"
+            label="查看演练计划"
+            onClick={() => openDetail(row)}
+          />
           <ArtButtonTable
             type="edit"
             permission="SmisEmergencyDrillPlan:Edit"
@@ -394,10 +418,35 @@
       }
 
       strong,
+      .drill-plan-page__record-link,
       small {
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+      }
+
+      .drill-plan-page__record-link {
+        width: fit-content;
+        max-width: 100%;
+        padding: 0;
+        font: inherit;
+        font-weight: 600;
+        color: var(--theme-color);
+        text-align: left;
+        cursor: pointer;
+        background: transparent;
+        border: 0;
+        border-radius: var(--el-border-radius-small);
+
+        &:hover {
+          text-decoration: underline;
+          text-underline-offset: 3px;
+        }
+
+        &:focus-visible {
+          outline: 2px solid color-mix(in srgb, var(--theme-color) 42%, transparent);
+          outline-offset: 2px;
+        }
       }
 
       small {
