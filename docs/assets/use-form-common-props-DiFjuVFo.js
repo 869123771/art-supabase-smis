@@ -1,0 +1,5 @@
+import{D as e,r as t}from"./icon-1ctp03Iv.js";import{Dt as n,Ot as r,et as i}from"./style-DcA0srdd.js";import{J as a,L as o,On as s,g as c,vn as l}from"./runtime-core.esm-bundler-B53NdkV7.js";var u=e=>{let t=o();return c(()=>t?.proxy?.$props?.[e])},d={prefix:Math.floor(Math.random()*1e4),current:0},f=Symbol(`elIdInjection`),p=()=>o()?a(f,d):d,m=t=>{let a=p();!r&&a===d&&e(`IdInjection`,`Looks like you are using server rendering, you must provide a id provider to ensure the hydration process to be succeed
+usage: app.provide(ID_INJECTION_KEY, {
+  prefix: number,
+  current: number,
+})`);let o=i();return n(()=>s(t)||`${o.value}-id-${a.prefix}-${a.current++}`)},h=Symbol(`formContextKey`),g=Symbol(`formItemContextKey`),_=(e,n={})=>{let r=l(void 0),i=n.prop?r:u(`size`),o=n.global?r:t(),d=n.form?{size:void 0}:a(h,void 0),f=n.formItem?{size:void 0}:a(g,void 0);return c(()=>i.value||s(e)||f?.size||d?.size||o.value||``)},v=e=>{let t=u(`disabled`),n=a(h,void 0);return c(()=>t.value??s(e)??n?.disabled??!1)};export{m as a,g as i,_ as n,p as o,h as r,v as t};

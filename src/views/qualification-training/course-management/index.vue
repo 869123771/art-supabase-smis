@@ -21,7 +21,7 @@
       </BusinessWorkspaceHeader>
 
       <div class="course-page__body art-card-xs">
-        <ElTabs v-model="activeTab" class="course-page__tabs" stretch>
+        <ElTabs v-model="activeTab" class="course-page__tabs">
           <ElTabPane label="课程库" name="course" />
           <ElTabPane
             v-if="hasAuth('SmisCourseManagement:ViewLearningRecord')"

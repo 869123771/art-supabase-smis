@@ -80,6 +80,7 @@
     type SmisRiskPointSearchParams,
     type SmisRiskPointType
   } from '@smis/api'
+  import { toDualControlOrganizationTree } from '@smis/views/dual-control-system/shared/organization-tree'
   import RiskPointDialog, { type RiskPointDialogOpenData } from './modules/risk-point-dialog.vue'
   import HazardWorkspaceDialog, {
     type HazardWorkspaceDialogOpenData
@@ -152,6 +153,9 @@
       value: item.value as SmisRiskPointLevel
     }))
   )
+  const organizationTreeData = computed(() =>
+    toDualControlOrganizationTree(options.value.organizations)
+  )
   const workspaceMetrics = computed<BusinessWorkspaceMetric[]>(() => [
     {
       label: '风险点总数',
@@ -190,12 +194,14 @@
     {
       label: '辨识单位',
       key: 'organizationId',
-      type: 'select',
+      type: 'treeSelect',
       props: {
-        options: options.value.organizations.map((item) => ({
-          label: `${item.organizationName} · ${item.organizationCode}`,
-          value: item.id
-        })),
+        data: organizationTreeData.value,
+        props: { label: 'organizationName', value: 'id', children: 'children' },
+        nodeKey: 'id',
+        valueKey: 'id',
+        checkStrictly: true,
+        defaultExpandAll: true,
         filterable: true,
         clearable: true,
         placeholder: '全部部门'

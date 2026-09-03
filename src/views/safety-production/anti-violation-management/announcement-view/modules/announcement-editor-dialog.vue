@@ -43,11 +43,10 @@
         </template>
 
         <template #contentHtml>
-          <ArtWangEditor
+          <ArtTiptapEditor
             v-model="form.model.contentHtml"
             height="340px"
             placeholder="请输入公告正文，可使用标题、列表、表格与链接组织内容…"
-            :exclude-keys="['fontFamily', 'uploadImage', 'uploadVideo']"
           />
         </template>
 
@@ -76,7 +75,7 @@
     type FormItem,
     type FormItemOption
   } from '@/components/core/forms/art-form/index.vue'
-  import ArtWangEditor from '@/components/core/forms/art-wang-editor/index.vue'
+  import ArtTiptapEditor from '@/components/core/forms/art-tiptap-editor/index.vue'
   import ArtUploadFile from '@/components/core/forms/art-upload-file/index.vue'
   import { useUserStore } from '@/store/modules/user'
   import {

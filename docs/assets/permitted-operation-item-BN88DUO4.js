@@ -1,1 +1,0 @@
-import{an as e,gn as t,tr as n}from"./style-D3Duppxh.js";import{t as r}from"./qualification-catalog-page-C1TkkOHw.js";var i=t({name:`SmisPermittedOperationItem`,__name:`index`,setup(t){return(t,i)=>(n(),e(r,{"catalog-type":`permitted_operation_item`}))}});export{i as default};

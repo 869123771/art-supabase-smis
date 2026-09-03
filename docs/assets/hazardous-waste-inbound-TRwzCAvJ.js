@@ -1,0 +1,1 @@
+import{k as e,mt as t,v as n}from"./runtime-core.esm-bundler-B53NdkV7.js";import{t as r}from"./smis-page-placeholder-DJxrA3Cz.js";var i=e({name:`SmisHazardousWasteInbound`,__name:`index`,setup(e){return(e,i)=>(t(),n(r,{section:`危废管理`,title:`危废入库`}))}});export{i as default};

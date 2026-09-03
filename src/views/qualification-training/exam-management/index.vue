@@ -21,7 +21,7 @@
       </BusinessWorkspaceHeader>
 
       <div class="exam-page__body art-card-xs">
-        <ElTabs v-model="activeTab" class="exam-page__tabs" stretch
+        <ElTabs v-model="activeTab" class="exam-page__tabs"
           ><ElTabPane label="试卷管理" name="paper" /><ElTabPane
             v-if="hasAuth('SmisExamManagement:ViewRecord')"
             label="考试记录"
@@ -239,7 +239,12 @@
                         </span>
                       </ElCheckbox>
                     </ElCheckboxGroup>
-                    <ElEmpty v-else description="没有匹配的可用题目" :image-size="64" />
+                    <ArtEmptyState
+                      v-else
+                      title="没有匹配的可用题目"
+                      size="compact"
+                      :visual-size="64"
+                    />
                   </ElScrollbar>
                 </section>
                 <section class="exam-page__selected">
@@ -437,6 +442,7 @@
   import { useAuth } from '@/hooks/core/useAuth'
   import { useUserStore } from '@/store/modules/user'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
+  import ArtEmptyState from '@/components/core/feedback/art-empty-state/index.vue'
   import ArtButtonMore, {
     type ButtonMoreItem
   } from '@/components/core/forms/art-button-more/index.vue'

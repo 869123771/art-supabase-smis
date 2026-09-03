@@ -52,7 +52,12 @@
               ><small>负责人</small
               ><strong>{{ selectedPlan.responsibleEmployeeName || '待完善' }}</strong></div
             ></div
-          ><ElEmpty v-else :image-size="48" description="选择演练计划后显示自动带入信息"
+          ><ArtEmptyState
+            v-else
+            title="尚未选择演练计划"
+            description="选择演练计划后显示自动带入信息。"
+            size="compact"
+            :visual-size="48"
         /></template>
         <template #participantIds
           ><EmergencyEmployeeMultipleSelect
@@ -100,6 +105,7 @@
   import type { FormRules } from 'element-plus'
   import type { EmployeeIntegrationItem } from '@/api/integration/employees'
   import ArtDialog from '@/components/core/dialogs/art-dialog/index.vue'
+  import ArtEmptyState from '@/components/core/feedback/art-empty-state/index.vue'
   import type { ArtDialogExpose } from '@/components/core/dialogs/art-dialog/types'
   import ArtForm, { type FormItem } from '@/components/core/forms/art-form/index.vue'
   import ArtUploadFile from '@/components/core/forms/art-upload-file/index.vue'

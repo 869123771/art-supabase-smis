@@ -89,6 +89,739 @@ export type PositionRiskControlSavePayload = Omit<
   'id' | 'createBy' | 'createTime' | 'updateBy' | 'updateTime'
 >
 
+export interface SmisChecklistOrganization {
+  organizationId: string
+  organizationCode: string
+  organizationName: string
+}
+
+export interface SmisPersonnelChecklistRecord {
+  id: string
+  employeeNo: string
+  employeeName: string
+  gender?: string | null
+  age?: number | null
+  avatarUrl?: string | null
+  organizationId?: string | null
+  organizationCode?: string | null
+  organizationName?: string | null
+  positionId?: string | null
+  positionCode?: string | null
+  positionName: string
+  riskCount: number
+  inspectionCount: number
+  hazardCount: number
+  scheduleCount: number
+}
+
+export interface SmisPersonnelChecklistOverview {
+  total: number
+  scheduled: number
+  withRisk: number
+  withInspection: number
+}
+
+export interface SmisEmployeeShiftAssignment {
+  id: string
+  workDate: string
+  assignmentStatus: 'scheduled' | 'worked' | 'leave' | 'cancelled'
+  shiftCode: string
+  shiftName: string
+  shiftType: string
+  startTime: string
+  endTime: string
+  crossDay: boolean
+  remark?: string | null
+}
+
+export interface SmisEmployeeShiftCalendar {
+  employeeId: string
+  employeeName: string
+  month: string
+  assignments: SmisEmployeeShiftAssignment[]
+}
+
+export interface SmisPositionRiskChecklistRecord {
+  id: string
+  positionId: string
+  positionCode: string
+  positionName: string
+  organizationId: string
+  organizationCode: string
+  organizationName: string
+  pointNo: string
+  identificationLocation: string
+  equipmentFacility: string
+  activityNames: string
+  hazardFactor: string
+  accidentTypes: string[]
+  methodCode?: string | null
+  lValue?: number | null
+  eValue?: number | null
+  cValue?: number | null
+  sValue?: number | null
+  riskScore?: number | null
+  riskLevelCode?: string | null
+  riskLevelName?: string | null
+  riskLevelColor?: string | null
+  controlMeasureCategory: string
+  controlLevel: string
+  controlMeasure: string
+  standardBasis: string
+  failureMode: string
+  hazardLevel: string
+  frequencyCount: number
+  frequencyUnit: string
+  identificationUnits: SmisChecklistOrganization[]
+}
+
+export interface SmisPositionRiskChecklistOverview {
+  total: number
+  major: number
+  identifiedUnits: number
+  positions: number
+}
+
+export interface SmisAccidentInspectionChecklistRecord {
+  id: string
+  organizationId: string
+  organizationCode: string
+  organizationName: string
+  positionId: string
+  positionCode: string
+  positionName: string
+  inspectionItem: string
+  inspectionStandard: string
+  primaryHazardCategory: string
+  secondaryHazardCategory: string
+  hazardLevel: string
+  riskLevel: string
+  inspectionFrequency: number
+  frequencyUnit: string
+  revisionDate: string
+  standardSource: string
+}
+
+export interface SmisAccidentInspectionChecklistOverview {
+  total: number
+  positions: number
+  organizations: number
+  major: number
+}
+
+export interface SmisPositionResponsibilityChecklistRecord {
+  id: string
+  organizationId: string
+  organizationCode: string
+  organizationName: string
+  positionId: string
+  positionCode: string
+  positionName: string
+  riskCount: number
+  inspectionCount: number
+  responsibilityScope: string
+  workContent: string
+}
+
+export interface SmisPositionResponsibilityChecklistOverview {
+  total: number
+  organizations: number
+  riskMeasures: number
+  inspectionStandards: number
+}
+
+export interface SmisChecklistSearchParams {
+  keyword?: string
+  organizationId?: string
+  gender?: string
+  riskLevel?: string
+  hazardLevel?: string
+  from?: number
+  to?: number
+}
+
+export interface SmisRiskControlInformationOverview {
+  total: number
+  evaluated: number
+  major: number
+  controlled: number
+  generatedHazards: number
+}
+
+export interface SmisRiskControlMeasureSummary {
+  id: string
+  category: string
+  controlLevel: string
+  content: string
+  standardBasis?: string | null
+  failureMode?: string | null
+  hazardLevel: string
+  positions: string
+  frequency: string
+}
+
+export interface SmisRiskControlInformationRecord {
+  id: string
+  hazardNo: string
+  pointNo: string
+  identificationLocation: string
+  organizationIds: string[]
+  organizationNames: string
+  siteId?: string | null
+  siteName: string
+  equipmentFacility: string
+  isSpecialEquipment: boolean
+  activityNames: string
+  hazardFactor: string
+  accidentTypes: string[]
+  consequence?: string | null
+  methodCode?: string | null
+  lValue?: number | null
+  eValue?: number | null
+  cValue?: number | null
+  sValue?: number | null
+  riskScore?: number | null
+  riskLevelCode?: string | null
+  riskLevelName?: string | null
+  riskLevelColor?: string | null
+  measureCount: number
+  linkedPositionCount: number
+  generatedHazardCount: number
+  measures?: SmisRiskControlMeasureSummary[]
+}
+
+export interface SmisRiskControlInformationSearchParams extends SmisChecklistSearchParams {
+  siteId?: string
+  isSpecialEquipment?: boolean | ''
+}
+
+export interface SmisHiddenHazardLedgerOverview {
+  total: number
+  open: number
+  overdue: number
+  completed: number
+  major: number
+}
+
+export interface SmisHiddenHazardLedgerRecord {
+  id: string
+  hazardNo: string
+  inspectionTypeName?: string | null
+  sourceType: string
+  sourceRecordNo?: string | null
+  description: string
+  hazardOrganizationId?: string | null
+  hazardOrganizationName?: string | null
+  reporterOrganizationName?: string | null
+  location: string
+  hazardLevel: string
+  status: string
+  reporterEmployeeNo: string
+  reporterEmployeeName: string
+  reportedAt: string
+  imageUrls: string[]
+  rectificationSuggestion?: string | null
+  approverEmployeeName?: string | null
+  approvedAt?: string | null
+  approvalResult?: string | null
+  approvalDescription?: string | null
+  rectificationDeadline?: string | null
+  rectificationMeasures?: string | null
+  rectificationResponsibleEmployeeName?: string | null
+  rectificationCompletedAt?: string | null
+  rectificationDescription?: string | null
+  rectificationImageUrls: string[]
+  acceptorEmployeeName?: string | null
+  acceptedAt?: string | null
+  acceptanceResult?: string | null
+  acceptanceDescription?: string | null
+  acceptanceImageUrls: string[]
+  closedAt?: string | null
+  closeReason?: string | null
+  overdue: boolean
+  evidenceCount: number
+  events?: Array<{
+    id: string
+    title: string
+    content?: string | null
+    operatorName?: string | null
+    evidenceUrls: string[]
+    eventAt: string
+  }>
+}
+
+export interface SmisHiddenHazardLedgerSearchParams extends SmisChecklistSearchParams {
+  reportedFrom?: string
+  reportedTo?: string
+  status?: string
+  sourceType?: string
+}
+
+export interface SmisDualControlReportOverview {
+  organizations: number
+  riskItems: number
+  measures: number
+  inspectionRate: number
+  openHazards: number
+}
+
+export interface SmisDualControlReportRecord {
+  id: string
+  organizationId: string
+  organizationCode: string
+  organizationName: string
+  majorCount: number
+  highCount: number
+  mediumCount: number
+  lowCount: number
+  unevaluatedCount: number
+  riskPointCount: number
+  riskItemCount: number
+  measureCount: number
+  riskValue: number
+  generatedTaskCount: number
+  completedTaskCount: number
+  abnormalCount: number
+  inspectionRate: number
+  hazardCount: number
+  closedHazardCount: number
+  openHazardCount: number
+  closureRate: number
+}
+
+export interface SmisDualControlReportSearchParams extends SmisChecklistSearchParams {
+  month?: string
+}
+
+export interface SmisHiddenHazardInspectionReportOverview {
+  organizations: number
+  generatedTasks: number
+  completedTasks: number
+  inspectionRate: number
+  missedInspectors: number
+  generatedHazards: number
+}
+
+export interface SmisHiddenHazardInspectionReportRecord {
+  id: string
+  organizationId: string
+  organizationCode: string
+  organizationName: string
+  organizationType: string
+  activePlanCount: number
+  generatedTaskCount: number
+  completedTaskCount: number
+  inProgressTaskCount: number
+  overdueTaskCount: number
+  cancelledTaskCount: number
+  inspectionRate: number
+  executorCount: number
+  missedInspectorCount: number
+  abnormalCount: number
+  generatedHazardCount: number
+}
+
+export interface SmisHiddenHazardInspectionReportSearchParams extends SmisChecklistSearchParams {
+  plannedFrom?: string
+  plannedTo?: string
+}
+
+export interface SmisReportOrganizationOption {
+  id: string
+  parentId?: string | null
+  organizationCode: string
+  organizationName: string
+  organizationType: string
+  sort: number
+  children?: SmisReportOrganizationOption[]
+}
+
+export interface SmisHazardGovernanceReportOverview {
+  total: number
+  closed: number
+  open: number
+  overdue: number
+  major: number
+  closureRate: number
+}
+
+export interface SmisHazardGovernanceOrganizationStat {
+  organizationId?: string | null
+  organizationName: string
+  hazardCount: number
+  closedCount: number
+  openCount: number
+  overdueCount: number
+  majorCount: number
+  closureRate: number
+}
+
+export interface SmisHazardGovernanceDimensionStat {
+  name?: string
+  value?: string
+  count: number
+}
+
+export interface SmisHazardGovernanceCycleStat {
+  withinDay: number
+  withinThreeDays: number
+  withinWeek: number
+  withinMonth: number
+  overMonth: number
+}
+
+export interface SmisHazardGovernanceReportDetail {
+  id: string
+  hazardNo: string
+  organizationName: string
+  description: string
+  location: string
+  hazardLevel?: string
+  status: string
+  sourceType?: string
+  reporterName: string
+  reportedAt: string
+  rectificationDeadline?: string | null
+  rectificationMeasures?: string | null
+  rectifierName?: string | null
+  rectificationCompletedAt?: string | null
+  acceptorName?: string | null
+  acceptedAt?: string | null
+}
+
+export interface SmisHazardGovernanceReportResult {
+  overview: SmisHazardGovernanceReportOverview
+  organizationStats: SmisHazardGovernanceOrganizationStat[]
+  categoryStats: SmisHazardGovernanceDimensionStat[]
+  sourceStats: SmisHazardGovernanceDimensionStat[]
+  cycleStats: SmisHazardGovernanceCycleStat
+  hazardDetails: SmisHazardGovernanceReportDetail[]
+  majorHazards: SmisHazardGovernanceReportDetail[]
+  yearOutstanding: SmisHazardGovernanceReportDetail[]
+  organizationOptions: SmisReportOrganizationOption[]
+}
+
+export interface SmisHazardGovernanceReportSearchParams {
+  reportedFrom?: string
+  reportedTo?: string
+  organizationId?: string
+}
+
+export type SmisInspectionStatisticsReportType = 'inspection_rate' | 'missed_rate'
+
+export interface SmisInspectionStatisticsOverview {
+  organizationCount: number
+  generatedCount: number
+  completedCount: number
+  pendingCount: number
+  missedCount: number
+  repeatedMissedCount: number
+  inspectionRate: number
+  missedRate: number
+}
+
+export interface SmisInspectionOrganizationStat {
+  organizationId?: string | null
+  organizationName: string
+  generatedCount: number
+  completedCount: number
+  pendingCount: number
+  missedCount: number
+  missedPointCount: number
+  missedExecutorCount: number
+  repeatedMissedCount: number
+  inspectionRate: number
+  missedRate: number
+  repeatRate: number
+}
+
+export interface SmisInspectionRiskLevelOption {
+  value: string
+  label: string
+  color?: string | null
+}
+
+export interface SmisInspectionStatisticsResult {
+  overview: SmisInspectionStatisticsOverview
+  organizationStats: SmisInspectionOrganizationStat[]
+  organizationOptions: SmisReportOrganizationOption[]
+  riskLevelOptions: SmisInspectionRiskLevelOption[]
+}
+
+export interface SmisInspectionStatisticsSearchParams {
+  reportType: SmisInspectionStatisticsReportType
+  plannedFrom?: string
+  plannedTo?: string
+  organizationId?: string
+  riskLevel?: string
+}
+
+export interface SmisInspectionStatisticsDetailRecord {
+  id: string
+  taskNo: string
+  organizationId?: string | null
+  organizationName: string
+  riskPointName: string
+  riskLevelNames: string
+  executorName: string
+  executorNo: string
+  plannedStartAt: string
+  plannedEndAt: string
+  completedAt?: string | null
+  status: string
+  inspectionContent: string
+  itemCount: number
+  normalCount: number
+  abnormalCount: number
+  missed: boolean
+  missedFrequency: number
+  repeatedMissed: boolean
+}
+
+export interface SmisInspectionPersonnelIssue {
+  executorName: string
+  executorNo: string
+  pendingCount: number
+  missedCount: number
+  riskPointCount: number
+  earliestDeadline: string
+}
+
+export interface SmisInspectionStatisticsDetailResult {
+  records: SmisInspectionStatisticsDetailRecord[]
+  personnelIssues: SmisInspectionPersonnelIssue[]
+}
+
+export interface SmisInspectionStatisticsDetailParams extends SmisInspectionStatisticsSearchParams {
+  organizationId: string
+}
+
+export interface SmisHiddenHazardInspectionRecordOverview {
+  inspectorCount: number
+  taskCount: number
+  completedCount: number
+  overdueCount: number
+  abnormalTaskCount: number
+  completionRate: number
+}
+
+export interface SmisInspectionCycleCounts {
+  shift: number
+  day: number
+  week: number
+  tenDay: number
+  month: number
+  quarter: number
+  year: number
+}
+
+export interface SmisHiddenHazardInspectionPersonnelStat {
+  employeeId?: string | null
+  employeeName: string
+  employeeNo: string
+  organizationId?: string | null
+  organizationName: string
+  positionName: string
+  taskCount: number
+  completedCount: number
+  overdueCount: number
+  abnormalTaskCount: number
+  completionRate: number
+  cycleCounts: SmisInspectionCycleCounts
+}
+
+export interface SmisHiddenHazardInspectionRecordDetail {
+  id: string
+  taskNo: string
+  employeeId?: string | null
+  employeeName: string
+  employeeNo: string
+  organizationName: string
+  positionName: string
+  riskPointName: string
+  equipmentName: string
+  specialEquipment: boolean
+  controlLevel: string
+  frequencyUnit: string
+  repeatFrequency: number
+  plannedStartAt: string
+  plannedEndAt: string
+  actualStartAt?: string | null
+  completedAt?: string | null
+  status: string
+  riskLevelNames: string
+  inspectionContent: string
+  controlMeasures: string
+  itemCount: number
+  normalCount: number
+  abnormalCount: number
+  pendingItemCount: number
+  executionSummary?: string | null
+}
+
+export interface SmisHiddenHazardInspectionRecordResult {
+  overview: SmisHiddenHazardInspectionRecordOverview
+  personnelStats: SmisHiddenHazardInspectionPersonnelStat[]
+  details: SmisHiddenHazardInspectionRecordDetail[]
+  organizationOptions: SmisReportOrganizationOption[]
+}
+
+export interface SmisHiddenHazardInspectionRecordSearchParams {
+  plannedFrom?: string
+  plannedTo?: string
+  organizationId?: string
+  executorKeyword?: string
+  isSpecialEquipment?: boolean | ''
+}
+
+export interface SmisNoHazardPersonnelOverview {
+  personnelCount: number
+  matchedCount: number
+  zeroReportCount: number
+  onLeaveCount: number
+  averageHazardCount: number
+}
+
+export interface SmisNoHazardPersonnelRecord {
+  employeeId: string
+  employeeNo: string
+  employeeName: string
+  organizationId?: string | null
+  organizationName: string
+  positionName: string
+  onLeave: boolean
+  hazardCount: number
+  lastReportedAt?: string | null
+}
+
+export interface SmisNoHazardPersonnelStatisticsResult {
+  overview: SmisNoHazardPersonnelOverview
+  records: SmisNoHazardPersonnelRecord[]
+  organizationOptions: SmisReportOrganizationOption[]
+}
+
+export interface SmisNoHazardPersonnelStatisticsSearchParams {
+  reportedFrom?: string
+  reportedTo?: string
+  organizationId?: string
+  maxHazardCount?: number
+  employeeKeyword?: string
+}
+
+export interface SmisTeamSelfInspectionCoverageOverview {
+  organizationCount: number
+  teamCount: number
+  memberCount: number
+  coveredMemberCount: number
+  coverageRate: number
+  completedTaskCount: number
+}
+
+export interface SmisTeamSelfInspectionCoverageRecord {
+  organizationId: string
+  organizationName: string
+  teamCount: number
+  memberCount: number
+  coveredMemberCount: number
+  coverageRate: number
+  taskCount: number
+  completedTaskCount: number
+  taskCompletionRate: number
+}
+
+export interface SmisTeamSelfInspectionCoverageResult {
+  overview: SmisTeamSelfInspectionCoverageOverview
+  records: SmisTeamSelfInspectionCoverageRecord[]
+  organizationOptions: SmisReportOrganizationOption[]
+}
+
+export interface SmisTeamSelfInspectionCoverageSearchParams {
+  plannedFrom?: string
+  plannedTo?: string
+  organizationId?: string
+}
+
+export interface SmisSpecialEquipmentRiskControlOverview {
+  equipmentCount: number
+  riskPointCount: number
+  highRiskPointCount: number
+  riskItemCount: number
+  measureCount: number
+  taskCount: number
+  completedTaskCount: number
+  inspectionRate: number
+}
+
+export interface SmisSpecialEquipmentRiskLevelStat {
+  riskLevelCode: string
+  riskLevelName: string
+  color?: string | null
+  equipmentCount: number
+  riskPointCount: number
+  riskItemCount: number
+  measureCount: number
+}
+
+export interface SmisSpecialEquipmentRiskCategoryStat {
+  categoryName: string
+  equipmentCount: number
+  riskPointCount: number
+  riskItemCount: number
+  measureCount: number
+}
+
+export interface SmisSpecialEquipmentCycleStat {
+  frequencyUnit: string
+  taskCount: number
+  completedCount: number
+  completionRate: number
+}
+
+export interface SmisSpecialEquipmentOrganizationStat {
+  organizationId?: string | null
+  organizationName: string
+  equipmentCount: number
+  riskPointCount: number
+  taskCount: number
+  completedTaskCount: number
+  inspectionRate: number
+}
+
+export interface SmisSpecialEquipmentRiskDetail {
+  equipmentId: string
+  equipmentCode: string
+  equipmentName: string
+  categoryName: string
+  organizationId?: string | null
+  organizationName: string
+  riskPointId?: string | null
+  riskPointName: string
+  riskLevelCode: string
+  riskLevelName: string
+  riskLevelColor?: string | null
+  riskItemCount: number
+  hazardFactors: string
+  measureCount: number
+  controlMeasures: string
+  taskCount: number
+  completedTaskCount: number
+  inspectionRate: number
+}
+
+export interface SmisSpecialEquipmentRiskControlStatisticsResult {
+  overview: SmisSpecialEquipmentRiskControlOverview
+  riskLevelStats: SmisSpecialEquipmentRiskLevelStat[]
+  categoryStats: SmisSpecialEquipmentRiskCategoryStat[]
+  cycleStats: SmisSpecialEquipmentCycleStat[]
+  organizationStats: SmisSpecialEquipmentOrganizationStat[]
+  riskDetails: SmisSpecialEquipmentRiskDetail[]
+  organizationOptions: SmisReportOrganizationOption[]
+}
+
+export interface SmisSpecialEquipmentRiskControlStatisticsSearchParams {
+  organizationId?: string
+}
+
 export interface WorkInstructionOrganization {
   id: string
   parentId?: string | null

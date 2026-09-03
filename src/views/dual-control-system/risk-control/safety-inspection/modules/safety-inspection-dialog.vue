@@ -35,7 +35,7 @@
           </ElSelect>
         </template>
         <template #inspectionOrganizationId>
-          <SafetyInspectionOrganizationSelect
+          <OrganizationTreeSelect
             v-model="form.model.inspectionOrganizationId"
             :organizations="options.organizations"
             title="选择检查单位"
@@ -43,7 +43,7 @@
           />
         </template>
         <template #inspectedOrganizationId>
-          <SafetyInspectionOrganizationSelect
+          <OrganizationTreeSelect
             v-model="form.model.inspectedOrganizationId"
             :organizations="options.organizations"
             title="选择被检查单位"
@@ -88,7 +88,7 @@
     type SmisSafetyInspectionRecord,
     type SmisSafetyInspectionTypeOption
   } from '@smis/api'
-  import SafetyInspectionOrganizationSelect from './safety-inspection-organization-select.vue'
+  import OrganizationTreeSelect from '@smis/views/dual-control-system/shared/organization-tree-select.vue'
   import SafetyInspectionEmployeeMultipleSelect from './safety-inspection-employee-multiple-select.vue'
 
   export interface SafetyInspectionDialogOpenData {

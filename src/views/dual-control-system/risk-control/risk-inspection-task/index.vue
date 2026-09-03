@@ -20,24 +20,12 @@
         <template #actions><BusinessTableWorkspaceActions :table="tableQueryRef" /></template>
       </BusinessWorkspaceHeader>
 
-      <div class="risk-task-page__status-filter art-card-xs">
-        <ElSegmented
-          class="risk-task-page__status-segment"
-          :model-value="searchQuery.status || ''"
-          :options="statusTabs"
-          aria-label="任务状态快捷筛选"
-          block
-          @update:model-value="handleStatusSegmentChange"
-        >
-          <template #default="{ item }">
-            <span class="risk-task-page__segment-option">
-              <ArtSvgIcon :icon="item.icon" />
-              <span>{{ item.label }}</span>
-              <strong>{{ item.count }}</strong>
-            </span>
-          </template>
-        </ElSegmented>
-      </div>
+      <ArtStatusSegmented
+        :model-value="searchQuery.status || ''"
+        :options="statusTabs"
+        aria-label="任务状态快捷筛选"
+        @update:model-value="handleStatusSegmentChange"
+      />
 
       <ArtTableQuery
         ref="tableQueryRef"
@@ -79,6 +67,7 @@
   import { pageInfoHandler } from '@/utils/table/tableUtils'
   import { useUserStore } from '@/store/modules/user'
   import ArtPermissionGuard from '@/components/core/feedback/art-permission-guard/index.vue'
+  import ArtStatusSegmented from '@/components/core/forms/art-status-segmented/index.vue'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import ArtDictDisplay from '@/components/core/base/art-dict-display/index.vue'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
@@ -507,58 +496,6 @@
     gap: 12px;
     min-width: 0;
 
-    &__status-filter {
-      padding: 7px;
-    }
-
-    &__status-segment {
-      width: 100%;
-
-      :deep(.el-segmented__item-label) {
-        min-width: 0;
-        padding-inline: 12px;
-      }
-    }
-
-    &__segment-option {
-      display: flex;
-      gap: 7px;
-      align-items: center;
-      justify-content: center;
-      min-width: 0;
-      min-height: 30px;
-      white-space: nowrap;
-    }
-
-    &__segment-option .art-svg-icon {
-      flex: 0 0 auto;
-      font-size: 15px;
-    }
-
-    &__segment-option > span {
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    &__segment-option strong {
-      display: inline-grid;
-      place-items: center;
-      min-width: 22px;
-      height: 22px;
-      padding: 0 6px;
-      font-family: var(--art-font-family-mono, Consolas, monospace);
-      font-size: 11px;
-      color: var(--el-text-color-secondary);
-      background: color-mix(in srgb, var(--el-fill-color-darker) 70%, transparent);
-      border-radius: 999px;
-    }
-
-    &__status-segment :deep(.el-segmented__item-selected) + &__segment-option strong,
-    &__status-segment :deep(.el-segmented__item.is-selected) &__segment-option strong {
-      color: var(--theme-color);
-      background: color-mix(in srgb, var(--theme-color) 10%, var(--el-bg-color));
-    }
-
     &__table {
       flex: 1 1 auto;
       min-width: 0;
@@ -647,16 +584,6 @@
       gap: 2px;
       align-items: center;
       justify-content: center;
-    }
-  }
-
-  @media (width <= 960px) {
-    .risk-task-page__segment-option .art-svg-icon {
-      display: none;
-    }
-
-    .risk-task-page__status-segment :deep(.el-segmented__item-label) {
-      padding-inline: 6px;
     }
   }
 </style>

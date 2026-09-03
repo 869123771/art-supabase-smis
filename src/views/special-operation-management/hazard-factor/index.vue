@@ -1,9 +1,22 @@
 <template>
-  <SmisPagePlaceholder section="特殊作业管理" title="危害因素" />
+  <SpecialOperationCatalogPage
+    catalog-kind="hazard_factor"
+    title="危害因素"
+    singular="危害因素"
+    item-label="危害因素"
+    description="建立按作业类型归集的危害因素库，帮助作业人员在开工前快速识别风险并形成统一管控口径。"
+    page-icon="ri:alert-line"
+    view-permission="SmisSpecialOperationHazardFactor:View"
+    add-permission="SmisSpecialOperationHazardFactor:Add"
+    edit-permission="SmisSpecialOperationHazardFactor:Edit"
+    delete-permission="SmisSpecialOperationHazardFactor:Delete"
+    export-permission="SmisSpecialOperationHazardFactor:Export"
+    void-permission="SmisSpecialOperationHazardFactor:Void"
+  />
 </template>
 
 <script setup lang="ts">
-  import SmisPagePlaceholder from '@smis/views/components/smis-page-placeholder.vue'
+  import SpecialOperationCatalogPage from '../shared/special-operation-catalog-page.vue'
 
   defineOptions({ name: 'SmisSpecialOperationHazardFactor' })
 </script>

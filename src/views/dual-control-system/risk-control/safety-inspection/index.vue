@@ -90,7 +90,6 @@
   } from '@/components/core/tables/art-table-query/index.vue'
   import type { ColumnOption } from '@/types'
   import { pageInfoHandler } from '@/utils/table/tableUtils'
-  import TreeUtils from '@/utils/tree'
   import {
     copySafetyInspection,
     deleteSafetyInspections,
@@ -102,6 +101,7 @@
     type SmisSafetyInspectionSearchParams,
     type SmisSafetyInspectionTypeOption
   } from '@smis/api'
+  import { toDualControlOrganizationTree } from '@smis/views/dual-control-system/shared/organization-tree'
   import SafetyInspectionNavigator from './modules/safety-inspection-navigator.vue'
   import SafetyInspectionDialog, {
     type SafetyInspectionDialogOpenData
@@ -118,11 +118,6 @@
 
   const tableQueryRef = ref<ArtTableQueryExpose>()
   const dialogRef = ref<DialogExpose>()
-  const organizationTree = new TreeUtils({
-    idKey: 'id',
-    parentKey: 'parentId',
-    childrenKey: 'children'
-  })
   const navigation = reactive({ value: '' })
   const options = reactive({
     inspectionTypes: [] as SmisSafetyInspectionTypeOption[],
@@ -178,12 +173,6 @@
       tone: 'warning'
     }
   ])
-  const flatOrganizations = computed(
-    () => organizationTree.treeToList(options.organizations) as SmisSafetyInspectionOrganization[]
-  )
-  const organizationOptions = computed(() =>
-    flatOrganizations.value.map((item) => ({ label: item.organizationName, value: item.id }))
-  )
   const searchItems = computed<SearchFormItem[]>(() => [
     {
       label: '检查名称',
@@ -206,9 +195,14 @@
     {
       label: '被检查单位',
       key: 'inspectedOrganizationId',
-      type: 'select',
+      type: 'treeSelect',
       props: {
-        options: organizationOptions.value,
+        data: options.organizations,
+        props: { label: 'organizationName', value: 'id', children: 'children' },
+        nodeKey: 'id',
+        valueKey: 'id',
+        checkStrictly: true,
+        defaultExpandAll: true,
         filterable: true,
         clearable: true,
         placeholder: '全部单位'
@@ -429,9 +423,7 @@
     try {
       const result = await fetchSafetyInspectionOptions()
       options.inspectionTypes = result.inspectionTypes
-      options.organizations = organizationTree.listToTree(
-        result.organizations
-      ) as SmisSafetyInspectionOrganization[]
+      options.organizations = toDualControlOrganizationTree(result.organizations)
     } catch {
       options.error = '检查导航加载失败，请稍后重试'
     } finally {

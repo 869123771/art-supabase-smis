@@ -1,0 +1,1 @@
+import{k as e,mt as t,v as n}from"./runtime-core.esm-bundler-B53NdkV7.js";import{t as r}from"./smis-page-placeholder-DJxrA3Cz.js";var i=e({name:`SmisWorkAtHeightApplication`,__name:`index`,setup(e){return(e,i)=>(t(),n(r,{section:`特殊作业管理`,title:`高处作业申请`}))}});export{i as default};

@@ -17,6 +17,7 @@
     | 'antiViolationStandard'
     | 'employee'
     | 'equipment'
+    | 'inspection-standard'
     | 'material'
     | 'organization'
     | 'position'
@@ -75,6 +76,17 @@
           routeName: 'SmisEquipmentLedgerList',
           permission: 'SmisEquipmentLedger:View',
           icon: 'ri:archive-stack-line'
+        }
+      ]
+    },
+    'inspection-standard': {
+      resourceName: '排查标准',
+      actions: [
+        {
+          label: '去维护排查标准',
+          routeName: 'SmisDualControlInspectionStandard',
+          permission: 'SmisDualControlInspectionStandard:View',
+          icon: 'ri:list-check-3'
         }
       ]
     },

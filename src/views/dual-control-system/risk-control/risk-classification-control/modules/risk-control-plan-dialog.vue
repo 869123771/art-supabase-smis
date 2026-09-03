@@ -122,7 +122,12 @@
             </div>
           </section>
         </div>
-        <ElEmpty v-else :image-size="96" description="请至少选择一个管控层级" />
+        <ArtEmptyState
+          v-else
+          title="请至少选择一个管控层级"
+          description="选择层级后可继续配置责任人与排查周期。"
+          :visual-size="96"
+        />
       </ElForm>
     </div>
 
@@ -145,6 +150,7 @@
   import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
   import type { EmployeeIntegrationItem } from '@/api/integration/employees'
   import ArtDialog from '@/components/core/dialogs/art-dialog/index.vue'
+  import ArtEmptyState from '@/components/core/feedback/art-empty-state/index.vue'
   import type { ArtDialogExpose } from '@/components/core/dialogs/art-dialog/types'
   import ArtSectionTitle from '@/components/core/surfaces/art-section-title/index.vue'
   import ArtEmployeeSelect from '@/components/business/art-employee-select/index.vue'

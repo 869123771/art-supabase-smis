@@ -60,12 +60,7 @@
       </template>
     </ArtPageHeader>
 
-    <ElTabs
-      v-if="equipment"
-      v-model="activeTab"
-      class="equipment-archive-detail__tabs art-card-xs"
-      stretch
-    >
+    <ElTabs v-if="equipment" v-model="activeTab" class="equipment-archive-detail__tabs art-card-xs">
       <ElTabPane label="设备档案信息" name="archive">
         <div class="equipment-archive-detail__sections">
           <ArtSectionCard title="基础信息" subtitle="设备识别、分类、位置与技术参数">
@@ -157,9 +152,10 @@
               <p v-if="item.remark">{{ item.remark }}</p>
             </div>
           </article>
-          <ElEmpty
+          <ArtEmptyState
             v-if="!inspectionLoading && !inspections.length"
-            description="当前设备暂无检验记录"
+            title="当前设备暂无检验记录"
+            :visual-size="96"
           />
         </div>
       </ElTabPane>
@@ -168,7 +164,8 @@
 </template>
 
 <script setup lang="tsx">
-  import { ElEmpty, ElTabPane, ElTabs } from 'element-plus'
+  import { ElTabPane, ElTabs } from 'element-plus'
+  import ArtEmptyState from '@/components/core/feedback/art-empty-state/index.vue'
   import type { ColumnOption } from '@/types'
   import ArtDescriptions from '@/components/core/base/art-descriptions/index.vue'
   import type { ArtDescriptionItem } from '@/components/core/base/art-descriptions/types'

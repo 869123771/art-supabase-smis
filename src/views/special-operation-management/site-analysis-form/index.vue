@@ -1,9 +1,22 @@
 <template>
-  <SmisPagePlaceholder section="特殊作业管理" title="现场分析表" />
+  <SpecialOperationCatalogPage
+    catalog-kind="site_analysis"
+    title="现场分析表"
+    singular="分析项"
+    item-label="分析项"
+    description="按作业类型配置现场分析项目、记录方式与正常/异常判定值，支撑文本、数值和单选三类现场记录。"
+    page-icon="ri:flask-line"
+    view-permission="SmisSpecialOperationSiteAnalysisForm:View"
+    add-permission="SmisSpecialOperationSiteAnalysisForm:Add"
+    edit-permission="SmisSpecialOperationSiteAnalysisForm:Edit"
+    delete-permission="SmisSpecialOperationSiteAnalysisForm:Delete"
+    export-permission="SmisSpecialOperationSiteAnalysisForm:Export"
+    void-permission="SmisSpecialOperationSiteAnalysisForm:Void"
+  />
 </template>
 
 <script setup lang="ts">
-  import SmisPagePlaceholder from '@smis/views/components/smis-page-placeholder.vue'
+  import SpecialOperationCatalogPage from '../shared/special-operation-catalog-page.vue'
 
   defineOptions({ name: 'SmisSpecialOperationSiteAnalysisForm' })
 </script>

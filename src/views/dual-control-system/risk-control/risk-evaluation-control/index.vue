@@ -42,15 +42,20 @@
             </small>
           </div>
         </li>
-        <li :class="{ active: measureState.rows.length, completed: measureState.rows.length }">
+        <li
+          :class="{
+            active: Boolean(selectedItem?.evaluation),
+            completed: Boolean(selectedItem?.measureCount)
+          }"
+        >
           <span class="risk-evaluation-page__step-icon">
-            <ArtSvgIcon :icon="measureState.rows.length ? 'ri:check-line' : 'ri:number-3'" />
+            <ArtSvgIcon :icon="selectedItem?.measureCount ? 'ri:check-line' : 'ri:number-3'" />
           </span>
           <div>
             <strong>落实防控措施</strong>
             <small>{{
-              measureState.rows.length
-                ? `已维护 ${measureState.rows.length} 条措施`
+              selectedItem?.measureCount
+                ? `已维护 ${selectedItem.measureCount} 条措施`
                 : '配置措施、岗位与排查周期'
             }}</small>
           </div>
@@ -80,102 +85,15 @@
           :on-success="handleTableSuccess"
           focusable
         />
-        <ArtSectionCard
-          class="risk-evaluation-page__measures"
-          title="防控措施与责任岗位"
-          :subtitle="measureSubtitle"
-          :loading="measureState.loading"
-          :error="measureState.error"
-          :empty="!measureState.loading && !measureState.rows.length"
-          :empty-title="selectedItem?.evaluation ? '暂无防控措施' : '请先选择并完成风险评价'"
-          :empty-description="
-            selectedItem?.evaluation
-              ? '点击新增防控措施，并为每条措施选择多个防控岗位及排查周期。'
-              : '只有完成 LEC 或 LS 定量评价后，才能新增控制措施。'
-          "
-          :empty-visual-size="64"
-          :min-height="100"
-          @retry="loadMeasures"
-        >
-          <template #actions
-            ><ElButton
-              v-auth="'SmisDualControlRiskEvaluationControl:AddMeasure'"
-              type="primary"
-              :disabled="!selectedItem?.evaluation"
-              @click="openMeasure()"
-              ><ArtSvgIcon icon="ri:add-line" />新增防控措施</ElButton
-            ></template
-          >
-          <ElScrollbar v-if="measureState.rows.length" class="risk-evaluation-page__measure-scroll">
-            <ul class="risk-evaluation-page__measure-list">
-              <li v-for="(row, index) in measureState.rows" :key="row.id">
-                <span class="risk-evaluation-page__measure-index">{{ index + 1 }}</span>
-                <div class="risk-evaluation-page__measure-main">
-                  <div class="risk-evaluation-page__measure-heading">
-                    <strong>{{ row.controlMeasure }}</strong>
-                    <div>
-                      <ArtDictDisplay
-                        dict-code="smisControlMeasureCategory"
-                        :value="row.controlMeasureCategory"
-                        display="tag"
-                      />
-                      <ArtDictDisplay
-                        dict-code="smisControlLevel"
-                        :value="row.controlLevel"
-                        display="tag"
-                      />
-                      <ElTag :type="row.status === 'enabled' ? 'success' : 'info'" effect="plain">
-                        {{ row.status === 'enabled' ? '启用' : '已作废' }}
-                      </ElTag>
-                    </div>
-                  </div>
-                  <div v-if="row.positions?.length" class="risk-evaluation-page__position-tags">
-                    <ElTag
-                      v-for="binding in row.positions"
-                      :key="binding.positionId"
-                      type="primary"
-                      effect="plain"
-                    >
-                      <ArtSvgIcon icon="ri:briefcase-4-line" />
-                      {{ binding.position?.positionName || binding.positionId }} · 每
-                      {{ binding.frequencyCount }}
-                      {{ dictLabel('smisFrequencyUnit', binding.frequencyUnit) }}
-                    </ElTag>
-                  </div>
-                  <span v-else class="risk-evaluation-page__position-empty">暂未配置防控岗位</span>
-                </div>
-                <div class="risk-evaluation-page__measure-actions">
-                  <ArtButtonTable
-                    type="edit"
-                    permission="SmisDualControlRiskEvaluationControl:EditMeasure"
-                    label="编辑防控措施"
-                    :disabled="row.status === 'voided'"
-                    @click="openMeasureRow(row)"
-                  />
-                  <ArtButtonTable
-                    type="delete"
-                    permission="SmisDualControlRiskEvaluationControl:DeleteMeasure"
-                    label="删除防控措施"
-                    @click="deleteMeasureRow(row)"
-                  />
-                </div>
-              </li>
-            </ul>
-          </ElScrollbar>
-        </ArtSectionCard>
       </div>
-      <EvaluationDialog ref="evaluationDialogRef" @success="handleEvaluationSaved" /><MeasureDialog
-        ref="measureDialogRef"
-        @success="handleMeasureSaved"
-      />
+      <EvaluationDialog ref="evaluationDialogRef" @success="handleEvaluationSaved" />
+      <MeasureManagementDrawer ref="measureManagementDrawerRef" @success="handleMeasureChanged" />
     </div>
   </ArtPermissionGuard>
 </template>
 <script setup lang="tsx">
-  import { ElMessage, ElTag } from 'element-plus'
+  import { ElTag } from 'element-plus'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
-  import ArtDictDisplay from '@/components/core/base/art-dict-display/index.vue'
-  import ArtSectionCard from '@/components/core/surfaces/art-section-card/index.vue'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
   import BusinessTableWorkspaceActions from '@/components/business/business-table-workspace-actions/index.vue'
   import BusinessWorkspaceHeader, {
@@ -189,46 +107,35 @@
   } from '@/components/core/tables/art-table-query/index.vue'
   import type { ColumnOption } from '@/types'
   import { pageInfoHandler } from '@/utils/table/tableUtils'
-  import { useArtFeedback } from '@/hooks/core/useArtFeedback'
   import { useUserStore } from '@/store/modules/user'
   import { useTenantScopeStore } from '@/store/modules/tenantScope'
   import {
-    deleteRiskControlMeasures,
-    fetchRiskControlMeasures,
     fetchRiskFactorCategoryOptions,
     fetchRiskItems,
-    voidRiskControlMeasures,
-    type SmisRiskControlMeasure,
     type SmisRiskFactorCategoryOption,
     type SmisRiskItem,
     type SmisRiskItemSearchParams
   } from '@smis/api'
   import EvaluationDialog, { type EvaluationDialogOpenData } from './modules/evaluation-dialog.vue'
-  import MeasureDialog, { type MeasureDialogOpenData } from './modules/measure-dialog.vue'
+  import MeasureManagementDrawer, {
+    type MeasureManagementDrawerExpose
+  } from './modules/measure-management-drawer.vue'
   defineOptions({ name: 'SmisDualControlRiskEvaluationControl' })
   type TableParams = SmisRiskItemSearchParams &
     Pick<Api.Common.PaginationParams, 'current' | 'size'>
   interface EvaluationDialogExpose {
     handleOpen: (data: EvaluationDialogOpenData) => Promise<void>
   }
-  interface MeasureDialogExpose {
-    handleOpen: (data: MeasureDialogOpenData) => Promise<void>
-  }
-  const { confirmDelete, confirmAction } = useArtFeedback()
   const userStore = useUserStore()
   const tenantScopeStore = useTenantScopeStore()
-  const { getDictMap } = storeToRefs(userStore)
   const { effectiveTenantId, revision } = storeToRefs(tenantScopeStore)
   const tableQueryRef = ref<ArtTableQueryExpose>()
   const evaluationDialogRef = ref<EvaluationDialogExpose>()
-  const measureDialogRef = ref<MeasureDialogExpose>()
+  const measureManagementDrawerRef = ref<MeasureManagementDrawerExpose>()
   const searchQuery = ref<SmisRiskItemSearchParams>({})
   const selectedItem = ref<SmisRiskItem>()
   const categories = ref<SmisRiskFactorCategoryOption[]>([])
   const listState = reactive({ total: 0, evaluated: 0, identified: 0, measures: 0 })
-  const measureState = reactive({ rows: [] as SmisRiskControlMeasure[], loading: false, error: '' })
-  const dictLabel = (code: string, value: string) =>
-    (getDictMap.value[code] ?? []).find((i) => i.value === value)?.label || value
   const statusOptions = [
     { label: '待评价', value: 'identified' },
     { label: '已评价', value: 'evaluated' },
@@ -290,24 +197,15 @@
       icon: 'ri:shield-check-line'
     }
   ])
-  const measureSubtitle = computed(() =>
-    selectedItem.value
-      ? `${selectedItem.value.riskPointRecord?.pointName || selectedItem.value.riskPoint || '风险点'} · ${selectedItem.value.itemNo} · ${selectedItem.value.hazardFactor}`
-      : '从上方列表选择一条危险有害因素'
-  )
   const openEvaluation = (row: SmisRiskItem) =>
     void evaluationDialogRef.value?.handleOpen({
       item: row,
       tenantId: row.tenantId || effectiveTenantId.value
     })
-  const openMeasure = (row?: SmisRiskControlMeasure) => {
-    if (!selectedItem.value?.evaluation) {
-      ElMessage.warning('请先完成危险有害因素定量评价')
-      return
-    }
-    void measureDialogRef.value?.handleOpen({ item: selectedItem.value, row })
+  const openMeasureManagement = (row: SmisRiskItem): void => {
+    handleSelectItem(row)
+    void measureManagementDrawerRef.value?.handleOpen(row)
   }
-  const openMeasureRow = (row: unknown) => openMeasure(row as SmisRiskControlMeasure)
   const headerActions = computed<ArtTableQueryHeaderAction[]>(() => [
     {
       permission: 'SmisDualControlRiskEvaluationControl:Evaluate',
@@ -317,21 +215,6 @@
       selectionRequired: true,
       selectionLimit: 1,
       onClick: ({ selectedRows }) => openEvaluation(selectedRows[0] as SmisRiskItem)
-    },
-    {
-      permission: 'SmisDualControlRiskEvaluationControl:VoidMeasure',
-      key: 'void',
-      label: '作废措施',
-      icon: 'ri:forbid-2-line',
-      disabled: !selectedItem.value || !measureState.rows.some((i) => i.status === 'enabled'),
-      onClick: async () => {
-        if (!measureState.rows.length) return
-        await confirmAction('确定作废当前因素的全部有效防控措施吗？', '作废防控措施')
-        await voidRiskControlMeasures(
-          measureState.rows.filter((i) => i.status === 'enabled').map((i) => i.id)
-        )
-        await loadMeasures()
-      }
     },
     {
       permission: 'SmisDualControlRiskEvaluationControl:Export',
@@ -425,25 +308,23 @@
     {
       prop: 'operation',
       label: '操作',
-      width: 185,
+      width: 112,
       fixed: 'right',
       formatter: (row) => (
         <div class="risk-evaluation-page__actions">
           <ArtButtonTable
+            type="edit"
             permission="SmisDualControlRiskEvaluationControl:Evaluate"
             label={row.evaluation ? '重新评价' : '定量评价'}
-            icon="ri:function-line"
+            icon="ri:calculator-line"
             onClick={() => openEvaluation(row)}
           />
           <ArtButtonTable
-            permission="SmisDualControlRiskEvaluationControl:AddMeasure"
-            label="新增措施"
-            icon="ri:add-line"
-            disabled={!row.evaluation}
-            onClick={() => {
-              handleSelectItem(row)
-              openMeasure()
-            }}
+            type="view"
+            permission="SmisDualControlRiskEvaluationControl:View"
+            label="防控措施"
+            icon="ri:shield-check-line"
+            onClick={() => openMeasureManagement(row)}
           />
         </div>
       )
@@ -467,44 +348,13 @@
   const handleSelectItem = (row: SmisRiskItem) => {
     if (selectedItem.value?.id === row.id) return
     selectedItem.value = row
-    void loadMeasures()
-  }
-  const loadMeasures = async () => {
-    measureState.error = ''
-    if (!selectedItem.value) {
-      measureState.rows = []
-      return
-    }
-    measureState.loading = true
-    try {
-      const result = await fetchRiskControlMeasures(selectedItem.value.id)
-      measureState.rows = result.data ?? []
-    } catch (e) {
-      measureState.error = e instanceof Error ? e.message : '防控措施加载失败'
-    } finally {
-      measureState.loading = false
-    }
   }
   const handleEvaluationSaved = async () => {
     await tableQueryRef.value?.refreshUpdate()
-    await nextTick()
-    await loadMeasures()
   }
-  const handleMeasureSaved = async () => {
-    await loadMeasures()
+  const handleMeasureChanged = async () => {
     await tableQueryRef.value?.refreshUpdate()
   }
-  const deleteMeasure = async (row: SmisRiskControlMeasure) => {
-    try {
-      await confirmDelete(`确定删除防控措施“${row.controlMeasure}”吗？`)
-      await deleteRiskControlMeasures([row.id])
-      await loadMeasures()
-      await tableQueryRef.value?.refreshUpdate()
-    } catch {
-      /* 用户取消 */
-    }
-  }
-  const deleteMeasureRow = (row: unknown) => void deleteMeasure(row as SmisRiskControlMeasure)
   onMounted(async () => {
     await Promise.all(
       [
@@ -519,7 +369,6 @@
   })
   watch(revision, () => {
     selectedItem.value = undefined
-    measureState.rows = []
     void tableQueryRef.value?.refreshContext()
   })
 </script>
@@ -534,10 +383,8 @@
     }
 
     &__workspace {
-      display: grid;
+      display: flex;
       flex: 1 1 auto;
-      grid-template-rows: minmax(290px, 1.12fr) minmax(230px, 0.88fr);
-      gap: 12px;
       min-width: 0;
       min-height: 0;
     }
@@ -615,98 +462,10 @@
       color: var(--el-text-color-secondary);
     }
 
-    &__table,
-    &__measures {
-      min-width: 0;
-      min-height: 0;
-    }
-
-    &__measures {
-      height: 100%;
-      overflow: hidden;
-
-      :deep(.art-section-card__body),
-      :deep(.art-async-state),
-      :deep(.art-async-state__content) {
-        height: 100%;
-        min-height: 0;
-      }
-
-      :deep(.art-section-card__body) {
-        display: flex;
-        flex-direction: column;
-      }
-    }
-
-    &__measure-scroll {
+    &__table {
       flex: 1 1 auto;
+      min-width: 0;
       min-height: 0;
-    }
-
-    &__measure-list {
-      display: grid;
-      gap: 8px;
-      padding: 0 4px 4px 0;
-      margin: 0;
-      list-style: none;
-    }
-
-    &__measure-list > li {
-      display: grid;
-      grid-template-columns: 32px minmax(0, 1fr) auto;
-      gap: 12px;
-      align-items: start;
-      padding: 13px 14px;
-      background: var(--el-fill-color-extra-light);
-      border: 1px solid var(--el-border-color-lighter);
-      border-radius: var(--el-border-radius-base);
-    }
-
-    &__measure-index {
-      display: grid;
-      place-items: center;
-      width: 30px;
-      height: 30px;
-      font-family: var(--art-font-family-mono, Consolas, monospace);
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--theme-color);
-      background: color-mix(in srgb, var(--theme-color) 9%, var(--el-bg-color));
-      border-radius: var(--el-border-radius-small);
-    }
-
-    &__measure-main {
-      display: grid;
-      gap: 9px;
-      min-width: 0;
-    }
-
-    &__measure-heading {
-      display: flex;
-      gap: 12px;
-      align-items: center;
-      justify-content: space-between;
-      min-width: 0;
-    }
-
-    &__measure-heading > strong {
-      overflow: hidden;
-      text-overflow: ellipsis;
-      font-size: 13px;
-      white-space: nowrap;
-    }
-
-    &__measure-heading > div,
-    &__measure-actions {
-      display: flex;
-      flex: 0 0 auto;
-      gap: 5px;
-      align-items: center;
-    }
-
-    &__position-empty {
-      font-size: 12px;
-      color: var(--el-text-color-placeholder);
     }
 
     :deep(.risk-evaluation-page__risk-point) {
@@ -756,18 +515,11 @@
 
     :deep(.risk-evaluation-page__actions) {
       display: flex;
+      gap: 6px;
       align-items: center;
-    }
 
-    &__position-tags {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 5px;
-
-      .el-tag {
-        max-width: 100%;
-        overflow: hidden;
-        text-overflow: ellipsis;
+      .art-button-table {
+        margin-right: 0;
       }
     }
   }

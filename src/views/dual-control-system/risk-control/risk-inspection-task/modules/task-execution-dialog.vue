@@ -28,7 +28,7 @@
               v-model="form.attachmentUrls"
               multiple
               :limit="8"
-              :size="88"
+              :size="112"
               title="上传现场照片"
             />
           </ElFormItem>
@@ -36,7 +36,7 @@
             <ElInput
               v-model="form.executionSummary"
               type="textarea"
-              :rows="3"
+              :rows="5"
               maxlength="2000"
               show-word-limit
               placeholder="说明本次巡查总体情况、发现问题和后续建议"
@@ -70,7 +70,7 @@
               <ElInput
                 v-model="item.remark"
                 type="textarea"
-                :rows="2"
+                :rows="4"
                 maxlength="1000"
                 show-word-limit
                 placeholder="填写检查说明；异常项请描述问题位置、现象与处置建议"
@@ -79,7 +79,7 @@
                 v-model="item.attachmentUrls"
                 multiple
                 :limit="4"
-                :size="72"
+                :size="104"
                 title="项目照片"
               />
             </div>
@@ -352,7 +352,7 @@
 
   .task-execution-dialog__item-fields {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 250px;
+    grid-template-columns: minmax(0, 1fr) 280px;
     gap: 16px;
     align-items: start;
   }

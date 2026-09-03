@@ -1,9 +1,14 @@
 <template>
-  <SmisPagePlaceholder section="双控体系 / 双控报表" title="漏查率统计" />
+  <InspectionStatisticsWorkspace
+    report-type="missed_rate"
+    page-permission="SmisDualControlMissedInspectionRateStatistics:View"
+    detail-permission="SmisDualControlMissedInspectionRateStatistics:ViewDetail"
+    export-permission="SmisDualControlMissedInspectionRateStatistics:Export"
+  />
 </template>
 
 <script setup lang="ts">
-  import SmisPagePlaceholder from '@smis/views/components/smis-page-placeholder.vue'
+  import InspectionStatisticsWorkspace from '../shared/inspection-statistics-workspace.vue'
 
   defineOptions({ name: 'SmisDualControlMissedInspectionRateStatistics' })
 </script>

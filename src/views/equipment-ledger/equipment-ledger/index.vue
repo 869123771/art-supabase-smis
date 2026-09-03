@@ -88,7 +88,7 @@
           <small>{{ lifecycle.row?.equipmentCode }} · 设备全生命周期</small>
         </div>
       </div>
-      <ElTabs v-if="lifecycle.row" v-model="lifecycle.active" stretch>
+      <ElTabs v-if="lifecycle.row" v-model="lifecycle.active">
         <ElTabPane name="overview" label="生命周期概览">
           <div class="equipment-ledger-page__lifecycle-grid">
             <article
@@ -166,9 +166,11 @@
                 <ArtSvgIcon icon="ri:delete-bin-line" />
               </ElButton>
             </article>
-            <ElEmpty
+            <ArtEmptyState
               v-if="!attachmentsLoading && !attachments.length"
-              description="暂无附件；可上传证照、铭牌、设备照片、说明书或检验报告。"
+              title="暂无设备附件"
+              description="可上传证照、铭牌、设备照片、说明书或检验报告。"
+              :visual-size="96"
             />
           </div>
         </ElTabPane>
@@ -222,9 +224,11 @@
                 <p v-if="item.remark">{{ item.remark }}</p>
               </div>
             </article>
-            <ElEmpty
+            <ArtEmptyState
               v-if="!inspectionsLoading && !inspections.length"
-              description="当前设备暂无检验记录；可前往“检验申报”创建第一条生命周期记录。"
+              title="当前设备暂无检验记录"
+              description="可前往“检验申报”创建第一条生命周期记录。"
+              :visual-size="96"
             />
           </div>
         </ElTabPane>
@@ -258,6 +262,7 @@
   import { useImageViewer } from '@/hooks/core/useImageViewer'
   import { useUserStore } from '@/store/modules/user'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
+  import ArtEmptyState from '@/components/core/feedback/art-empty-state/index.vue'
   import ArtDictDisplay from '@/components/core/base/art-dict-display/index.vue'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
   import ArtResourcePicker from '@/components/core/forms/art-resource-picker/index.vue'

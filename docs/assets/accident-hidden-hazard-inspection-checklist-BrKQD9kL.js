@@ -1,1 +1,0 @@
-import{an as e,gn as t,tr as n}from"./style-D3Duppxh.js";import{t as r}from"./smis-page-placeholder-BLWa4iKJ.js";var i=t({name:`SmisDualControlAccidentHiddenHazardInspectionChecklist`,__name:`index`,setup(t){return(t,i)=>(n(),e(r,{section:`双控体系 / 双控清单`,title:`事故隐患排查清单`}))}});export{i as default};
