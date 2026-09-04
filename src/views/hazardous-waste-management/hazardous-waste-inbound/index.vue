@@ -1,9 +1,5 @@
-<template>
-  <SmisPagePlaceholder section="危废管理" title="危废入库" />
-</template>
-
+<template><HazardousWasteDocumentPage direction="inbound" /></template>
 <script setup lang="ts">
-  import SmisPagePlaceholder from '@smis/views/components/smis-page-placeholder.vue'
-
+  import HazardousWasteDocumentPage from '../shared/document-page.vue'
   defineOptions({ name: 'SmisHazardousWasteInbound' })
 </script>

@@ -6,7 +6,15 @@
       </ElButton>
     </template>
     <ElScrollbar class="site-navigator__scroll">
-      <div class="site-navigator__body" v-loading="loading">
+      <div class="site-navigator__body" :aria-busy="loading">
+        <ArtOverlayLoading
+          v-if="loading"
+          loading
+          overlay
+          size="compact"
+          text="正在加载场所树…"
+          description=""
+        />
         <ElAlert v-if="error" :title="error" type="error" :closable="false" show-icon />
         <ElTree
           v-else-if="treeData.length"
@@ -68,6 +76,7 @@
     }
 
     &__body {
+      position: relative;
       padding: 4px 2px 12px;
     }
 

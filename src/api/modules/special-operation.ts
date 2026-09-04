@@ -9,6 +9,164 @@ export type SmisSpecialOperationCatalogKind = 'safety_checklist' | 'hazard_facto
 export type SmisSpecialOperationRecordType = 'text' | 'number' | 'single'
 export type SmisSpecialOperationFieldType =
   'text' | 'textarea' | 'number' | 'date' | 'datetime' | 'single' | 'multiple' | 'switch'
+export type SmisSpecialOperationPermitStatus =
+  | 'draft'
+  | 'pending_approval'
+  | 'rejected'
+  | 'in_progress'
+  | 'pending_acceptance'
+  | 'completed'
+  | 'voided'
+export type SmisSpecialOperationTransitionAction =
+  'start' | 'request_acceptance' | 'accept' | 'void'
+
+export interface SmisSpecialOperationPerson {
+  employeeId: string
+  employeeNo?: string | null
+  employeeName: string
+  idCardNo?: string | null
+  phone?: string | null
+  organizationName?: string | null
+  certificateName?: string | null
+  certificateNumber?: string | null
+}
+
+export interface SmisSpecialOperationBlindPlateItem {
+  id: string
+  equipmentPipelineName: string
+  medium: string
+  temperature: string
+  pressure: string
+  material: string
+  specification: string
+  blindPlateNo: string
+}
+
+export interface SmisSpecialOperationCatalogSelection {
+  id: string
+  itemName: string
+  recordType?: SmisSpecialOperationRecordType | null
+  normalValue?: string | null
+  abnormalValue?: string | null
+  recordedValue?: string | number | null
+  involved?: boolean
+}
+
+export interface SmisSpecialOperationRelatedPermit {
+  id: string
+  permitNo: string
+  operationTypeName: string
+  workContent?: string | null
+  workStartTime?: string | null
+  workEndTime?: string | null
+  workLocation?: string | null
+}
+
+export interface SmisSpecialOperationPermitEvent {
+  id: string
+  eventType: string
+  eventTitle: string
+  eventDescription?: string | null
+  fromStatus?: SmisSpecialOperationPermitStatus | null
+  toStatus?: SmisSpecialOperationPermitStatus | null
+  operatorName?: string | null
+  createTime: string
+}
+
+export interface SmisSpecialOperationPermit {
+  id: string
+  tenantId: string
+  permitNo: string
+  operationTypeId: string
+  operationTypeCode: string
+  operationTypeName: string
+  workContent: string | null
+  workStartTime: string | null
+  workEndTime: string | null
+  workLocation: string | null
+  workUnit: string | null
+  workSection: string | null
+  hotWorkLevel: string | null
+  hotWorkMethods: string[]
+  hazardFactors: SmisSpecialOperationCatalogSelection[]
+  responsibleEmployee: SmisSpecialOperationPerson | null
+  guardianEmployees: SmisSpecialOperationPerson[]
+  verifierEmployees: SmisSpecialOperationPerson[]
+  briefingGiverEmployees: SmisSpecialOperationPerson[]
+  briefingReceiverEmployees: SmisSpecialOperationPerson[]
+  workers: SmisSpecialOperationPerson[]
+  analysts: SmisSpecialOperationPerson[]
+  siteAnalysisRecords: SmisSpecialOperationCatalogSelection[]
+  relatedPermits: SmisSpecialOperationRelatedPermit[]
+  safetyMeasures: SmisSpecialOperationCatalogSelection[]
+  customValues: Record<string, unknown>
+  workDescription: string | null
+  sitePhotoUrls: string[]
+  applicantName: string | null
+  applicationTime: string | null
+  currentNode: string
+  status: SmisSpecialOperationPermitStatus
+  voidReason?: string | null
+  voidedBy?: string | null
+  voidedAt?: string | null
+  acceptanceResult?: string | null
+  acceptanceDescription?: string | null
+  acceptedBy?: string | null
+  acceptedAt?: string | null
+  events?: SmisSpecialOperationPermitEvent[]
+  createTime: string
+  updateTime: string
+}
+
+export interface SmisSpecialOperationPermitOverview {
+  total: number
+  draft: number
+  pendingApproval: number
+  rejected: number
+  inProgress: number
+  pendingAcceptance: number
+  completed: number
+  voided: number
+}
+
+export interface SmisSpecialOperationPermitSearchParams {
+  from?: number
+  to?: number
+  keyword?: string
+  operationTypeId?: string | null
+  operationTypeCode?: string | null
+  workStart?: string | null
+  workEnd?: string | null
+  applicantKeyword?: string
+  status?: SmisSpecialOperationPermitStatus
+  tenantId?: string | null
+}
+
+export interface SmisSpecialOperationPermitSavePayload {
+  operationTypeId: string
+  workContent: string | null
+  workStartTime: string | null
+  workEndTime: string | null
+  workLocation: string | null
+  workUnit: string | null
+  workSection: string | null
+  hotWorkLevel: string | null
+  hotWorkMethods: string[]
+  hazardFactors: SmisSpecialOperationCatalogSelection[]
+  responsibleEmployee: SmisSpecialOperationPerson | null
+  guardianEmployees: SmisSpecialOperationPerson[]
+  verifierEmployees: SmisSpecialOperationPerson[]
+  briefingGiverEmployees: SmisSpecialOperationPerson[]
+  briefingReceiverEmployees: SmisSpecialOperationPerson[]
+  workers: SmisSpecialOperationPerson[]
+  analysts: SmisSpecialOperationPerson[]
+  siteAnalysisRecords: SmisSpecialOperationCatalogSelection[]
+  relatedPermits: SmisSpecialOperationRelatedPermit[]
+  safetyMeasures: SmisSpecialOperationCatalogSelection[]
+  customValues: Record<string, unknown>
+  workDescription: string | null
+  sitePhotoUrls: string[]
+}
 
 export interface SmisSpecialOperationFieldDefinition {
   id?: string
@@ -141,6 +299,12 @@ interface CatalogListResult {
   overview?: SmisSpecialOperationCatalogOverview
 }
 
+interface PermitListResult {
+  records?: SmisSpecialOperationPermit[]
+  total?: number
+  overview?: SmisSpecialOperationPermitOverview
+}
+
 const { supabase, keysToSnakeDeep, responseHandle } = useSupabase()
 
 const emptyTypeOverview = (): SmisSpecialOperationTypeOverview => ({
@@ -155,6 +319,17 @@ const emptyCatalogOverview = (): SmisSpecialOperationCatalogOverview => ({
   total: 0,
   enabled: 0,
   disabled: 0,
+  voided: 0
+})
+
+const emptyPermitOverview = (): SmisSpecialOperationPermitOverview => ({
+  total: 0,
+  draft: 0,
+  pendingApproval: 0,
+  rejected: 0,
+  inProgress: 0,
+  pendingAcceptance: 0,
+  completed: 0,
   voided: 0
 })
 
@@ -296,5 +471,117 @@ export async function voidSpecialOperationCatalogItems(
         p_tenant_id: tenantId || null
       }),
     { showMessage: true, breakReturn: true, message: '配置项已作废' }
+  )
+}
+
+export async function fetchSpecialOperationPermitList(
+  params: SmisSpecialOperationPermitSearchParams = {}
+) {
+  const from = Math.max(params.from ?? 0, 0)
+  const result = await responseHandle<PermitListResult>(
+    () =>
+      supabase.rpc('smis_list_special_operation_permits_secure', {
+        p_from: from,
+        p_to: Math.max(params.to ?? from + 19, from),
+        p_keyword: params.keyword?.trim() || null,
+        p_operation_type_id: params.operationTypeId || null,
+        p_operation_type_code: params.operationTypeCode || null,
+        p_work_start: params.workStart || null,
+        p_work_end: params.workEnd || null,
+        p_applicant_keyword: params.applicantKeyword?.trim() || null,
+        p_status: params.status || null,
+        p_tenant_id: params.tenantId || null
+      }),
+    { showErrorMessage: true }
+  )
+  return {
+    data: result.data?.records ?? [],
+    total: result.data?.total ?? 0,
+    overview: result.data?.overview ?? emptyPermitOverview(),
+    error: result.error
+  }
+}
+
+export async function fetchSpecialOperationPermit(id: string, tenantId?: string | null) {
+  return await responseHandle<SmisSpecialOperationPermit>(
+    () =>
+      supabase.rpc('smis_get_special_operation_permit_secure', {
+        p_id: id,
+        p_tenant_id: tenantId || null
+      }),
+    { showErrorMessage: true, breakReturn: true }
+  )
+}
+
+export async function fetchSpecialOperationWorkerDefaults(
+  employeeIds: string[],
+  operationTypeCode = 'HOT_WORK',
+  tenantId?: string | null
+) {
+  return await responseHandle<SmisSpecialOperationPerson[]>(
+    () =>
+      supabase.rpc('smis_get_special_operation_worker_defaults_secure', {
+        p_employee_ids: employeeIds,
+        p_operation_type_code: operationTypeCode,
+        p_tenant_id: tenantId || null
+      }),
+    { showErrorMessage: true, breakReturn: true }
+  )
+}
+
+export async function saveSpecialOperationPermit(
+  id: string | undefined,
+  payload: SmisSpecialOperationPermitSavePayload,
+  submit: boolean,
+  tenantId?: string | null
+) {
+  return await responseHandle<string>(
+    () =>
+      supabase.rpc('smis_save_special_operation_permit_secure', {
+        p_id: id || null,
+        p_payload: keysToSnakeDeep(payload),
+        p_submit: submit,
+        p_tenant_id: tenantId || null
+      }),
+    {
+      showMessage: true,
+      breakReturn: true,
+      message: submit ? '作业票已提交审批' : '作业票草稿已保存'
+    }
+  )
+}
+
+export async function deleteSpecialOperationPermits(ids: string[], tenantId?: string | null) {
+  return await responseHandle<number>(
+    () =>
+      supabase.rpc('smis_delete_special_operation_permits_secure', {
+        p_ids: ids,
+        p_tenant_id: tenantId || null
+      }),
+    { showMessage: true, breakReturn: true, message: '作业票已删除' }
+  )
+}
+
+export async function transitionSpecialOperationPermit(
+  id: string,
+  action: SmisSpecialOperationTransitionAction,
+  options: { result?: string | null; description?: string | null; tenantId?: string | null } = {}
+) {
+  const messageMap: Record<SmisSpecialOperationTransitionAction, string> = {
+    start: options.result === 'rejected' ? '作业票已拒绝' : '作业票已进入作业中',
+    request_acceptance: '验收申请已提交',
+    accept: options.result === 'returned' ? '作业票已退回整改' : '作业票已验收完成',
+    void: '作业票已作废'
+  }
+  return await responseHandle<SmisSpecialOperationPermitStatus>(
+    () =>
+      supabase.rpc('smis_transition_special_operation_permit_secure', {
+        p_id: id,
+        p_action: action,
+        p_result: options.result || null,
+        p_description: options.description?.trim() || null,
+        p_tenant_id: options.tenantId || null
+      }),
+    { showMessage: true, breakReturn: true, message: messageMap[action] }
   )
 }

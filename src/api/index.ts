@@ -226,6 +226,21 @@ export {
 } from '@smis/api/modules/storage-location'
 
 export {
+  deleteHazardousWasteCatalog,
+  deleteHazardousWasteCategories,
+  deleteHazardousWasteDocuments,
+  deleteHazardousWasteWarehouses,
+  fetchHazardousWasteCatalogList,
+  fetchHazardousWasteDocumentList,
+  fetchHazardousWasteWarehouseList,
+  saveHazardousWasteCatalog,
+  saveHazardousWasteCategory,
+  saveHazardousWasteDocument,
+  saveHazardousWasteWarehouse,
+  transitionHazardousWasteDocument
+} from '@smis/api/modules/hazardous-waste'
+
+export {
   deleteSuppliers,
   exportSupplierList,
   fetchSupplierList,
@@ -423,6 +438,25 @@ export type {
   LeaveInformationSavePayload,
   LeaveInformationSearchParams,
   SmisPositionOption,
+  SmisHazardousWasteCatalogItem,
+  SmisHazardousWasteCatalogOverview,
+  SmisHazardousWasteCatalogSavePayload,
+  SmisHazardousWasteCatalogSearchParams,
+  SmisHazardousWasteCategory,
+  SmisHazardousWasteCategorySavePayload,
+  SmisHazardousWasteDocument,
+  SmisHazardousWasteDocumentDirection,
+  SmisHazardousWasteDocumentItem,
+  SmisHazardousWasteDocumentOverview,
+  SmisHazardousWasteDocumentSavePayload,
+  SmisHazardousWasteDocumentSearchParams,
+  SmisHazardousWasteDocumentStatus,
+  SmisHazardousWasteEnableStatus,
+  SmisHazardousWasteTagStyle,
+  SmisHazardousWasteWarehouse,
+  SmisHazardousWasteWarehouseOverview,
+  SmisHazardousWasteWarehouseSavePayload,
+  SmisHazardousWasteWarehouseSearchParams,
   SmisPositionSearchParams,
   WorkInstructionOrganization,
   WorkInstructionPosition,

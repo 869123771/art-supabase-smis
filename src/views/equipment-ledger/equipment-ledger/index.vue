@@ -135,7 +135,14 @@
               <ArtSvgIcon icon="ri:upload-cloud-2-line" />上传附件
             </ElButton>
           </div>
-          <div v-loading="attachmentsLoading" class="equipment-ledger-page__attachments">
+          <div class="equipment-ledger-page__attachments" :aria-busy="attachmentsLoading">
+            <ArtOverlayLoading
+              v-if="attachmentsLoading"
+              loading
+              overlay
+              text="正在加载设备附件…"
+              description="正在获取最新附件，请稍候"
+            />
             <article v-for="item in attachments" :key="item.attachmentId">
               <span><ArtSvgIcon icon="ri:file-text-line" /></span>
               <div>
@@ -175,7 +182,14 @@
           </div>
         </ElTabPane>
         <ElTabPane name="inspections" label="检验记录">
-          <div v-loading="inspectionsLoading" class="equipment-ledger-page__inspections">
+          <div class="equipment-ledger-page__inspections" :aria-busy="inspectionsLoading">
+            <ArtOverlayLoading
+              v-if="inspectionsLoading"
+              loading
+              overlay
+              text="正在加载检验记录…"
+              description="正在获取最新记录，请稍候"
+            />
             <article v-for="item in inspections" :key="item.id">
               <span class="equipment-ledger-page__inspection-marker">
                 <ArtSvgIcon icon="ri:shield-check-line" />
@@ -1072,6 +1086,7 @@
     }
 
     &__attachments {
+      position: relative;
       min-height: 220px;
     }
 
@@ -1111,6 +1126,7 @@
     }
 
     &__inspections {
+      position: relative;
       display: grid;
       gap: 12px;
       min-height: 220px;

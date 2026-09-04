@@ -117,7 +117,14 @@
       </ElTabPane>
 
       <ElTabPane label="检验记录" name="inspections" lazy>
-        <div v-loading="inspectionLoading" class="equipment-archive-detail__inspection-list">
+        <div class="equipment-archive-detail__inspection-list" :aria-busy="inspectionLoading">
+          <ArtOverlayLoading
+            v-if="inspectionLoading"
+            loading
+            overlay
+            text="正在加载检验记录…"
+            description="正在获取最新记录，请稍候"
+          />
           <article v-for="item in inspections" :key="item.id">
             <span class="equipment-archive-detail__inspection-icon" aria-hidden="true">
               <ArtSvgIcon icon="ri:shield-check-line" />
@@ -537,6 +544,7 @@
     }
 
     &__inspection-list {
+      position: relative;
       display: grid;
       gap: 12px;
       min-height: 220px;

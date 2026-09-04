@@ -1,0 +1,1 @@
+import{k as e,mt as t,v as n}from"./runtime-core.esm-bundler-B53NdkV7.js";import{t as r}from"./document-page-CGIcbtFR.js";var i=e({name:`SmisHazardousWasteInbound`,__name:`index`,setup(e){return(e,i)=>(t(),n(r,{direction:`inbound`}))}});export{i as default};

@@ -5404,3 +5404,220 @@ export interface SmisRiskInspectionExecutionPayload {
   items: Array<Pick<SmisRiskInspectionTaskItem, 'id' | 'result' | 'remark' | 'attachmentUrls'>>
   complete: boolean
 }
+
+export type SmisHazardousWasteEnableStatus = 'enabled' | 'disabled'
+export type SmisHazardousWasteTagStyle = '' | 'primary' | 'success' | 'info' | 'warning' | 'danger'
+export type SmisHazardousWasteDocumentDirection = 'inbound' | 'outbound'
+export type SmisHazardousWasteDocumentStatus = 'draft' | 'pending' | 'approved' | 'rejected'
+
+export interface SmisHazardousWasteWarehouse {
+  id: string
+  tenantId: string
+  tenantName?: string | null
+  warehouseCode: string
+  warehouseName: string
+  sort: number
+  textColor?: string | null
+  tagStyle: SmisHazardousWasteTagStyle
+  status: SmisHazardousWasteEnableStatus
+  keeperEmployeeId?: string | null
+  keeperEmployeeNo?: string | null
+  keeperEmployeeName?: string | null
+  responsibleEmployeeId?: string | null
+  responsibleEmployeeNo?: string | null
+  responsibleEmployeeName?: string | null
+  regionPath: string[]
+  regionAdcode?: string | null
+  addressDetail?: string | null
+  remark?: string | null
+  createBy?: string | null
+  createTime: string
+  updateBy?: string | null
+  updateTime: string
+}
+
+export interface SmisHazardousWasteWarehouseOverview {
+  total: number
+  enabled: number
+  managed: number
+  regionCount: number
+}
+
+export interface SmisHazardousWasteWarehouseSearchParams {
+  keyword?: string
+  status?: SmisHazardousWasteEnableStatus
+  ids?: string[]
+  purpose?: 'list' | 'export'
+  from?: number
+  to?: number
+}
+
+export interface SmisHazardousWasteWarehouseSavePayload {
+  id?: string
+  warehouseCode: string
+  warehouseName: string
+  sort: number
+  textColor?: string | null
+  tagStyle: SmisHazardousWasteTagStyle
+  status: SmisHazardousWasteEnableStatus
+  keeperEmployeeId?: string | null
+  responsibleEmployeeId?: string | null
+  regionPath: string[]
+  regionAdcode?: string | null
+  addressDetail?: string | null
+  remark?: string | null
+}
+
+export interface SmisHazardousWasteCategory {
+  id: string
+  tenantId: string
+  parentId?: string | null
+  categoryCode: string
+  categoryName: string
+  sort: number
+  textColor?: string | null
+  tagStyle: SmisHazardousWasteTagStyle
+  status: SmisHazardousWasteEnableStatus
+  description?: string | null
+  catalogCount: number
+  children?: SmisHazardousWasteCategory[]
+}
+
+export interface SmisHazardousWasteCategorySavePayload {
+  id?: string
+  parentId?: string | null
+  categoryCode: string
+  categoryName: string
+  sort: number
+  textColor?: string | null
+  tagStyle: SmisHazardousWasteTagStyle
+  status: SmisHazardousWasteEnableStatus
+  description?: string | null
+}
+
+export interface SmisHazardousWasteCatalogItem {
+  id: string
+  tenantId: string
+  categoryId: string
+  category: Pick<SmisHazardousWasteCategory, 'id' | 'categoryCode' | 'categoryName'>
+  wasteCode: string
+  wasteName: string
+  wasteType?: string | null
+  safetyMeasure?: string | null
+  hazardCharacteristic?: string | null
+  unit: string
+  sort: number
+  textColor?: string | null
+  tagStyle: SmisHazardousWasteTagStyle
+  status: SmisHazardousWasteEnableStatus
+  remark?: string | null
+  createBy?: string | null
+  createTime: string
+  updateBy?: string | null
+  updateTime: string
+}
+
+export interface SmisHazardousWasteCatalogOverview {
+  total: number
+  enabled: number
+  categoryCount: number
+  characteristicCount: number
+}
+
+export interface SmisHazardousWasteCatalogSearchParams {
+  keyword?: string
+  status?: SmisHazardousWasteEnableStatus
+  categoryId?: string
+  ids?: string[]
+  purpose?: 'list' | 'export'
+  from?: number
+  to?: number
+}
+
+export interface SmisHazardousWasteCatalogSavePayload {
+  id?: string
+  categoryId: string
+  wasteCode: string
+  wasteName: string
+  wasteType?: string | null
+  safetyMeasure?: string | null
+  hazardCharacteristic?: string | null
+  unit: string
+  sort: number
+  textColor?: string | null
+  tagStyle: SmisHazardousWasteTagStyle
+  status: SmisHazardousWasteEnableStatus
+  remark?: string | null
+}
+
+export interface SmisHazardousWasteDocumentItem {
+  id?: string
+  catalogId: string
+  categoryName: string
+  wasteCode: string
+  wasteName: string
+  hazardCharacteristic?: string | null
+  unit: string
+  quantity: number
+  productionDate: string
+  remark?: string | null
+}
+
+export interface SmisHazardousWasteDocument {
+  id: string
+  tenantId: string
+  direction: SmisHazardousWasteDocumentDirection
+  documentNo: string
+  operationDate: string
+  warehouseId: string
+  warehouseName: string
+  handlerEmployeeId: string
+  handlerEmployeeNo: string
+  handlerEmployeeName: string
+  transferOrderNo?: string | null
+  outboundReason?: string | null
+  description?: string | null
+  status: SmisHazardousWasteDocumentStatus
+  submittedAt?: string | null
+  reviewedAt?: string | null
+  reviewedBy?: string | null
+  reviewRemark?: string | null
+  items: SmisHazardousWasteDocumentItem[]
+  createBy?: string | null
+  createTime: string
+  updateBy?: string | null
+  updateTime: string
+}
+
+export interface SmisHazardousWasteDocumentOverview {
+  total: number
+  draft: number
+  pending: number
+  approved: number
+  rejected: number
+  quantity: number
+}
+
+export interface SmisHazardousWasteDocumentSearchParams {
+  documentNo?: string
+  dateRange?: [string, string]
+  warehouseId?: string
+  handlerKeyword?: string
+  status?: SmisHazardousWasteDocumentStatus
+  purpose?: 'list' | 'export'
+  from?: number
+  to?: number
+}
+
+export interface SmisHazardousWasteDocumentSavePayload {
+  id?: string
+  operationDate: string
+  warehouseId: string
+  handlerEmployeeId: string
+  transferOrderNo?: string | null
+  outboundReason?: string | null
+  description?: string | null
+  items: Array<
+    Pick<SmisHazardousWasteDocumentItem, 'catalogId' | 'quantity' | 'productionDate' | 'remark'>
+  >
+}
