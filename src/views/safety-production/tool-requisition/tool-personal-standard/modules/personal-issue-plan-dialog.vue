@@ -76,15 +76,11 @@
       width: 170,
       formatter: (row) => (
         <ElDatePicker
-          modelValue={row.initialIssueDate}
+          v-model={row.initialIssueDate}
           type="date"
           valueFormat="YYYY-MM-DD"
           placeholder="选择日期"
           class="!w-full"
-          onUpdate:modelValue={(value) => {
-            row.initialIssueDate = String(value || '')
-            row.nextIssueDate ||= row.initialIssueDate
-          }}
         />
       )
     },

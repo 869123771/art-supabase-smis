@@ -70,7 +70,7 @@
 
 <script setup lang="tsx">
   import { uniqBy } from 'lodash-es'
-  import { ElButton, ElDatePicker, ElInput, ElOption, ElSelect, type FormRules } from 'element-plus'
+  import { ElButton, ElDatePicker, ElOption, ElSelect, type FormRules } from 'element-plus'
   import type { ColumnOption } from '@/types'
   import type { EmployeeIntegrationItem } from '@/api/integration/employees'
   import ArtDialog from '@/components/core/dialogs/art-dialog/index.vue'
@@ -287,7 +287,7 @@
           prop: 'workCode',
           label: '项目编码',
           width: 120,
-          formatter: (row) => <ElInput modelValue={row.workCode || '—'} readonly />
+          formatter: (row) => <span>{row.workCode || '—'}</span>
         }
       )
     }
