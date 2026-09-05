@@ -1,0 +1,1 @@
+import{k as e,mt as t,v as n}from"./runtime-core.esm-bundler-B53NdkV7.js";import{t as r}from"./qualification-catalog-page-5Ty-W3eS.js";var i=e({name:`SmisWorkCategory`,__name:`index`,setup(e){return(e,i)=>(t(),n(r,{"catalog-type":`work_category`}))}});export{i as default};

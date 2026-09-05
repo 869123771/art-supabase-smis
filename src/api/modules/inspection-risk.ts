@@ -1,3 +1,4 @@
+import { buildOrIlikeFilter } from '@/utils/supabase/search'
 import { omit } from 'lodash-es'
 import { useSupabase } from '@/hooks'
 import type {
@@ -127,8 +128,8 @@ export async function fetchInspectionItems(
   if (params.status) query = query.eq('status', params.status)
   if (params.ids?.length) query = query.in('id', params.ids)
   if (params.keyword?.trim()) {
-    const keyword = params.keyword.trim().replace(/[,%_().:"\\]/g, ' ')
-    query = query.or(`item_code.ilike.%${keyword}%,inspection_content.ilike.%${keyword}%`)
+    const keyword = params.keyword.trim()
+    query = query.or(buildOrIlikeFilter(['item_code', 'inspection_content'], keyword))
   }
   const result = await responseHandle<SmisInspectionItem[]>(
     () => applyRange(query, params.from, params.to),
@@ -179,8 +180,8 @@ export async function fetchInspectionTypes(
   if (params.tagStyle) query = query.eq('tag_style', params.tagStyle)
   if (params.ids?.length) query = query.in('id', params.ids)
   if (params.keyword?.trim()) {
-    const keyword = params.keyword.trim().replace(/[,%_().:"\\]/g, ' ')
-    query = query.or(`type_code.ilike.%${keyword}%,type_name.ilike.%${keyword}%`)
+    const keyword = params.keyword.trim()
+    query = query.or(buildOrIlikeFilter(['type_code', 'type_name'], keyword))
   }
   const result = await responseHandle<SmisInspectionType[]>(
     () => applyRange(query, params.from, params.to),
@@ -241,7 +242,7 @@ export async function fetchDuplicateConfigurations(
   if (params.status) query = query.eq('status', params.status)
   if (params.ids?.length) query = query.in('id', params.ids)
   if (params.keyword?.trim()) {
-    const keyword = params.keyword.trim().replace(/[,%_().:"\\]/g, ' ')
+    const keyword = params.keyword.trim()
     query = query.ilike('content_item', `%${keyword}%`)
   }
   const result = await responseHandle<SmisDuplicateConfiguration[]>(
@@ -373,9 +374,7 @@ export async function fetchRiskItems(
   if (params.ids?.length) query = query.in('id', params.ids)
   if (params.keyword?.trim()) {
     const keyword = params.keyword.trim().replace(/[,%_().:"\\]/g, ' ')
-    query = query.or(
-      `item_no.ilike.%${keyword}%,risk_point.ilike.%${keyword}%,hazard_factor.ilike.%${keyword}%`
-    )
+    query = query.or(buildOrIlikeFilter(['item_no', 'risk_point', 'hazard_factor'], keyword))
   }
   const result = await responseHandle<RiskItemRow[]>(
     () => applyRange(query, params.from, params.to),
@@ -445,7 +444,7 @@ export async function fetchRiskControlMeasures(riskItemId: string) {
           `
             *,
             positions:smis_risk_control_measure_position(
-              *, position:hr_position(id, position_code, position_name, organization_id)
+              *, position:mdm_position(id, position_code, position_name, organization_id)
             )
           `
         )

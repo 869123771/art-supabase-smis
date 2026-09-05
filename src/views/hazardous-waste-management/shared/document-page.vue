@@ -1,5 +1,5 @@
 <template>
-  <ArtPermissionGuard :permission="`${menuName}:View`" :resource-name="businessName">
+  <ArtPermissionGuard :permission="permissions.view" :resource-name="businessName">
     <div class="hazardous-document-page business-workspace-page art-full-height">
       <BusinessWorkspaceHeader
         :eyebrow="direction === 'inbound' ? 'HAZARDOUS WASTE RECEIPT' : 'HAZARDOUS WASTE DISPATCH'"
@@ -73,12 +73,23 @@
     type SmisHazardousWasteWarehouse
   } from '@smis/api'
   import DocumentDialog, { type DocumentDialogOpenData } from './document-dialog.vue'
-  const props = defineProps<{ direction: SmisHazardousWasteDocumentDirection }>()
+  interface DocumentPermissions {
+    view: string
+    add: string
+    edit: string
+    delete: string
+    export: string
+    submit: string
+    review: string
+  }
+
+  const props = defineProps<{
+    direction: SmisHazardousWasteDocumentDirection
+    permissions: DocumentPermissions
+  }>()
   const direction = toRef(props, 'direction')
+  const permissions = toRef(props, 'permissions')
   const businessName = computed(() => (direction.value === 'inbound' ? '危废入库' : '危废出库'))
-  const menuName = computed(
-    () => `SmisHazardousWaste${direction.value === 'inbound' ? 'Inbound' : 'Outbound'}`
-  )
   type TableParams = SmisHazardousWasteDocumentSearchParams &
     Pick<Api.Common.PaginationParams, 'current' | 'size'>
   interface DialogExpose {
@@ -193,9 +204,9 @@
     { key: 'description', title: '说明' }
   ]
   const headerActions = computed<ArtTableQueryHeaderAction[]>(() => [
-    { permission: `${menuName.value}:Add`, type: 'add', label: '新增', onClick: () => open() },
+    { permission: permissions.value.add, type: 'add', label: '新增', onClick: () => open() },
     {
-      permission: `${menuName.value}:Edit`,
+      permission: permissions.value.edit,
       key: 'edit',
       label: '编辑',
       icon: 'ri:edit-line',
@@ -205,7 +216,7 @@
       onClick: ({ selectedRows }) => open(selectedRows[0] as SmisHazardousWasteDocument)
     },
     {
-      permission: `${menuName.value}:Delete`,
+      permission: permissions.value.delete,
       type: 'delete',
       disabled: ({ selectedRows }) =>
         selectedRows.some((row) => !editable(row as SmisHazardousWasteDocument)),
@@ -220,7 +231,7 @@
       }
     },
     {
-      permission: `${menuName.value}:Export`,
+      permission: permissions.value.export,
       type: 'export',
       exportFilename: businessName.value,
       exportSheetName: businessName.value,
@@ -355,7 +366,7 @@
         <div class="hazardous-document-page__actions">
           {editable(row) && (
             <ArtButtonTable
-              permission={`${menuName.value}:Submit`}
+              permission={permissions.value.submit}
               icon="ri:send-plane-line"
               label="提交"
               onClick={() => void handleSubmit(row)}
@@ -363,7 +374,7 @@
           )}{' '}
           {row.status === 'pending' && (
             <ArtButtonTable
-              permission={`${menuName.value}:Review`}
+              permission={permissions.value.review}
               icon="ri:checkbox-circle-line"
               label="通过"
               onClick={() => void handleReview(row, true)}
@@ -377,13 +388,13 @@
                       key: 'edit',
                       label: '编辑',
                       icon: 'ri:edit-line',
-                      auth: `${menuName.value}:Edit`
+                      auth: permissions.value.edit
                     },
                     {
                       key: 'delete',
                       label: '删除',
                       icon: 'ri:delete-bin-line',
-                      auth: `${menuName.value}:Delete`,
+                      auth: permissions.value.delete,
                       color: 'var(--el-color-danger)'
                     }
                   ]
@@ -394,7 +405,7 @@
                       key: 'reject',
                       label: '审核退回',
                       icon: 'ri:close-circle-line',
-                      auth: `${menuName.value}:Review`,
+                      auth: permissions.value.review,
                       color: 'var(--el-color-danger)'
                     }
                   ]

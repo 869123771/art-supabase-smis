@@ -1,3 +1,4 @@
+import { buildOrIlikeFilter } from '@/utils/supabase/search'
 import { useSupabase } from '@/hooks'
 import { withRequestOptions } from '@/api/providers/supabase/query'
 import type { ApiRequestOptions } from '@/types/api/request'
@@ -67,9 +68,9 @@ export async function fetchPositionRiskControlList(
     query = query.eq('is_special_equipment', params.isSpecialEquipment === 'true')
   }
   if (params.keyword?.trim()) {
-    const keyword = params.keyword.trim().replace(/[,%_().:"\\]/g, ' ')
+    const keyword = params.keyword.trim()
     query = query.or(
-      `hazard_factor.ilike.%${keyword}%,control_measure.ilike.%${keyword}%,standard_basis.ilike.%${keyword}%`
+      buildOrIlikeFilter(['hazard_factor', 'control_measure', 'standard_basis'], keyword)
     )
   }
 
