@@ -63,6 +63,7 @@
           @update:selected-data="handleCatalogChange"
       /></template>
       <ArtTable
+        ref="detailTableRef"
         :data="form.model.items"
         :columns="detailColumns"
         :pagination="false"
@@ -83,6 +84,7 @@
   import type { ArtDialogExpose } from '@/components/core/dialogs/art-dialog/types'
   import ArtForm, { type FormItem } from '@/components/core/forms/art-form/index.vue'
   import ArtTable from '@/components/core/tables/art-table/index.vue'
+  import type { ArtTableExpose } from '@/components/core/tables/art-table/index.vue'
   import ArtTableMultipleSelect from '@/components/core/forms/art-data-select/table-multiple.vue'
   import ArtTableSingleSelect from '@/components/core/forms/art-data-select/table-single.vue'
   import type {
@@ -124,6 +126,7 @@
   const businessName = computed(() => (direction.value === 'inbound' ? '危废入库' : '危废出库'))
   const dialogRef = ref<ArtDialogExpose<DocumentDialogOpenData>>()
   const formRef = ref<{ validate: () => Promise<boolean>; clearValidate: () => void }>()
+  const detailTableRef = ref<ArtTableExpose>()
   const userStore = useUserStore()
   const { getUserInfo } = storeToRefs(userStore)
   const initial = (): FormModel => ({
@@ -231,6 +234,10 @@
       label: '数量',
       width: 150,
       required: true,
+      rules: {
+        validator: ({ value }) => Number(value) > 0,
+        message: ({ rowIndex }) => `第 ${rowIndex + 1} 行危废数量必须大于 0`
+      },
       formatter: (row) => (
         <ElInputNumber
           v-model={row.quantity}
@@ -402,8 +409,9 @@
         ElMessage.warning('请至少添加一条危废明细')
         return false
       }
-      if (model.items.some((item) => !(item.quantity > 0) || !item.productionDate)) {
-        ElMessage.warning('请完整填写明细数量和生产日期')
+      const tableValidation = await detailTableRef.value?.validate()
+      if (tableValidation?.valid === false) {
+        ElMessage.warning(tableValidation.firstError?.message || '请完整填写危废明细')
         return false
       }
       await saveHazardousWasteDocument(direction.value, {

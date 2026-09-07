@@ -253,6 +253,7 @@
                     <span>{{ selectedQuestions.length }} 题 · {{ totalScore }} 分</span>
                   </header>
                   <ArtTable
+                    ref="selectedQuestionTableRef"
                     :data="selectedQuestions"
                     :columns="selectedQuestionColumns"
                     :pagination="false"
@@ -451,7 +452,7 @@
   import ArtDialog from '@/components/core/dialogs/art-dialog/index.vue'
   import type { ArtDialogExpose } from '@/components/core/dialogs/art-dialog/types'
   import ArtForm, { type FormItem } from '@/components/core/forms/art-form/index.vue'
-  import ArtTable from '@/components/core/tables/art-table/index.vue'
+  import ArtTable, { type ArtTableExpose } from '@/components/core/tables/art-table/index.vue'
   import BusinessWorkspaceHeader, {
     type BusinessWorkspaceMetric
   } from '@/components/business/business-workspace-header/index.vue'
@@ -495,6 +496,7 @@
   const paperTableRef = ref<ArtTableQueryExpose>()
   const recordTableRef = ref<ArtTableQueryExpose>()
   const paperDialogRef = ref<ArtDialogExpose>()
+  const selectedQuestionTableRef = ref<ArtTableExpose>()
   const detailDialogRef = ref<ArtDialogExpose>()
   const sessionDialogRef = ref<ArtDialogExpose>()
   const paperFormRef = ref<InstanceType<typeof ArtForm>>()
@@ -573,6 +575,13 @@
       label: '分值',
       width: 124,
       required: true,
+      requiredMessage: ({ rowIndex }) => `第 ${rowIndex + 1} 道试题分值必须大于 0`,
+      rules: [
+        {
+          validator: ({ value }) => Number(value) > 0,
+          message: ({ rowIndex }) => `第 ${rowIndex + 1} 道试题分值必须大于 0`
+        }
+      ],
       formatter: (row) => (
         <ElInputNumber
           v-model={row.score}
@@ -896,6 +905,8 @@
     employeeSelection.value = []
     selectedQuestions.value = []
     selectedQuestionIds.value = []
+    await nextTick()
+    selectedQuestionTableRef.value?.clearValidate()
     if (row) {
       const value = await fetchExamDetail(row.id, null, true)
       selectedQuestions.value = (value?.questions ?? []).map((item) => ({
@@ -952,6 +963,11 @@
       }
       if (!selectedQuestions.value.length) {
         ElMessage.warning('请至少选择一道试题后再保存')
+        return
+      }
+      const questionValidation = await selectedQuestionTableRef.value?.validate()
+      if (questionValidation && !questionValidation.valid) {
+        ElMessage.warning(questionValidation.firstError?.message || '请完善试题分值')
         return
       }
       if (totalScore.value <= 0) {

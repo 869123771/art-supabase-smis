@@ -81,6 +81,7 @@
         </ArtTableMultipleSelect>
       </template>
       <ArtTable
+        ref="detailTableRef"
         :data="form.model.items"
         :columns="detailColumns"
         :pagination="false"
@@ -101,6 +102,7 @@
   import ArtForm, { type FormItem } from '@/components/core/forms/art-form/index.vue'
   import ArtTableMultipleSelect from '@/components/core/forms/art-data-select/table-multiple.vue'
   import ArtTableSingleSelect from '@/components/core/forms/art-data-select/table-single.vue'
+  import type { ArtTableExpose } from '@/components/core/tables/art-table/index.vue'
   import type {
     DataSelectColumn,
     DataSelectFetchParams,
@@ -147,6 +149,7 @@
   const emit = defineEmits<{ success: [] }>()
   const dialogRef = ref<ArtDialogExpose<OpenData>>()
   const formRef = ref<{ validate: () => Promise<boolean>; clearValidate: () => void }>()
+  const detailTableRef = ref<ArtTableExpose>()
   const userStore = useUserStore()
   const { getUserInfo, getDictMap } = storeToRefs(userStore)
 
@@ -224,6 +227,13 @@
       prop: 'issueQuantity',
       label: '发放数量',
       required: true,
+      requiredMessage: ({ rowIndex }) => `第 ${rowIndex + 1} 行发放数量必须大于 0`,
+      rules: [
+        {
+          validator: ({ value }) => Number(value) > 0,
+          message: ({ rowIndex }) => `第 ${rowIndex + 1} 行发放数量必须大于 0`
+        }
+      ],
       width: 160,
       formatter: (row) => (
         <ElInputNumber
@@ -385,6 +395,7 @@
     selection.materials = []
     await nextTick()
     formRef.value?.clearValidate()
+    detailTableRef.value?.clearValidate()
   }
 
   const initializeFromRecord = (row: SmisToolIssuanceRecord, copy: boolean): void => {
@@ -427,6 +438,11 @@
       await formRef.value?.validate()
       if (!form.model.items.length) {
         ElMessage.warning('请至少添加一条工器具明细')
+        return false
+      }
+      const tableValidation = await detailTableRef.value?.validate()
+      if (tableValidation && !tableValidation.valid) {
+        ElMessage.warning(tableValidation.firstError?.message || '请完善工器具明细')
         return false
       }
       await saveToolIssuanceRecord({

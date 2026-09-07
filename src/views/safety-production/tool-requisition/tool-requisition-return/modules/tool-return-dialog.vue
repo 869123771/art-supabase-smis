@@ -53,6 +53,7 @@
 
         <ArtTable
           v-if="form.model.items.length"
+          ref="detailTableRef"
           :data="form.model.items"
           :columns="detailColumns"
           :pagination="false"
@@ -79,6 +80,7 @@
   import ArtSectionCard from '@/components/core/surfaces/art-section-card/index.vue'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
   import ArtTable from '@/components/core/tables/art-table/index.vue'
+  import type { ArtTableExpose } from '@/components/core/tables/art-table/index.vue'
   import SmisDataSourceEmptyActions from '@smis/views/components/smis-data-source-empty-actions.vue'
   import type { ColumnOption } from '@/types'
   import {
@@ -112,6 +114,7 @@
   const emit = defineEmits<{ success: [] }>()
   const dialogRef = ref<ArtDialogExpose<ToolReturnDialogOpenData>>()
   const formRef = ref<{ validate: () => Promise<boolean>; clearValidate: () => void }>()
+  const detailTableRef = ref<ArtTableExpose>()
   const openMode = ref<ToolReturnDialogOpenData['mode']>('add')
   const createInitialForm = (): FormModel => ({
     id: undefined,
@@ -171,6 +174,13 @@
       prop: 'returnQuantity',
       label: '本次归还数量',
       required: true,
+      rules: {
+        validator: ({ value, row }) => {
+          const quantity = Number(value)
+          return quantity > 0 && quantity <= sourceMaximum(row.sourceIssuanceItemId)
+        },
+        message: ({ rowIndex }) => `第 ${rowIndex + 1} 行归还数量应大于 0 且不能超过可归还数量`
+      },
       width: 172,
       formatter: (row) => (
         <ElInputNumber
@@ -317,8 +327,9 @@
         ElMessage.warning('请至少选择一条待归还工器具')
         return false
       }
-      if (form.model.items.some((item) => !(Number(item.returnQuantity) > 0))) {
-        ElMessage.warning('归还数量必须大于 0')
+      const tableValidation = await detailTableRef.value?.validate()
+      if (tableValidation?.valid === false) {
+        ElMessage.warning(tableValidation.firstError?.message || '请完整填写归还明细')
         return false
       }
       const result = await saveToolReturn(
@@ -360,6 +371,10 @@
       subtitle: '归还单号按月自动生成 4 位流水码，源单关系由系统保留',
       confirmText: data.mode === 'return' ? '生成并提交审批' : '保存草稿',
       contentMaxHeight: '78vh',
+      onOpen: () => {
+        formRef.value?.clearValidate()
+        detailTableRef.value?.clearValidate()
+      },
       onConfirm: handleSubmit
     })
   }

@@ -12,6 +12,7 @@
 
     <ArtTable
       v-if="rows.length"
+      ref="tableRef"
       :data="rows"
       :columns="columns"
       :pagination="false"
@@ -35,7 +36,10 @@
   import ArtEmployeeSelect from '@/components/business/art-employee-select/index.vue'
   import ArtEmptyState from '@/components/core/feedback/art-empty-state/index.vue'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
-  import ArtTable from '@/components/core/tables/art-table/index.vue'
+  import ArtTable, {
+    type ArtTableExpose,
+    type ArtTableValidationResult
+  } from '@/components/core/tables/art-table/index.vue'
   import {
     fetchAccidentEmployeeCandidates,
     type SmisAccidentEmployee,
@@ -53,6 +57,7 @@
     'update:modelValue': [value: SmisAccidentPreventionMeasure[]]
   }>()
   const rows = ref<EditorRow[]>([])
+  const tableRef = ref<ArtTableExpose>()
   let localSequence = 0
   const createLocalKey = (): string => `measure-${Date.now()}-${localSequence++}`
   const toModelRows = (): SmisAccidentPreventionMeasure[] =>
@@ -99,6 +104,7 @@
       prop: 'plannedMeasure',
       label: '计划防范措施',
       required: true,
+      requiredMessage: ({ rowIndex }) => `第 ${rowIndex + 1} 行计划防范措施不能为空`,
       minWidth: 280,
       showOverflowTooltip: false,
       formatter: (row) => (
@@ -164,6 +170,12 @@
       )
     }
   ]
+
+  const validate = async (): Promise<ArtTableValidationResult> =>
+    (await tableRef.value?.validate()) ?? { valid: true, errors: [] }
+  const clearValidate = (): void => tableRef.value?.clearValidate()
+
+  defineExpose({ validate, clearValidate })
 </script>
 
 <style scoped lang="scss">

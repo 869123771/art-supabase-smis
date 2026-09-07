@@ -183,7 +183,7 @@
           title="盲板抽堵配置"
           subtitle="按现场隔离方案逐块登记盲板工况、规格和标识"
         >
-          <SpecialOperationBlindPlateItems v-model="blindPlateItems" />
+          <SpecialOperationBlindPlateItems ref="blindPlateItemsRef" v-model="blindPlateItems" />
         </ArtSectionCard>
 
         <ArtSectionCard title="责任与交底" subtitle="人员均来自当前租户员工花名册">
@@ -446,6 +446,7 @@
   const { getDictMap } = storeToRefs(userStore)
   const dialogRef = ref<ArtDialogExpose<SpecialOperationPermitDialogOpenData>>()
   const formRef = ref<InstanceType<typeof ArtForm>>()
+  const blindPlateItemsRef = ref<InstanceType<typeof SpecialOperationBlindPlateItems>>()
   const loading = ref(false)
   const submitting = ref(false)
   const submitMode = ref<'draft' | 'submit'>('draft')
@@ -761,11 +762,9 @@
           ElMessage.warning('请至少添加一项盲板明细')
           return
         }
-        const incompleteIndex = blindPlateItems.value.findIndex(
-          (item) => !item.equipmentPipelineName.trim() || !item.specification.trim()
-        )
-        if (incompleteIndex >= 0) {
-          ElMessage.warning(`请完善第 ${incompleteIndex + 1} 项盲板的设备 / 管线名称和规格`)
+        const tableValidation = await blindPlateItemsRef.value?.validate()
+        if (tableValidation && !tableValidation.valid) {
+          ElMessage.warning(tableValidation.firstError?.message || '请完善盲板明细')
           return
         }
       }

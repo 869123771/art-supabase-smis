@@ -17,6 +17,7 @@
       empty-description="请先为该员工生成工器具个人标准。"
     >
       <ArtTable
+        ref="planTableRef"
         :data="form.items"
         :columns="planColumns"
         :pagination="false"
@@ -33,6 +34,7 @@
   import type { ColumnOption } from '@/types'
   import { useUserStore } from '@/store/modules/user'
   import type { ArtDialogExpose } from '@/components/core/dialogs/art-dialog/types'
+  import type { ArtTableExpose } from '@/components/core/tables/art-table/index.vue'
   import {
     fetchToolPersonalStandardItems,
     saveToolPersonalIssuePlan,
@@ -47,6 +49,7 @@
 
   const emit = defineEmits<{ success: [] }>()
   const dialogRef = ref<ArtDialogExpose<SmisToolPersonalStandard>>()
+  const planTableRef = ref<ArtTableExpose>()
   const employee = shallowRef<SmisToolPersonalStandard>()
   const loading = ref(false)
   const form = reactive<{ items: PlanItem[] }>({ items: [] })
@@ -134,8 +137,9 @@
       ElMessage.warning('请先生成工器具个人标准')
       return false
     }
-    if (form.items.some((item) => !item.initialIssueDate || !item.nextIssueDate)) {
-      ElMessage.warning('请完整填写首次领用时间和下次领用日期')
+    const tableValidation = await planTableRef.value?.validate()
+    if (tableValidation?.valid === false) {
+      ElMessage.warning(tableValidation.firstError?.message || '请完整填写个人领用计划')
       return false
     }
     try {

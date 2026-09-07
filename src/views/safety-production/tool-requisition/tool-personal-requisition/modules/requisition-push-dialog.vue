@@ -59,6 +59,7 @@
 
     <ArtSectionCard title="本次发放明细" subtitle="可按实发情况调整发放数量，确认后一次过账。">
       <ArtTable
+        ref="detailTableRef"
         :data="rows"
         :columns="detailColumns"
         :pagination="false"
@@ -76,6 +77,7 @@
   import ArtEmployeeSelect from '@/components/business/art-employee-select/index.vue'
   import ArtForm, { type FormItem } from '@/components/core/forms/art-form/index.vue'
   import ArtTableSingleSelect from '@/components/core/forms/art-data-select/table-single.vue'
+  import type { ArtTableExpose } from '@/components/core/tables/art-table/index.vue'
   import type {
     DataSelectColumn,
     DataSelectFetchParams,
@@ -101,6 +103,7 @@
   const emit = defineEmits<{ success: [] }>()
   const dialogRef = ref<ArtDialogExpose<SmisToolPersonalRequisitionItem[]>>()
   const formRef = ref<{ validate: () => Promise<boolean>; clearValidate: () => void }>()
+  const detailTableRef = ref<ArtTableExpose>()
   const rows = ref<SmisToolPersonalRequisitionItem[]>([])
   const userStore = useUserStore()
   const { getUserInfo } = storeToRefs(userStore)
@@ -139,6 +142,13 @@
       prop: 'requestedQuantity',
       label: '发放数量',
       required: true,
+      requiredMessage: ({ rowIndex }) => `第 ${rowIndex + 1} 行发放数量必须大于 0`,
+      rules: [
+        {
+          validator: ({ value }) => Number(value) > 0,
+          message: ({ rowIndex }) => `第 ${rowIndex + 1} 行发放数量必须大于 0`
+        }
+      ],
       width: 160,
       formatter: (row) => (
         <ElInputNumber
@@ -201,13 +211,15 @@
     rows.value = []
     await nextTick()
     formRef.value?.clearValidate()
+    detailTableRef.value?.clearValidate()
   }
 
   const handleSubmit = async (): Promise<boolean> => {
     try {
       await formRef.value?.validate()
-      if (rows.value.some((row) => !(Number(row.requestedQuantity) > 0))) {
-        ElMessage.warning('发放数量必须大于 0')
+      const tableValidation = await detailTableRef.value?.validate()
+      if (tableValidation && !tableValidation.valid) {
+        ElMessage.warning(tableValidation.firstError?.message || '请完善发放明细')
         return false
       }
       await pushToolRequisitionItems(

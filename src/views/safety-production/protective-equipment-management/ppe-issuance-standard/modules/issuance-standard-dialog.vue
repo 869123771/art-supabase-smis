@@ -95,6 +95,7 @@
           </ArtTableMultipleSelect>
         </template>
         <ArtTable
+          ref="detailTableRef"
           :data="form.details"
           :columns="detailColumns"
           :pagination="false"
@@ -128,7 +129,7 @@
   } from '@/components/core/forms/art-data-select/types'
   import ArtSectionCard from '@/components/core/surfaces/art-section-card/index.vue'
   import ArtForm, { type FormItem } from '@/components/core/forms/art-form/index.vue'
-  import ArtTable from '@/components/core/tables/art-table/index.vue'
+  import ArtTable, { type ArtTableExpose } from '@/components/core/tables/art-table/index.vue'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
   import SmisDataSourceEmptyActions from '@smis/views/components/smis-data-source-empty-actions.vue'
   import type { ColumnOption } from '@/types'
@@ -156,6 +157,7 @@
   const userStore = useUserStore()
   const dialogRef = ref<ArtDialogExpose<IssuanceStandardDialogOpenData>>()
   const formRef = ref<{ validate: () => Promise<boolean>; clearValidate: () => void }>()
+  const detailTableRef = ref<ArtTableExpose>()
   const numberRule = useDocumentNumberRule('smis.ppe_issuance_standard')
   const organizationTree = ref<SmisPpeScopeOption[]>([])
   const selectedPositions = ref<SmisPpeScopeOption[]>([])
@@ -297,6 +299,13 @@
       prop: 'quotaQuantity',
       label: '定额数量',
       required: true,
+      requiredMessage: ({ rowIndex }) => `第 ${rowIndex + 1} 行定额数量必须大于 0`,
+      rules: [
+        {
+          validator: ({ value }) => Number(value) > 0,
+          message: ({ rowIndex }) => `第 ${rowIndex + 1} 行定额数量必须大于 0`
+        }
+      ],
       width: 150,
       formatter: (row) => (
         <ElInputNumber v-model={row.quotaQuantity} min={0.001} precision={3} class="!w-full" />
@@ -318,6 +327,16 @@
       prop: 'issuanceFrequency',
       label: '发放频次',
       required: true,
+      requiredMessage: ({ rowIndex }) => `第 ${rowIndex + 1} 行发放频次必须为 1 至 9999`,
+      rules: [
+        {
+          validator: ({ value }) => {
+            const frequency = Number(value)
+            return Number.isInteger(frequency) && frequency >= 1 && frequency <= 9999
+          },
+          message: ({ rowIndex }) => `第 ${rowIndex + 1} 行发放频次必须为 1 至 9999`
+        }
+      ],
       width: 130,
       formatter: (row) => (
         <ElInputNumber
@@ -414,6 +433,7 @@
     selectedMaterialIds.value = []
     await nextTick()
     formRef.value?.clearValidate()
+    detailTableRef.value?.clearValidate()
   }
   const submit = async () => {
     try {
@@ -424,6 +444,11 @@
       }
       if (!form.details.length) {
         ElMessage.warning('请至少添加一条防护用品明细')
+        return false
+      }
+      const tableValidation = await detailTableRef.value?.validate()
+      if (tableValidation && !tableValidation.valid) {
+        ElMessage.warning(tableValidation.firstError?.message || '请完善防护用品明细')
         return false
       }
       await savePpeIssuanceStandard({

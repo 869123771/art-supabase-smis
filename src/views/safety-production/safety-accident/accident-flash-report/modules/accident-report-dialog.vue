@@ -47,7 +47,7 @@
           />
         </template>
         <template #measures>
-          <AccidentMeasuresEditor v-model="form.measures" />
+          <AccidentMeasuresEditor ref="measuresEditorRef" v-model="form.measures" />
         </template>
         <template #people>
           <AccidentPeopleEditor v-model="form.people" />
@@ -117,6 +117,7 @@
   const { getDictMap } = storeToRefs(userStore)
   const dialogRef = ref<ArtDialogExpose<AccidentReportDialogOpenData>>()
   const formRef = ref<FormExpose>()
+  const measuresEditorRef = ref<InstanceType<typeof AccidentMeasuresEditor>>()
   const numberRule = useDocumentNumberRule('smis.accident_report')
   const organizations = shallowRef<SmisTreeOrganization[]>([])
   const reporterSelection = shallowRef<EmployeeIntegrationItem[]>([])
@@ -249,8 +250,11 @@
   const handleSubmit = async (): Promise<boolean> => {
     try {
       await formRef.value?.validate()
-      if (form.measures.some((measure) => !measure.plannedMeasure.trim())) {
-        ElMessage.warning('请补充完整计划防范措施，或删除空白措施')
+      const measuresValidation = await measuresEditorRef.value?.validate()
+      if (measuresValidation && !measuresValidation.valid) {
+        ElMessage.warning(
+          measuresValidation.firstError?.message || '请补充完整计划防范措施，或删除空白措施'
+        )
         return false
       }
       await saveAccidentReport({
@@ -321,6 +325,7 @@
     }
     await nextTick()
     formRef.value?.clearValidate()
+    measuresEditorRef.value?.clearValidate()
     await dialogRef.value?.handleOpen(data, {
       title: data.row ? '编辑事故快报' : '新增事故快报',
       subtitle: '记录事故事实、影响人员、分析判定与防范措施',

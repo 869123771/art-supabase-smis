@@ -52,6 +52,7 @@
           ></template
         >
         <ArtTable
+          ref="itemTableRef"
           :data="form.items"
           :columns="itemColumns"
           :pagination="false"
@@ -82,6 +83,7 @@
   import ArtSectionCard from '@/components/core/surfaces/art-section-card/index.vue'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
   import ArtTable from '@/components/core/tables/art-table/index.vue'
+  import type { ArtTableExpose } from '@/components/core/tables/art-table/index.vue'
   import { useUserStore } from '@/store/modules/user'
   import {
     fetchPersonnelCertificateEmployeeDetail,
@@ -145,6 +147,7 @@
   const { getDictMap } = storeToRefs(userStore)
   const dialogRef = ref<ArtDialogExpose<PersonnelCertificateDialogOpenData>>()
   const formRef = ref<ArtFormExpose>()
+  const itemTableRef = ref<ArtTableExpose>()
   const employeeSelection = ref<PersonnelCertificateEmployee[]>([])
   const catalogOptions = ref<SmisQualificationCatalog[]>([])
   const isEditing = ref(false)
@@ -312,6 +315,10 @@
         label: '有效日期',
         width: 160,
         required: true,
+        rules: {
+          validator: ({ value, row }) => !value || !row.approvalDate || value >= row.approvalDate,
+          message: ({ rowIndex }) => `第 ${rowIndex + 1} 行有效日期不能早于批准日期`
+        },
         formatter: (row) => (
           <ElDatePicker
             v-model={row.effectiveDate}
@@ -568,21 +575,14 @@
     if (value) void loadEmployeeDetail(value)
   }
 
-  const validateItems = (): boolean => {
+  const validateItems = async (): Promise<boolean> => {
     if (!form.items.length) {
       ElMessage.warning('请至少新增一个作业项目')
       return false
     }
-    const invalid = form.items.some(
-      (item) =>
-        !item.catalogId ||
-        (categoryMeta.value.showWorkCategory && !item.workCategoryId) ||
-        !item.approvalDate ||
-        !item.effectiveDate ||
-        item.effectiveDate < item.approvalDate
-    )
-    if (invalid) {
-      ElMessage.warning('请完整填写项目、批准日期和有效日期，且有效日期不能早于批准日期')
+    const tableValidation = await itemTableRef.value?.validate()
+    if (tableValidation?.valid === false) {
+      ElMessage.warning(tableValidation.firstError?.message || '请完整填写证件项目')
       return false
     }
     if (uniqBy(form.items, 'catalogId').length !== form.items.length) {
@@ -594,7 +594,7 @@
   const handleSubmit = async (): Promise<boolean> => {
     try {
       await formRef.value?.validate()
-      if (!validateItems()) return false
+      if (!(await validateItems())) return false
       const extraFields = (categoryMeta.value.extraFields ?? []).reduce<Record<string, string>>(
         (result, field) => {
           const value = form.extraFields[field.key]?.trim()

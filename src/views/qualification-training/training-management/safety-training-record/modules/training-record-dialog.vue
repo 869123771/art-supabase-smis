@@ -225,6 +225,7 @@
                 </ElButton>
               </header>
               <ArtTable
+                ref="attendanceTableRef"
                 :data="form.participants"
                 :columns="attendanceColumns"
                 :pagination="false"
@@ -298,7 +299,7 @@
   import ArtUploadFile from '@/components/core/forms/art-upload-file/index.vue'
   import ArtEmptyState from '@/components/core/feedback/art-empty-state/index.vue'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
-  import ArtTable from '@/components/core/tables/art-table/index.vue'
+  import ArtTable, { type ArtTableExpose } from '@/components/core/tables/art-table/index.vue'
   import ArtSectionCard from '@/components/core/surfaces/art-section-card/index.vue'
   import SmisDataSourceEmptyActions from '@smis/views/components/smis-data-source-empty-actions.vue'
   import { useDocumentNumberRule } from '@/hooks/core/useDocumentNumberRule'
@@ -348,6 +349,7 @@
   const { getDictMap } = storeToRefs(userStore)
   const dialogRef = ref<ArtDialogExpose<TrainingRecordDialogOpenData>>()
   const formRef = ref<InstanceType<typeof ArtForm>>()
+  const attendanceTableRef = ref<ArtTableExpose>()
   const planOptions = shallowRef<SmisSafetyTrainingPlanOption[]>([])
   const detailRecord = shallowRef<SmisSafetyTrainingRecord | null>(null)
   const readonly = ref(false)
@@ -551,6 +553,13 @@
       label: '签到信息',
       minWidth: 340,
       required: true,
+      requiredMessage: ({ rowIndex }) => `第 ${rowIndex + 1} 行参训人员尚未完成签到状态`,
+      rules: [
+        {
+          validator: ({ value }) => value !== 'pending',
+          message: ({ rowIndex }) => `第 ${rowIndex + 1} 行参训人员尚未完成签到状态`
+        }
+      ],
       formatter: (row) => (
         <div class="training-record-dialog__field-stack">
           <label class="training-record-dialog__inline-field">
@@ -782,9 +791,14 @@
         ElMessage.warning('实际结束时间不能早于开始时间')
         return
       }
-      if (submit && form.participants.some((item) => item.attendanceStatus === 'pending')) {
-        ElMessage.warning('归档前请完成全部参训人员的签到状态')
-        return
+      if (submit) {
+        const attendanceValidation = await attendanceTableRef.value?.validate()
+        if (attendanceValidation && !attendanceValidation.valid) {
+          ElMessage.warning(
+            attendanceValidation.firstError?.message || '归档前请完成全部参训人员的签到状态'
+          )
+          return
+        }
       }
       if (submit) {
         await confirm('归档后记录将锁定，不能再编辑签到、成绩和归档材料。请确认内容已核对完整。', {
@@ -836,6 +850,7 @@
     }
   }
   const handleOpen = async (data: TrainingRecordDialogOpenData): Promise<void> => {
+    attendanceTableRef.value?.clearValidate()
     initialize(data)
     await dialogRef.value?.handleOpen(data, {
       title: data.readonly ? '查看培训记录与签到' : data.row ? '编辑培训记录' : '新增培训记录',

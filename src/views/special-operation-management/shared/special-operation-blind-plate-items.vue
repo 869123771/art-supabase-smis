@@ -13,96 +13,27 @@
 
     <div class="blind-plate-items__table-scroll">
       <ArtTable
+        ref="tableRef"
         :data="modelValue"
+        :columns="columns"
         :pagination="false"
         row-key="id"
         table-layout="fixed"
         empty-text="尚未添加盲板明细"
-      >
-        <ElTableColumn type="index" label="序号" width="62" fixed="left" />
-        <ElTableColumn label="设备 / 管线名称" min-width="180">
-          <template #default="{ row, $index }">
-            <ElInput
-              :model-value="row.equipmentPipelineName"
-              maxlength="120"
-              placeholder="必填"
-              @update:model-value="updateItem($index, 'equipmentPipelineName', $event)"
-            />
-          </template>
-        </ElTableColumn>
-        <ElTableColumn label="介质" min-width="120">
-          <template #default="{ row, $index }">
-            <ElInput
-              :model-value="row.medium"
-              maxlength="80"
-              placeholder="介质名称"
-              @update:model-value="updateItem($index, 'medium', $event)"
-            />
-          </template>
-        </ElTableColumn>
-        <ElTableColumn label="温度（℃）" min-width="112">
-          <template #default="{ row, $index }">
-            <ElInput
-              :model-value="row.temperature"
-              maxlength="24"
-              placeholder="例如 35"
-              @update:model-value="updateItem($index, 'temperature', $event)"
-            />
-          </template>
-        </ElTableColumn>
-        <ElTableColumn label="压力（MPa）" min-width="118">
-          <template #default="{ row, $index }">
-            <ElInput
-              :model-value="row.pressure"
-              maxlength="24"
-              placeholder="例如 0.6"
-              @update:model-value="updateItem($index, 'pressure', $event)"
-            />
-          </template>
-        </ElTableColumn>
-        <ElTableColumn label="盲板材质" min-width="120">
-          <template #default="{ row, $index }">
-            <ElInput
-              :model-value="row.material"
-              maxlength="80"
-              placeholder="材质"
-              @update:model-value="updateItem($index, 'material', $event)"
-            />
-          </template>
-        </ElTableColumn>
-        <ElTableColumn label="盲板规格" min-width="132">
-          <template #default="{ row, $index }">
-            <ElInput
-              :model-value="row.specification"
-              maxlength="80"
-              placeholder="必填"
-              @update:model-value="updateItem($index, 'specification', $event)"
-            />
-          </template>
-        </ElTableColumn>
-        <ElTableColumn label="盲板编号" min-width="132">
-          <template #default="{ row, $index }">
-            <ElInput
-              :model-value="row.blindPlateNo"
-              maxlength="80"
-              placeholder="现场标识编号"
-              @update:model-value="updateItem($index, 'blindPlateNo', $event)"
-            />
-          </template>
-        </ElTableColumn>
-        <ElTableColumn label="操作" width="76" fixed="right">
-          <template #default="{ $index }">
-            <ElButton link type="danger" @click="removeItem($index)">移除</ElButton>
-          </template>
-        </ElTableColumn>
-      </ArtTable>
+      />
     </div>
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup lang="tsx">
+  import { ElButton, ElInput } from 'element-plus'
   import type { SmisSpecialOperationBlindPlateItem } from '@smis/api'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
+  import ArtTable, {
+    type ArtTableExpose,
+    type ArtTableValidationResult
+  } from '@/components/core/tables/art-table/index.vue'
+  import type { ColumnOption } from '@/types'
   import { createBlindPlateItem } from './special-operation-permit-utils'
 
   type BlindPlateEditableKey = Exclude<keyof SmisSpecialOperationBlindPlateItem, 'id'>
@@ -111,6 +42,7 @@
   const emit = defineEmits<{
     'update:modelValue': [value: SmisSpecialOperationBlindPlateItem[]]
   }>()
+  const tableRef = ref<ArtTableExpose>()
 
   const addItem = (): void =>
     emit('update:modelValue', [...props.modelValue, createBlindPlateItem()])
@@ -127,6 +59,60 @@
       )
     )
   }
+
+  const textColumn = (
+    prop: BlindPlateEditableKey,
+    label: string,
+    minWidth: number,
+    placeholder: string,
+    maxlength: number,
+    required = false
+  ): ColumnOption<SmisSpecialOperationBlindPlateItem> => ({
+    prop,
+    label,
+    minWidth,
+    required,
+    requiredMessage: required
+      ? ({ rowIndex }) => `第 ${rowIndex + 1} 项盲板的${label}不能为空`
+      : undefined,
+    formatter: (row) => (
+      <ElInput
+        modelValue={String(row[prop] ?? '')}
+        maxlength={maxlength}
+        placeholder={placeholder}
+        onUpdate:modelValue={(value: string) =>
+          updateItem(props.modelValue.indexOf(row), prop, value)
+        }
+      />
+    )
+  })
+  const columns: ColumnOption<SmisSpecialOperationBlindPlateItem>[] = [
+    { type: 'globalIndex', label: '序号', width: 62, fixed: 'left' },
+    textColumn('equipmentPipelineName', '设备 / 管线名称', 180, '必填', 120, true),
+    textColumn('medium', '介质', 120, '介质名称', 80),
+    textColumn('temperature', '温度（℃）', 112, '例如 35', 24),
+    textColumn('pressure', '压力（MPa）', 118, '例如 0.6', 24),
+    textColumn('material', '盲板材质', 120, '材质', 80),
+    textColumn('specification', '盲板规格', 132, '必填', 80, true),
+    textColumn('blindPlateNo', '盲板编号', 132, '现场标识编号', 80),
+    {
+      prop: 'operation',
+      label: '操作',
+      width: 76,
+      fixed: 'right',
+      formatter: (row) => (
+        <ElButton link type="danger" onClick={() => removeItem(props.modelValue.indexOf(row))}>
+          移除
+        </ElButton>
+      )
+    }
+  ]
+
+  const validate = async (): Promise<ArtTableValidationResult> =>
+    (await tableRef.value?.validate()) ?? { valid: true, errors: [] }
+  const clearValidate = (): void => tableRef.value?.clearValidate()
+
+  defineExpose({ validate, clearValidate })
 </script>
 
 <style scoped lang="scss">
