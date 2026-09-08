@@ -123,9 +123,8 @@
       {
         label: '状态',
         key: 'status',
-        type: 'radioGroup',
-        options: statusOptions.value,
-        props: { optionType: 'button' }
+        type: 'segment',
+        options: statusOptions.value
       }
     ]),
     rules: {

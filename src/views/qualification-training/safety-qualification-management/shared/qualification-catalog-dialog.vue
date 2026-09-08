@@ -170,7 +170,7 @@
         type: 'number',
         props: { min: 0, max: 999999, precision: 0, controlsPosition: 'right', class: '!w-full' }
       },
-      { label: '启用状态', key: 'status', type: 'radioGroup', options: statusOptions.value },
+      { label: '启用状态', key: 'status', type: 'segment', options: statusOptions.value },
       {
         label: '备注',
         key: 'remark',

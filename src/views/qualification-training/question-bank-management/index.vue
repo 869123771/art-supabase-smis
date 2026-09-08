@@ -372,9 +372,8 @@
     {
       label: '启用状态',
       key: 'status',
-      type: 'radioGroup',
-      options: dictOptions('smisQuestionStatus'),
-      props: { optionType: 'button' }
+      type: 'segment',
+      options: dictOptions('smisQuestionStatus')
     },
     {
       label: '排序',
@@ -416,9 +415,8 @@
     {
       label: '启用状态',
       key: 'status',
-      type: 'radioGroup',
-      options: dictOptions('smisQuestionStatus'),
-      props: { optionType: 'button' }
+      type: 'segment',
+      options: dictOptions('smisQuestionStatus')
     },
     { label: '题目内容', key: 'contentSection', type: 'divider', span: 24 },
     {

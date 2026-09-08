@@ -314,7 +314,7 @@
     {
       label: '特种设备演练',
       key: 'isSpecialEquipmentDrill',
-      type: 'radioGroup',
+      type: 'segment',
       options: booleanOptions.value
     },
     {

@@ -258,7 +258,7 @@
     {
       label: '是否特种设备演练',
       key: 'isSpecialEquipmentDrill',
-      type: 'radioGroup',
+      type: 'segment',
       options: booleanOptions.value
     },
     { label: '评审与附件', key: 'review', type: 'divider', span: 24 },

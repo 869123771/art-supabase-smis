@@ -358,7 +358,7 @@
       {
         label: '启用状态',
         key: 'status',
-        type: 'radioGroup',
+        type: 'segment',
         span: 8,
         options: statusOptions.value
       },

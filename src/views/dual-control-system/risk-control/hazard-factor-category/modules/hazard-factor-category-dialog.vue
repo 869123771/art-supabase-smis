@@ -197,7 +197,7 @@
       {
         label: '状态',
         key: 'status',
-        type: 'radioGroup',
+        type: 'segment',
         options: statusOptions.value
       },
       { label: '文字颜色', key: 'textColor' },

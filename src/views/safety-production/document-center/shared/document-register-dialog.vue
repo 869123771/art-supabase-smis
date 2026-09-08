@@ -232,10 +232,9 @@
           {
             label: '是否特种设备',
             key: 'isSpecialEquipment',
-            type: 'radioGroup' as const,
+            type: 'segment' as const,
             span: 12,
-            options: booleanOptions.value,
-            props: { optionType: 'button' }
+            options: booleanOptions.value
           }
         ]
       : []),

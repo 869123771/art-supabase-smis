@@ -241,7 +241,7 @@
       {
         label: '启用状态',
         key: 'status',
-        type: 'radioGroup',
+        type: 'segment',
         span: 24,
         options: statusOptions.value
       }

@@ -1,13 +1,13 @@
 <template>
   <ArtDialog ref="dialogRef" size="lg">
     <div class="equipment-category-dialog">
-      <div class="equipment-category-dialog__context" role="note">
-        <span aria-hidden="true"><ArtSvgIcon icon="ri:node-tree" /></span>
-        <div>
-          <strong>共享设备台账分类口径</strong>
-          <p>分类按租户隔离；停用后保留历史层级与检验规则，但不再用于新增设备。</p>
-        </div>
-      </div>
+      <ArtEntitySummary
+        class="equipment-category-dialog__context"
+        icon="ri:node-tree"
+        title="共享设备台账分类口径"
+        description="分类按租户隔离；停用后保留历史层级与检验规则，但不再用于新增设备。"
+        compact
+      />
 
       <ArtForm
         ref="formRef"
@@ -32,7 +32,7 @@
     type FormItem,
     type FormItemOption
   } from '@/components/core/forms/art-form/index.vue'
-  import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
+  import ArtEntitySummary from '@/components/core/surfaces/art-entity-summary/index.vue'
   import { useTenantScopeFormPolicy } from '@/hooks/core/useTenantScopeFormPolicy'
   import { useUserStore } from '@/store/modules/user'
   import TreeUtils from '@/utils/tree'
@@ -371,35 +371,7 @@
 <style scoped lang="scss">
   .equipment-category-dialog {
     &__context {
-      display: grid;
-      grid-template-columns: 40px minmax(0, 1fr);
-      gap: 12px;
-      align-items: center;
-      padding: 12px 14px;
       margin-bottom: 18px;
-      background: color-mix(in srgb, var(--theme-color) 7%, var(--default-box-color));
-      border-left: 3px solid var(--theme-color);
-      border-radius: var(--el-border-radius-base);
-
-      > span {
-        display: grid;
-        place-items: center;
-        width: 40px;
-        height: 40px;
-        color: var(--theme-color);
-        background: var(--default-box-color);
-        border-radius: var(--el-border-radius-base);
-      }
-
-      strong {
-        color: var(--el-text-color-primary);
-      }
-
-      p {
-        margin: 3px 0 0;
-        font-size: 12px;
-        color: var(--el-text-color-secondary);
-      }
     }
   }
 </style>

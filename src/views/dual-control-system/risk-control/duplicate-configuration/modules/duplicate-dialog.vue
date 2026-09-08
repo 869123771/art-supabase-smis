@@ -110,12 +110,11 @@
     {
       label: '重复',
       key: 'repeatEnabled',
-      type: 'radioGroup',
+      type: 'segment',
       options: [
         { label: '不重复', value: false },
         { label: '重复', value: true }
-      ],
-      props: { optionType: 'button' }
+      ]
     },
     {
       label: '重复频次',
@@ -187,9 +186,8 @@
     {
       label: '状态',
       key: 'status',
-      type: 'radioGroup',
-      options: statusOptions.value,
-      props: { optionType: 'button' }
+      type: 'segment',
+      options: statusOptions.value
     }
   ])
   const rules: FormRules = {

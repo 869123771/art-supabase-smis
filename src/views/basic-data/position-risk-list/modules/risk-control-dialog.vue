@@ -231,12 +231,11 @@
     {
       label: '是否特种设备',
       key: 'isSpecialEquipment',
-      type: 'radioGroup',
+      type: 'segment',
       options: [
         { label: '否', value: false },
         { label: '是', value: true }
-      ],
-      props: { optionType: 'button' }
+      ]
     }
   ])
 
