@@ -83,7 +83,8 @@
   import dayjs from 'dayjs'
   import { computed, onMounted, reactive, ref } from 'vue'
   import { storeToRefs } from 'pinia'
-  import { ElTag, ElTooltip } from 'element-plus'
+  import { ElTag } from 'element-plus'
+  import ArtTooltip from '@/components/core/feedback/art-tooltip/index.vue'
   import ArtAttachmentLink from '@/components/core/media/art-file-viewer/attachment-link.vue'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
@@ -262,7 +263,7 @@
               </ElTag>
             ))}
             {remainder ? (
-              <ElTooltip
+              <ArtTooltip
                 content={scopes
                   .slice(2)
                   .map((scope) => `${scope.organizationName} / ${scope.positionName}`)
@@ -272,7 +273,7 @@
                 <ElTag effect="light" type="info">
                   +{remainder}
                 </ElTag>
-              </ElTooltip>
+              </ArtTooltip>
             ) : null}
           </div>
         )

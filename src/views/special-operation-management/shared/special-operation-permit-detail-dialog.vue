@@ -120,7 +120,7 @@
                 /><span>{{ item.itemName }}</span></div
               >
             </div>
-            <ElEmpty v-else description="暂无安全措施记录" :image-size="64" />
+            <ArtEmptyState v-else title="暂无安全措施记录" size="compact" :visual-size="64" />
           </ArtSectionCard>
         </div>
 
@@ -165,7 +165,7 @@
               >
             </ElTimelineItem>
           </ElTimeline>
-          <ElEmpty v-else description="暂无流程记录" :image-size="64" />
+          <ArtEmptyState v-else title="暂无流程记录" size="compact" :visual-size="64" />
         </ArtSectionCard>
       </template>
 
@@ -189,6 +189,7 @@
   import type { ArtDescriptionItem } from '@/components/core/base/art-descriptions/types'
   import ArtDictDisplay from '@/components/core/base/art-dict-display/index.vue'
   import ArtUploadImage from '@/components/core/forms/art-upload-image/index.vue'
+  import ArtEmptyState from '@/components/core/feedback/art-empty-state/index.vue'
   import ArtSectionCard from '@/components/core/surfaces/art-section-card/index.vue'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
   import { useAuth } from '@/hooks/core/useAuth'

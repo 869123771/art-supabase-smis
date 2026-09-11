@@ -60,6 +60,8 @@
 <script setup lang="ts">
   import dayjs from 'dayjs'
   import { cloneDeep } from 'lodash-es'
+  import { computed, nextTick, onDeactivated, reactive, ref, shallowRef } from 'vue'
+  import { storeToRefs } from 'pinia'
   import type { FormRules } from 'element-plus'
   import type { EmployeeIntegrationItem } from '@/api/integration/employees'
   import ArtDialog from '@/components/core/dialogs/art-dialog/index.vue'
@@ -101,6 +103,11 @@
     operationAreaOrganizationId?: string
     accidentLevel: SmisAccidentLevel | ''
     indirectEconomicLoss: number
+    minorInjuryCount: number
+    seriousInjuryCount: number
+    deathCount: number
+    onSiteCount: number
+    briefDescription: string
     causeAnalysis: string
     resultDetermination: string
     imageUrls: string[]
@@ -132,6 +139,11 @@
     operationAreaOrganizationId: undefined,
     accidentLevel: '',
     indirectEconomicLoss: 0,
+    minorInjuryCount: 0,
+    seriousInjuryCount: 0,
+    deathCount: 0,
+    onSiteCount: 0,
+    briefDescription: '',
     causeAnalysis: '',
     resultDetermination: '',
     imageUrls: [],
@@ -203,6 +215,73 @@
       type: 'number',
       props: { min: 0, precision: 2, controlsPosition: 'right', class: '!w-full' }
     },
+    { label: '人员影响与事发经过', key: 'peopleImpact', type: 'divider', span: 24 },
+    {
+      label: '轻伤人数',
+      key: 'minorInjuryCount',
+      type: 'number',
+      span: 6,
+      props: {
+        min: 0,
+        max: 99999,
+        precision: 0,
+        controlsPosition: 'right',
+        class: '!w-full'
+      }
+    },
+    {
+      label: '重伤人数',
+      key: 'seriousInjuryCount',
+      type: 'number',
+      span: 6,
+      props: {
+        min: 0,
+        max: 99999,
+        precision: 0,
+        controlsPosition: 'right',
+        class: '!w-full'
+      }
+    },
+    {
+      label: '死亡人数',
+      key: 'deathCount',
+      type: 'number',
+      span: 6,
+      props: {
+        min: 0,
+        max: 99999,
+        precision: 0,
+        controlsPosition: 'right',
+        class: '!w-full'
+      }
+    },
+    {
+      label: '现场人数',
+      key: 'onSiteCount',
+      type: 'number',
+      span: 6,
+      description: '事故发生时现场总人数',
+      props: {
+        min: 0,
+        max: 99999,
+        precision: 0,
+        controlsPosition: 'right',
+        class: '!w-full'
+      }
+    },
+    {
+      label: '事故简要经过',
+      key: 'briefDescription',
+      type: 'textarea',
+      span: 24,
+      props: {
+        rows: 4,
+        maxlength: 400,
+        showWordLimit: true,
+        resize: 'vertical',
+        placeholder: '按时间顺序简要记录事故发生、现场处置和人员影响'
+      }
+    },
     { label: '分析与判定', key: 'analysis', type: 'divider', span: 24 },
     {
       label: '原因分析',
@@ -242,7 +321,24 @@
     accidentTime: [{ required: true, message: '请选择事故时间', trigger: 'change' }],
     accidentLocation: [{ required: true, message: '请输入事故地点', trigger: 'blur' }],
     accidentCategories: [{ required: true, message: '请选择至少一个事故类别', trigger: 'change' }],
-    accidentLevel: [{ required: true, message: '请选择事故级别', trigger: 'change' }]
+    accidentLevel: [{ required: true, message: '请选择事故级别', trigger: 'change' }],
+    briefDescription: [{ required: true, message: '请输入事故简要经过', trigger: 'blur' }],
+    onSiteCount: [
+      {
+        validator: (_rule, value, callback) => {
+          const casualtyCount =
+            Number(form.minorInjuryCount || 0) +
+            Number(form.seriousInjuryCount || 0) +
+            Number(form.deathCount || 0)
+          if (Number(value || 0) < casualtyCount) {
+            callback(new Error('现场人数不能少于轻伤、重伤和死亡人数之和'))
+            return
+          }
+          callback()
+        },
+        trigger: 'change'
+      }
+    ]
   }
   const toEmployeeSelection = (
     employee?: SmisAccidentEmployee | null
@@ -267,6 +363,11 @@
         operationAreaOrganizationId: form.operationAreaOrganizationId || null,
         accidentLevel: form.accidentLevel as SmisAccidentLevel,
         indirectEconomicLoss: Number(form.indirectEconomicLoss || 0),
+        minorInjuryCount: Number(form.minorInjuryCount || 0),
+        seriousInjuryCount: Number(form.seriousInjuryCount || 0),
+        deathCount: Number(form.deathCount || 0),
+        onSiteCount: Number(form.onSiteCount || 0),
+        briefDescription: form.briefDescription.trim(),
         causeAnalysis: form.causeAnalysis.trim(),
         resultDetermination: form.resultDetermination.trim(),
         imageUrls: [...form.imageUrls],
@@ -281,7 +382,7 @@
           id: person.id,
           employeeId: person.employeeId,
           jobYears: person.jobYears ?? null,
-          safetyEducationLevel: person.safetyEducationLevel?.trim() || null,
+          safetyEducationCount: person.safetyEducationCount ?? null,
           victimNature: person.victimNature?.trim() || null,
           injuryPart: person.injuryPart?.trim() || null,
           injuryDegree: person.injuryDegree?.trim() || null,
@@ -312,6 +413,11 @@
         operationAreaOrganizationId: row.operationAreaOrganizationId || undefined,
         accidentLevel: row.accidentLevel,
         indirectEconomicLoss: Number(row.indirectEconomicLoss || 0),
+        minorInjuryCount: Number(row.minorInjuryCount || 0),
+        seriousInjuryCount: Number(row.seriousInjuryCount || 0),
+        deathCount: Number(row.deathCount || 0),
+        onSiteCount: Number(row.onSiteCount || 0),
+        briefDescription: row.briefDescription || '',
         causeAnalysis: row.causeAnalysis || '',
         resultDetermination: row.resultDetermination || '',
         imageUrls: [...row.imageUrls],
@@ -337,7 +443,8 @@
           await Promise.all([
             numberRule.loadRule(),
             userStore.ensureDictLoaded('smisAccidentCategory'),
-            userStore.ensureDictLoaded('smisAccidentLevel')
+            userStore.ensureDictLoaded('smisAccidentLevel'),
+            userStore.ensureDictLoaded('sex')
           ])
         } finally {
           api.setLoading(false)

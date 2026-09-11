@@ -80,7 +80,8 @@
   import dayjs from 'dayjs'
   import { computed, onMounted, reactive, ref } from 'vue'
   import { storeToRefs } from 'pinia'
-  import { ElTag, ElTooltip } from 'element-plus'
+  import { ElTag } from 'element-plus'
+  import ArtTooltip from '@/components/core/feedback/art-tooltip/index.vue'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import ArtDictDisplay from '@/components/core/base/art-dict-display/index.vue'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
@@ -362,11 +363,11 @@
               />
             </>
           ) : (
-            <ElTooltip content="已进入 HR 假勤流程，仅支持查看">
+            <ArtTooltip content="已进入 HR 假勤流程，仅支持查看">
               <span class="leave-information-page__locked" aria-label="已锁定">
                 <ArtSvgIcon icon="ri:lock-line" />
               </span>
-            </ElTooltip>
+            </ArtTooltip>
           )}
         </div>
       )

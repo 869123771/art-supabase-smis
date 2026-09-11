@@ -329,7 +329,12 @@
               >{{ item.itemName }}</ElCheckbox
             >
           </div>
-          <ElEmpty v-else description="当前作业类型未配置安全检查项" :image-size="72" />
+          <ArtEmptyState
+            v-else
+            title="当前作业类型未配置安全检查项"
+            size="compact"
+            :visual-size="72"
+          />
           <ElFormItem label="作业描述" class="permit-form__description">
             <ElInput
               v-model="form.workDescription"
@@ -383,6 +388,7 @@
   import ArtEmployeeSelect from '@/components/business/art-employee-select/index.vue'
   import ArtSectionCard from '@/components/core/surfaces/art-section-card/index.vue'
   import ArtUploadImage from '@/components/core/forms/art-upload-image/index.vue'
+  import ArtEmptyState from '@/components/core/feedback/art-empty-state/index.vue'
   import {
     fetchSpecialOperationCatalogList,
     fetchSpecialOperationPermit,

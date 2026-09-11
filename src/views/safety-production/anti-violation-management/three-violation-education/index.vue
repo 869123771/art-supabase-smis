@@ -52,12 +52,15 @@
 
       <ThreeViolationDialog ref="dialogRef" @success="handleSaveSuccess" />
       <EducationRecordDialog ref="recordDialogRef" @success="handleSaveSuccess" />
+      <ThreeViolationDetailDialog ref="detailDialogRef" />
     </div>
   </ArtPermissionGuard>
 </template>
 
 <script setup lang="tsx">
   import dayjs from 'dayjs'
+  import { storeToRefs } from 'pinia'
+  import { computed, onMounted, reactive, ref, shallowRef, watch } from 'vue'
   import { ElAvatar } from 'element-plus'
   import type { EmployeeIntegrationItem } from '@/api/integration/employees'
   import type { SearchFormItem } from '@/components/core/forms/art-search-bar/index.vue'
@@ -79,6 +82,7 @@
   import ArtDictDisplay from '@/components/core/base/art-dict-display/index.vue'
   import ArtPermissionGuard from '@/components/core/feedback/art-permission-guard/index.vue'
   import BusinessTableWorkspaceActions from '@/components/business/business-table-workspace-actions/index.vue'
+  import BusinessTableRowActions from '@/components/business/business-table-row-actions/index.vue'
   import BusinessWorkspaceHeader, {
     type BusinessWorkspaceMetric
   } from '@/components/business/business-workspace-header/index.vue'
@@ -96,6 +100,8 @@
     type ThreeViolationDialogOpenData
   } from './modules/three-violation-dialog.vue'
   import EducationRecordDialog from './modules/education-record-dialog.vue'
+  import ThreeViolationDetailDialog from './modules/three-violation-detail-dialog.vue'
+  import { formatGender, printThreeViolationLedger } from './modules/three-violation-ledger'
 
   defineOptions({ name: 'SmisThreeViolationEducation' })
 
@@ -107,6 +113,9 @@
   interface RecordDialogExpose {
     handleOpen: (row: SmisThreeViolationEducation) => Promise<void>
   }
+  interface DetailDialogExpose {
+    handleOpen: (row: SmisThreeViolationEducation) => Promise<void>
+  }
 
   const { confirmDelete } = useArtFeedback()
   const userStore = useUserStore()
@@ -114,6 +123,7 @@
   const tableQueryRef = ref<ArtTableQueryExpose>()
   const dialogRef = ref<DialogExpose>()
   const recordDialogRef = ref<RecordDialogExpose>()
+  const detailDialogRef = ref<DetailDialogExpose>()
   const checkerSearchSelection = ref<EmployeeIntegrationItem[]>([])
   const searchQuery = reactive<SmisThreeViolationEducationSearchParams>({})
   const organizations = shallowRef<SmisAntiViolationOrganization[]>([])
@@ -247,10 +257,14 @@
   const openDialog = (mode: ThreeViolationDialogMode, row?: SmisThreeViolationEducation): void => {
     void dialogRef.value?.handleOpen({ mode, row, standards: standards.value })
   }
+  const openDetail = (row: SmisThreeViolationEducation): void => {
+    void detailDialogRef.value?.handleOpen(row)
+  }
 
   const formatEducationRows = (rows: SmisThreeViolationEducation[]) =>
     rows.map((row) => ({
       ...row,
+      gender: formatGender(row.gender),
       inspectionTimeText: dayjs(row.inspectionTime).format('YYYY-MM-DD HH:mm'),
       warningStatusText: row.warningStatus === 'warning' ? '预警' : '正常',
       educationStatusText: row.educationStatus === 'educated' ? '已教育' : '待教育',
@@ -260,29 +274,16 @@
         : ''
     }))
 
-  const escapeHtml = (value: unknown): string =>
-    String(value ?? '—')
-      .replaceAll('&', '&amp;')
-      .replaceAll('<', '&lt;')
-      .replaceAll('>', '&gt;')
-      .replaceAll('"', '&quot;')
-      .replaceAll("'", '&#039;')
-
-  const printLedger = (row: SmisThreeViolationEducation): void => {
-    const popup = window.open('', '_blank', 'noopener,noreferrer,width=980,height=820')
-    if (!popup) {
-      ElMessage.warning('浏览器阻止了打印窗口，请允许弹窗后重试')
-      return
-    }
-    const responsibleNames = row.responsibleEmployees.map((item) => item.employeeName).join('、')
-    const date = dayjs(row.educationCompletedAt || row.inspectionTime)
-    popup.document.write(
-      `<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>安全教育台账-${escapeHtml(row.employeeName)}</title><style>@page{size:A4 portrait;margin:14mm}*{box-sizing:border-box}body{font:14px/1.65 "Microsoft YaHei",sans-serif;color:#111;margin:0}h1{text-align:center;font-size:24px;letter-spacing:4px;margin:0 0 2px}.date{text-align:right;margin:0 4px 8px}table{width:100%;border-collapse:collapse;table-layout:fixed}th,td{border:1px solid #111;padding:7px 8px;vertical-align:top;word-break:break-word}th{width:110px;text-align:center;font-weight:600;background:#f7f7f7}.section{height:205px}.section strong{display:block;margin-bottom:10px}.signature{height:74px}.muted{color:#666}.footer{display:flex;justify-content:space-between;margin-top:20px}@media print{th{background:#fff}}</style></head><body><h1>安全教育台账</h1><div class="date">${date.format('YYYY 年 MM 月 DD 日')}</div><table><tr><th>受教育人姓名</th><td>${escapeHtml(row.employeeName)}</td><th>员工工号</th><td>${escapeHtml(row.employeeNo)}</td><th>性别 / 年龄</th><td>${escapeHtml(row.gender || '—')} / ${escapeHtml(row.age ?? '—')}</td></tr><tr><th>教育类型</th><td colspan="2">三违人员教育</td><th>组织岗位</th><td colspan="2">${escapeHtml([row.organizationName, row.positionName].filter(Boolean).join(' · '))}</td></tr><tr><th>违章分类</th><td colspan="2">${escapeHtml(row.categoryName || '未关联')}</td><th>考核分数</th><td colspan="2">${escapeHtml(row.examScore ?? '—')}</td></tr><tr><td class="section" colspan="6"><strong>三违问题及教育培训内容：</strong><div>${escapeHtml(row.violationDescription)}</div><br><div>${escapeHtml(row.educationContent || row.plannedEducationContent || '待记录')}</div></td></tr><tr><td class="section" colspan="6"><strong>教育培训结果：</strong><div>${escapeHtml(row.educationResult || '待记录')}</div></td></tr><tr><th>教育负责人</th><td colspan="2">${escapeHtml(responsibleNames || '—')}</td><th>培训课时</th><td colspan="2">${escapeHtml(row.trainingHours ?? '—')}</td></tr><tr><th>领导检查意见</th><td class="signature" colspan="5"></td></tr></table><div class="footer"><span>受教育人签字：____________</span><span>教育负责人签字：____________</span></div><script>window.onload=()=>window.print()<${'/script'}></body></html>`
-    )
-    popup.document.close()
-  }
-
   const headerActions = computed<ArtTableQueryHeaderAction[]>(() => [
+    {
+      permission: 'SmisThreeViolationEducation:View',
+      key: 'view',
+      label: '查看',
+      icon: 'ri:eye-line',
+      selectionRequired: true,
+      disabled: ({ selectedRows }) => selectedRows.length !== 1,
+      onClick: ({ selectedRows }) => openDetail(selectedRows[0] as SmisThreeViolationEducation)
+    },
     {
       permission: 'SmisThreeViolationEducation:Add',
       type: 'add',
@@ -339,7 +340,8 @@
       icon: 'ri:printer-line',
       selectionRequired: true,
       disabled: ({ selectedRows }) => selectedRows.length !== 1,
-      onClick: ({ selectedRows }) => printLedger(selectedRows[0] as SmisThreeViolationEducation)
+      onClick: ({ selectedRows }) =>
+        printThreeViolationLedger(selectedRows[0] as SmisThreeViolationEducation)
     },
     {
       permission: 'SmisThreeViolationEducation:Export',
@@ -448,7 +450,12 @@
       width: 196,
       fixed: 'right',
       formatter: (row) => (
-        <div class="three-violation-page__actions">
+        <BusinessTableRowActions>
+          <ArtButtonTable
+            permission="SmisThreeViolationEducation:View"
+            type="view"
+            onClick={() => openDetail(row)}
+          />
           <ArtButtonTable
             permission="SmisThreeViolationEducation:RecordEducation"
             icon="ri:graduation-cap-line"
@@ -486,7 +493,7 @@
             ]}
             onClick={(item: ButtonMoreItem) => void handleMoreAction(item, row)}
           />
-        </div>
+        </BusinessTableRowActions>
       )
     }
   ]
@@ -507,7 +514,7 @@
     row: SmisThreeViolationEducation
   ): Promise<void> => {
     if (item.key === 'copy') openDialog('copy', row)
-    if (item.key === 'print') printLedger(row)
+    if (item.key === 'print') printThreeViolationLedger(row)
     if (item.key !== 'delete') return
     try {
       await confirmDelete(`确定删除“${row.employeeName}”的待教育记录吗？`)
@@ -571,12 +578,6 @@
         font-size: 11px;
         color: var(--el-text-color-secondary);
       }
-    }
-
-    :deep(.three-violation-page__actions) {
-      display: flex;
-      gap: 4px;
-      align-items: center;
     }
   }
 </style>

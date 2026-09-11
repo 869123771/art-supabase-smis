@@ -283,6 +283,7 @@
 </template>
 
 <script setup lang="ts">
+  import { computed, nextTick, onMounted, reactive, ref, shallowRef, watch } from 'vue'
   import { cloneDeep, clamp } from 'lodash-es'
   import ArtWorkspaceSplitter from '@/components/core/layouts/art-workspace-splitter/index.vue'
   import ArtSectionCard from '@/components/core/surfaces/art-section-card/index.vue'
@@ -292,6 +293,7 @@
     type BusinessWorkspaceTag
   } from '@/components/business/business-workspace-header/index.vue'
   import TreeUtils from '@/utils/tree'
+  import { downloadBlob } from '@/utils/file'
   import { useArtFeedback } from '@/hooks/core/useArtFeedback'
   import {
     deleteRiskMapScene,
@@ -639,12 +641,7 @@
     exportSvg.removeAttribute('style')
     const source = new XMLSerializer().serializeToString(exportSvg)
     const blob = new Blob([source], { type: 'image/svg+xml;charset=utf-8' })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = `${scene.sceneName}-风险四色图.svg`
-    link.click()
-    window.setTimeout(() => URL.revokeObjectURL(url), 0)
+    downloadBlob(blob, `${scene.sceneName}-风险四色图.svg`)
   }
 
   onMounted(loadWorkspace)

@@ -30,6 +30,7 @@
 
 <script setup lang="tsx">
   import { cloneDeep, isEqual, omit } from 'lodash-es'
+  import { ref, watch } from 'vue'
   import { ElButton, ElDatePicker, ElInput } from 'element-plus'
   import type { EmployeeIntegrationItem } from '@/api/integration/employees'
   import type { ColumnOption } from '@/types'
@@ -105,7 +106,7 @@
       label: '计划防范措施',
       required: true,
       requiredMessage: ({ rowIndex }) => `第 ${rowIndex + 1} 行计划防范措施不能为空`,
-      minWidth: 280,
+      minWidth: 420,
       showOverflowTooltip: false,
       formatter: (row) => (
         <ElInput
@@ -115,6 +116,7 @@
           maxlength={1000}
           showWordLimit
           resize="none"
+          class="accident-measures-editor__measure-input"
           placeholder="请输入可执行、可核验的防范措施"
         />
       )
@@ -122,7 +124,7 @@
     {
       prop: 'plannedImplementationDate',
       label: '计划落实时间',
-      width: 180,
+      width: 170,
       showOverflowTooltip: false,
       formatter: (row) => (
         <ElDatePicker
@@ -137,7 +139,7 @@
     {
       prop: 'responsibleEmployeeId',
       label: '落实责任人',
-      minWidth: 240,
+      width: 240,
       showOverflowTooltip: false,
       formatter: (row) => (
         <ArtEmployeeSelect
@@ -202,6 +204,10 @@
 
     :deep(.el-table__cell) {
       vertical-align: top;
+    }
+
+    :deep(.accident-measures-editor__measure-input) {
+      width: 100%;
     }
 
     @media (width <= 760px) {

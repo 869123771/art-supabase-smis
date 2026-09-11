@@ -22,6 +22,7 @@
       <ElTableColumn type="expand" width="48">
         <template #default="{ row }">
           <div class="accident-people-editor__detail">
+            <ArtSectionTitle title="员工档案快照" />
             <dl class="accident-people-editor__snapshot">
               <div
                 ><dt>公司</dt><dd>{{ row.companyName || '—' }}</dd></div
@@ -48,6 +49,7 @@
                 ><dt>家庭住址</dt><dd>{{ row.homeAddress || '—' }}</dd></div
               >
             </dl>
+            <ArtSectionTitle title="伤害与安全教育信息" />
             <div class="accident-people-editor__injury-grid">
               <label>
                 <span>工种年龄（年）</span>
@@ -61,11 +63,14 @@
                 />
               </label>
               <label>
-                <span>受过几级安全教育</span>
-                <ElInput
-                  v-model="row.safetyEducationLevel"
-                  maxlength="80"
-                  placeholder="例如：三级安全教育"
+                <span>受过几次安全教育</span>
+                <ElInputNumber
+                  v-model="row.safetyEducationCount"
+                  :min="0"
+                  :max="999"
+                  :precision="0"
+                  controls-position="right"
+                  placeholder="请输入次数"
                 />
               </label>
               <label>
@@ -109,7 +114,10 @@
         <template #default="{ row }">{{ organizationPath(row) }}</template>
       </ElTableColumn>
       <ElTableColumn label="性别 / 年龄" width="96">
-        <template #default="{ row }">{{ row.gender || '—' }} / {{ row.age ?? '—' }}</template>
+        <template #default="{ row }">
+          <ArtDictDisplay dict-code="sex" :value="row.gender || ''" display="text" /> /
+          {{ row.age ?? '—' }}
+        </template>
       </ElTableColumn>
       <ElTableColumn label="工种 / 工龄" min-width="140" show-overflow-tooltip>
         <template #default="{ row }">
@@ -143,7 +151,10 @@
 
 <script setup lang="ts">
   import { cloneDeep, isEqual, omit } from 'lodash-es'
+  import { computed, ref, watch } from 'vue'
+  import ArtDictDisplay from '@/components/core/base/art-dict-display/index.vue'
   import ArtEmptyState from '@/components/core/feedback/art-empty-state/index.vue'
+  import ArtSectionTitle from '@/components/core/surfaces/art-section-title/index.vue'
   import ArtTable from '@/components/core/tables/art-table/index.vue'
   import type { SmisAccidentEmployee, SmisAccidentPerson } from '@smis/api'
   import AccidentEmployeeMultipleSelect from '../../shared/accident-employee-multiple-select.vue'
@@ -219,7 +230,7 @@
         jobTitle: employee.jobTitle,
         workYears: employee.workYears,
         jobYears: null,
-        safetyEducationLevel: null,
+        safetyEducationCount: null,
         victimNature: null,
         injuryPart: null,
         injuryDegree: null,
@@ -301,9 +312,13 @@
 
     &__detail {
       display: grid;
-      gap: 16px;
+      gap: 8px;
       padding: 16px 20px 18px;
       background: var(--art-gray-100);
+
+      :deep(.art-section-title) {
+        margin: 0 0 4px;
+      }
     }
 
     &__snapshot {
@@ -337,8 +352,7 @@
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 14px 18px;
-      padding-top: 16px;
-      border-top: 1px solid var(--el-border-color-lighter);
+      margin-bottom: 4px;
 
       label {
         display: grid;

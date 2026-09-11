@@ -947,9 +947,7 @@
           ? { ...initialForm().boiler, ...data.row.boiler }
           : initialForm().boiler
       })
-      supplierSelection.value = data.row.supplier
-        ? [data.row.supplier as unknown as DataSelectRecord]
-        : []
+      supplierSelection.value = data.row.supplier ? [{ ...data.row.supplier }] : []
       ;[pressureGaugeSelection.value, safetyValveSelection.value] = await Promise.all([
         selectedRows(data.row.pressureGaugeIds, 'pressure_gauge'),
         selectedRows(data.row.safetyValveIds, 'safety_valve')

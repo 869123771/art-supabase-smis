@@ -49,6 +49,8 @@
 
 <script setup lang="tsx">
   import dayjs from 'dayjs'
+  import { computed, onMounted, reactive, ref, shallowRef } from 'vue'
+  import { storeToRefs } from 'pinia'
   import type { SearchFormItem } from '@/components/core/forms/art-search-bar/index.vue'
   import type {
     ArtTableQueryExcelColumn,
@@ -249,11 +251,36 @@
       formatter: (row) => row.reporterEmployee?.employeeName || '—'
     },
     {
-      prop: 'people',
-      label: '涉及人员',
-      width: 96,
-      align: 'center',
-      formatter: (row) => `${row.people.length} 人`
+      prop: 'minorInjuryCount',
+      label: '人员统计',
+      minWidth: 238,
+      formatter: (row) => (
+        <div class="accident-page__people-stats">
+          <span>
+            <small>轻伤</small>
+            {row.minorInjuryCount}
+          </span>
+          <span>
+            <small>重伤</small>
+            {row.seriousInjuryCount}
+          </span>
+          <span class={{ 'is-danger': row.deathCount > 0 }}>
+            <small>死亡</small>
+            {row.deathCount}
+          </span>
+          <span>
+            <small>现场</small>
+            {row.onSiteCount}
+          </span>
+        </div>
+      )
+    },
+    {
+      prop: 'briefDescription',
+      label: '事故简要经过',
+      minWidth: 220,
+      showOverflowTooltip: true,
+      formatter: (row) => row.briefDescription || '—'
     },
     {
       prop: 'indirectEconomicLoss',
@@ -299,6 +326,11 @@
     { key: 'operationAreaOrganizationName', title: '事故发生作业区' },
     { key: 'accidentLevel', title: '事故级别' },
     { key: 'indirectEconomicLoss', title: '间接经济损失（万元）' },
+    { key: 'minorInjuryCount', title: '轻伤人数' },
+    { key: 'seriousInjuryCount', title: '重伤人数' },
+    { key: 'deathCount', title: '死亡人数' },
+    { key: 'onSiteCount', title: '现场人数' },
+    { key: 'briefDescription', title: '事故简要经过' },
     { key: 'causeAnalysis', title: '原因分析' },
     { key: 'resultDetermination', title: '结果判定' },
     { key: 'peopleCount', title: '涉及人员数' }
@@ -345,6 +377,11 @@
             operationAreaOrganizationName: row.operationAreaOrganizationName || '',
             accidentLevel: dictLabel('smisAccidentLevel', row.accidentLevel),
             indirectEconomicLoss: Number(row.indirectEconomicLoss || 0),
+            minorInjuryCount: row.minorInjuryCount,
+            seriousInjuryCount: row.seriousInjuryCount,
+            deathCount: row.deathCount,
+            onSiteCount: row.onSiteCount,
+            briefDescription: row.briefDescription || '',
             causeAnalysis: row.causeAnalysis || '',
             resultDetermination: row.resultDetermination || '',
             peopleCount: row.people.length
@@ -465,6 +502,33 @@
         font-family: var(--art-font-family-mono, Consolas, monospace);
         font-size: 11px;
         color: var(--el-text-color-secondary);
+      }
+    }
+
+    :deep(.accident-page__people-stats) {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(42px, 1fr));
+      gap: 6px;
+      font-variant-numeric: tabular-nums;
+
+      > span {
+        display: grid;
+        gap: 1px;
+        min-width: 0;
+        font-weight: 600;
+        color: var(--el-text-color-primary);
+        text-align: center;
+      }
+
+      small {
+        font-size: 11px;
+        font-weight: 400;
+        color: var(--el-text-color-secondary);
+      }
+
+      .is-danger,
+      .is-danger small {
+        color: var(--el-color-danger);
       }
     }
 

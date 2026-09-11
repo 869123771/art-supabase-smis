@@ -58,7 +58,7 @@
       >
         <template #actions>
           <div class="measure-management-drawer__toolbar">
-            <ElTooltip
+            <ArtTooltip
               :disabled="Boolean(item.evaluation)"
               content="请先完成定量风险评价"
               placement="top"
@@ -74,8 +74,8 @@
                   新增措施
                 </ElButton>
               </span>
-            </ElTooltip>
-            <ElTooltip
+            </ArtTooltip>
+            <ArtTooltip
               :disabled="enabledMeasures.length > 0"
               content="当前没有可作废的有效措施"
               placement="top"
@@ -90,7 +90,7 @@
                   作废有效措施
                 </ElButton>
               </span>
-            </ElTooltip>
+            </ArtTooltip>
           </div>
         </template>
 

@@ -204,7 +204,7 @@
       {
         label: '标签样式',
         key: 'tagStyle',
-        type: 'select',
+        type: 'tagStyleSelect',
         options: tagStyleOptions.value,
         props: { clearable: false, placeholder: '请选择标签样式' }
       }

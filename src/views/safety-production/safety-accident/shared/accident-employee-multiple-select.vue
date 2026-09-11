@@ -23,6 +23,8 @@
 </template>
 
 <script setup lang="ts">
+  import { h } from 'vue'
+  import ArtDictDisplay from '@/components/core/base/art-dict-display/index.vue'
   import ArtTableMultipleSelect from '@/components/core/forms/art-data-select/table-multiple.vue'
   import SmisDataSourceEmptyActions from '@smis/views/components/smis-data-source-empty-actions.vue'
   import type {
@@ -74,7 +76,17 @@
       formatter: (row) => employee(row).organization?.organizationName || '未分配组织'
     },
     { prop: 'jobTitle', label: '工种 / 岗位', minWidth: 140 },
-    { prop: 'gender', label: '性别', width: 80 },
+    {
+      prop: 'gender',
+      label: '性别',
+      width: 80,
+      formatter: (row) =>
+        h(ArtDictDisplay, {
+          dictCode: 'sex',
+          value: employee(row).gender || '',
+          display: 'text'
+        })
+    },
     { prop: 'age', label: '年龄', width: 80 },
     { prop: 'phone', label: '手机号码', width: 140 }
   ]

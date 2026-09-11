@@ -357,7 +357,7 @@
         ></div>
       </ArtDialog>
 
-      <ArtDialog ref="sessionDialogRef" size="full">
+      <ArtDialog ref="sessionDialogRef" size="full" @closed="stopSessionClock">
         <div v-if="session" class="exam-session"
           ><aside
             ><small>剩余时间</small><strong>{{ remainingText }}</strong
@@ -428,6 +428,8 @@
 </template>
 
 <script setup lang="tsx">
+  import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue'
+  import { storeToRefs } from 'pinia'
   import type { FormRules } from 'element-plus'
   import { ElButton, ElInputNumber, ElMessage } from 'element-plus'
   import type { EmployeeIntegrationItem } from '@/api/integration/employees'
@@ -458,6 +460,14 @@
   } from '@/components/business/business-workspace-header/index.vue'
   import BusinessTableWorkspaceActions from '@/components/business/business-table-workspace-actions/index.vue'
   import TrainingEmployeeMultipleSelect from '../training-management/shared/training-employee-multiple-select.vue'
+  import {
+    calculateExamTotalScore,
+    createExamPaperPayload,
+    getExamResultStatus,
+    isExamDateRangeInvalid,
+    toExamQuestionPayload
+  } from './modules/exam-paper-model'
+  import { useExamSession } from './modules/use-exam-session'
   import {
     deleteExamPapers,
     fetchExamDetail,
@@ -523,28 +533,19 @@
   const selectedQuestionIds = ref<string[]>([]),
     questionKeyword = ref(''),
     employeeSelection = ref<EmployeeIntegrationItem[]>([])
-  const detail = ref<SmisExamDetail>(),
-    session = ref<SmisExamDetail>(),
-    currentIndex = ref(0),
-    answers = reactive<Record<string, string[]>>({}),
-    singleAnswers = reactive<Record<string, string>>({}),
-    nowTick = ref(Date.now())
-  const createPaper = (): SmisExamPaperPayload => ({
-    paperTitle: '',
-    paperNo: '',
-    assemblyMode: 'fixed',
-    randomRule: [{ categoryId: null, questionType: null, count: 5, score: 2 }],
-    passingScore: 60,
-    timeLimitMinutes: 60,
-    allowRetake: false,
-    maxAttempts: 1,
-    openAt: null,
-    closeAt: null,
-    remark: '',
-    questions: [],
-    employeeIds: []
-  })
-  const paperForm = reactive<SmisExamPaperPayload>(createPaper())
+  const detail = ref<SmisExamDetail>()
+  const {
+    session,
+    currentIndex,
+    answers,
+    singleAnswers,
+    currentQuestion,
+    answerProgress,
+    remainingText,
+    startSession,
+    stopSessionClock
+  } = useExamSession()
+  const paperForm = reactive<SmisExamPaperPayload>(createExamPaperPayload())
   const dictOptions = (code: string) =>
     (getDictMap.value[code] ?? []).map((item) => ({
       label: item.label || item.name,
@@ -557,8 +558,6 @@
     )
   const exportDictLabel = (code: string, value: unknown) =>
     dictOptions(code).find((item) => item.value === String(value))?.label ?? String(value ?? '')
-  const examResultStatus = (row: SmisExamRecord) =>
-    row.attemptStatus === 'in_progress' ? 'in_progress' : row.passed ? 'passed' : 'failed'
   const selectedQuestionColumns = computed<ColumnOption<SmisExamQuestionSelection>[]>(() => [
     { type: 'globalIndex', label: '序号', width: 58, align: 'center' },
     { prop: 'stem', label: '题目', minWidth: 180, showOverflowTooltip: true },
@@ -610,18 +609,12 @@
       (item) => !questionKeyword.value || item.stem.includes(questionKeyword.value.trim())
     )
   )
-  const totalScore = computed(() =>
-    selectedQuestions.value.reduce((sum, item) => sum + Number(item.score || 0), 0)
-  )
+  const totalScore = computed(() => calculateExamTotalScore(selectedQuestions.value))
   const passingScoreInvalid = computed(
     () => totalScore.value > 0 && Number(paperForm.passingScore) > totalScore.value
   )
-  const dateRangeInvalid = computed(
-    () =>
-      Boolean(paperForm.openAt) &&
-      Boolean(paperForm.closeAt) &&
-      new Date(paperForm.closeAt as string).getTime() <=
-        new Date(paperForm.openAt as string).getTime()
+  const dateRangeInvalid = computed(() =>
+    isExamDateRangeInvalid(paperForm.openAt, paperForm.closeAt)
   )
   const paperConfigurationReady = computed(
     () =>
@@ -655,49 +648,11 @@
     { deep: true }
   )
   watch(
-    singleAnswers,
-    (value) => {
-      Object.entries(value).forEach(([id, answer]) => {
-        answers[id] = answer ? [answer] : []
-      })
-    },
-    { deep: true }
-  )
-  watch(
     () => paperForm.allowRetake,
     (allowed) => {
       paperForm.maxAttempts = allowed ? Math.max(Number(paperForm.maxAttempts || 0), 2) : 1
     }
   )
-  useIntervalFn(() => {
-    nowTick.value = Date.now()
-  }, 1000)
-  const emptyExamQuestion: SmisExamQuestionSelection = {
-    id: '',
-    questionId: '',
-    questionType: 'single',
-    stem: '',
-    score: 0,
-    options: []
-  }
-  const currentQuestion = computed<SmisExamQuestionSelection>(
-    () => session.value?.questions[currentIndex.value] ?? emptyExamQuestion
-  )
-  const answerProgress = computed(() =>
-    !session.value?.questions.length
-      ? 0
-      : Math.round(
-          (Object.values(answers).filter((item) => item.length).length /
-            session.value.questions.length) *
-            100
-        )
-  )
-  const remainingText = computed(() => {
-    const expires = session.value?.attempt?.expiresAt
-    if (!expires) return '不限时'
-    const seconds = Math.max(Math.floor((new Date(expires).getTime() - nowTick.value) / 1000), 0)
-    return `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`
-  })
   const metrics = computed<BusinessWorkspaceMetric[]>(() =>
     activeTab.value === 'paper'
       ? [
@@ -891,7 +846,7 @@
     categories.value = bank.categories
     Object.assign(
       paperForm,
-      createPaper(),
+      createExamPaperPayload(),
       row
         ? {
             ...row,
@@ -985,10 +940,7 @@
       submitting.value = true
       await saveExamPaper({
         ...paperForm,
-        questions: selectedQuestions.value.map((item) => ({
-          questionId: item.questionId,
-          score: Number(item.score)
-        }))
+        questions: toExamQuestionPayload(selectedQuestions.value)
       })
       await paperDialogRef.value?.handleClose(true)
       await paperTableRef.value?.refreshUpdate()
@@ -1006,14 +958,7 @@
     })
   }
   const beginExam = async (row: SmisExamPaper) => {
-    session.value = (await startExam(row.id)) ?? undefined
-    currentIndex.value = 0
-    Object.keys(answers).forEach((key) => delete answers[key])
-    Object.keys(singleAnswers).forEach((key) => delete singleAnswers[key])
-    session.value?.questions.forEach((item) => {
-      answers[item.id] = [...(item.answerValues ?? [])]
-      singleAnswers[item.id] = item.answerValues?.[0] ?? ''
-    })
+    startSession((await startExam(row.id)) ?? undefined)
     await sessionDialogRef.value?.handleOpen(undefined, {
       title: row.examStatus === 'in_progress' ? '继续考试' : '开始考试',
       contentMaxHeight: '84vh'
@@ -1229,7 +1174,7 @@
       label: '结果',
       width: 90,
       formatter: (row) => (
-        <ArtDictDisplay dictCode="smisExamStatus" value={examResultStatus(row)} display="tag" />
+        <ArtDictDisplay dictCode="smisExamStatus" value={getExamResultStatus(row)} display="tag" />
       )
     },
     { prop: 'startedAt', label: '开始时间', width: 168 },

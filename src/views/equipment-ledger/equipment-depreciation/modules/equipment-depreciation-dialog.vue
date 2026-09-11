@@ -296,8 +296,12 @@
     else if (form.model.originalValue != null)
       form.model.netValue = form.model.originalValue - form.model.accumulatedDepreciation
   }
+  const isEquipmentRecord = (
+    value: DataSelectRecord | undefined
+  ): value is DataSelectRecord & SmisEquipment =>
+    Boolean(value && typeof value.equipmentCode === 'string')
   const handleEquipmentChange = (_value: DataSelectModelValue, rows: DataSelectRecord[]) =>
-    applyEquipment(rows[0] as unknown as SmisEquipment | undefined)
+    applyEquipment(isEquipmentRecord(rows[0]) ? rows[0] : undefined)
   watch(
     () => [form.model.originalValue, form.model.accumulatedDepreciation] as const,
     ([original, accumulated]) => {
@@ -353,7 +357,7 @@
         remark: data.row.remark || '',
         status: data.row.status
       })
-      equipmentSelection.value = [data.row.equipment as unknown as DataSelectRecord]
+      equipmentSelection.value = [{ ...data.row.equipment }]
     }
     await dialogRef.value?.handleOpen(data, {
       title: data.row ? '编辑设备折旧' : '新增设备折旧',

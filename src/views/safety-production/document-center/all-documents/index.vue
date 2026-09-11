@@ -94,15 +94,15 @@
               @update:model-value="handleViewSegmentChange"
             >
               <template #default="{ item }">
-                <ElTooltip :content="item.label" placement="bottom">
+                <ArtTooltip :content="item.label" placement="bottom">
                   <span class="document-center-page__segment-option is-icon-only">
                     <ArtSvgIcon :icon="item.icon" />
                     <span class="sr-only">{{ item.label }}</span>
                   </span>
-                </ElTooltip>
+                </ArtTooltip>
               </template>
             </ElSegmented>
-            <ElTooltip :content="focusMode ? '退出专注模式' : '进入专注模式'" placement="bottom">
+            <ArtTooltip :content="focusMode ? '退出专注模式' : '进入专注模式'" placement="bottom">
               <ArtIconButton
                 class="document-center-page__focus-toggle"
                 :class="{ 'is-active': focusMode }"
@@ -111,7 +111,7 @@
                 :aria-pressed="focusMode"
                 @click="toggleFocusMode"
               />
-            </ElTooltip>
+            </ArtTooltip>
           </div>
         </div>
 
@@ -136,15 +136,15 @@
                 ><span>文档分类</span><small>{{ categories.length }} 个一级目录</small></div
               >
               <div class="document-center-page__category-actions">
-                <ElTooltip content="新增分类" placement="bottom">
+                <ArtTooltip content="新增分类" placement="bottom">
                   <ArtIconButton
                     v-auth="'SmisAllDocuments:CategoryAdd'"
                     icon="ri:folder-add-line"
                     label="新增文档分类"
                     @click="openCategoryDialog()"
                   />
-                </ElTooltip>
-                <ElTooltip content="编辑当前分类" placement="bottom">
+                </ArtTooltip>
+                <ArtTooltip content="编辑当前分类" placement="bottom">
                   <ArtIconButton
                     v-auth="'SmisAllDocuments:CategoryEdit'"
                     icon="ri:edit-2-line"
@@ -152,8 +152,8 @@
                     :disabled="!selectedCategory"
                     @click="openCategoryDialog(selectedCategory)"
                   />
-                </ElTooltip>
-                <ElTooltip content="删除当前分类" placement="bottom">
+                </ArtTooltip>
+                <ArtTooltip content="删除当前分类" placement="bottom">
                   <ArtIconButton
                     v-auth="'SmisAllDocuments:CategoryDelete'"
                     icon="ri:delete-bin-6-line"
@@ -161,7 +161,7 @@
                     :disabled="!selectedCategory"
                     @click="handleDeleteCategory"
                   />
-                </ElTooltip>
+                </ArtTooltip>
               </div>
             </div>
             <div class="document-center-page__category-search">

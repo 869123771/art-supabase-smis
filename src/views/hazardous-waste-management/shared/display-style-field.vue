@@ -1,18 +1,12 @@
 <template>
   <div class="hazardous-display-style-field">
     <ElColorPicker v-model="textColor" show-alpha aria-label="选择文字颜色" />
-    <ElSelect
+    <ArtTagStyleSelect
       v-model="tagStyle"
       class="hazardous-display-style-field__select"
+      :options="options"
       placeholder="标签样式"
-    >
-      <ElOption
-        v-for="item in options"
-        :key="String(item.value)"
-        :label="item.label"
-        :value="String(item.value)"
-      />
-    </ElSelect>
+    />
     <ElTag
       class="hazardous-display-style-field__preview"
       :type="tagStyle || 'info'"
@@ -26,6 +20,7 @@
 
 <script setup lang="ts">
   import type { FormItemOption } from '@/components/core/forms/art-form/index.vue'
+  import ArtTagStyleSelect from '@/components/core/forms/art-tag-style-select/index.vue'
   import type { SmisHazardousWasteTagStyle } from '@smis/api'
 
   defineProps<{

@@ -33,12 +33,6 @@ export {
 } from '@smis/api/modules/leave-information'
 
 export {
-  deleteStatutoryHolidays,
-  fetchStatutoryHolidayList,
-  saveStatutoryHoliday
-} from '@smis/api/modules/statutory-holiday'
-
-export {
   deleteSites,
   fetchSiteEmployeeOptions,
   fetchSiteList,

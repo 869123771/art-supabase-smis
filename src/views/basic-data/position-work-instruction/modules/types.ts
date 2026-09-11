@@ -3,6 +3,7 @@ import type {
   WorkInstructionPosition,
   WorkInstructionPositionTree
 } from '@smis/api'
+import TreeUtils from '@/utils/tree'
 
 export type WorkInstructionTreeNodeType = 'organization' | 'position'
 
@@ -21,6 +22,12 @@ export interface WorkInstructionTreeNode {
   disabled?: boolean
   children?: WorkInstructionTreeNode[]
 }
+
+const workInstructionTree = new TreeUtils({
+  idKey: 'key',
+  childrenKey: 'children',
+  deepClone: false
+})
 
 export function buildWorkInstructionTree(
   source: WorkInstructionPositionTree
@@ -69,7 +76,7 @@ export function buildWorkInstructionTree(
 export function flattenWorkInstructionTree(
   nodes: WorkInstructionTreeNode[]
 ): WorkInstructionTreeNode[] {
-  return nodes.flatMap((node) => [node, ...flattenWorkInstructionTree(node.children ?? [])])
+  return workInstructionTree.treeToList(nodes)
 }
 
 function compareOrganization(
