@@ -1,0 +1,1 @@
+import{yt as e}from"./use-global-config-CBj8c4GV.js";var t=t=>[``,...e].includes(t);export{t};
