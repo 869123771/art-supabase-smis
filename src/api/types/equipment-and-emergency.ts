@@ -258,35 +258,23 @@ export interface SmisEquipmentSavePayload extends Omit<
   id?: string
 }
 
-export type SmisEquipmentDepreciationMethod =
-  'double_declining_balance' | 'sum_of_years_digits' | 'straight_line'
 export type SmisEquipmentDepreciationStatus = 'active' | 'stopped'
 
-export interface SmisEquipmentDepreciationEquipment {
-  id: string
-  equipmentCode: string
-  equipmentName: string
-  model?: string | null
-  assetOriginalValue?: number | string | null
-  serviceLifeYears?: number | string | null
-  categoryName: string
-  locationName?: string | null
+export interface SmisEquipmentDepreciationRate {
+  id?: string
+  depreciationYear: number
+  depreciationRate: number | string
 }
 
 export interface SmisEquipmentDepreciation {
   id: string
   depreciationNo: string
-  equipmentId: string
-  depreciationMethod: SmisEquipmentDepreciationMethod
-  depreciationStartDate: string
-  originalValue: number | string
-  residualRate: number | string
-  usefulLifeYears: number | string
-  accumulatedDepreciation: number | string
-  netValue: number | string
+  depreciationName: string
+  depreciationYears: number
+  depreciationPeriodMonths: number
   remark?: string | null
   status: SmisEquipmentDepreciationStatus
-  equipment: SmisEquipmentDepreciationEquipment
+  annualRates: SmisEquipmentDepreciationRate[]
   createBy?: string | null
   createTime?: string
   updateBy?: string | null
@@ -295,7 +283,6 @@ export interface SmisEquipmentDepreciation {
 
 export interface SmisEquipmentDepreciationSearchParams {
   keyword?: string
-  depreciationMethod?: SmisEquipmentDepreciationMethod
   status?: SmisEquipmentDepreciationStatus
   from?: number
   to?: number
@@ -304,13 +291,13 @@ export interface SmisEquipmentDepreciationSearchParams {
 export interface SmisEquipmentDepreciationOverview {
   total: number
   active: number
-  totalOriginalValue: number | string
-  totalNetValue: number | string
+  averageYears: number | string
+  configuredRateCount: number
 }
 
 export interface SmisEquipmentDepreciationSavePayload extends Omit<
   SmisEquipmentDepreciation,
-  'id' | 'equipment' | 'createBy' | 'createTime' | 'updateBy' | 'updateTime'
+  'id' | 'depreciationPeriodMonths' | 'createBy' | 'createTime' | 'updateBy' | 'updateTime'
 > {
   id?: string
 }

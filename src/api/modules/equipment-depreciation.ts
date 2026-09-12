@@ -24,7 +24,6 @@ export async function fetchEquipmentDepreciationList(
         p_from: from,
         p_to: Math.max(params.to ?? from + 19, from),
         p_keyword: params.keyword?.trim() || null,
-        p_depreciation_method: params.depreciationMethod || null,
         p_status: params.status || null
       }),
     { showErrorMessage: true }
@@ -35,8 +34,8 @@ export async function fetchEquipmentDepreciationList(
     overview: result.data?.overview ?? {
       total: 0,
       active: 0,
-      totalOriginalValue: 0,
-      totalNetValue: 0
+      averageYears: 0,
+      configuredRateCount: 0
     },
     error: result.error
   }
@@ -52,7 +51,7 @@ export async function saveEquipmentDepreciation(params: SmisEquipmentDepreciatio
     {
       showMessage: true,
       breakReturn: true,
-      message: params.id ? '设备折旧已更新' : '设备折旧已新增'
+      message: params.id ? '折旧方法已更新' : '折旧方法已新增'
     }
   )
 }
@@ -60,6 +59,6 @@ export async function saveEquipmentDepreciation(params: SmisEquipmentDepreciatio
 export async function deleteEquipmentDepreciations(ids: string[]) {
   return await responseHandle<number>(
     () => supabase.rpc('smis_delete_equipment_depreciations_secure', { p_ids: ids }),
-    { showMessage: true, breakReturn: true, message: '设备折旧已删除' }
+    { showMessage: true, breakReturn: true, message: '折旧方法已删除' }
   )
 }
