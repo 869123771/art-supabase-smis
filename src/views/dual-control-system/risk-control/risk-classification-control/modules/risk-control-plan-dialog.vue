@@ -146,6 +146,7 @@
 </template>
 
 <script setup lang="ts">
+  import { normalizeNullableText } from '@/utils/form/normalize'
   import dayjs from 'dayjs'
   import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
   import type { EmployeeIntegrationItem } from '@/api/integration/employees'
@@ -263,13 +264,13 @@
         riskPointId: form.riskPointId,
         controlStartAt: dayjs(form.controlStartAt).toISOString(),
         status: form.status,
-        controlDescription: form.controlDescription?.trim() || null,
+        controlDescription: normalizeNullableText(form.controlDescription),
         assignments: form.assignments.map((item, index) => ({
           controlLevel: item.controlLevel,
           responsibleEmployeeId: item.responsibleEmployeeId,
           duplicateConfigurationId: item.duplicateConfigurationId,
           sort: index + 1,
-          controlMeasure: item.controlMeasure?.trim() || null
+          controlMeasure: normalizeNullableText(item.controlMeasure)
         }))
       })
       emit('success', row.value?.planId ? 'edit' : 'add')

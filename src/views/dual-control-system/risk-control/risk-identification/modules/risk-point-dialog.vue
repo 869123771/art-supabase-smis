@@ -149,6 +149,7 @@
 </template>
 
 <script setup lang="ts">
+  import { normalizeNullableText } from '@/utils/form/normalize'
   import type { FormInstance, FormRules } from 'element-plus'
   import ArtDialog from '@/components/core/dialogs/art-dialog/index.vue'
   import type { ArtDialogExpose } from '@/components/core/dialogs/art-dialog/types'
@@ -281,7 +282,7 @@
         equipmentId: form.equipmentId || null,
         equipmentName: form.equipmentName.trim(),
         isSpecialEquipment: form.isSpecialEquipment,
-        controlPlanName: form.controlPlanName?.trim() || null,
+        controlPlanName: normalizeNullableText(form.controlPlanName),
         controlPlanAttachmentUrls: [...form.controlPlanAttachmentUrls],
         photoUrls: [...form.photoUrls],
         attachmentUrls: [...form.attachmentUrls],

@@ -1,3 +1,4 @@
+import { normalizeNullableText } from '@/utils/form/normalize'
 import { omit } from 'lodash-es'
 import { useSupabase } from '@/hooks'
 
@@ -342,7 +343,7 @@ export async function fetchSpecialOperationTypeList(
       supabase.rpc('smis_list_special_operation_types_secure', {
         p_from: from,
         p_to: Math.max(params.to ?? from + 19, from),
-        p_keyword: params.keyword?.trim() || null,
+        p_keyword: normalizeNullableText(params.keyword),
         p_status: params.status || null,
         p_tag_style: params.tagStyle || null,
         p_tenant_id: params.tenantId || null
@@ -406,7 +407,7 @@ export async function fetchSpecialOperationCatalogList(
         p_catalog_kind: params.catalogKind,
         p_from: from,
         p_to: Math.max(params.to ?? from + 19, from),
-        p_keyword: params.keyword?.trim() || null,
+        p_keyword: normalizeNullableText(params.keyword),
         p_operation_type_id: params.operationTypeId || null,
         p_record_type: params.recordType || null,
         p_status: params.status || null,
@@ -483,12 +484,12 @@ export async function fetchSpecialOperationPermitList(
       supabase.rpc('smis_list_special_operation_permits_secure', {
         p_from: from,
         p_to: Math.max(params.to ?? from + 19, from),
-        p_keyword: params.keyword?.trim() || null,
+        p_keyword: normalizeNullableText(params.keyword),
         p_operation_type_id: params.operationTypeId || null,
         p_operation_type_code: params.operationTypeCode || null,
         p_work_start: params.workStart || null,
         p_work_end: params.workEnd || null,
-        p_applicant_keyword: params.applicantKeyword?.trim() || null,
+        p_applicant_keyword: normalizeNullableText(params.applicantKeyword),
         p_status: params.status || null,
         p_tenant_id: params.tenantId || null
       }),
@@ -579,7 +580,7 @@ export async function transitionSpecialOperationPermit(
         p_id: id,
         p_action: action,
         p_result: options.result || null,
-        p_description: options.description?.trim() || null,
+        p_description: normalizeNullableText(options.description),
         p_tenant_id: options.tenantId || null
       }),
     { showMessage: true, breakReturn: true, message: messageMap[action] }

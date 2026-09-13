@@ -1,3 +1,4 @@
+import { normalizeNullableText } from '@/utils/form/normalize'
 import dayjs from 'dayjs'
 import { omit } from 'lodash-es'
 import { useSupabase } from '@/hooks'
@@ -80,7 +81,7 @@ export async function fetchQualificationCatalogList(params: SmisQualificationCat
         p_catalog_type: params.catalogType,
         p_from: from,
         p_to: Math.max(params.to ?? from + 99, from),
-        p_keyword: params.keyword?.trim() || null,
+        p_keyword: normalizeNullableText(params.keyword),
         p_status: params.status || null,
         p_ancestor_id: params.ancestorId || null,
         p_purpose: params.purpose ?? 'list',
@@ -159,8 +160,8 @@ export async function fetchPersonnelCertificateList(
       supabase.rpc('smis_list_personnel_certificates_extended_secure', {
         p_from: from,
         p_to: Math.max(params.to ?? from + 19, from),
-        p_employee_name: params.employeeName?.trim() || null,
-        p_certificate_number: params.certificateNumber?.trim() || null,
+        p_employee_name: normalizeNullableText(params.employeeName),
+        p_certificate_number: normalizeNullableText(params.certificateNumber),
         p_certificate_category: params.certificateCategory || null,
         p_start_date: startDate ? dayjs(startDate).format('YYYY-MM-DD') : null,
         p_end_date: endDate ? dayjs(endDate).format('YYYY-MM-DD') : null,
@@ -194,7 +195,7 @@ export async function fetchPersonnelCertificateEmployeeOptions(
         p_certificate_category: category,
         p_from: from,
         p_to: Math.max(params.to ?? from + 19, from),
-        p_keyword: params.keyword?.trim() || null
+        p_keyword: normalizeNullableText(params.keyword)
       }),
     { showErrorMessage: true }
   )

@@ -1,3 +1,4 @@
+import { normalizeNullableText } from '@/utils/form/normalize'
 import { omit } from 'lodash-es'
 import { useSupabase } from '@/hooks'
 import type {
@@ -31,7 +32,7 @@ export async function fetchHazardFactorCategoryList(
       supabase.rpc('smis_list_hazard_factor_categories_secure', {
         p_from: from,
         p_to: Math.max(params.to ?? from + 19, from),
-        p_keyword: params.keyword?.trim() || null,
+        p_keyword: normalizeNullableText(params.keyword),
         p_factor_type: params.factorType || null,
         p_status: params.status || null,
         p_tag_style: params.tagStyle || null,

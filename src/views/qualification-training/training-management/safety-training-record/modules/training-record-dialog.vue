@@ -280,6 +280,9 @@
 </template>
 
 <script setup lang="tsx">
+  import { createDateTimeFormatter } from '@/utils/ui/format'
+
+  import { normalizeNullableText } from '@/utils/form/normalize'
   import dayjs from 'dayjs'
   import {
     ElDatePicker,
@@ -629,8 +632,7 @@
   ])
   const formatRange = (start: string, end: string) =>
     `${dayjs(start).format('MM-DD HH:mm')} 至 ${dayjs(end).format('MM-DD HH:mm')}`
-  const formatDateTime = (value?: string | null): string =>
-    value ? dayjs(value).format('YYYY-MM-DD HH:mm') : '—'
+  const formatDateTime = createDateTimeFormatter({ format: 'YYYY-MM-DD HH:mm', emptyText: '—' })
   const formatDateRange = (start?: string | null, end?: string | null): string => {
     if (!start && !end) return '—'
     if (!start) return `截至 ${formatDateTime(end)}`
@@ -760,15 +762,15 @@
     trainingPlanId: form.trainingPlanId,
     actualStartAt: form.actualStartAt ? dayjs(form.actualStartAt).toISOString() : null,
     actualEndAt: form.actualEndAt ? dayjs(form.actualEndAt).toISOString() : null,
-    location: form.location.trim() || null,
-    instructorName: form.instructorName.trim() || null,
-    lecturerName: form.lecturerName.trim() || null,
-    trainingContent: form.trainingContent.trim() || null,
+    location: normalizeNullableText(form.location),
+    instructorName: normalizeNullableText(form.instructorName),
+    lecturerName: normalizeNullableText(form.lecturerName),
+    trainingContent: normalizeNullableText(form.trainingContent),
     trainingHours: Number(form.trainingHours || 0),
-    effectEvaluation: form.effectEvaluation.trim() || null,
+    effectEvaluation: normalizeNullableText(form.effectEvaluation),
     attachmentUrls: [...form.attachmentUrls],
     signInAttachmentUrls: [...form.signInAttachmentUrls],
-    remark: form.remark.trim() || null,
+    remark: normalizeNullableText(form.remark),
     participants: form.participants.map((item) => ({
       employeeId: item.employeeId,
       attendanceStatus: item.attendanceStatus as SmisSafetyTrainingAttendanceStatus,

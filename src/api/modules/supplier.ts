@@ -1,3 +1,4 @@
+import { normalizeNullableText } from '@/utils/form/normalize'
 import { omit } from 'lodash-es'
 import { useSupabase } from '@/hooks'
 import type {
@@ -27,7 +28,7 @@ const buildListParams = (params: SmisSupplierSearchParams) => {
   return {
     p_from: from,
     p_to: Math.max(params.to ?? from + 19, from),
-    p_keyword: params.keyword?.trim() || null,
+    p_keyword: normalizeNullableText(params.keyword),
     p_supplier_category: params.supplierCategory || null,
     p_supplier_type: params.supplierType || null,
     p_enterprise_nature: params.enterpriseNature || null,

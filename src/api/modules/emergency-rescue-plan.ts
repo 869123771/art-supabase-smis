@@ -1,3 +1,4 @@
+import { normalizeNullableText } from '@/utils/form/normalize'
 import { omit } from 'lodash-es'
 import { useSupabase } from '@/hooks'
 import TreeUtils from '@/utils/tree'
@@ -30,7 +31,7 @@ export async function fetchEmergencyRescuePlanList(
       supabase.rpc('smis_list_emergency_rescue_plans_secure', {
         p_from: from,
         p_to: Math.max(params.to ?? from + 19, from),
-        p_keyword: params.keyword?.trim() || null,
+        p_keyword: normalizeNullableText(params.keyword),
         p_plan_category: params.planCategory || null,
         p_organization_id: params.organizationId || null,
         p_is_valid: params.isValid ?? null,

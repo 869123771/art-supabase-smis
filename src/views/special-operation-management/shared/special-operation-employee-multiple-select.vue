@@ -16,7 +16,7 @@
     :show-pagination="true"
     :page-size="10"
     :page-sizes="[10, 20, 30, 50]"
-    @update:model-value="emit('update:modelValue', normalizeIds($event))"
+    @update:model-value="emit('update:modelValue', normalizeStringList($event))"
     @update:selected-data="emit('update:selectedData', normalizeRows($event))"
     @confirm="handleConfirm"
   >
@@ -25,6 +25,8 @@
 </template>
 
 <script setup lang="ts">
+  import { normalizeStringList } from '@/utils/form/normalize'
+
   import ArtTableMultipleSelect from '@/components/core/forms/art-data-select/table-multiple.vue'
   import SmisDataSourceEmptyActions from '@smis/views/components/smis-data-source-empty-actions.vue'
   import type {
@@ -94,11 +96,10 @@
     })
     return { data: result.data, total: result.total }
   }
-  const normalizeIds = (value: DataSelectKey | DataSelectKey[] | undefined): string[] =>
-    (Array.isArray(value) ? value : value == null ? [] : [value]).map(String)
+
   const normalizeRows = (rows: DataSelectRecord[]): EmployeeIntegrationItem[] => rows.map(employee)
   const handleConfirm = (
     value: DataSelectKey | DataSelectKey[] | undefined,
     rows: DataSelectRecord[]
-  ): void => emit('confirm', normalizeIds(value), normalizeRows(rows))
+  ): void => emit('confirm', normalizeStringList(value), normalizeRows(rows))
 </script>

@@ -62,6 +62,7 @@
 </template>
 
 <script setup lang="ts">
+  import { normalizeNullableText } from '@/utils/form/normalize'
   import dayjs from 'dayjs'
   import type { FormRules } from 'element-plus'
   import type { EmployeeIntegrationItem } from '@/api/integration/employees'
@@ -329,7 +330,7 @@
         await approveHiddenHazard({
           id: row.id,
           result: form.model.approvalResult,
-          approvalDescription: form.model.approvalDescription.trim() || null,
+          approvalDescription: normalizeNullableText(form.model.approvalDescription),
           rectificationResponsibleEmployeeId:
             form.model.approvalResult === 'rectify' ? form.model.responsibleEmployeeId : null,
           rectificationDeadline:

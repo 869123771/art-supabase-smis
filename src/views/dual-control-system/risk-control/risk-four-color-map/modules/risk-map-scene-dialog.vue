@@ -49,6 +49,7 @@
 </template>
 
 <script setup lang="ts">
+  import { normalizeNullableText } from '@/utils/form/normalize'
   import type { FormRules } from 'element-plus'
   import ArtDialog from '@/components/core/dialogs/art-dialog/index.vue'
   import type { ArtDialogExpose } from '@/components/core/dialogs/art-dialog/types'
@@ -134,7 +135,7 @@
       const result = await saveRiskMapScene({
         ...toRaw(form.model),
         sceneName: form.model.sceneName.trim(),
-        backgroundUrl: form.model.backgroundUrl?.trim() || null
+        backgroundUrl: normalizeNullableText(form.model.backgroundUrl)
       })
       const id = String(result.data || form.model.id)
       emit('success', id, form.model.id ? 'edit' : 'add')

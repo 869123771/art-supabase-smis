@@ -364,6 +364,8 @@
 </template>
 
 <script setup lang="tsx">
+  import { createDateTimeFormatter } from '@/utils/ui/format'
+
   import dayjs from 'dayjs'
   import type { ElTree, TreeNodeData } from 'element-plus'
   import { ElMessage, ElTag } from 'element-plus'
@@ -568,8 +570,7 @@
       : size >= 1024 * 1024
         ? `${(size / 1024 / 1024).toFixed(1)} MB`
         : `${Math.ceil(size / 1024)} KB`
-  const formatDateTime = (value?: string): string =>
-    value ? dayjs(value).format('YYYY-MM-DD HH:mm') : '—'
+  const formatDateTime = createDateTimeFormatter({ format: 'YYYY-MM-DD HH:mm', emptyText: '—' })
   const formatScheduled = (row: SmisDocument): string =>
     row.scheduledEffectiveDate ? dayjs(row.scheduledEffectiveDate).format('YYYY-MM-DD') : '待定'
   const getDocumentPreviewFile = (row: SmisDocument): FilePreviewTarget => ({

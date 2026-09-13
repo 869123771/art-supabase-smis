@@ -155,6 +155,8 @@
 </template>
 
 <script setup lang="tsx">
+  import { createDateTimeFormatter } from '@/utils/ui/format'
+
   import dayjs from 'dayjs'
   import { ElProgress } from 'element-plus'
   import type { PieDataItem } from '@/types/component/chart'
@@ -233,8 +235,7 @@
     value
       ? (getDictMap.value[code] ?? []).find((item) => item.value === value)?.label || value
       : '—'
-  const formatDateTime = (value?: string | null): string =>
-    value ? dayjs(value).format('YYYY-MM-DD HH:mm') : '—'
+  const formatDateTime = createDateTimeFormatter({ format: 'YYYY-MM-DD HH:mm', emptyText: '—' })
   const organizationOptions = computed(() =>
     toDualControlOrganizationTree(state.data.organizationOptions)
   )

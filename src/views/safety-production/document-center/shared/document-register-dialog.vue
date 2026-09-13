@@ -59,6 +59,7 @@
 </template>
 
 <script setup lang="ts">
+  import { normalizeNullableText } from '@/utils/form/normalize'
   import dayjs from 'dayjs'
   import type { FormRules } from 'element-plus'
   import { fetchGetEnableOrganizationTree } from '@/api/system-manage'
@@ -312,7 +313,7 @@
         attachmentUrl: form.attachmentUrl || null,
         attachmentType: form.attachmentType || null,
         attachmentSize: form.attachmentSize ?? null,
-        remark: form.remark.trim() || null,
+        remark: normalizeNullableText(form.remark),
         copySourceId: form.copySourceId || null
       }
       await saveDocumentRegister(payload)

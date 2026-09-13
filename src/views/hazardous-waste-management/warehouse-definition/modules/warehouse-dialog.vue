@@ -63,6 +63,7 @@
 </template>
 
 <script setup lang="ts">
+  import { normalizeNullableText } from '@/utils/form/normalize'
   import type { FormRules } from 'element-plus'
   import type { EmployeeIntegrationItem } from '@/api/integration/employees'
   import { fetchRegionOptions } from '@/api/common'
@@ -242,8 +243,8 @@
         warehouseCode: payload.warehouseCode.trim().toUpperCase(),
         warehouseName: payload.warehouseName.trim(),
         textColor: payload.textColor || null,
-        addressDetail: payload.addressDetail?.trim() || null,
-        remark: payload.remark?.trim() || null
+        addressDetail: normalizeNullableText(payload.addressDetail),
+        remark: normalizeNullableText(payload.remark)
       })
       emit('success', payload.id ? 'edit' : 'add')
       return true

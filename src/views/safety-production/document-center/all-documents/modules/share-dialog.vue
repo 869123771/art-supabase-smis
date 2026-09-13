@@ -34,6 +34,7 @@
 </template>
 
 <script setup lang="ts">
+  import { normalizeNullableText } from '@/utils/form/normalize'
   import type { FormRules } from 'element-plus'
   import { fetchGetEnableOrganizationUserList } from '@/api/system-manage'
   import ArtDialog from '@/components/core/dialogs/art-dialog/index.vue'
@@ -125,7 +126,7 @@
       await shareDocument({
         documentId: document.value.id,
         userIds: [...form.userIds],
-        message: form.message.trim() || null
+        message: normalizeNullableText(form.message)
       })
       emit('success')
       return true

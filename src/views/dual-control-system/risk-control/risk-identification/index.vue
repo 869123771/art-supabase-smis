@@ -44,6 +44,7 @@
 </template>
 
 <script setup lang="tsx">
+  import { normalizeNullableText } from '@/utils/form/normalize'
   import { ElImage, ElTag } from 'element-plus'
   import type { SearchFormItem } from '@/components/core/forms/art-search-bar/index.vue'
   import type {
@@ -483,7 +484,7 @@
         equipmentId: equipment?.id || null,
         equipmentName: String(raw.equipmentName || '').trim(),
         isSpecialEquipment: special,
-        controlPlanName: String(raw.controlPlanName || '').trim() || null,
+        controlPlanName: normalizeNullableText(String(raw.controlPlanName || '')),
         controlPlanAttachmentUrls: [],
         photoUrls: splitValues(raw.photoUrls),
         attachmentUrls: splitValues(raw.attachmentUrls),

@@ -25,6 +25,7 @@
 </template>
 
 <script setup lang="ts">
+  import { normalizeNullableText } from '@/utils/form/normalize'
   import type { FormRules } from 'element-plus'
   import ArtDialog from '@/components/core/dialogs/art-dialog/index.vue'
   import type { ArtDialogExpose } from '@/components/core/dialogs/art-dialog/types'
@@ -195,10 +196,10 @@
         standardCode: form.model.standardCode.trim().toUpperCase(),
         standardName: form.model.standardName.trim(),
         deductionPoints: Number(form.model.deductionPoints),
-        handlingRequirements: form.model.handlingRequirements.trim() || null,
-        legalBasis: form.model.legalBasis.trim() || null,
+        handlingRequirements: normalizeNullableText(form.model.handlingRequirements),
+        legalBasis: normalizeNullableText(form.model.legalBasis),
         status: form.model.status,
-        description: form.model.description.trim() || null
+        description: normalizeNullableText(form.model.description)
       }
       await saveAntiViolationStandard(payload)
       emit('success', form.model.id ? 'edit' : 'add')

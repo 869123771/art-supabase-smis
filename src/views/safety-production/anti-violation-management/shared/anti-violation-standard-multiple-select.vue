@@ -14,7 +14,7 @@
     :show-pagination="false"
     empty-text="暂无可选违章项目"
     empty-description="请先在反违章标准库中维护并启用违章项目。"
-    @update:model-value="emit('update:modelValue', normalizeIds($event))"
+    @update:model-value="emit('update:modelValue', normalizeStringList($event))"
     @update:selected-data="emit('update:selectedData', normalizeRows($event))"
   >
     <template #empty>
@@ -24,11 +24,12 @@
 </template>
 
 <script setup lang="ts">
+  import { normalizeStringList } from '@/utils/form/normalize'
+
   import ArtTableMultipleSelect from '@/components/core/forms/art-data-select/table-multiple.vue'
   import SmisDataSourceEmptyActions from '@smis/views/components/smis-data-source-empty-actions.vue'
   import type {
     DataSelectColumn,
-    DataSelectKey,
     DataSelectRecord
   } from '@/components/core/forms/art-data-select/types'
   import type { SmisAntiViolationStandardOption } from '@smis/api'
@@ -57,8 +58,7 @@
     { prop: 'standardName', label: '项目名称', minWidth: 300 },
     { prop: 'deductionPoints', label: '扣减分值', width: 110, align: 'right' }
   ]
-  const normalizeIds = (value: DataSelectKey | DataSelectKey[] | undefined): string[] =>
-    (Array.isArray(value) ? value : value == null ? [] : [value]).map(String)
+
   const normalizeRows = (rows: DataSelectRecord[]): SmisAntiViolationStandardOption[] =>
     rows.map(standard)
 </script>

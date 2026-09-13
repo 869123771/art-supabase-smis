@@ -50,6 +50,8 @@
 </template>
 
 <script setup lang="tsx">
+  import { createDateTimeFormatter } from '@/utils/ui/format'
+
   import dayjs from 'dayjs'
   import { ElTag } from 'element-plus'
   import type { ColumnOption } from '@/types'
@@ -90,8 +92,7 @@
       : '不限'
     return `${start} 至 ${end}`
   })
-  const formatDateTime = (value?: string | null): string =>
-    value ? dayjs(value).format('YYYY-MM-DD HH:mm') : '—'
+  const formatDateTime = createDateTimeFormatter({ format: 'YYYY-MM-DD HH:mm', emptyText: '—' })
 
   const taskColumns: ColumnOption<SmisInspectionStatisticsDetailRecord>[] = [
     { type: 'globalIndex', label: '序号', width: 68 },

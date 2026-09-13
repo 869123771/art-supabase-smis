@@ -1,3 +1,4 @@
+import { normalizeNullableText } from '@/utils/form/normalize'
 import { omit } from 'lodash-es'
 import { useSupabase } from '@/hooks'
 import type {
@@ -42,14 +43,14 @@ export async function fetchSafetyRiskList(params: SmisSafetyRiskSearchParams = {
       supabase.rpc('smis_list_safety_risks_secure', {
         p_from: from,
         p_to: Math.max(params.to ?? from + 19, from),
-        p_keyword: params.keyword?.trim() || null,
-        p_risk_name: params.riskName?.trim() || null,
+        p_keyword: normalizeNullableText(params.keyword),
+        p_risk_name: normalizeNullableText(params.riskName),
         p_accident_type: params.accidentType || null,
         p_identified_from: params.identifiedFrom || null,
         p_identified_to: params.identifiedTo || null,
         p_control_level: params.controlLevel || null,
         p_status: params.status || null,
-        p_responsible_keyword: params.responsibleKeyword?.trim() || null
+        p_responsible_keyword: normalizeNullableText(params.responsibleKeyword)
       }),
     { showErrorMessage: true }
   )
@@ -100,7 +101,7 @@ export async function fetchRiskControlPointList(params: SmisRiskControlSearchPar
       supabase.rpc('smis_list_risk_control_points_secure', {
         p_from: from,
         p_to: Math.max(params.to ?? from + 19, from),
-        p_keyword: params.keyword?.trim() || null,
+        p_keyword: normalizeNullableText(params.keyword),
         p_risk_type: params.riskType || null,
         p_control_level: params.controlLevel || null,
         p_control_status: params.controlStatus || null
@@ -123,7 +124,7 @@ export async function saveRiskControlPlan(params: SmisRiskControlPlanSavePayload
         p_risk_point_id: params.riskPointId,
         p_control_start_at: params.controlStartAt,
         p_status: params.status,
-        p_control_description: params.controlDescription?.trim() || null,
+        p_control_description: normalizeNullableText(params.controlDescription),
         p_assignments: keysToSnakeDeep(
           params.assignments.map((assignment) => omit(assignment, ['id']))
         )
@@ -157,14 +158,14 @@ export async function fetchRiskInspectionTaskList(params: SmisRiskInspectionTask
       supabase.rpc('smis_list_risk_inspection_tasks_secure', {
         p_from: from,
         p_to: Math.max(params.to ?? from + 19, from),
-        p_keyword: params.keyword?.trim() || null,
-        p_risk_name: params.riskName?.trim() || null,
+        p_keyword: normalizeNullableText(params.keyword),
+        p_risk_name: normalizeNullableText(params.riskName),
         p_risk_type: params.riskType || null,
         p_planned_from: params.plannedFrom || null,
         p_planned_to: params.plannedTo || null,
         p_responsible_employee_id: params.responsibleEmployeeId || null,
         p_status: params.status || null,
-        p_executor_keyword: params.executorKeyword?.trim() || null
+        p_executor_keyword: normalizeNullableText(params.executorKeyword)
       }),
     { showErrorMessage: true }
   )
@@ -209,7 +210,7 @@ export async function saveRiskInspectionExecution(params: SmisRiskInspectionExec
       supabase.rpc('smis_save_risk_inspection_execution_secure', {
         p_id: params.id,
         p_actual_executor_employee_id: params.actualExecutorEmployeeId,
-        p_execution_summary: params.executionSummary?.trim() || null,
+        p_execution_summary: normalizeNullableText(params.executionSummary),
         p_attachment_urls: params.attachmentUrls,
         p_items: keysToSnakeDeep(params.items),
         p_complete: params.complete

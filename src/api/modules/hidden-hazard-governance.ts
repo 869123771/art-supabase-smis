@@ -1,3 +1,4 @@
+import { normalizeNullableText } from '@/utils/form/normalize'
 import { omit } from 'lodash-es'
 import { useSupabase } from '@/hooks'
 
@@ -306,12 +307,12 @@ export async function fetchHiddenHazardGovernanceList(
       supabase.rpc('smis_list_hidden_hazard_governance_secure', {
         p_from: from,
         p_to: Math.max(params.to ?? from + 19, from),
-        p_hazard_no: params.hazardNo?.trim() || null,
+        p_hazard_no: normalizeNullableText(params.hazardNo),
         p_reported_from: params.reportedFrom || null,
         p_reported_to: params.reportedTo || null,
         p_status: params.status || null,
-        p_rectifier_keyword: params.rectifierKeyword?.trim() || null,
-        p_reporter_keyword: params.reporterKeyword?.trim() || null,
+        p_rectifier_keyword: normalizeNullableText(params.rectifierKeyword),
+        p_reporter_keyword: normalizeNullableText(params.reporterKeyword),
         p_inspection_type_id: params.inspectionTypeId || null
       }),
     { showErrorMessage: true }
@@ -423,7 +424,7 @@ export async function fetchPublicHazardReportList(params: SmisPublicHazardReport
       supabase.rpc('smis_list_public_hazard_reports_secure', {
         p_from: from,
         p_to: Math.max(params.to ?? from + 19, from),
-        p_keyword: params.keyword?.trim() || null,
+        p_keyword: normalizeNullableText(params.keyword),
         p_status: params.status || null,
         p_reported_from: params.reportedFrom || null,
         p_reported_to: params.reportedTo || null
@@ -456,7 +457,7 @@ export async function fetchRectificationNoticeList(
         p_inspection_to: params.inspectionTo || null,
         p_inspection_organization_id: params.inspectionOrganizationId || null,
         p_inspected_organization_id: params.inspectedOrganizationId || null,
-        p_inspector_keyword: params.inspectorKeyword?.trim() || null,
+        p_inspector_keyword: normalizeNullableText(params.inspectorKeyword),
         p_rectifiable_only: params.rectifiableOnly ?? false
       }),
     { showErrorMessage: true }

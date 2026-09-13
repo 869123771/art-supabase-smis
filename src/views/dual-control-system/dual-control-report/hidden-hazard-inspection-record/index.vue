@@ -78,6 +78,8 @@
 </template>
 
 <script setup lang="tsx">
+  import { createDateTimeFormatter } from '@/utils/ui/format'
+
   import dayjs from 'dayjs'
   import { ElProgress } from 'element-plus'
   import type { ColumnOption } from '@/types'
@@ -247,8 +249,7 @@
       )
     })
   }
-  const formatDateTime = (value?: string | null): string =>
-    value ? dayjs(value).format('YYYY-MM-DD HH:mm') : '—'
+  const formatDateTime = createDateTimeFormatter({ format: 'YYYY-MM-DD HH:mm', emptyText: '—' })
   const dictLabel = (code: string, value: string): string =>
     (getDictMap.value[code] ?? []).find((item) => item.value === value)?.label || value
   const frequencyLabel = (unit: string, count: number): string =>

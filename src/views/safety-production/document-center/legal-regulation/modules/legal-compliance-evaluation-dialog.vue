@@ -15,6 +15,7 @@
 </template>
 
 <script setup lang="ts">
+  import { normalizeNullableText } from '@/utils/form/normalize'
   import dayjs from 'dayjs'
   import type { FormRules } from 'element-plus'
   import ArtDialog from '@/components/core/dialogs/art-dialog/index.vue'
@@ -158,7 +159,7 @@
         evaluationConclusion: form.evaluationConclusion.trim(),
         evaluationDate: form.evaluationDate,
         evaluatorName: form.evaluatorName.trim(),
-        remark: form.remark.trim() || null,
+        remark: normalizeNullableText(form.remark),
         copySourceId: form.copySourceId || null
       }
       await saveLegalComplianceEvaluation(payload)

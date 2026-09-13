@@ -1,3 +1,4 @@
+import { normalizeNullableText } from '@/utils/form/normalize'
 import { useSupabase } from '@/hooks'
 import { withRequestOptions } from '@/api/providers/supabase/query'
 import type { ApiRequestOptions } from '@/types/api/request'
@@ -39,8 +40,8 @@ export async function fetchPositionWorkInstructionList(
         supabase.rpc('smis_list_position_work_instructions_secure', {
           p_from: from,
           p_to: Math.max(params.to ?? from + 19, from),
-          p_keyword: params.keyword?.trim() || null,
-          p_file_type: params.fileType?.trim() || null,
+          p_keyword: normalizeNullableText(params.keyword),
+          p_file_type: normalizeNullableText(params.fileType),
           p_organization_id: params.organizationId || null,
           p_position_id: params.positionId || null
         }),

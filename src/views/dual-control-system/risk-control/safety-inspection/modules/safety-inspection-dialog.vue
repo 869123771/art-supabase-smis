@@ -72,6 +72,7 @@
 </template>
 
 <script setup lang="ts">
+  import { normalizeNullableText } from '@/utils/form/normalize'
   import dayjs from 'dayjs'
   import type { FormRules } from 'element-plus'
   import type { EmployeeIntegrationItem } from '@/api/integration/employees'
@@ -193,7 +194,7 @@
       await saveSafetyInspection({
         ...toRaw(form.model),
         inspectionName: form.model.inspectionName.trim(),
-        remark: form.model.remark?.trim() || null,
+        remark: normalizeNullableText(form.model.remark),
         planAttachmentUrls: [...form.model.planAttachmentUrls],
         inspectorIds: [...form.model.inspectorIds]
       })

@@ -185,6 +185,7 @@
 </template>
 
 <script setup lang="ts">
+  import { normalizeNullableText } from '@/utils/form/normalize'
   import type { FormRules } from 'element-plus'
   import { cloneDeep } from 'lodash-es'
   import ArtDialog from '@/components/core/dialogs/art-dialog/index.vue'
@@ -447,8 +448,8 @@
           fieldLabel: definition.fieldLabel.trim(),
           fieldType: definition.fieldType,
           required: definition.required,
-          placeholder: definition.placeholder.trim() || null,
-          unit: definition.unit.trim() || null,
+          placeholder: normalizeNullableText(definition.placeholder),
+          unit: normalizeNullableText(definition.unit),
           options: ['single', 'multiple'].includes(definition.fieldType)
             ? normalizeOptions(definition.optionsText)
             : [],
@@ -459,7 +460,7 @@
         tenantId: targetTenantId.value,
         typeCode: form.model.typeCode.trim().toUpperCase(),
         typeName: form.model.typeName.trim(),
-        remark: form.model.remark.trim() || null,
+        remark: normalizeNullableText(form.model.remark),
         sort: Number(form.model.sort),
         textColor: form.model.textColor || null,
         tagStyle: form.model.tagStyle,

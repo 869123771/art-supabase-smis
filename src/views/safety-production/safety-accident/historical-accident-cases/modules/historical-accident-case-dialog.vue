@@ -62,6 +62,7 @@
 </template>
 
 <script setup lang="ts">
+  import { normalizeNullableText } from '@/utils/form/normalize'
   import dayjs from 'dayjs'
   import { cloneDeep } from 'lodash-es'
   import type { FormRules } from 'element-plus'
@@ -227,7 +228,7 @@
         occurrenceDate: form.occurrenceDate,
         caseStatus: (form.caseStatus as SmisAccidentCaseStatus) || null,
         applicableCompanyId: form.applicableCompanyId || null,
-        summary: form.summary.trim() || null,
+        summary: normalizeNullableText(form.summary),
         content: form.content.trim(),
         imageUrls: [...form.imageUrls],
         attachmentUrls: [...form.attachmentUrls]

@@ -1,3 +1,4 @@
+import { normalizeNullableText } from '@/utils/form/normalize'
 import { omit } from 'lodash-es'
 import { useSupabase } from '@/hooks'
 import type {
@@ -26,7 +27,7 @@ export async function fetchSiteEmployeeOptions(params: EmployeeSelectorContractP
       supabase.rpc('smis_list_site_employees_secure', {
         p_from: from,
         p_to: Math.max(params.to ?? from + 19, from),
-        p_keyword: params.keyword?.trim() || null
+        p_keyword: normalizeNullableText(params.keyword)
       }),
     { showErrorMessage: true }
   )

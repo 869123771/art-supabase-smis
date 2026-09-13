@@ -92,6 +92,7 @@
 </template>
 
 <script setup lang="ts">
+  import { normalizeNullableText } from '@/utils/form/normalize'
   import dayjs from 'dayjs'
   import { ElMessage, type FormRules } from 'element-plus'
   import type { EmployeeIntegrationItem } from '@/api/integration/employees'
@@ -370,17 +371,17 @@
     organizerOrganizationId: form.organizerOrganizationId,
     targetOrganizationId: form.targetOrganizationId || null,
     responsibleEmployeeId: form.responsibleEmployeeId || null,
-    instructorName: form.instructorName.trim() || null,
+    instructorName: normalizeNullableText(form.instructorName),
     plannedStartAt: dayjs(form.plannedStartAt).toISOString(),
     plannedEndAt: dayjs(form.plannedEndAt).toISOString(),
-    location: form.location.trim() || null,
+    location: normalizeNullableText(form.location),
     content: form.content.trim(),
-    requirements: form.requirements.trim() || null,
+    requirements: normalizeNullableText(form.requirements),
     trainingHours: Number(form.trainingHours || 0),
     assessmentMethod: form.assessmentMethod,
     warningStatus: form.warningStatus,
     attachmentUrls: [...form.attachmentUrls],
-    remark: form.remark.trim() || null,
+    remark: normalizeNullableText(form.remark),
     participantIds: [...form.participantIds]
   })
 

@@ -76,6 +76,7 @@
   </ArtDialog>
 </template>
 <script setup lang="tsx">
+  import { normalizeNullableText } from '@/utils/form/normalize'
   import dayjs from 'dayjs'
   import { ElButton, ElDatePicker, ElInput, ElInputNumber, type FormRules } from 'element-plus'
   import type { EmployeeIntegrationItem } from '@/api/integration/employees'
@@ -419,14 +420,14 @@
         operationDate: model.operationDate,
         warehouseId: model.warehouseId,
         handlerEmployeeId: model.handlerEmployeeId,
-        transferOrderNo: model.transferOrderNo.trim() || null,
-        outboundReason: model.outboundReason.trim() || null,
-        description: model.description.trim() || null,
+        transferOrderNo: normalizeNullableText(model.transferOrderNo),
+        outboundReason: normalizeNullableText(model.outboundReason),
+        description: normalizeNullableText(model.description),
         items: model.items.map(({ catalogId, quantity, productionDate, remark }) => ({
           catalogId,
           quantity,
           productionDate,
-          remark: remark?.trim() || null
+          remark: normalizeNullableText(remark)
         }))
       })
       emit('success')

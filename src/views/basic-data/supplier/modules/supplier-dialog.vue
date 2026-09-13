@@ -40,6 +40,7 @@
 </template>
 
 <script setup lang="ts">
+  import { normalizeNullableText } from '@/utils/form/normalize'
   import type { FormRules } from 'element-plus'
   import ArtDialog from '@/components/core/dialogs/art-dialog/index.vue'
   import type { ArtDialogExpose } from '@/components/core/dialogs/art-dialog/types'
@@ -258,15 +259,15 @@
         ...toRaw(form.model),
         supplierCode: form.model.supplierCode.trim().toUpperCase(),
         supplierName: form.model.supplierName.trim(),
-        supplierGroup: form.model.supplierGroup?.trim() || null,
-        contactPerson: form.model.contactPerson?.trim() || null,
-        contactPhone: form.model.contactPhone?.trim() || null,
-        region: form.model.region?.trim() || null,
-        regionAdcode: form.model.regionAdcode?.trim() || null,
-        addressDetail: form.model.addressDetail?.trim() || null,
+        supplierGroup: normalizeNullableText(form.model.supplierGroup),
+        contactPerson: normalizeNullableText(form.model.contactPerson),
+        contactPhone: normalizeNullableText(form.model.contactPhone),
+        region: normalizeNullableText(form.model.region),
+        regionAdcode: normalizeNullableText(form.model.regionAdcode),
+        addressDetail: normalizeNullableText(form.model.addressDetail),
         longitude: form.model.longitude === '' ? null : form.model.longitude,
         latitude: form.model.latitude === '' ? null : form.model.latitude,
-        remark: form.model.remark?.trim() || null
+        remark: normalizeNullableText(form.model.remark)
       })
       emit('success', form.model.id ? 'edit' : 'add')
       return true

@@ -83,6 +83,7 @@
 </template>
 
 <script setup lang="ts">
+  import { normalizeNullableText } from '@/utils/form/normalize'
   import dayjs from 'dayjs'
   import { ElMessage, type FormRules } from 'element-plus'
   import ArtDialog from '@/components/core/dialogs/art-dialog/index.vue'
@@ -323,13 +324,13 @@
         categoryId: form.categoryId,
         title: form.title.trim(),
         status: form.status,
-        summary: form.summary.trim() || null,
+        summary: normalizeNullableText(form.summary),
         fileName: isUploadMode.value ? form.fileName : null,
         fileUrl: isUploadMode.value ? form.fileUrl : null,
         fileType: isUploadMode.value ? form.fileType || null : null,
         fileSize: isUploadMode.value ? (form.fileSize ?? null) : null,
         effectiveDate: isUploadMode.value ? form.effectiveDate : null,
-        replacementNote: isUploadMode.value ? form.replacementNote.trim() || null : null,
+        replacementNote: isUploadMode.value ? normalizeNullableText(form.replacementNote) : null,
         duplicateAction: form.duplicateAction ?? 'none',
         duplicateDocumentId: form.duplicateDocumentId ?? null
       })

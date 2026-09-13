@@ -1,3 +1,4 @@
+import { normalizeNullableText } from '@/utils/form/normalize'
 import { omit } from 'lodash-es'
 import { useSupabase } from '@/hooks'
 import TreeUtils from '@/utils/tree'
@@ -60,7 +61,7 @@ export async function fetchAccidentEmployeeCandidates(
       supabase.rpc('smis_list_accident_employee_candidates_secure', {
         p_from: from,
         p_to: Math.max(params.to ?? from + 19, from),
-        p_keyword: params.keyword?.trim() || null
+        p_keyword: normalizeNullableText(params.keyword)
       }),
     { showErrorMessage: true }
   )
@@ -79,7 +80,7 @@ export async function fetchAccidentReportList(params: SmisAccidentReportSearchPa
       supabase.rpc('smis_list_accident_reports_secure', {
         p_from: from,
         p_to: Math.max(params.to ?? from + 19, from),
-        p_keyword: params.keyword?.trim() || null,
+        p_keyword: normalizeNullableText(params.keyword),
         p_accident_level: params.accidentLevel || null,
         p_accident_category: params.accidentCategory || null,
         p_organization_id: params.organizationId || null,
@@ -130,7 +131,7 @@ export async function fetchHistoricalAccidentCaseList(
       supabase.rpc('smis_list_historical_accident_cases_secure', {
         p_from: from,
         p_to: Math.max(params.to ?? from + 19, from),
-        p_keyword: params.keyword?.trim() || null,
+        p_keyword: normalizeNullableText(params.keyword),
         p_accident_level: params.accidentLevel || null,
         p_start_date: params.startDate || null,
         p_end_date: params.endDate || null,
@@ -193,7 +194,7 @@ export async function fetchAccidentReportOptions(keyword?: string) {
   const result = await responseHandle<SmisAccidentOption[]>(
     () =>
       supabase.rpc('smis_list_accident_report_options_secure', {
-        p_keyword: keyword?.trim() || null
+        p_keyword: normalizeNullableText(keyword)
       }),
     { showErrorMessage: true }
   )
@@ -207,7 +208,7 @@ export async function fetchAccidentAnalysisList(params: SmisAccidentAnalysisSear
       supabase.rpc('smis_list_accident_analyses_secure', {
         p_from: from,
         p_to: Math.max(params.to ?? from + 19, from),
-        p_keyword: params.keyword?.trim() || null,
+        p_keyword: normalizeNullableText(params.keyword),
         p_accident_level: params.accidentLevel || null,
         p_ids: params.ids?.length ? params.ids : null
       }),
@@ -250,7 +251,7 @@ export async function fetchWorkInjuryDeclarationList(params: SmisWorkInjurySearc
       supabase.rpc('smis_list_work_injury_declarations_secure', {
         p_from: from,
         p_to: Math.max(params.to ?? from + 19, from),
-        p_keyword: params.keyword?.trim() || null,
+        p_keyword: normalizeNullableText(params.keyword),
         p_injury_type: params.injuryType || null,
         p_start_date: params.startDate || null,
         p_end_date: params.endDate || null,

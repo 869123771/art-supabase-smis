@@ -1,3 +1,4 @@
+import { normalizeNullableText } from '@/utils/form/normalize'
 import { omit } from 'lodash-es'
 import { useSupabase } from '@/hooks'
 import TreeUtils from '@/utils/tree'
@@ -34,7 +35,7 @@ export async function fetchToolScopeOptions(kind: 'position' | 'organization', k
     () =>
       supabase.rpc('smis_list_tool_scope_options_secure', {
         p_kind: kind,
-        p_keyword: keyword?.trim() || null
+        p_keyword: normalizeNullableText(keyword)
       }),
     { showErrorMessage: true }
   )
@@ -60,7 +61,7 @@ export async function fetchToolIssuanceStandardList(
       supabase.rpc('smis_list_tool_issuance_standards_secure', {
         p_from: from,
         p_to: Math.max(params.to ?? from + 19, from),
-        p_keyword: params.keyword?.trim() || null,
+        p_keyword: normalizeNullableText(params.keyword),
         p_status: params.status || null,
         p_purpose: params.purpose ?? 'list'
       }),
@@ -105,7 +106,7 @@ export async function fetchToolPersonalStandardList(
       supabase.rpc('smis_list_tool_personal_standards_secure', {
         p_from: from,
         p_to: Math.max(params.to ?? from + 19, from),
-        p_keyword: params.keyword?.trim() || null,
+        p_keyword: normalizeNullableText(params.keyword),
         p_organization_ids: params.organizationIds?.length ? params.organizationIds : null,
         p_position_id: params.positionId || null,
         p_only_missing: Boolean(params.onlyMissing),

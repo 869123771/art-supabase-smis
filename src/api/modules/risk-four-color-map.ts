@@ -1,3 +1,4 @@
+import { normalizeNullableText } from '@/utils/form/normalize'
 import { omit } from 'lodash-es'
 import { useSupabase } from '@/hooks'
 
@@ -91,7 +92,7 @@ export async function saveRiskMapScene(params: SmisRiskMapScenePayload) {
         p_id: params.id ?? null,
         p_parent_id: params.parentId || null,
         p_scene_name: params.sceneName.trim(),
-        p_background_url: params.backgroundUrl?.trim() || null,
+        p_background_url: normalizeNullableText(params.backgroundUrl),
         p_canvas_width: params.canvasWidth,
         p_canvas_height: params.canvasHeight,
         p_sort: params.sort

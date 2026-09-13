@@ -62,6 +62,7 @@
 </template>
 
 <script setup lang="tsx">
+  import { normalizeNullableText } from '@/utils/form/normalize'
   import dayjs from 'dayjs'
   import { ElImage, ElMessage } from 'element-plus'
   import type { SearchFormItem } from '@/components/core/forms/art-search-bar/index.vue'
@@ -434,12 +435,12 @@
         controlOrganizationId: org.id,
         responsibleEmployeeId: employeeId,
         quantity,
-        location: String(raw.location || '').trim() || null,
-        evaluationDate: String(raw.evaluationDate || '').trim() || null,
-        evaluationOrganization: String(raw.evaluationOrganization || '').trim() || null,
-        filingDate: String(raw.filingDate || '').trim() || null,
-        filingOrganization: String(raw.filingOrganization || '').trim() || null,
-        filingNo: String(raw.filingNo || '').trim() || null,
+        location: normalizeNullableText(String(raw.location || '')),
+        evaluationDate: normalizeNullableText(String(raw.evaluationDate || '')),
+        evaluationOrganization: normalizeNullableText(String(raw.evaluationOrganization || '')),
+        filingDate: normalizeNullableText(String(raw.filingDate || '')),
+        filingOrganization: normalizeNullableText(String(raw.filingOrganization || '')),
+        filingNo: normalizeNullableText(String(raw.filingNo || '')),
         imageUrls: [],
         remark: String(raw.remark || '')
       })

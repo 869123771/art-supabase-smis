@@ -60,6 +60,7 @@
 </template>
 
 <script setup lang="ts">
+  import { normalizeNullableText } from '@/utils/form/normalize'
   import dayjs from 'dayjs'
   import type { FormRules } from 'element-plus'
   import type { EmployeeIntegrationItem } from '@/api/integration/employees'
@@ -226,7 +227,7 @@
             : Number(form.model.examScore),
         responsibleEmployeeIds: [...form.model.responsibleEmployeeIds],
         attachmentUrls: [...form.model.attachmentUrls],
-        educationRemark: form.model.educationRemark.trim() || null
+        educationRemark: normalizeNullableText(form.model.educationRemark)
       }
       await recordThreeViolationEducation(row.id, payload)
       emit('success')

@@ -104,7 +104,9 @@
 </template>
 
 <script setup lang="ts">
-  import dayjs from 'dayjs'
+  import { createDateTimeFormatter } from '@/utils/ui/format'
+
+  import { normalizeNullableText } from '@/utils/form/normalize'
   import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
   import type { EmployeeIntegrationItem } from '@/api/integration/employees'
   import ArtDialog from '@/components/core/dialogs/art-dialog/index.vue'
@@ -155,7 +157,7 @@
   const completedCount = computed(
     () => form.items.filter((item) => item.result !== 'pending').length
   )
-  const formatDate = (value: string): string => dayjs(value).format('YYYY-MM-DD HH:mm')
+  const formatDate = createDateTimeFormatter({ format: 'YYYY-MM-DD HH:mm' })
   const toEmployee = (value: SmisRiskInspectionTaskDetail): EmployeeIntegrationItem[] =>
     value.actualExecutorEmployeeId && value.actualExecutorEmployeeName
       ? [
@@ -205,9 +207,9 @@
       await saveRiskInspectionExecution({
         id: detail.value.id,
         actualExecutorEmployeeId: form.actualExecutorEmployeeId!,
-        executionSummary: form.executionSummary.trim() || null,
+        executionSummary: normalizeNullableText(form.executionSummary),
         attachmentUrls: [...form.attachmentUrls],
-        items: form.items.map((item) => ({ ...item, remark: item.remark.trim() || null })),
+        items: form.items.map((item) => ({ ...item, remark: normalizeNullableText(item.remark) })),
         complete
       })
       emit('success')

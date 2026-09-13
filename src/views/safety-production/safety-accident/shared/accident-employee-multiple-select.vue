@@ -13,7 +13,7 @@
     :description-key="employeeDescription"
     empty-text="暂无可选员工"
     empty-description="当前租户没有可选的在职或试用期员工，请先完善员工花名册。"
-    @update:model-value="emit('update:modelValue', normalizeIds($event))"
+    @update:model-value="emit('update:modelValue', normalizeStringList($event))"
     @update:selected-data="emit('update:selectedData', normalizeRows($event))"
   >
     <template #empty>
@@ -23,6 +23,8 @@
 </template>
 
 <script setup lang="ts">
+  import { normalizeStringList } from '@/utils/form/normalize'
+
   import { h } from 'vue'
   import ArtDictDisplay from '@/components/core/base/art-dict-display/index.vue'
   import ArtTableMultipleSelect from '@/components/core/forms/art-data-select/table-multiple.vue'
@@ -30,7 +32,6 @@
   import type {
     DataSelectColumn,
     DataSelectFetchParams,
-    DataSelectKey,
     DataSelectRecord
   } from '@/components/core/forms/art-data-select/types'
   import { fetchAccidentEmployeeCandidates, type SmisAccidentEmployee } from '@smis/api'
@@ -99,7 +100,6 @@
     })
     return { data: result.data, total: result.total }
   }
-  const normalizeIds = (value: DataSelectKey | DataSelectKey[] | undefined): string[] =>
-    (Array.isArray(value) ? value : value == null ? [] : [value]).map(String)
+
   const normalizeRows = (rows: DataSelectRecord[]): SmisAccidentEmployee[] => rows.map(employee)
 </script>

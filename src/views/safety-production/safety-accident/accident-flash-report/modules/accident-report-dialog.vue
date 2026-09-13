@@ -58,6 +58,7 @@
 </template>
 
 <script setup lang="ts">
+  import { normalizeNullableText } from '@/utils/form/normalize'
   import dayjs from 'dayjs'
   import { cloneDeep } from 'lodash-es'
   import { computed, nextTick, onDeactivated, reactive, ref, shallowRef } from 'vue'
@@ -383,10 +384,10 @@
           employeeId: person.employeeId,
           jobYears: person.jobYears ?? null,
           safetyEducationCount: person.safetyEducationCount ?? null,
-          victimNature: person.victimNature?.trim() || null,
-          injuryPart: person.injuryPart?.trim() || null,
-          injuryDegree: person.injuryDegree?.trim() || null,
-          remark: person.remark?.trim() || null,
+          victimNature: normalizeNullableText(person.victimNature),
+          injuryPart: normalizeNullableText(person.injuryPart),
+          injuryDegree: normalizeNullableText(person.injuryDegree),
+          remark: normalizeNullableText(person.remark),
           sort: index
         }))
       })

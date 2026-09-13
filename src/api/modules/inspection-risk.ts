@@ -1,3 +1,4 @@
+import { normalizeNullableText } from '@/utils/form/normalize'
 import { buildOrIlikeFilter } from '@/utils/supabase/search'
 import { omit } from 'lodash-es'
 import { useSupabase } from '@/hooks'
@@ -462,7 +463,7 @@ export async function fetchRiskPositionOptions(keyword = '', from = 0, to = 49) 
   const result = await responseHandle<PositionListPayload>(
     () =>
       supabase.rpc('smis_list_active_risk_positions_secure', {
-        p_keyword: keyword.trim() || null,
+        p_keyword: normalizeNullableText(keyword),
         p_from: from,
         p_to: to
       }),

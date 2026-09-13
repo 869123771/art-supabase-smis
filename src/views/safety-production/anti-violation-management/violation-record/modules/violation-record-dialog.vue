@@ -62,6 +62,7 @@
 </template>
 
 <script setup lang="ts">
+  import { normalizeNullableText } from '@/utils/form/normalize'
   import dayjs from 'dayjs'
   import type { FormRules } from 'element-plus'
   import type { EmployeeIntegrationItem } from '@/api/integration/employees'
@@ -321,9 +322,9 @@
         violatorEmployeeIds: [...form.model.violatorEmployeeIds],
         standardIds: [...form.model.standardIds],
         fineAmount: Number(form.model.fineAmount || 0),
-        situationDescription: form.model.situationDescription?.trim() || null,
+        situationDescription: normalizeNullableText(form.model.situationDescription),
         imageUrls: [...form.model.imageUrls],
-        remark: form.model.remark?.trim() || null
+        remark: normalizeNullableText(form.model.remark)
       }
       await saveViolationRecord(payload)
       emit('success', mode.value)

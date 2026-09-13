@@ -121,6 +121,7 @@
 </template>
 
 <script setup lang="ts">
+  import { normalizeNullableText } from '@/utils/form/normalize'
   import type { FormInstance, FormRules } from 'element-plus'
   import ArtDialog from '@/components/core/dialogs/art-dialog/index.vue'
   import type { ArtDialogExpose } from '@/components/core/dialogs/art-dialog/types'
@@ -197,7 +198,7 @@
         ...form,
         id: row.value?.id,
         hazardFactor: form.hazardFactor.trim(),
-        consequence: form.consequence?.trim() || null,
+        consequence: normalizeNullableText(form.consequence),
         accidentTypes: [...form.accidentTypes],
         activityIds: [...form.activityIds]
       })

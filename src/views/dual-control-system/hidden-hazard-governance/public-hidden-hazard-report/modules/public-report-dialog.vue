@@ -55,6 +55,7 @@
 </template>
 
 <script setup lang="ts">
+  import { normalizeNullableText } from '@/utils/form/normalize'
   import type { FormRules } from 'element-plus'
   import ArtDialog from '@/components/core/dialogs/art-dialog/index.vue'
   import type { ArtDialogExpose } from '@/components/core/dialogs/art-dialog/types'
@@ -219,10 +220,10 @@
         description: form.model.description.trim(),
         location: form.model.location.trim(),
         publicReporterName: form.model.publicReporterName?.trim(),
-        publicReporterPhone: form.model.publicReporterPhone?.trim() || null,
-        publicReporterIdCard: form.model.publicReporterIdCard?.trim() || null,
-        publicReporterUnit: form.model.publicReporterUnit?.trim() || null,
-        rectificationSuggestion: form.model.rectificationSuggestion?.trim() || null,
+        publicReporterPhone: normalizeNullableText(form.model.publicReporterPhone),
+        publicReporterIdCard: normalizeNullableText(form.model.publicReporterIdCard),
+        publicReporterUnit: normalizeNullableText(form.model.publicReporterUnit),
+        rectificationSuggestion: normalizeNullableText(form.model.rectificationSuggestion),
         imageUrls: [...form.model.imageUrls]
       })
       emit('success')

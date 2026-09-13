@@ -150,6 +150,8 @@
 </template>
 
 <script setup lang="ts">
+  import { createDateTimeFormatter } from '@/utils/ui/format'
+
   import dayjs from 'dayjs'
   import ArtDialog from '@/components/core/dialogs/art-dialog/index.vue'
   import type { ArtDialogExpose } from '@/components/core/dialogs/art-dialog/types'
@@ -210,10 +212,8 @@
       ? 'warning'
       : 'normal'
   })
-  const formatDateTime = (value?: string | null): string =>
-    value ? dayjs(value).format('YYYY-MM-DD HH:mm') : '—'
-  const formatDate = (value?: string | null): string =>
-    value ? dayjs(value).format('YYYY-MM-DD') : '—'
+  const formatDateTime = createDateTimeFormatter({ format: 'YYYY-MM-DD HH:mm', emptyText: '—' })
+  const formatDate = createDateTimeFormatter({ format: 'YYYY-MM-DD', emptyText: '—' })
 
   const rescueBasicItems: ArtDescriptionItem<SmisEmergencyRescuePlan>[] = [
     { key: 'planNo', label: '预案编码', field: 'planNo', copyable: true },

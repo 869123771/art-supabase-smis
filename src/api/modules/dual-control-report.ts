@@ -1,3 +1,4 @@
+import { normalizeNullableText } from '@/utils/form/normalize'
 import { useSupabase } from '@/hooks'
 import type {
   SmisDualControlReportOverview,
@@ -148,7 +149,7 @@ export async function fetchRiskControlInformationList(
       supabase.rpc('smis_list_risk_control_information_secure', {
         p_from: from,
         p_to: Math.max(params.to ?? from + 19, from),
-        p_keyword: params.keyword?.trim() || null,
+        p_keyword: normalizeNullableText(params.keyword),
         p_organization_id: params.organizationId || null,
         p_site_id: params.siteId || null,
         p_risk_level: params.riskLevel || null,
@@ -178,7 +179,7 @@ export async function fetchHiddenHazardLedgerList(params: SmisHiddenHazardLedger
       supabase.rpc('smis_list_hidden_hazard_ledger_secure', {
         p_from: from,
         p_to: Math.max(params.to ?? from + 19, from),
-        p_keyword: params.keyword?.trim() || null,
+        p_keyword: normalizeNullableText(params.keyword),
         p_organization_id: params.organizationId || null,
         p_reported_from: params.reportedFrom || null,
         p_reported_to: params.reportedTo || null,
@@ -207,7 +208,7 @@ export async function fetchDualControlManagementReport(
         p_to: Math.max(params.to ?? from + 19, from),
         p_month: params.month ? `${params.month}-01` : null,
         p_organization_id: params.organizationId || null,
-        p_keyword: params.keyword?.trim() || null
+        p_keyword: normalizeNullableText(params.keyword)
       }),
     { showErrorMessage: true }
   )
@@ -237,7 +238,7 @@ export async function fetchHiddenHazardInspectionReport(
         p_planned_from: params.plannedFrom || null,
         p_planned_to: params.plannedTo || null,
         p_organization_id: params.organizationId || null,
-        p_keyword: params.keyword?.trim() || null
+        p_keyword: normalizeNullableText(params.keyword)
       }),
     { showErrorMessage: true }
   )
@@ -314,7 +315,7 @@ export async function fetchHiddenHazardInspectionRecord(
         p_planned_from: params.plannedFrom || null,
         p_planned_to: params.plannedTo || null,
         p_organization_id: params.organizationId || null,
-        p_executor_keyword: params.executorKeyword?.trim() || null,
+        p_executor_keyword: normalizeNullableText(params.executorKeyword),
         p_is_special_equipment:
           params.isSpecialEquipment === '' ? null : (params.isSpecialEquipment ?? null)
       }),
@@ -333,7 +334,7 @@ export async function fetchNoHiddenHazardPersonnelStatistics(
         p_reported_to: params.reportedTo || null,
         p_organization_id: params.organizationId || null,
         p_max_hazard_count: Math.max(params.maxHazardCount ?? 0, 0),
-        p_employee_keyword: params.employeeKeyword?.trim() || null
+        p_employee_keyword: normalizeNullableText(params.employeeKeyword)
       }),
     { showErrorMessage: true }
   )

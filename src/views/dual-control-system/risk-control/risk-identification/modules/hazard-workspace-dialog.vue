@@ -283,6 +283,7 @@
 </template>
 
 <script setup lang="ts">
+  import { normalizeNullableText } from '@/utils/form/normalize'
   import { Plus } from '@element-plus/icons-vue'
   import { ElMessage } from 'element-plus'
   import ArtDialog from '@/components/core/dialogs/art-dialog/index.vue'
@@ -430,7 +431,7 @@
       hazardFactor: hazardForm.hazardFactor.trim(),
       factorCategoryId: hazardForm.factorCategoryId,
       accidentTypes: [...hazardForm.accidentTypes],
-      consequence: hazardForm.consequence.trim() || null,
+      consequence: normalizeNullableText(hazardForm.consequence),
       activityIds: [...hazardForm.activityIds],
       sort: hazardForm.sort
     })

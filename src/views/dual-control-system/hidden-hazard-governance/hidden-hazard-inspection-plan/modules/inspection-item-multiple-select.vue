@@ -13,7 +13,7 @@
     :description-key="itemDescription"
     empty-text="暂无可用排查标准"
     empty-description="请先在排查标准中启用至少一条排查项。"
-    @update:model-value="emit('update:modelValue', normalizeIds($event))"
+    @update:model-value="emit('update:modelValue', normalizeStringList($event))"
     @update:selected-data="emit('update:selectedData', normalizeRows($event))"
   >
     <template #empty><SmisDataSourceEmptyActions source="inspection-standard" /></template>
@@ -21,11 +21,12 @@
 </template>
 
 <script setup lang="ts">
+  import { normalizeStringList } from '@/utils/form/normalize'
+
   import ArtTableMultipleSelect from '@/components/core/forms/art-data-select/table-multiple.vue'
   import type {
     DataSelectColumn,
     DataSelectFetchParams,
-    DataSelectKey,
     DataSelectRecord
   } from '@/components/core/forms/art-data-select/types'
   import { fetchInspectionItems, type SmisInspectionItem } from '@smis/api'
@@ -70,7 +71,6 @@
     })
     return { data: result.data, total: result.total }
   }
-  const normalizeIds = (value: DataSelectKey | DataSelectKey[] | undefined): string[] =>
-    (Array.isArray(value) ? value : value == null ? [] : [value]).map(String)
+
   const normalizeRows = (rows: DataSelectRecord[]): SmisInspectionItem[] => rows.map(item)
 </script>

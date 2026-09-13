@@ -77,6 +77,8 @@
 </template>
 
 <script setup lang="tsx">
+  import { createDateTimeFormatter } from '@/utils/ui/format'
+
   import dayjs from 'dayjs'
   import { computed, onMounted, reactive, ref } from 'vue'
   import { storeToRefs } from 'pinia'
@@ -243,8 +245,11 @@
     }
   ])
 
-  const formatDateTime = (value?: string): string =>
-    value && dayjs(value).isValid() ? dayjs(value).format('YYYY-MM-DD HH:mm') : '—'
+  const formatDateTime = createDateTimeFormatter({
+    format: 'YYYY-MM-DD HH:mm',
+    emptyText: '—',
+    invalidText: '—'
+  })
   const getLeaveTypeLabel = (row: LeaveInformation): string =>
     row.leaveTypeName || row.leaveTypeCode || '—'
   const resolveLeaveTypeLabel = (value: string): string =>

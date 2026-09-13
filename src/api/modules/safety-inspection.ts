@@ -1,3 +1,4 @@
+import { normalizeNullableText } from '@/utils/form/normalize'
 import { omit } from 'lodash-es'
 import { useSupabase } from '@/hooks'
 
@@ -119,12 +120,12 @@ export async function fetchSafetyInspectionList(params: SmisSafetyInspectionSear
       supabase.rpc('smis_list_safety_inspections_secure', {
         p_from: from,
         p_to: Math.max(params.to ?? from + 19, from),
-        p_inspection_name: params.inspectionName?.trim() || null,
+        p_inspection_name: normalizeNullableText(params.inspectionName),
         p_inspection_from: params.inspectionFrom || null,
         p_inspection_to: params.inspectionTo || null,
         p_inspected_organization_id: params.inspectedOrganizationId || null,
         p_inspection_type_id: params.inspectionTypeId || null,
-        p_inspector_keyword: params.inspectorKeyword?.trim() || null
+        p_inspector_keyword: normalizeNullableText(params.inspectorKeyword)
       }),
     { showErrorMessage: true }
   )

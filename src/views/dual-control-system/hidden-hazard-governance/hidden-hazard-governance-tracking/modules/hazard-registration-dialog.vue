@@ -58,6 +58,7 @@
 </template>
 
 <script setup lang="ts">
+  import { normalizeNullableText } from '@/utils/form/normalize'
   import dayjs from 'dayjs'
   import type { FormRules } from 'element-plus'
   import type { EmployeeIntegrationItem } from '@/api/integration/employees'
@@ -212,7 +213,7 @@
         reporterEmployeeId: form.model.reporterEmployeeId,
         reportedAt: form.model.reportedAt,
         imageUrls: [...form.model.imageUrls],
-        rectificationSuggestion: form.model.rectificationSuggestion.trim() || null
+        rectificationSuggestion: normalizeNullableText(form.model.rectificationSuggestion)
       })
       emit('success')
       return true

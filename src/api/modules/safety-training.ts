@@ -1,3 +1,4 @@
+import { normalizeNullableText } from '@/utils/form/normalize'
 import { omit } from 'lodash-es'
 import { useSupabase } from '@/hooks'
 import TreeUtils from '@/utils/tree'
@@ -33,7 +34,7 @@ export async function fetchSafetyTrainingPlanList(params: SmisSafetyTrainingPlan
       supabase.rpc('smis_list_safety_training_plans_secure', {
         p_from: from,
         p_to: Math.max(params.to ?? from + 19, from),
-        p_keyword: params.keyword?.trim() || null,
+        p_keyword: normalizeNullableText(params.keyword),
         p_status: params.status || null,
         p_execution_status: params.executionStatus || null,
         p_training_category: params.trainingCategory || null,
@@ -94,7 +95,7 @@ export async function fetchSafetyTrainingRecordList(
       supabase.rpc('smis_list_safety_training_records_secure', {
         p_from: from,
         p_to: Math.max(params.to ?? from + 19, from),
-        p_keyword: params.keyword?.trim() || null,
+        p_keyword: normalizeNullableText(params.keyword),
         p_status: params.status || null,
         p_start_at: params.dateRange?.[0] || null,
         p_end_at: params.dateRange?.[1] || null,

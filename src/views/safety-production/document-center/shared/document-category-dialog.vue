@@ -41,6 +41,7 @@
 </template>
 
 <script setup lang="ts">
+  import { normalizeNullableText } from '@/utils/form/normalize'
   import type { FormRules } from 'element-plus'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
   import ArtDialog from '@/components/core/dialogs/art-dialog/index.vue'
@@ -132,7 +133,7 @@
         ...toRaw(form),
         parentId: form.parentId || null,
         categoryName: form.categoryName.trim(),
-        description: form.description?.trim() || null
+        description: normalizeNullableText(form.description)
       })
       emit('success')
       return true

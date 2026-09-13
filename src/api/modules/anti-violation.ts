@@ -1,3 +1,4 @@
+import { normalizeNullableText } from '@/utils/form/normalize'
 import dayjs from 'dayjs'
 import { omit } from 'lodash-es'
 import { useSupabase } from '@/hooks'
@@ -96,7 +97,7 @@ export async function fetchViolationCategoryList(params: SmisViolationCategorySe
       supabase.rpc('smis_list_violation_categories_secure', {
         p_from: from,
         p_to: Math.max(params.to ?? from + 19, from),
-        p_keyword: params.keyword?.trim() || null,
+        p_keyword: normalizeNullableText(params.keyword),
         p_status: params.status || null,
         p_ancestor_id: params.ancestorId || null,
         p_purpose: params.purpose ?? 'list'
@@ -144,7 +145,7 @@ export async function fetchAntiViolationStandardList(
       supabase.rpc('smis_list_anti_violation_standards_secure', {
         p_from: from,
         p_to: Math.max(params.to ?? from + 19, from),
-        p_keyword: params.keyword?.trim() || null,
+        p_keyword: normalizeNullableText(params.keyword),
         p_status: params.status || null,
         p_category_id: params.categoryId || null,
         p_purpose: params.purpose ?? 'list'
@@ -192,7 +193,7 @@ export async function fetchThreeViolationEducationList(
       supabase.rpc('smis_list_three_violation_education_secure', {
         p_from: from,
         p_to: Math.max(params.to ?? from + 19, from),
-        p_keyword: params.keyword?.trim() || null,
+        p_keyword: normalizeNullableText(params.keyword),
         p_organization_id: params.organizationId || null,
         p_checker_employee_id: params.checkerEmployeeId || null,
         p_education_status: params.educationStatus || null,

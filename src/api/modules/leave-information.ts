@@ -1,3 +1,4 @@
+import { normalizeNullableText } from '@/utils/form/normalize'
 import { omit } from 'lodash-es'
 import { useSupabase } from '@/hooks'
 import type {
@@ -31,8 +32,8 @@ export async function fetchLeaveInformationList(params: LeaveInformationSearchPa
         p_from: from,
         p_to: Math.max(params.to ?? from + 19, from),
         p_organization_id: params.organizationId || null,
-        p_company_keyword: params.companyKeyword?.trim() || null,
-        p_applicant_keyword: params.applicantKeyword?.trim() || null,
+        p_company_keyword: normalizeNullableText(params.companyKeyword),
+        p_applicant_keyword: normalizeNullableText(params.applicantKeyword),
         p_start_date: params.startDate || null,
         p_end_date: params.endDate || null
       }),
@@ -74,7 +75,7 @@ export async function fetchLeaveEmployeeOptions(params: EmployeeSelectorContract
       supabase.rpc('smis_list_leave_employees_secure', {
         p_from: from,
         p_to: Math.max(params.to ?? from + 19, from),
-        p_keyword: params.keyword?.trim() || null
+        p_keyword: normalizeNullableText(params.keyword)
       }),
     { showErrorMessage: true }
   )

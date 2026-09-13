@@ -1,3 +1,4 @@
+import { normalizeNullableText } from '@/utils/form/normalize'
 import { omit } from 'lodash-es'
 import { useSupabase } from '@/hooks'
 import type {
@@ -83,7 +84,7 @@ export async function fetchToolPersonalRequisitionList(
         p_organization_id: params.organizationId || null,
         p_employee_id: params.employeeId || null,
         p_status: params.status || null,
-        p_keyword: params.keyword?.trim() || null,
+        p_keyword: normalizeNullableText(params.keyword),
         p_purpose: params.purpose ?? 'list'
       }),
     { showErrorMessage: true }
@@ -108,7 +109,7 @@ export async function fetchToolIssuanceRecordList(params: SmisToolIssuanceRecord
         p_organization_id: params.organizationId || null,
         p_employee_id: params.employeeId || null,
         p_status: params.status || null,
-        p_keyword: params.keyword?.trim() || null,
+        p_keyword: normalizeNullableText(params.keyword),
         p_purpose: params.purpose ?? 'list'
       }),
     { showErrorMessage: true }
@@ -178,7 +179,7 @@ export async function confirmToolRequisitionItems(
       supabase.rpc('smis_confirm_tool_requisition_items_secure', {
         p_item_ids: itemIds,
         p_confirmed: confirmed,
-        p_reason: reason?.trim() || null
+        p_reason: normalizeNullableText(reason)
       }),
     {
       showMessage: true,
@@ -247,7 +248,7 @@ export async function fetchToolReturnableItems(params: SmisToolReturnableSearchP
         p_from: from,
         p_to: Math.max(params.to ?? from + 19, from),
         p_employee_id: params.employeeId || null,
-        p_keyword: params.keyword?.trim() || null,
+        p_keyword: normalizeNullableText(params.keyword),
         p_purpose: params.purpose ?? 'list'
       }),
     { showErrorMessage: true }
@@ -270,7 +271,7 @@ export async function fetchToolReturnList(params: SmisToolReturnSearchParams = {
         p_date_to: params.dateRange?.[1] ?? null,
         p_employee_id: params.employeeId || null,
         p_status: params.status || null,
-        p_keyword: params.keyword?.trim() || null,
+        p_keyword: normalizeNullableText(params.keyword),
         p_purpose: params.purpose ?? 'list'
       }),
     { showErrorMessage: true }

@@ -1,3 +1,4 @@
+import { normalizeNullableText } from '@/utils/form/normalize'
 import { useSupabase } from '@/hooks'
 import type {
   SmisAccidentInspectionChecklistOverview,
@@ -39,7 +40,7 @@ export async function fetchPersonnelDualControlChecklist(params: SmisChecklistSe
       supabase.rpc('smis_list_personnel_dual_control_checklist_secure', {
         p_from: from,
         p_to: Math.max(params.to ?? from + 19, from),
-        p_keyword: params.keyword?.trim() || null,
+        p_keyword: normalizeNullableText(params.keyword),
         p_organization_id: params.organizationId || null,
         p_gender: params.gender || null
       }),
@@ -69,7 +70,7 @@ export async function fetchPositionRiskChecklist(params: SmisChecklistSearchPara
       supabase.rpc('smis_list_position_risk_checklist_secure', {
         p_from: from,
         p_to: Math.max(params.to ?? from + 19, from),
-        p_keyword: params.keyword?.trim() || null,
+        p_keyword: normalizeNullableText(params.keyword),
         p_organization_id: params.organizationId || null,
         p_risk_level: params.riskLevel || null
       }),
@@ -90,7 +91,7 @@ export async function fetchAccidentInspectionChecklist(params: SmisChecklistSear
       supabase.rpc('smis_list_accident_hidden_hazard_inspection_checklist_secure', {
         p_from: from,
         p_to: Math.max(params.to ?? from + 19, from),
-        p_keyword: params.keyword?.trim() || null,
+        p_keyword: normalizeNullableText(params.keyword),
         p_organization_id: params.organizationId || null,
         p_hazard_level: params.hazardLevel || null
       }),
@@ -111,7 +112,7 @@ export async function fetchPositionResponsibilityChecklist(params: SmisChecklist
       supabase.rpc('smis_list_position_safety_responsibility_checklist_secure', {
         p_from: from,
         p_to: Math.max(params.to ?? from + 19, from),
-        p_keyword: params.keyword?.trim() || null,
+        p_keyword: normalizeNullableText(params.keyword),
         p_organization_id: params.organizationId || null
       }),
     { showErrorMessage: true }

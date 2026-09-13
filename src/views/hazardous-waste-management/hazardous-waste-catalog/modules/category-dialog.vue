@@ -31,6 +31,7 @@
   </ArtDialog>
 </template>
 <script setup lang="ts">
+  import { normalizeNullableText } from '@/utils/form/normalize'
   import type { FormRules } from 'element-plus'
   import ArtDialog from '@/components/core/dialogs/art-dialog/index.vue'
   import type { ArtDialogExpose } from '@/components/core/dialogs/art-dialog/types'
@@ -165,7 +166,7 @@
         parentId: payload.parentId || null,
         categoryCode: payload.categoryCode.trim().toUpperCase(),
         categoryName: payload.categoryName.trim(),
-        description: payload.description?.trim() || null
+        description: normalizeNullableText(payload.description)
       })
       emit('success')
       return true

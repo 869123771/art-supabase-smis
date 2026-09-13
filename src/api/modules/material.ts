@@ -1,3 +1,4 @@
+import { normalizeNullableText } from '@/utils/form/normalize'
 import { omit } from 'lodash-es'
 import { useSupabase } from '@/hooks'
 import TreeUtils from '@/utils/tree'
@@ -64,7 +65,7 @@ export async function fetchMaterialCategoryList(params: SmisMaterialCategorySear
       supabase.rpc('smis_list_material_categories_secure', {
         p_from: from,
         p_to: Math.max(params.to ?? from + 19, from),
-        p_keyword: params.keyword?.trim() || null,
+        p_keyword: normalizeNullableText(params.keyword),
         p_status: params.status || null,
         p_ancestor_id: params.ancestorId || null
       }),
@@ -109,10 +110,10 @@ export async function fetchMaterialList(params: SmisMaterialSearchParams = {}) {
       supabase.rpc('smis_list_materials_secure', {
         p_from: from,
         p_to: Math.max(params.to ?? from + 19, from),
-        p_material_name: params.materialName?.trim() || null,
-        p_material_code: params.materialCode?.trim() || null,
-        p_specification_model: params.specificationModel?.trim() || null,
-        p_drawing_no: params.drawingNo?.trim() || null,
+        p_material_name: normalizeNullableText(params.materialName),
+        p_material_code: normalizeNullableText(params.materialCode),
+        p_specification_model: normalizeNullableText(params.specificationModel),
+        p_drawing_no: normalizeNullableText(params.drawingNo),
         p_category_id: params.categoryId || null,
         p_material_type: params.materialType || null,
         p_material_source: params.materialSource || null,

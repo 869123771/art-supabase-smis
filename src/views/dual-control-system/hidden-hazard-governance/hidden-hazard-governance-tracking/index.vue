@@ -125,7 +125,8 @@
 </template>
 
 <script setup lang="tsx">
-  import dayjs from 'dayjs'
+  import { createDateTimeFormatter } from '@/utils/ui/format'
+
   import type { SearchFormItem } from '@/components/core/forms/art-search-bar/index.vue'
   import type {
     ArtTableQueryExcelColumn,
@@ -309,8 +310,7 @@
     { key: 'sourceType', title: '隐患来源' }
   ]
 
-  const formatDateTime = (value?: string | null): string =>
-    value ? dayjs(value).format('YYYY-MM-DD HH:mm') : '—'
+  const formatDateTime = createDateTimeFormatter({ format: 'YYYY-MM-DD HH:mm', emptyText: '—' })
   const openDetail = (row: SmisHiddenHazardGovernanceRecord): void => {
     void detailRef.value?.handleOpen({ row })
   }

@@ -41,6 +41,7 @@
 </template>
 
 <script setup lang="ts">
+  import { normalizeNullableText } from '@/utils/form/normalize'
   import { computed, nextTick, reactive, ref, toRaw } from 'vue'
   import { storeToRefs } from 'pinia'
   import type { FormRules } from 'element-plus'
@@ -293,7 +294,7 @@
     positionId: form.positionId,
     primaryHazardCategory: form.primaryHazardCategory,
     secondaryHazardCategory: form.secondaryHazardCategory,
-    hazardContent: form.hazardContent?.trim() || null,
+    hazardContent: normalizeNullableText(form.hazardContent),
     hazardLevel: form.hazardLevel,
     riskLevel: form.riskLevel,
     inspectionItem: form.inspectionItem.trim(),

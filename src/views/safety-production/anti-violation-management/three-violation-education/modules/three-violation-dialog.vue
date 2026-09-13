@@ -62,6 +62,7 @@
 </template>
 
 <script setup lang="ts">
+  import { normalizeNullableText } from '@/utils/form/normalize'
   import dayjs from 'dayjs'
   import type { FormRules } from 'element-plus'
   import type { EmployeeIntegrationItem } from '@/api/integration/employees'
@@ -276,9 +277,9 @@
         warningStatus: form.model.warningStatus,
         inspectionTime: dayjs(form.model.inspectionTime).toISOString(),
         violationDescription: form.model.violationDescription.trim(),
-        plannedEducationContent: form.model.plannedEducationContent.trim() || null,
+        plannedEducationContent: normalizeNullableText(form.model.plannedEducationContent),
         responsibleEmployeeIds: [...form.model.responsibleEmployeeIds],
-        remark: form.model.remark.trim() || null
+        remark: normalizeNullableText(form.model.remark)
       }
       await saveThreeViolationEducation(payload)
       emit('success', form.model.id ? 'edit' : 'add')

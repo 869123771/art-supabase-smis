@@ -1,3 +1,4 @@
+import { normalizeNullableText } from '@/utils/form/normalize'
 import { omit } from 'lodash-es'
 import { useSupabase } from '@/hooks'
 import TreeUtils from '@/utils/tree'
@@ -50,7 +51,7 @@ export async function fetchHazardousWasteWarehouseList(
       supabase.rpc('smis_list_hazardous_waste_warehouses_secure', {
         p_from: from,
         p_to: Math.max(params.to ?? from + 19, from),
-        p_keyword: params.keyword?.trim() || null,
+        p_keyword: normalizeNullableText(params.keyword),
         p_status: params.status || null,
         p_ids: params.ids?.length ? params.ids : null,
         p_purpose: params.purpose ?? 'list'
@@ -96,7 +97,7 @@ export async function fetchHazardousWasteCatalogList(
       supabase.rpc('smis_list_hazardous_waste_catalog_secure', {
         p_from: from,
         p_to: Math.max(params.to ?? from + 19, from),
-        p_keyword: params.keyword?.trim() || null,
+        p_keyword: normalizeNullableText(params.keyword),
         p_status: params.status || null,
         p_category_id: params.categoryId || null,
         p_ids: params.ids?.length ? params.ids : null,
@@ -178,11 +179,11 @@ export async function fetchHazardousWasteDocumentList(
         p_direction: direction,
         p_from: from,
         p_to: Math.max(params.to ?? from + 19, from),
-        p_document_no: params.documentNo?.trim() || null,
+        p_document_no: normalizeNullableText(params.documentNo),
         p_date_from: params.dateRange?.[0] ?? null,
         p_date_to: params.dateRange?.[1] ?? null,
         p_warehouse_id: params.warehouseId || null,
-        p_handler_keyword: params.handlerKeyword?.trim() || null,
+        p_handler_keyword: normalizeNullableText(params.handlerKeyword),
         p_status: params.status || null,
         p_purpose: params.purpose ?? 'list'
       }),
@@ -249,7 +250,7 @@ export async function transitionHazardousWasteDocument(
         p_direction: direction,
         p_id: id,
         p_action: action,
-        p_remark: remark?.trim() || null
+        p_remark: normalizeNullableText(remark)
       }),
     { showMessage: true, breakReturn: true, message: `危废单据已${actionLabel}` }
   )

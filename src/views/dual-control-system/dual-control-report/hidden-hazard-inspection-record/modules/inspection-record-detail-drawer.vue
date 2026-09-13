@@ -56,7 +56,8 @@
 </template>
 
 <script setup lang="tsx">
-  import dayjs from 'dayjs'
+  import { createDateTimeFormatter } from '@/utils/ui/format'
+
   import type { ColumnOption } from '@/types'
   import ArtDrawer from '@/components/core/drawers/art-drawer/index.vue'
   import type { ArtDrawerExpose } from '@/components/core/drawers/art-drawer/types'
@@ -81,8 +82,7 @@
 
   const drawerRef = ref<ArtDrawerExpose<InspectionRecordDetailOpenData>>()
   const currentData = shallowRef<InspectionRecordDetailOpenData | null>(null)
-  const formatDateTime = (value?: string | null): string =>
-    value ? dayjs(value).format('YYYY-MM-DD HH:mm') : '—'
+  const formatDateTime = createDateTimeFormatter({ format: 'YYYY-MM-DD HH:mm', emptyText: '—' })
   const frequencyLabel = (unit: string, count: number): string =>
     `${count || 1}${({ shift: '班', day: '日', week: '周', ten_day: '旬', month: '月', quarter: '季', year: '年' } as Record<string, string>)[unit] || unit}`
 

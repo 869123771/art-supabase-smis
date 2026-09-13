@@ -59,6 +59,8 @@
 </template>
 
 <script setup lang="ts">
+  import { createDateTimeFormatter } from '@/utils/ui/format'
+
   import dayjs from 'dayjs'
   import ArtDescriptions from '@/components/core/base/art-descriptions/index.vue'
   import type { ArtDescriptionItem } from '@/components/core/base/art-descriptions/types'
@@ -72,7 +74,7 @@
   const drawerRef = ref<ArtDrawerExpose<SmisHazardSource>>()
   const detail = shallowRef<SmisHazardSource | null>(null)
   const emptyText = (value?: string | null) => value || '—'
-  const formatDate = (value?: string | null) => (value ? dayjs(value).format('YYYY-MM-DD') : '—')
+  const formatDate = createDateTimeFormatter({ format: 'YYYY-MM-DD', emptyText: '—' })
   const ledgerItems: ArtDescriptionItem<SmisHazardSource>[] = [
     { key: 'hazardNo', label: '危险源编号', field: 'hazardNo', copyable: true },
     { key: 'hazardName', label: '危险源名称', field: 'hazardName' },

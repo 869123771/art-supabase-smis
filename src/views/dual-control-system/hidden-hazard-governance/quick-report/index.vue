@@ -146,6 +146,7 @@
 </template>
 
 <script setup lang="ts">
+  import { normalizeNullableText } from '@/utils/form/normalize'
   import type { FormRules } from 'element-plus'
   import ArtForm, { type FormItem } from '@/components/core/forms/art-form/index.vue'
   import ArtPermissionGuard from '@/components/core/feedback/art-permission-guard/index.vue'
@@ -298,7 +299,7 @@
         ...toRaw(form.model),
         description: form.model.description.trim(),
         location: form.model.location.trim(),
-        rectificationSuggestion: form.model.rectificationSuggestion?.trim() || null,
+        rectificationSuggestion: normalizeNullableText(form.model.rectificationSuggestion),
         imageUrls: [...form.model.imageUrls]
       })
       resetForm()

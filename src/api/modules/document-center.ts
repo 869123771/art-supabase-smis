@@ -1,3 +1,4 @@
+import { normalizeNullableText } from '@/utils/form/normalize'
 import { omit } from 'lodash-es'
 import { useSupabase } from '@/hooks'
 import { normalizeBooleanFilter } from '@/api/providers/supabase/query'
@@ -108,7 +109,7 @@ export async function fetchDocumentList(params: SmisDocumentSearchParams = {}) {
       supabase.rpc('smis_list_documents_secure', {
         p_from: from,
         p_to: Math.max(params.to ?? from + 19, from),
-        p_keyword: params.keyword?.trim() || null,
+        p_keyword: normalizeNullableText(params.keyword),
         p_status: params.status ?? null,
         p_category_id: params.categoryId ?? null,
         p_scope: params.scope ?? 'all',
@@ -177,7 +178,7 @@ export async function shareDocument(params: {
       supabase.rpc('smis_share_document_secure', {
         p_document_id: params.documentId,
         p_user_ids: params.userIds,
-        p_message: params.message?.trim() || null
+        p_message: normalizeNullableText(params.message)
       }),
     { showMessage: true, breakReturn: true, message: '文档已分享' }
   )
@@ -197,8 +198,8 @@ export async function fetchDocumentRegisterList(params: SmisDocumentRegisterSear
       supabase.rpc('smis_list_document_registers_secure', {
         p_from: from,
         p_to: Math.max(params.to ?? from + 19, from),
-        p_file_name: params.fileName?.trim() || null,
-        p_document_code: params.documentCode?.trim() || null,
+        p_file_name: normalizeNullableText(params.fileName),
+        p_document_code: normalizeNullableText(params.documentCode),
         p_category_id: params.categoryId || null,
         p_kind: params.kind,
         p_is_special_equipment: normalizeBooleanFilter(params.isSpecialEquipment) ?? null,
@@ -265,7 +266,7 @@ export async function fetchLegalComplianceEvaluationList(
         p_document_id: params.documentId,
         p_from: from,
         p_to: Math.max(params.to ?? from + 19, from),
-        p_keyword: params.keyword?.trim() || null
+        p_keyword: normalizeNullableText(params.keyword)
       }),
     { showErrorMessage: true }
   )

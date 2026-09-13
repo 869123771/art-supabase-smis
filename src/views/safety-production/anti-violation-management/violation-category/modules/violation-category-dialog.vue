@@ -25,6 +25,7 @@
 </template>
 
 <script setup lang="ts">
+  import { normalizeNullableText } from '@/utils/form/normalize'
   import type { FormRules } from 'element-plus'
   import ArtDialog from '@/components/core/dialogs/art-dialog/index.vue'
   import type { ArtDialogExpose } from '@/components/core/dialogs/art-dialog/types'
@@ -173,7 +174,7 @@
         categoryName: form.model.categoryName.trim(),
         sort: Number(form.model.sort),
         status: form.model.status,
-        description: form.model.description.trim() || null
+        description: normalizeNullableText(form.model.description)
       }
       await saveViolationCategory(payload)
       emit('success', form.model.id ? 'edit' : 'add')

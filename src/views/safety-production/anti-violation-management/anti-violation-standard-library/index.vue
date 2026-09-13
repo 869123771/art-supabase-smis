@@ -70,6 +70,7 @@
 </template>
 
 <script setup lang="tsx">
+  import { normalizeNullableText } from '@/utils/form/normalize'
   import dayjs from 'dayjs'
   import TreeUtils from '@/utils/tree'
   import type { SearchFormItem } from '@/components/core/forms/art-search-bar/index.vue'
@@ -232,10 +233,10 @@
         standardCode,
         standardName,
         deductionPoints,
-        handlingRequirements: String(raw.handlingRequirements || '').trim() || null,
-        legalBasis: String(raw.legalBasis || '').trim() || null,
+        handlingRequirements: normalizeNullableText(String(raw.handlingRequirements || '')),
+        legalBasis: normalizeNullableText(String(raw.legalBasis || '')),
         status: raw.status === 'disabled' ? 'disabled' : 'enabled',
-        description: String(raw.description || '').trim() || null
+        description: normalizeNullableText(String(raw.description || ''))
       })
     }
     await tableQueryRef.value?.getData()

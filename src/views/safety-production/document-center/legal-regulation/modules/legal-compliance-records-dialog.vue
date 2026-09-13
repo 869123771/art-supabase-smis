@@ -37,7 +37,8 @@
 </template>
 
 <script setup lang="tsx">
-  import dayjs from 'dayjs'
+  import { createDateTimeFormatter } from '@/utils/ui/format'
+
   import type { SearchFormItem } from '@/components/core/forms/art-search-bar/index.vue'
   import type {
     ArtTableQueryExpose,
@@ -215,8 +216,7 @@
     if (item.key === 'delete') await handleDelete(row)
   }
   const handleSaveSuccess = (): void => void tableQueryRef.value?.getData()
-  const formatDate = (value?: string | null): string =>
-    value ? dayjs(value).format('YYYY-MM-DD') : '—'
+  const formatDate = createDateTimeFormatter({ format: 'YYYY-MM-DD', emptyText: '—' })
 
   const handleOpen = async (data: LegalComplianceRecordsDialogOpenData): Promise<void> => {
     document.value = data.document

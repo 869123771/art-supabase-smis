@@ -1,3 +1,4 @@
+import { normalizeNullableText } from '@/utils/form/normalize'
 import { omit } from 'lodash-es'
 import { useSupabase } from '@/hooks'
 import TreeUtils from '@/utils/tree'
@@ -59,7 +60,7 @@ export async function fetchEquipmentCategoryList(params: SmisEquipmentCategorySe
         supabase.rpc('smis_list_equipment_categories_secure', {
           p_from: from,
           p_to: Math.max(params.to ?? from + 19, from),
-          p_keyword: params.keyword?.trim() || null,
+          p_keyword: normalizeNullableText(params.keyword),
           p_status: params.status || null,
           p_ancestor_id: params.ancestorId || null
         }),

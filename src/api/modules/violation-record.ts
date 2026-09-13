@@ -1,3 +1,4 @@
+import { normalizeNullableText } from '@/utils/form/normalize'
 import dayjs from 'dayjs'
 import { omit } from 'lodash-es'
 import { useSupabase } from '@/hooks'
@@ -31,8 +32,8 @@ export async function fetchViolationRecordList(params: SmisViolationRecordSearch
       supabase.rpc('smis_list_violation_records_secure', {
         p_from: from,
         p_to: Math.max(params.to ?? from + 19, from),
-        p_record_no: params.recordNo?.trim() || null,
-        p_violation_keyword: params.violationKeyword?.trim() || null,
+        p_record_no: normalizeNullableText(params.recordNo),
+        p_violation_keyword: normalizeNullableText(params.violationKeyword),
         p_violator_employee_id: params.violatorEmployeeId || null,
         p_start_time: startTime ? dayjs(startTime).startOf('day').toISOString() : null,
         p_end_time: endTime ? dayjs(endTime).endOf('day').toISOString() : null,

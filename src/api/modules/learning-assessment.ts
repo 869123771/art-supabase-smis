@@ -1,3 +1,4 @@
+import { normalizeNullableText } from '@/utils/form/normalize'
 import { useSupabase } from '@/hooks'
 import type {
   SmisCourseLearningListResult,
@@ -31,7 +32,7 @@ export async function fetchQuestionBankList(params: SmisQuestionBankSearchParams
       supabase.rpc('smis_list_question_bank_secure', {
         p_from: from,
         p_to: to,
-        p_keyword: params.keyword?.trim() || null,
+        p_keyword: normalizeNullableText(params.keyword),
         p_category_id: params.categoryId || null,
         p_question_type: params.questionType || null,
         p_status: params.status || null
@@ -135,7 +136,7 @@ export async function fetchExamPaperList(params: SmisExamPaperSearchParams = {})
       supabase.rpc('smis_list_exam_papers_secure', {
         p_from: from,
         p_to: to,
-        p_keyword: params.keyword?.trim() || null,
+        p_keyword: normalizeNullableText(params.keyword),
         p_status: params.status || null,
         p_scope: params.scope ?? 'manage'
       }),
@@ -236,7 +237,7 @@ export async function fetchExamRecordList(params: SmisExamRecordSearchParams = {
       supabase.rpc('smis_list_exam_records_secure', {
         p_from: from,
         p_to: to,
-        p_keyword: params.keyword?.trim() || null,
+        p_keyword: normalizeNullableText(params.keyword),
         p_status: params.status || null
       }),
     { showErrorMessage: true }
@@ -256,7 +257,7 @@ export async function fetchCourseList(params: SmisCourseSearchParams = {}) {
       supabase.rpc('smis_list_courses_secure', {
         p_from: from,
         p_to: to,
-        p_keyword: params.keyword?.trim() || null,
+        p_keyword: normalizeNullableText(params.keyword),
         p_status: params.status || null,
         p_category: params.category || null,
         p_scope: params.scope ?? 'manage'
@@ -313,7 +314,7 @@ export async function fetchCourseLearningRecordList(params: SmisCourseLearningSe
       supabase.rpc('smis_list_course_learning_records_secure', {
         p_from: from,
         p_to: to,
-        p_keyword: params.keyword?.trim() || null,
+        p_keyword: normalizeNullableText(params.keyword),
         p_status: params.status || null
       }),
     { showErrorMessage: true }

@@ -41,7 +41,8 @@
 </template>
 
 <script setup lang="ts">
-  import dayjs from 'dayjs'
+  import { createDateTimeFormatter } from '@/utils/ui/format'
+
   import { useAuth } from '@/hooks/core/useAuth'
   import { ref, shallowRef } from 'vue'
   import type { ArtDescriptionItem } from '@/components/core/base/art-descriptions/types'
@@ -56,8 +57,7 @@
   const dialogRef = ref<ArtDialogExpose<SmisThreeViolationEducation>>()
   const record = shallowRef<SmisThreeViolationEducation>()
   const { hasAuth } = useAuth()
-  const formatDateTime = (value?: string | null): string =>
-    value ? dayjs(value).format('YYYY-MM-DD HH:mm') : '—'
+  const formatDateTime = createDateTimeFormatter({ format: 'YYYY-MM-DD HH:mm', emptyText: '—' })
   const responsibleNames = (row: SmisThreeViolationEducation): string =>
     row.responsibleEmployees.map((item) => item.employeeName).join('、') || '—'
   const responsibleOrganizations = (row: SmisThreeViolationEducation): string =>

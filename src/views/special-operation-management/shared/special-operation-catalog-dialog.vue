@@ -44,6 +44,7 @@
 </template>
 
 <script setup lang="ts">
+  import { normalizeNullableText } from '@/utils/form/normalize'
   import type { FormRules } from 'element-plus'
   import ArtDialog from '@/components/core/dialogs/art-dialog/index.vue'
   import type { ArtDialogExpose } from '@/components/core/dialogs/art-dialog/types'
@@ -264,8 +265,10 @@
         operationTypeId: form.model.operationTypeId,
         itemName: form.model.itemName.trim(),
         recordType: isSiteAnalysis.value ? form.model.recordType : null,
-        normalValue: isSiteAnalysis.value ? form.model.normalValue.trim() || null : null,
-        abnormalValue: isSiteAnalysis.value ? form.model.abnormalValue.trim() || null : null,
+        normalValue: isSiteAnalysis.value ? normalizeNullableText(form.model.normalValue) : null,
+        abnormalValue: isSiteAnalysis.value
+          ? normalizeNullableText(form.model.abnormalValue)
+          : null,
         sort: Number(form.model.sort),
         textColor: form.model.textColor || null,
         tagStyle: form.model.tagStyle,

@@ -87,7 +87,9 @@
 </template>
 
 <script setup lang="ts">
-  import dayjs from 'dayjs'
+  import { createDateTimeFormatter } from '@/utils/ui/format'
+
+  import { normalizeNullableText } from '@/utils/form/normalize'
   import { ElMessage } from 'element-plus'
   import ArtDialog from '@/components/core/dialogs/art-dialog/index.vue'
   import type { ArtDialogExpose } from '@/components/core/dialogs/art-dialog/types'
@@ -148,7 +150,7 @@
   const completedCount = computed(
     () => form.model.items.filter((item) => item.result !== 'pending').length
   )
-  const formatDate = (value: string): string => dayjs(value).format('YYYY-MM-DD HH:mm')
+  const formatDate = createDateTimeFormatter({ format: 'YYYY-MM-DD HH:mm' })
   const initialize = (value: SmisHiddenHazardInspectionTaskDetail): void => {
     Object.assign(form.model, {
       executionSummary: value.executionSummary || '',
@@ -174,9 +176,12 @@
       submitting.value = true
       await saveHiddenHazardInspectionExecution({
         id: detail.value.id,
-        executionSummary: form.model.executionSummary.trim() || null,
+        executionSummary: normalizeNullableText(form.model.executionSummary),
         attachmentUrls: [...form.model.attachmentUrls],
-        items: form.model.items.map((item) => ({ ...item, remark: item.remark.trim() || null })),
+        items: form.model.items.map((item) => ({
+          ...item,
+          remark: normalizeNullableText(item.remark)
+        })),
         complete
       })
       emit('success')

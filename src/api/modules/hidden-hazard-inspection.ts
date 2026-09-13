@@ -1,3 +1,4 @@
+import { normalizeNullableText } from '@/utils/form/normalize'
 import { omit } from 'lodash-es'
 import { useSupabase } from '@/hooks'
 import type {
@@ -244,12 +245,12 @@ export async function fetchHiddenHazardInspectionPlanList(
       supabase.rpc('smis_list_hidden_hazard_inspection_plans_secure', {
         p_from: from,
         p_to: Math.max(params.to ?? from + 19, from),
-        p_plan_no: params.planNo?.trim() || null,
-        p_plan_name: params.planName?.trim() || null,
+        p_plan_no: normalizeNullableText(params.planNo),
+        p_plan_name: normalizeNullableText(params.planName),
         p_planned_from: params.plannedFrom || null,
         p_planned_to: params.plannedTo || null,
         p_status: params.status || null,
-        p_executor_keyword: params.executorKeyword?.trim() || null,
+        p_executor_keyword: normalizeNullableText(params.executorKeyword),
         p_inspection_type_id: params.inspectionTypeId || null
       }),
     { showErrorMessage: true }
@@ -314,13 +315,13 @@ export async function fetchHiddenHazardInspectionTaskList(
       supabase.rpc('smis_list_hidden_hazard_inspection_tasks_secure', {
         p_from: from,
         p_to: Math.max(params.to ?? from + 19, from),
-        p_task_no: params.taskNo?.trim() || null,
-        p_inspection_object: params.inspectionObject?.trim() || null,
+        p_task_no: normalizeNullableText(params.taskNo),
+        p_inspection_object: normalizeNullableText(params.inspectionObject),
         p_planned_from: params.plannedFrom || null,
         p_planned_to: params.plannedTo || null,
         p_status: params.status || null,
-        p_executor_keyword: params.executorKeyword?.trim() || null,
-        p_source_plan_no: params.sourcePlanNo?.trim() || null
+        p_executor_keyword: normalizeNullableText(params.executorKeyword),
+        p_source_plan_no: normalizeNullableText(params.sourcePlanNo)
       }),
     { showErrorMessage: true }
   )

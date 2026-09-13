@@ -1,3 +1,4 @@
+import { normalizeNullableText } from '@/utils/form/normalize'
 import { omit } from 'lodash-es'
 import { useSupabase } from '@/hooks'
 import TreeUtils from '@/utils/tree'
@@ -50,11 +51,11 @@ export async function fetchEquipmentLedgerList(params: SmisEquipmentSearchParams
         supabase.rpc('smis_list_equipment_ledger_secure', {
           p_from: from,
           p_to: Math.max(params.to ?? from + 19, from),
-          p_keyword: params.keyword?.trim() || null,
+          p_keyword: normalizeNullableText(params.keyword),
           p_category_id: params.categoryId || null,
           p_location_id: params.locationId || null,
           p_equipment_kind: params.equipmentKind || null,
-          p_model: params.model?.trim() || null,
+          p_model: normalizeNullableText(params.model),
           p_operation_status: params.operationStatus || null,
           p_supplier_id: params.supplierId || null,
           p_importance_level: params.importanceLevel || null,
@@ -148,7 +149,7 @@ export async function linkEquipmentAttachment(
         equipment_id: equipmentId,
         attachment_id: attachmentId,
         attachment_type: attachmentType,
-        remark: remark?.trim() || null
+        remark: normalizeNullableText(remark)
       }),
     { showMessage: true, breakReturn: true, message: '设备附件已关联' }
   )

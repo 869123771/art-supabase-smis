@@ -16,8 +16,8 @@
     :show-pagination="true"
     :page-size="10"
     :page-sizes="[10, 20, 30, 50]"
-    @update:model-value="emit('update:modelValue', normalizeValues($event))"
-    @update:selected-data="emit('update:selectedData', normalizeRows($event))"
+    @update:model-value="emit('update:modelValue', normalizeStringList($event))"
+    @update:selected-data="emit('update:selectedData', $event.map(getEmployee))"
     @change="handleChange"
     @confirm="handleConfirm"
   >
@@ -28,6 +28,8 @@
 </template>
 
 <script setup lang="ts">
+  import { normalizeStringList } from '@/utils/form/normalize'
+
   import ArtTableMultipleSelect from '@/components/core/forms/art-data-select/table-multiple.vue'
   import SmisDataSourceEmptyActions from '@smis/views/components/smis-data-source-empty-actions.vue'
   import type {
@@ -98,10 +100,6 @@
     { prop: 'phone', label: '手机号码', width: 140 }
   ]
 
-  const normalizeValues = (value: DataSelectKey | DataSelectKey[] | undefined): string[] =>
-    (Array.isArray(value) ? value : value == null ? [] : [value]).map(String)
-  const normalizeRows = (rows: DataSelectRecord[]): EmployeeIntegrationItem[] =>
-    rows.map(getEmployee)
   const fetchEmployees = async (params: DataSelectFetchParams) => {
     const from = Math.max((params.page - 1) * params.pageSize, 0)
     const result = await fetchEmployeeSelectorList({
@@ -115,9 +113,9 @@
   const handleChange = (
     value: DataSelectKey | DataSelectKey[] | undefined,
     rows: DataSelectRecord[]
-  ): void => emit('change', normalizeValues(value), normalizeRows(rows))
+  ): void => emit('change', normalizeStringList(value), rows.map(getEmployee))
   const handleConfirm = (
     value: DataSelectKey | DataSelectKey[] | undefined,
     rows: DataSelectRecord[]
-  ): void => emit('confirm', normalizeValues(value), normalizeRows(rows))
+  ): void => emit('confirm', normalizeStringList(value), rows.map(getEmployee))
 </script>

@@ -1,3 +1,4 @@
+import { normalizeNullableText } from '@/utils/form/normalize'
 import { omit } from 'lodash-es'
 import { useSupabase } from '@/hooks'
 import type {
@@ -65,7 +66,7 @@ export async function fetchPpePersonalRequisitionList(
         p_organization_id: params.organizationId || null,
         p_employee_id: params.employeeId || null,
         p_status: params.status || null,
-        p_keyword: params.keyword?.trim() || null,
+        p_keyword: normalizeNullableText(params.keyword),
         p_purpose: params.purpose ?? 'list'
       }),
     { showErrorMessage: true }
@@ -90,7 +91,7 @@ export async function fetchPpeIssuanceRecordList(params: SmisPpeIssuanceRecordSe
         p_organization_id: params.organizationId || null,
         p_employee_id: params.employeeId || null,
         p_status: params.status || null,
-        p_keyword: params.keyword?.trim() || null,
+        p_keyword: normalizeNullableText(params.keyword),
         p_purpose: params.purpose ?? 'list'
       }),
     { showErrorMessage: true }
@@ -160,7 +161,7 @@ export async function confirmPpeRequisitionItems(
       supabase.rpc('smis_confirm_ppe_requisition_items_secure', {
         p_item_ids: itemIds,
         p_confirmed: confirmed,
-        p_reason: reason?.trim() || null
+        p_reason: normalizeNullableText(reason)
       }),
     {
       showMessage: true,

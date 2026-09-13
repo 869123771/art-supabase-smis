@@ -1,3 +1,4 @@
+import { normalizeNullableText } from '@/utils/form/normalize'
 import { omit } from 'lodash-es'
 import { useSupabase } from '@/hooks'
 import type {
@@ -25,7 +26,7 @@ export async function fetchHazardSourceList(params: SmisHazardSourceSearchParams
       supabase.rpc('smis_list_hazard_sources_secure', {
         p_from: from,
         p_to: Math.max(params.to ?? from + 19, from),
-        p_keyword: params.keyword?.trim() || null,
+        p_keyword: normalizeNullableText(params.keyword),
         p_site_id: params.siteId || null,
         p_hazard_level: params.hazardLevel || null,
         p_risk_level: params.riskLevel || null,
@@ -50,7 +51,7 @@ export async function fetchHazardSourceEmployees(params: EmployeeSelectorContrac
       supabase.rpc('smis_list_hazard_source_employees_secure', {
         p_from: from,
         p_to: Math.max(params.to ?? from + 19, from),
-        p_keyword: params.keyword?.trim() || null
+        p_keyword: normalizeNullableText(params.keyword)
       }),
     { showErrorMessage: true }
   )

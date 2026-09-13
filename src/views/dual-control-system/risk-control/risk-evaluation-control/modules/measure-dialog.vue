@@ -102,6 +102,7 @@
   </ArtDialog>
 </template>
 <script setup lang="ts">
+  import { normalizeNullableText } from '@/utils/form/normalize'
   import { ElMessage, type FormRules } from 'element-plus'
   import ArtDialog from '@/components/core/dialogs/art-dialog/index.vue'
   import type { ArtDialogExpose } from '@/components/core/dialogs/art-dialog/types'
@@ -241,8 +242,8 @@
       await saveRiskControlMeasure({
         ...model,
         controlMeasure: model.controlMeasure.trim(),
-        standardBasis: model.standardBasis?.trim() || null,
-        failureMode: model.failureMode?.trim() || null
+        standardBasis: normalizeNullableText(model.standardBasis),
+        failureMode: normalizeNullableText(model.failureMode)
       })
       emit('success')
       return true

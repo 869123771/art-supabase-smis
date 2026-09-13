@@ -1,3 +1,4 @@
+import { normalizeNullableText } from '@/utils/form/normalize'
 import { buildOrIlikeFilter } from '@/utils/supabase/search'
 import { useSupabase } from '@/hooks'
 import { withRequestOptions } from '@/api/providers/supabase/query'
@@ -31,7 +32,7 @@ export async function fetchSmisRiskPositionList(
           p_organization_id: params.organizationId,
           p_from: from,
           p_to: Math.max(params.to ?? 499, from),
-          p_keyword: params.keyword?.trim() || null
+          p_keyword: normalizeNullableText(params.keyword)
         }),
         options
       ),

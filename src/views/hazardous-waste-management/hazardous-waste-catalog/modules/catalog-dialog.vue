@@ -31,6 +31,7 @@
   </ArtDialog>
 </template>
 <script setup lang="ts">
+  import { normalizeNullableText } from '@/utils/form/normalize'
   import type { FormRules } from 'element-plus'
   import ArtDialog from '@/components/core/dialogs/art-dialog/index.vue'
   import type { ArtDialogExpose } from '@/components/core/dialogs/art-dialog/types'
@@ -191,10 +192,10 @@
         ...payload,
         wasteCode: payload.wasteCode.trim().toUpperCase(),
         wasteName: payload.wasteName.trim(),
-        wasteType: payload.wasteType?.trim() || null,
+        wasteType: normalizeNullableText(payload.wasteType),
         safetyMeasure: payload.safetyMeasure || null,
         hazardCharacteristic: payload.hazardCharacteristic || null,
-        remark: payload.remark?.trim() || null
+        remark: normalizeNullableText(payload.remark)
       })
       emit('success')
       return true

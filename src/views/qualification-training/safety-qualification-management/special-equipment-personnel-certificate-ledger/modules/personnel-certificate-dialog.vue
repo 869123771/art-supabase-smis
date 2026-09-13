@@ -70,6 +70,7 @@
 </template>
 
 <script setup lang="tsx">
+  import { normalizeNullableText } from '@/utils/form/normalize'
   import { uniqBy } from 'lodash-es'
   import { ElButton, ElDatePicker, ElOption, ElSelect, type FormRules } from 'element-plus'
   import type { ColumnOption } from '@/types'
@@ -608,12 +609,12 @@
         employeeId: form.employeeId,
         certificateCategory: form.certificateCategory,
         certificateNumber: form.certificateNumber.trim(),
-        issuingAuthority: form.issuingAuthority.trim() || null,
-        archiveNumber: form.archiveNumber.trim() || null,
+        issuingAuthority: normalizeNullableText(form.issuingAuthority),
+        archiveNumber: normalizeNullableText(form.archiveNumber),
         certificatePhotoUrl: form.certificatePhotoUrl || null,
         warningStatus: form.warningStatus,
         extraFields,
-        remark: form.remark.trim() || null,
+        remark: normalizeNullableText(form.remark),
         items: form.items.map((item) => ({
           id: item.id,
           catalogId: item.catalogId,
