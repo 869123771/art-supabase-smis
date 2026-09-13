@@ -5,7 +5,7 @@
         <span aria-hidden="true"><ArtSvgIcon icon="ri:archive-stack-line" /></span>
         <div>
           <strong>维护物料主数据</strong>
-          <p>编码用于唯一识别；类别、单位、类型和来源均使用系统统一字典。</p>
+          <p>分类、物料类型、计量单位与来源均直接沿用 MDM 物料编码主数据。</p>
         </div>
       </div>
       <ArtForm
@@ -52,7 +52,9 @@
     type SmisMaterialSavePayload,
     type SmisMaterialSource,
     type SmisMaterialStatus,
-    type SmisMaterialType
+    type SmisMaterialType,
+    type SmisMaterialTypeOption,
+    type SmisMaterialUnitOption
   } from '@smis/api'
 
   interface CategoryTreeOption extends SmisMaterialCategory {
@@ -63,6 +65,8 @@
   export interface MaterialDialogOpenData {
     row?: SmisMaterial
     categoryTree: SmisMaterialCategory[]
+    materialTypes: SmisMaterialTypeOption[]
+    units: SmisMaterialUnitOption[]
     presetCategoryId?: string
   }
   interface MaterialForm {
@@ -74,10 +78,14 @@
     drawingNo: string
     basicUnit: string
     materialType: SmisMaterialType | ''
+    baseUnitId?: string
+    materialTypeId?: string
     materialSource: SmisMaterialSource | ''
     brand: string
+    manufacturer: string
     materialComposition: string
     placeOfOrigin: string
+    color: string
     imageUrls: string[]
     description: string
     status: SmisMaterialStatus
@@ -94,6 +102,8 @@
   const dialogRef = ref<ArtDialogExpose<MaterialDialogOpenData>>()
   const formRef = ref<FormExpose>()
   const categoryTree = ref<SmisMaterialCategory[]>([])
+  const materialTypes = ref<SmisMaterialTypeOption[]>([])
+  const units = ref<SmisMaterialUnitOption[]>([])
   const initialForm = (): MaterialForm => ({
     id: undefined,
     categoryId: undefined,
@@ -103,10 +113,14 @@
     drawingNo: '',
     basicUnit: '',
     materialType: '',
+    baseUnitId: undefined,
+    materialTypeId: undefined,
     materialSource: '',
     brand: '',
+    manufacturer: '',
     materialComposition: '',
     placeOfOrigin: '',
+    color: '',
     imageUrls: [],
     description: '',
     status: 'enabled',
@@ -124,6 +138,30 @@
       categoryLabel: `${item.categoryName} · ${item.categoryCode}${item.status === 'disabled' ? '（停用）' : ''}`,
       disabled: item.status === 'disabled' && item.id !== formModel.categoryId
     }))
+  )
+  const selectedTenantId = computed(
+    () => treeUtils.findNode(categoryTree.value, formModel.categoryId || '')?.tenantId
+  )
+  const materialTypeOptions = computed<FormItemOption[]>(() =>
+    materialTypes.value
+      .filter(
+        (item) =>
+          (!selectedTenantId.value || item.tenantId === selectedTenantId.value) &&
+          (item.status === 'enabled' || item.id === formModel.materialTypeId)
+      )
+      .map((item) => ({ label: `${item.typeName} · ${item.typeCode}`, value: item.id }))
+  )
+  const unitOptions = computed<FormItemOption[]>(() =>
+    units.value
+      .filter(
+        (item) =>
+          (!selectedTenantId.value || item.tenantId === selectedTenantId.value) &&
+          (item.status === 'enabled' || item.id === formModel.baseUnitId)
+      )
+      .map((item) => ({
+        label: `${item.unitName} · ${item.unitCode}${item.symbol ? `（${item.symbol}）` : ''}`,
+        value: item.id
+      }))
   )
   const form = reactive<{
     model: MaterialForm
@@ -173,23 +211,23 @@
       },
       {
         label: '基本单位',
-        key: 'basicUnit',
+        key: 'baseUnitId',
         type: 'select',
-        options: toOptions('smisMaterialUnit'),
+        options: unitOptions.value,
         props: { clearable: false, filterable: true, placeholder: '请选择计量单位' }
       },
       {
         label: '物料类型',
-        key: 'materialType',
+        key: 'materialTypeId',
         type: 'select',
-        options: toOptions('smisMaterialType'),
-        props: { clearable: false, placeholder: '请选择物料类型' }
+        options: materialTypeOptions.value,
+        props: { clearable: false, filterable: true, placeholder: '请选择物料类型' }
       },
       {
         label: '物料来源',
         key: 'materialSource',
         type: 'select',
-        options: toOptions('smisMaterialSource'),
+        options: toOptions('mdmMaterialSource'),
         props: { clearable: false, placeholder: '请选择物料来源' }
       },
       {
@@ -197,6 +235,12 @@
         key: 'brand',
         type: 'input',
         props: { maxlength: 80, clearable: true, placeholder: '输入品牌' }
+      },
+      {
+        label: '制造商',
+        key: 'manufacturer',
+        type: 'input',
+        props: { maxlength: 160, clearable: true, placeholder: '输入制造商' }
       },
       {
         label: '材质',
@@ -211,10 +255,16 @@
         props: { maxlength: 120, clearable: true, placeholder: '输入产地' }
       },
       {
+        label: '颜色',
+        key: 'color',
+        type: 'input',
+        props: { maxlength: 80, clearable: true, placeholder: '输入颜色' }
+      },
+      {
         label: '启用状态',
         key: 'status',
         type: 'select',
-        options: toOptions('smisMaterialEnableStatus'),
+        options: toOptions('commonEnabledStatus'),
         props: { clearable: false, placeholder: '请选择启用状态' }
       },
       {
@@ -256,8 +306,8 @@
         { max: 120, message: '物料名称不能超过 120 个字符', trigger: 'blur' }
       ],
       categoryId: [{ required: true, message: '请选择物料类别', trigger: 'change' }],
-      basicUnit: [{ required: true, message: '请选择基本单位', trigger: 'change' }],
-      materialType: [{ required: true, message: '请选择物料类型', trigger: 'change' }],
+      baseUnitId: [{ required: true, message: '请选择基本单位', trigger: 'change' }],
+      materialTypeId: [{ required: true, message: '请选择物料类型', trigger: 'change' }],
       materialSource: [{ required: true, message: '请选择物料来源', trigger: 'change' }],
       status: [{ required: true, message: '请选择启用状态', trigger: 'change' }],
       sort: [{ required: true, message: '请输入显示顺序', trigger: 'change' }]
@@ -272,6 +322,9 @@
   const handleSubmit = async (): Promise<boolean> => {
     try {
       await formRef.value?.validate()
+      const materialType = materialTypes.value.find((item) => item.id === form.model.materialTypeId)
+      const baseUnit = units.value.find((item) => item.id === form.model.baseUnitId)
+      if (!materialType || !baseUnit) return false
       const payload: SmisMaterialSavePayload = {
         id: form.model.id,
         categoryId: form.model.categoryId || '',
@@ -279,12 +332,16 @@
         materialName: form.model.materialName.trim(),
         specificationModel: form.model.specificationModel.trim(),
         drawingNo: form.model.drawingNo.trim(),
-        basicUnit: form.model.basicUnit,
-        materialType: form.model.materialType as SmisMaterialType,
+        basicUnit: baseUnit.unitCode,
+        materialType: materialType.typeCode,
+        baseUnitId: baseUnit.id,
+        materialTypeId: materialType.id,
         materialSource: form.model.materialSource as SmisMaterialSource,
         brand: form.model.brand.trim(),
+        manufacturer: form.model.manufacturer.trim(),
         materialComposition: form.model.materialComposition.trim(),
         placeOfOrigin: form.model.placeOfOrigin.trim(),
+        color: form.model.color.trim(),
         imageUrls: [...form.model.imageUrls],
         description: form.model.description.trim(),
         status: form.model.status,
@@ -300,6 +357,8 @@
   const handleOpen = async (data: MaterialDialogOpenData): Promise<void> => {
     await resetForm()
     categoryTree.value = data.categoryTree
+    materialTypes.value = data.materialTypes
+    units.value = data.units
     if (data.row)
       Object.assign(form.model, {
         id: data.row.id,
@@ -310,10 +369,26 @@
         drawingNo: data.row.drawingNo || '',
         basicUnit: data.row.basicUnit,
         materialType: data.row.materialType,
+        baseUnitId:
+          data.row.baseUnitId ||
+          data.units.find(
+            (item) =>
+              item.tenantId === data.row?.tenantId &&
+              [item.unitCode, item.unitName, item.symbol].includes(data.row?.basicUnit)
+          )?.id,
+        materialTypeId:
+          data.row.materialTypeId ||
+          data.materialTypes.find(
+            (item) =>
+              item.tenantId === data.row?.tenantId &&
+              [item.typeCode, item.typeName].includes(data.row?.materialType)
+          )?.id,
         materialSource: data.row.materialSource,
         brand: data.row.brand || '',
+        manufacturer: data.row.manufacturer || '',
         materialComposition: data.row.materialComposition || '',
         placeOfOrigin: data.row.placeOfOrigin || '',
+        color: data.row.color || '',
         imageUrls: [...(data.row.imageUrls || [])],
         description: data.row.description || '',
         status: data.row.status,
@@ -329,12 +404,9 @@
         api.setLoading(true)
         try {
           await Promise.all(
-            [
-              'smisMaterialEnableStatus',
-              'smisMaterialType',
-              'smisMaterialSource',
-              'smisMaterialUnit'
-            ].map((code) => userStore.ensureDictLoaded(code))
+            ['commonEnabledStatus', 'mdmMaterialSource'].map((code) =>
+              userStore.ensureDictLoaded(code)
+            )
           )
         } finally {
           api.setLoading(false)

@@ -93,7 +93,9 @@
     type SmisMaterial,
     type SmisMaterialCategory,
     type SmisMaterialOverview,
-    type SmisMaterialSearchParams
+    type SmisMaterialSearchParams,
+    type SmisMaterialTypeOption,
+    type SmisMaterialUnitOption
   } from '@smis/api'
   import MaterialCategoryNavigator from '../shared/material-category-navigator.vue'
   import MaterialDialog, { type MaterialDialogOpenData } from './modules/material-dialog.vue'
@@ -134,6 +136,8 @@
     pictured: 0
   })
   const tree = reactive<TreeGroup>({ data: [], selectedKey: ALL_KEY, loading: false, error: null })
+  const materialTypes = ref<SmisMaterialTypeOption[]>([])
+  const units = ref<SmisMaterialUnitOption[]>([])
   const searchQuery = reactive<SmisMaterialSearchParams>({})
   const selectedCategory = computed(() =>
     tree.selectedKey === ALL_KEY ? null : treeUtils.findNode(tree.data, tree.selectedKey)
@@ -171,10 +175,23 @@
     const item = (getDictMap.value[code] ?? []).find((option) => option.value === value)
     return item?.label || item?.name || value
   }
+  const materialTypeLabel = (row: SmisMaterial): string =>
+    row.materialTypeName ||
+    materialTypes.value.find(
+      (item) => item.id === row.materialTypeId || item.typeCode === row.materialType
+    )?.typeName ||
+    row.materialType
+  const unitLabel = (row: SmisMaterial): string =>
+    row.baseUnitName ||
+    units.value.find((item) => item.id === row.baseUnitId || item.unitCode === row.basicUnit)
+      ?.unitName ||
+    row.basicUnit
   const openDialog = (row?: SmisMaterial): void => {
     void dialogRef.value?.handleOpen({
       row,
       categoryTree: tree.data,
+      materialTypes: materialTypes.value,
+      units: units.value,
       presetCategoryId: !row ? selectedCategory.value?.id : undefined
     })
   }
@@ -237,13 +254,13 @@
             categoryName: row.category.categoryName,
             specificationModel: row.specificationModel || '',
             drawingNo: row.drawingNo || '',
-            basicUnit: dictLabel('smisMaterialUnit', row.basicUnit),
-            materialType: dictLabel('smisMaterialType', row.materialType),
-            materialSource: dictLabel('smisMaterialSource', row.materialSource),
+            basicUnit: unitLabel(row),
+            materialType: materialTypeLabel(row),
+            materialSource: dictLabel('mdmMaterialSource', row.materialSource),
             brand: row.brand || '',
             materialComposition: row.materialComposition || '',
             placeOfOrigin: row.placeOfOrigin || '',
-            status: dictLabel('smisMaterialEnableStatus', row.status),
+            status: dictLabel('commonEnabledStatus', row.status),
             description: row.description || '',
             updateTime: row.updateTime ? dayjs(row.updateTime).format('YYYY-MM-DD HH:mm:ss') : ''
           }))
@@ -355,18 +372,14 @@
       label: '基本单位',
       width: 100,
       align: 'center',
-      formatter: (row) => (
-        <ArtDictDisplay dictCode="smisMaterialUnit" value={row.basicUnit} display="text" />
-      )
+      formatter: unitLabel
     },
     {
       prop: 'materialType',
       label: '物料类型',
       width: 120,
       align: 'center',
-      formatter: (row) => (
-        <ArtDictDisplay dictCode="smisMaterialType" value={row.materialType} display="tag" />
-      )
+      formatter: materialTypeLabel
     },
     {
       prop: 'materialSource',
@@ -374,7 +387,7 @@
       width: 110,
       align: 'center',
       formatter: (row) => (
-        <ArtDictDisplay dictCode="smisMaterialSource" value={row.materialSource} display="tag" />
+        <ArtDictDisplay dictCode="mdmMaterialSource" value={row.materialSource} display="tag" />
       )
     },
     {
@@ -383,7 +396,7 @@
       width: 110,
       align: 'center',
       formatter: (row) => (
-        <ArtDictDisplay dictCode="smisMaterialEnableStatus" value={row.status} display="tag" />
+        <ArtDictDisplay dictCode="commonEnabledStatus" value={row.status} display="tag" />
       )
     },
     {
@@ -428,6 +441,8 @@
         categoryId: tree.selectedKey === ALL_KEY ? undefined : tree.selectedKey
       })
       tree.data = result.categoryTree
+      materialTypes.value = result.materialTypes
+      units.value = result.units
       Object.assign(overview, result.overview)
       tree.error = result.error ? '物料分类结构加载失败，请重试。' : null
       return { records: result.data, total: result.total }
@@ -448,12 +463,7 @@
   onMounted(
     () =>
       void Promise.all(
-        [
-          'smisMaterialEnableStatus',
-          'smisMaterialType',
-          'smisMaterialSource',
-          'smisMaterialUnit'
-        ].map((code) => userStore.ensureDictLoaded(code))
+        ['commonEnabledStatus', 'mdmMaterialSource'].map((code) => userStore.ensureDictLoaded(code))
       )
   )
 </script>

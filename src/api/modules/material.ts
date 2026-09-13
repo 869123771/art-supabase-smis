@@ -9,7 +9,9 @@ import type {
   SmisMaterialCategorySearchParams,
   SmisMaterialOverview,
   SmisMaterialSavePayload,
-  SmisMaterialSearchParams
+  SmisMaterialSearchParams,
+  SmisMaterialTypeOption,
+  SmisMaterialUnitOption
 } from '@smis/api/types'
 
 interface MaterialCategoryListResult {
@@ -24,6 +26,8 @@ interface MaterialListResult {
   total?: number
   categoryTree?: SmisMaterialCategory[]
   overview?: SmisMaterialOverview
+  materialTypes?: SmisMaterialTypeOption[]
+  units?: SmisMaterialUnitOption[]
 }
 
 const categoryTreeUtils = new TreeUtils({
@@ -124,6 +128,8 @@ export async function fetchMaterialList(params: SmisMaterialSearchParams = {}) {
     total: result.data?.total ?? 0,
     categoryTree: buildCategoryTree(result.data?.categoryTree ?? []),
     overview: result.data?.overview ?? emptyMaterialOverview(),
+    materialTypes: result.data?.materialTypes ?? [],
+    units: result.data?.units ?? [],
     error: result.error
   }
 }

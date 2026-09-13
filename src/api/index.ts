@@ -510,6 +510,8 @@ export type {
   SmisMaterialSource,
   SmisMaterialStatus,
   SmisMaterialType,
+  SmisMaterialTypeOption,
+  SmisMaterialUnitOption,
   SmisStorageLocation,
   SmisStorageLocationOverview,
   SmisStorageLocationResponsible,

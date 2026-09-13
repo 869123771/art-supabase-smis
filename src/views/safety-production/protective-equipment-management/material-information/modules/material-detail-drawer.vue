@@ -14,7 +14,7 @@
           ><strong>{{ detail.materialName }}</strong
           ><small>{{ detail.materialCode }} · {{ detail.category.categoryName }}</small></div
         >
-        <ArtDictDisplay dict-code="smisMaterialEnableStatus" :value="detail.status" display="tag" />
+        <ArtDictDisplay dict-code="commonEnabledStatus" :value="detail.status" display="tag" />
       </div>
       <ArtSectionCard title="基本信息" subtitle="物料识别、分类与计量口径">
         <ArtDescriptions :data="detail" :items="basicItems" :columns="2" />
@@ -66,22 +66,18 @@
     {
       key: 'basicUnit',
       label: '基本单位',
-      field: 'basicUnit',
-      dictCode: 'smisMaterialUnit',
-      dictDisplay: 'text'
+      value: (data: SmisMaterial) => data.baseUnitName || data.basicUnit
     },
     {
       key: 'materialType',
       label: '物料类型',
-      field: 'materialType',
-      dictCode: 'smisMaterialType',
-      dictDisplay: 'tag'
+      value: (data: SmisMaterial) => data.materialTypeName || data.materialType
     },
     {
       key: 'materialSource',
       label: '物料来源',
       field: 'materialSource',
-      dictCode: 'smisMaterialSource',
+      dictCode: 'mdmMaterialSource',
       dictDisplay: 'tag'
     },
     { key: 'specificationModel', label: '规格型号', field: 'specificationModel' },
@@ -89,8 +85,10 @@
   ]
   const extendedItems: ArtDescriptionItem<SmisMaterial>[] = [
     { key: 'brand', label: '品牌', field: 'brand' },
+    { key: 'manufacturer', label: '制造商', field: 'manufacturer' },
     { key: 'materialComposition', label: '材质', field: 'materialComposition' },
     { key: 'placeOfOrigin', label: '产地', field: 'placeOfOrigin' },
+    { key: 'color', label: '颜色', field: 'color' },
     { key: 'sort', label: '显示顺序', field: 'sort' },
     { key: 'description', label: '说明', field: 'description', span: 2 },
     {

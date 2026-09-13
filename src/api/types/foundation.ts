@@ -1385,8 +1385,27 @@ export interface SmisEquipmentCategorySavePayload {
 }
 
 export type SmisMaterialStatus = 'enabled' | 'disabled'
-export type SmisMaterialType = 'protective_equipment' | 'tool' | 'office_supply'
-export type SmisMaterialSource = 'purchase' | 'self_made'
+export type SmisMaterialType = string
+export type SmisMaterialSource = string
+
+export interface SmisMaterialTypeOption {
+  id: string
+  tenantId: string
+  typeCode: string
+  typeName: string
+  status: SmisMaterialStatus
+  sort: number
+}
+
+export interface SmisMaterialUnitOption {
+  id: string
+  tenantId: string
+  unitCode: string
+  unitName: string
+  symbol?: string | null
+  status: SmisMaterialStatus
+  sort: number
+}
 
 export interface SmisMaterialCategory {
   id?: string
@@ -1442,10 +1461,16 @@ export interface SmisMaterial {
   drawingNo?: string | null
   basicUnit: string
   materialType: SmisMaterialType
+  baseUnitId?: string | null
+  materialTypeId?: string | null
+  baseUnitName?: string | null
+  materialTypeName?: string | null
   materialSource: SmisMaterialSource
   brand?: string | null
+  manufacturer?: string | null
   materialComposition?: string | null
   placeOfOrigin?: string | null
+  color?: string | null
   imageUrls: string[]
   description?: string | null
   status: SmisMaterialStatus
