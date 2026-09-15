@@ -24,7 +24,8 @@
     start: 'SmisWorkAtHeightApplication:Start',
     requestAcceptance: 'SmisWorkAtHeightApplication:RequestAcceptance',
     accept: 'SmisWorkAtHeightApplication:Accept',
-    print: 'SmisWorkAtHeightApplication:Print'
+    print: 'SmisWorkAtHeightApplication:Print',
+    aiPrecheck: 'SmisWorkAtHeightApplication:AiPrecheck'
   } satisfies SpecialOperationPagePermissions
 
   defineOptions({ name: 'SmisWorkAtHeightApplication' })

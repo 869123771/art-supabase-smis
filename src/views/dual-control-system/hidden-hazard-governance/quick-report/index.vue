@@ -118,6 +118,16 @@
                   />
                 </template>
               </ArtForm>
+              <HazardAiAnalysisPanel
+                ref="aiPanelRef"
+                :image-urls="form.model.imageUrls"
+                :organization-name="selectedOrganizationName"
+                :site-name="selectedSiteName"
+                :location="form.model.location"
+                :existing-description="form.model.description"
+                :hazard-level-options="hazardLevelOptions"
+                @apply="applyAiSuggestion"
+              />
               <div class="quick-report-page__actions">
                 <p
                   ><ArtSvgIcon
@@ -147,7 +157,7 @@
 
 <script setup lang="ts">
   import { normalizeNullableText } from '@/utils/form/normalize'
-  import type { FormRules } from 'element-plus'
+  import { ElMessage, type FormRules } from 'element-plus'
   import ArtForm, { type FormItem } from '@/components/core/forms/art-form/index.vue'
   import ArtPermissionGuard from '@/components/core/feedback/art-permission-guard/index.vue'
   import ArtSectionCard from '@/components/core/surfaces/art-section-card/index.vue'
@@ -158,13 +168,16 @@
   import { useUserStore } from '@/store/modules/user'
   import {
     fetchHazardReportingOptions,
+    reviewHazardImageAnalysis,
     submitHazardSourceReport,
+    type SmisHazardImageAnalysisResponse,
     type SmisHazardReporterProfile,
     type SmisHazardReportingOrganization,
     type SmisHazardReportingSite,
     type SmisHazardSourceReportPayload
   } from '@smis/api'
   import OrganizationTreeSelect from '@smis/views/dual-control-system/shared/organization-tree-select.vue'
+  import HazardAiAnalysisPanel from './modules/hazard-ai-analysis-panel.vue'
 
   defineOptions({ name: 'SmisDualControlQuickReport' })
 
@@ -175,10 +188,14 @@
     validate: () => Promise<boolean>
     clearValidate: () => void
   }
+  interface AiPanelExpose {
+    reset: () => void
+  }
 
   const userStore = useUserStore()
   const { getDictMap } = storeToRefs(userStore)
   const formRef = ref<FormExpose>()
+  const aiPanelRef = ref<AiPanelExpose>()
   const initialModel = (): QuickReportModel => ({
     hazardNo: '',
     hazardOrganizationId: '',
@@ -206,8 +223,17 @@
     sites: SmisHazardReportingSite[]
     loading: boolean
     submitting: boolean
+    aiArtifactId: string
     error: string
-  }>({ profile: null, organizations: [], sites: [], loading: false, submitting: false, error: '' })
+  }>({
+    profile: null,
+    organizations: [],
+    sites: [],
+    loading: false,
+    submitting: false,
+    aiArtifactId: '',
+    error: ''
+  })
   const treeUtils = new TreeUtils({ idKey: 'id', parentKey: 'parentId', childrenKey: 'children' })
   const siteTree = computed(() => treeUtils.listToTree(state.sites) as SmisHazardReportingSite[])
   const hazardLevelOptions = computed(() =>
@@ -215,6 +241,14 @@
       label: item.label || item.name,
       value: item.value
     }))
+  )
+  const selectedOrganizationName = computed(
+    () =>
+      state.organizations.find((item) => item.id === form.model.hazardOrganizationId)
+        ?.organizationName ?? ''
+  )
+  const selectedSiteName = computed(
+    () => state.sites.find((item) => item.id === form.model.siteId)?.siteName ?? ''
   )
   const formItems = computed<FormItem[]>(() => [
     {
@@ -273,7 +307,34 @@
 
   const resetForm = (): void => {
     Object.assign(form.model, initialModel())
+    state.aiArtifactId = ''
+    aiPanelRef.value?.reset()
     nextTick(() => formRef.value?.clearValidate())
+  }
+  const applyAiSuggestion = (result: SmisHazardImageAnalysisResponse): void => {
+    const appliedFields: string[] = []
+    if (!form.model.description.trim() && result.hazard.description) {
+      form.model.description = result.hazard.description
+      appliedFields.push('隐患描述')
+    }
+    if (
+      !form.model.hazardLevel &&
+      result.hazard.hazardLevel &&
+      hazardLevelOptions.value.some((item) => item.value === result.hazard.hazardLevel)
+    ) {
+      form.model.hazardLevel = result.hazard.hazardLevel
+      appliedFields.push('隐患级别')
+    }
+    if (!form.model.rectificationSuggestion?.trim() && result.hazard.rectificationSuggestion) {
+      form.model.rectificationSuggestion = result.hazard.rectificationSuggestion
+      appliedFields.push('整改建议')
+    }
+    state.aiArtifactId = result.artifactId
+    ElMessage.success(
+      appliedFields.length
+        ? `已补充${appliedFields.join('、')}，请人工复核`
+        : '当前字段已有内容，AI 建议未覆盖人工填写'
+    )
   }
   const loadOptions = async (): Promise<void> => {
     state.loading = true
@@ -295,13 +356,25 @@
     try {
       await formRef.value?.validate()
       state.submitting = true
-      await submitHazardSourceReport('quick_report', {
+      const response = await submitHazardSourceReport('quick_report', {
         ...toRaw(form.model),
         description: form.model.description.trim(),
         location: form.model.location.trim(),
         rectificationSuggestion: normalizeNullableText(form.model.rectificationSuggestion),
         imageUrls: [...form.model.imageUrls]
       })
+      if (state.aiArtifactId && response.data?.id) {
+        const review = await reviewHazardImageAnalysis({
+          artifactId: state.aiArtifactId,
+          entityId: response.data.id,
+          finalPayload: {
+            description: form.model.description.trim(),
+            hazardLevel: form.model.hazardLevel,
+            rectificationSuggestion: normalizeNullableText(form.model.rectificationSuggestion)
+          }
+        })
+        if (review.error) console.warn('隐患 AI 分析反馈记录失败', review.error)
+      }
       resetForm()
     } finally {
       state.submitting = false

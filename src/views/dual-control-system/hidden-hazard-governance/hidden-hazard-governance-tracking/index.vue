@@ -20,6 +20,8 @@
         <template #actions><BusinessTableWorkspaceActions :table="tableQueryRef" /></template>
       </BusinessWorkspaceHeader>
 
+      <HazardAiTrendPanel />
+
       <div class="hazard-governance-page__workspace">
         <ArtWorkspaceSplitter
           primary-size="270px"
@@ -165,6 +167,7 @@
     type HazardWorkflowDialogOpenData,
     type HazardWorkflowMode
   } from './modules/hazard-workflow-dialog.vue'
+  import HazardAiTrendPanel from './modules/hazard-ai-trend-panel.vue'
 
   defineOptions({ name: 'SmisDualControlHiddenHazardGovernanceTracking' })
 

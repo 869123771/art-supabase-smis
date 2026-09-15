@@ -24,7 +24,8 @@
     start: 'SmisTemporaryElectricityApplication:Start',
     requestAcceptance: 'SmisTemporaryElectricityApplication:RequestAcceptance',
     accept: 'SmisTemporaryElectricityApplication:Accept',
-    print: 'SmisTemporaryElectricityApplication:Print'
+    print: 'SmisTemporaryElectricityApplication:Print',
+    aiPrecheck: 'SmisTemporaryElectricityApplication:AiPrecheck'
   } satisfies SpecialOperationPagePermissions
 
   defineOptions({ name: 'SmisTemporaryElectricityApplication' })

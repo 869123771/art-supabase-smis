@@ -133,6 +133,7 @@
     requestAcceptance: string
     accept: string
     print: string
+    aiPrecheck: string
   }
 
   const props = defineProps<{
@@ -385,6 +386,7 @@
       mode,
       operationTypes: operationTypes.value,
       forcedOperationTypeCode: props.operationTypeCode,
+      aiPrecheckPermission: props.permissions.aiPrecheck,
       tenantId: row?.tenantId || effectiveTenantId.value
     })
   }

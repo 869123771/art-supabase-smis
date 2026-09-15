@@ -24,7 +24,8 @@
     start: 'SmisBlindPlateOperationApplication:Start',
     requestAcceptance: 'SmisBlindPlateOperationApplication:RequestAcceptance',
     accept: 'SmisBlindPlateOperationApplication:Accept',
-    print: 'SmisBlindPlateOperationApplication:Print'
+    print: 'SmisBlindPlateOperationApplication:Print',
+    aiPrecheck: 'SmisBlindPlateOperationApplication:AiPrecheck'
   } satisfies SpecialOperationPagePermissions
 
   defineOptions({ name: 'SmisBlindPlateOperationApplication' })

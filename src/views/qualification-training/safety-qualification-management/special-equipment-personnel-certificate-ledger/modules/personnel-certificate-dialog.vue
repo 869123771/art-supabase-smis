@@ -45,6 +45,15 @@
         </ArtForm>
       </ArtSectionCard>
 
+      <SmisAiDocumentOcrPanel
+        ref="ocrPanelRef"
+        mode="certificate"
+        :permission="aiPermission"
+        :image-urls="certificateImageUrls"
+        :category="form.certificateCategory"
+        @apply-certificate="applyOcrResult"
+      />
+
       <ArtSectionCard :title="categoryMeta.detailTitle" :subtitle="categoryMeta.detailSubtitle">
         <template v-if="!categoryMeta.certificateTermCode" #actions
           ><ElButton type="primary" plain @click="addItem"
@@ -86,13 +95,16 @@
   import ArtTable from '@/components/core/tables/art-table/index.vue'
   import type { ArtTableExpose } from '@/components/core/tables/art-table/index.vue'
   import { useUserStore } from '@/store/modules/user'
+  import SmisAiDocumentOcrPanel from '@smis/views/components/smis-ai-document-ocr-panel.vue'
   import {
     fetchPersonnelCertificateEmployeeDetail,
     fetchPersonnelCertificateEmployeeOptions,
     fetchPersonnelCertificateCatalogOptions,
+    reviewPersonnelCertificateOcr,
     savePersonnelCertificate,
     type PersonnelCertificateEmployee,
     type SmisCertificateCategory,
+    type SmisCertificateOcrResponse,
     type SmisCertificateDismissalReason,
     type SmisCertificateWarningStatus,
     type SmisPersonnelCertificate,
@@ -110,6 +122,7 @@
     row?: SmisPersonnelCertificate
     category?: SmisCertificateCategory
     pageTitle?: string
+    aiPermission: string
   }
   interface ItemForm {
     key: string
@@ -142,6 +155,9 @@
     validate: () => Promise<boolean | void>
     clearValidate: () => void
   }
+  interface OcrPanelExpose {
+    reset: () => void
+  }
 
   const emit = defineEmits<{ success: [] }>()
   const userStore = useUserStore()
@@ -149,10 +165,13 @@
   const dialogRef = ref<ArtDialogExpose<PersonnelCertificateDialogOpenData>>()
   const formRef = ref<ArtFormExpose>()
   const itemTableRef = ref<ArtTableExpose>()
+  const ocrPanelRef = ref<OcrPanelExpose>()
   const employeeSelection = ref<PersonnelCertificateEmployee[]>([])
   const catalogOptions = ref<SmisQualificationCatalog[]>([])
   const isEditing = ref(false)
   const isCategoryLocked = ref(false)
+  const aiPermission = ref('')
+  const ocrArtifactId = ref('')
   let itemSequence = 0
   const makeItem = (): ItemForm => ({
     key: `item-${++itemSequence}`,
@@ -180,6 +199,9 @@
     items: [makeItem()]
   })
   const form = reactive<FormModel>(initial())
+  const certificateImageUrls = computed(() =>
+    form.certificatePhotoUrl ? [form.certificatePhotoUrl] : []
+  )
   const rules = computed<FormRules<FormModel>>(() => {
     const result: FormRules<FormModel> = {
       employeeId: [{ required: true, message: '请选择持证人员', trigger: 'change' }],
@@ -536,6 +558,43 @@
     void loadCatalogs()
     if (form.employeeId) void loadEmployeeDetail(form.employeeId)
   }
+  const applyOcrResult = (result: SmisCertificateOcrResponse): void => {
+    const appliedFields: string[] = []
+    const certificate = result.certificate
+    if (!form.certificateNumber.trim() && certificate.certificateNumber) {
+      form.certificateNumber = certificate.certificateNumber
+      appliedFields.push('证件编号')
+    }
+    if (!form.issuingAuthority.trim() && certificate.issuingAuthority) {
+      form.issuingAuthority = certificate.issuingAuthority
+      appliedFields.push('发证机关')
+    }
+    if (!form.archiveNumber.trim() && certificate.archiveNumber) {
+      form.archiveNumber = certificate.archiveNumber
+      appliedFields.push('档案编号')
+    }
+    const item = form.items[0]
+    if (item && !item.approvalDate && certificate.approvalDate) {
+      item.approvalDate = certificate.approvalDate
+      appliedFields.push(approvalDateLabel.value)
+    }
+    if (item && !item.effectiveDate && certificate.effectiveDate) {
+      item.effectiveDate = certificate.effectiveDate
+      appliedFields.push('有效日期')
+    }
+    ocrArtifactId.value = result.artifactId
+    const detectedName = certificate.holderName?.trim()
+    const selectedName = employeeSelection.value[0]?.employeeName?.trim()
+    if (detectedName && selectedName && detectedName !== selectedName) {
+      ElMessage.warning(`证件姓名“${detectedName}”与所选人员“${selectedName}”不一致，请重点核验`)
+      return
+    }
+    ElMessage.success(
+      appliedFields.length
+        ? `已补充${appliedFields.join('、')}，请人工复核`
+        : '当前字段已有内容，识别结果未覆盖人工填写'
+    )
+  }
   const toEmployee = (row: SmisPersonnelCertificate): PersonnelCertificateEmployee => ({
     id: row.employeeId,
     tenantId: row.tenantId || '',
@@ -624,7 +683,24 @@
           dismissalReason: isEditing.value ? item.dismissalReason || null : null
         }))
       }
-      await savePersonnelCertificate(payload)
+      const response = await savePersonnelCertificate(payload)
+      const entityId = form.id || response.data
+      if (ocrArtifactId.value && entityId) {
+        const firstItem = form.items[0]
+        const review = await reviewPersonnelCertificateOcr({
+          artifactId: ocrArtifactId.value,
+          entityId,
+          category: form.certificateCategory,
+          finalPayload: {
+            certificateNumber: form.certificateNumber.trim(),
+            issuingAuthority: normalizeNullableText(form.issuingAuthority),
+            archiveNumber: normalizeNullableText(form.archiveNumber),
+            approvalDate: firstItem?.approvalDate || null,
+            effectiveDate: firstItem?.effectiveDate || null
+          }
+        })
+        if (review.error) console.warn('人员证件 OCR 反馈记录失败', review.error)
+      }
       emit('success')
       return true
     } catch {
@@ -641,6 +717,9 @@
   const handleOpen = async (data: PersonnelCertificateDialogOpenData): Promise<void> => {
     isEditing.value = data.mode === 'edit'
     isCategoryLocked.value = Boolean(data.category) || data.mode === 'edit'
+    aiPermission.value = data.aiPermission
+    ocrArtifactId.value = ''
+    ocrPanelRef.value?.reset()
     Object.assign(form, initial())
     if (data.category) form.certificateCategory = data.category
     employeeSelection.value = []

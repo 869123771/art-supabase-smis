@@ -23,7 +23,8 @@
     start: 'SmisSpecialOperationWorkbench:Start',
     requestAcceptance: 'SmisSpecialOperationWorkbench:RequestAcceptance',
     accept: 'SmisSpecialOperationWorkbench:Accept',
-    print: 'SmisSpecialOperationWorkbench:Print'
+    print: 'SmisSpecialOperationWorkbench:Print',
+    aiPrecheck: 'SmisSpecialOperationWorkbench:AiPrecheck'
   } satisfies SpecialOperationPagePermissions
 
   defineOptions({ name: 'SmisSpecialOperationWorkbench' })

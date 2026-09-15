@@ -1,4 +1,5 @@
 import { normalizeNullableText } from '@/utils/form/normalize'
+import { normalizeSupabaseFunctionError } from '@/utils/supabase'
 import { omit } from 'lodash-es'
 import { useSupabase } from '@/hooks'
 
@@ -194,6 +195,39 @@ export interface SmisHazardSourceReportPayload {
 export interface SmisHazardSourceReportResult {
   id: string
   hazardNo: string
+}
+
+export type SmisHazardImageAnalysisField = 'description' | 'hazardLevel' | 'rectificationSuggestion'
+
+export interface SmisHazardImageAnalysisDraft {
+  description?: string | null
+  hazardLevel?: string | null
+  rectificationSuggestion?: string | null
+}
+
+export interface SmisHazardImageAnalysisRequest {
+  action: 'analyze'
+  imageUrls: string[]
+  organizationName?: string | null
+  siteName?: string | null
+  location?: string | null
+  existingDescription?: string | null
+}
+
+export interface SmisHazardImageAnalysisResponse {
+  rawText: string
+  summary: string
+  confidence: number
+  fieldConfidence: Partial<Record<SmisHazardImageAnalysisField, number>>
+  missingFields: string[]
+  warnings: string[]
+  observedHazards: string[]
+  evidence: string[]
+  hazard: SmisHazardImageAnalysisDraft
+  artifactId: string
+  runId: string
+  reviewConfidenceThreshold: number
+  generatedAt: string
 }
 
 export interface SmisPublicHazardReportRecord {
@@ -415,6 +449,33 @@ export async function submitHazardSourceReport(
       message: sourceType === 'quick_report' ? '随手拍已提交' : '公众举报隐患已登记'
     }
   )
+}
+
+export async function analyzeHazardImagesByAi(params: SmisHazardImageAnalysisRequest) {
+  const { data, error } = await supabase.functions.invoke<SmisHazardImageAnalysisResponse>(
+    'ai-smis-hazard-analyzer',
+    {
+      body: params
+    }
+  )
+  return { data: data ?? null, error: await normalizeSupabaseFunctionError(error) }
+}
+
+export async function reviewHazardImageAnalysis(params: {
+  artifactId: string
+  entityId: string
+  finalPayload: SmisHazardImageAnalysisDraft
+}) {
+  const { data, error } = await supabase.functions.invoke('ai-smis-hazard-analyzer', {
+    body: {
+      action: 'review',
+      artifactId: params.artifactId,
+      entityId: params.entityId,
+      outcome: 'applied',
+      finalPayload: params.finalPayload
+    }
+  })
+  return { data: data ?? null, error: await normalizeSupabaseFunctionError(error) }
 }
 
 export async function fetchPublicHazardReportList(params: SmisPublicHazardReportSearchParams = {}) {

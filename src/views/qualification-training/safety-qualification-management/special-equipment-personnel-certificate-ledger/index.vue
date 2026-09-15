@@ -85,7 +85,8 @@
       Edit: 'SmisPersonnelCertificateLedger:Edit',
       Delete: 'SmisPersonnelCertificateLedger:Delete',
       Export: 'SmisPersonnelCertificateLedger:Export',
-      ViewHistory: 'SmisPersonnelCertificateLedger:ViewHistory'
+      ViewHistory: 'SmisPersonnelCertificateLedger:ViewHistory',
+      AiAnalyze: 'SmisPersonnelCertificateLedger:AiAnalyze'
     },
     SmisSpecialEquipmentOperatorCertificateLedger: {
       View: 'SmisSpecialEquipmentOperatorCertificateLedger:View',
@@ -94,7 +95,8 @@
       Edit: 'SmisSpecialEquipmentOperatorCertificateLedger:Edit',
       Delete: 'SmisSpecialEquipmentOperatorCertificateLedger:Delete',
       Export: 'SmisSpecialEquipmentOperatorCertificateLedger:Export',
-      ViewHistory: 'SmisSpecialEquipmentOperatorCertificateLedger:ViewHistory'
+      ViewHistory: 'SmisSpecialEquipmentOperatorCertificateLedger:ViewHistory',
+      AiAnalyze: 'SmisSpecialEquipmentOperatorCertificateLedger:AiAnalyze'
     },
     SmisSpecialOperationCertificate: {
       View: 'SmisSpecialOperationCertificate:View',
@@ -103,7 +105,8 @@
       Edit: 'SmisSpecialOperationCertificate:Edit',
       Delete: 'SmisSpecialOperationCertificate:Delete',
       Export: 'SmisSpecialOperationCertificate:Export',
-      ViewHistory: 'SmisSpecialOperationCertificate:ViewHistory'
+      ViewHistory: 'SmisSpecialOperationCertificate:ViewHistory',
+      AiAnalyze: 'SmisSpecialOperationCertificate:AiAnalyze'
     },
     SmisSafetyManagerCertificate: {
       View: 'SmisSafetyManagerCertificate:View',
@@ -112,7 +115,8 @@
       Edit: 'SmisSafetyManagerCertificate:Edit',
       Delete: 'SmisSafetyManagerCertificate:Delete',
       Export: 'SmisSafetyManagerCertificate:Export',
-      ViewHistory: 'SmisSafetyManagerCertificate:ViewHistory'
+      ViewHistory: 'SmisSafetyManagerCertificate:ViewHistory',
+      AiAnalyze: 'SmisSafetyManagerCertificate:AiAnalyze'
     },
     SmisRegisteredSafetyEngineerLedger: {
       View: 'SmisRegisteredSafetyEngineerLedger:View',
@@ -121,7 +125,8 @@
       Edit: 'SmisRegisteredSafetyEngineerLedger:Edit',
       Delete: 'SmisRegisteredSafetyEngineerLedger:Delete',
       Export: 'SmisRegisteredSafetyEngineerLedger:Export',
-      ViewHistory: 'SmisRegisteredSafetyEngineerLedger:ViewHistory'
+      ViewHistory: 'SmisRegisteredSafetyEngineerLedger:ViewHistory',
+      AiAnalyze: 'SmisRegisteredSafetyEngineerLedger:AiAnalyze'
     }
   } as const
   type CertificatePermissionPrefix = keyof typeof certificatePermissionSets
@@ -262,7 +267,8 @@
       mode,
       row,
       category: category.value,
-      pageTitle: pageTitle.value
+      pageTitle: pageTitle.value,
+      aiPermission: permissionCode('AiAnalyze')
     })
   const exportColumns: ArtTableQueryExcelColumn[] = [
     { key: 'employeeNo', title: '员工工号' },

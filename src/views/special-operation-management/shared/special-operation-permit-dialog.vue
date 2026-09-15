@@ -355,6 +355,12 @@
             />
           </ElFormItem>
         </ArtSectionCard>
+
+        <SpecialOperationAiPrecheckPanel
+          ref="aiPrecheckRef"
+          :permission="aiPrecheckPermission"
+          :draft="aiPrecheckDraft"
+        />
       </div>
     </ArtForm>
 
@@ -400,12 +406,14 @@
     type SmisSpecialOperationPermit,
     type SmisSpecialOperationPermitSavePayload,
     type SmisSpecialOperationPerson,
-    type SmisSpecialOperationType
+    type SmisSpecialOperationType,
+    type SmisSpecialOperationPrecheckDraft
   } from '@smis/api'
   import { useUserStore } from '@/store/modules/user'
   import SpecialOperationEmployeeMultipleSelect from './special-operation-employee-multiple-select.vue'
   import SpecialOperationCustomField from './special-operation-custom-field.vue'
   import SpecialOperationBlindPlateItems from './special-operation-blind-plate-items.vue'
+  import SpecialOperationAiPrecheckPanel from './special-operation-ai-precheck-panel.vue'
   import {
     normalizeBlindPlateItems,
     normalizeCustomValues,
@@ -417,6 +425,7 @@
     mode?: 'add' | 'edit' | 'copy'
     operationTypes: SmisSpecialOperationType[]
     forcedOperationTypeCode?: string | null
+    aiPrecheckPermission: string
     tenantId?: string | null
   }
 
@@ -453,6 +462,7 @@
   const dialogRef = ref<ArtDialogExpose<SpecialOperationPermitDialogOpenData>>()
   const formRef = ref<InstanceType<typeof ArtForm>>()
   const blindPlateItemsRef = ref<InstanceType<typeof SpecialOperationBlindPlateItems>>()
+  const aiPrecheckRef = ref<InstanceType<typeof SpecialOperationAiPrecheckPanel>>()
   const loading = ref(false)
   const submitting = ref(false)
   const submitMode = ref<'draft' | 'submit'>('draft')
@@ -461,6 +471,7 @@
   const tenantId = ref<string | null>(null)
   const operationTypes = ref<SmisSpecialOperationType[]>([])
   const forcedOperationTypeCode = ref<string | null>(null)
+  const aiPrecheckPermission = ref('SmisSpecialOperationWorkbench:AiPrecheck')
   const catalogs = reactive<{ hazards: SmisSpecialOperationCatalogItem[] }>({ hazards: [] })
 
   const emptyForm = (): PermitFormState => ({
@@ -562,6 +573,46 @@
     enabledOperationTypes.value.filter((item) => item.id !== form.operationTypeId)
   )
   const displayPermitNo = computed(() => sourcePermitNo.value || '保存后按编号规则自动生成')
+  const isPresent = (value: unknown): boolean => {
+    if (value === null || value === undefined) return false
+    if (typeof value === 'string') return Boolean(value.trim())
+    if (Array.isArray(value)) return value.length > 0
+    return true
+  }
+  const aiPrecheckDraft = computed<SmisSpecialOperationPrecheckDraft>(() => ({
+    operationTypeCode: selectedOperationType.value?.typeCode || '',
+    operationTypeName: selectedOperationType.value?.typeName || '',
+    workContent: form.workContent || null,
+    workStartTime: form.workStartTime,
+    workEndTime: form.workEndTime,
+    workLocation: form.workLocation || null,
+    workUnit: form.workUnit || null,
+    workSection: form.workSection || null,
+    hotWorkLevel: form.hotWorkLevel || null,
+    hotWorkMethodCount: form.hotWorkMethods.length,
+    hazardFactorCount: form.hazardFactorIds.length,
+    responsibleEmployeeSelected: Boolean(form.responsibleEmployeeId),
+    guardianCount: form.guardianIds.length,
+    verifierCount: form.verifierIds.length,
+    briefingGiverCount: form.briefingGiverIds.length,
+    briefingReceiverCount: form.briefingReceiverIds.length,
+    workerCount: form.workers.length,
+    analystCount: form.analystIds.length,
+    siteAnalysisTotal: form.siteAnalysisRecords.length,
+    siteAnalysisCompleted: form.siteAnalysisRecords.filter((item) => isPresent(item.recordedValue))
+      .length,
+    safetyMeasureTotal: form.safetyMeasures.length,
+    safetyMeasureConfirmed: form.safetyMeasures.filter((item) => item.involved).length,
+    sitePhotoCount: form.sitePhotoUrls.length,
+    relatedOperationCount: form.relatedOperationTypeIds.length,
+    requiredCustomFields: visibleCustomFields.value
+      .filter((field) => field.required)
+      .map((field) => ({
+        label: field.fieldLabel,
+        present: isPresent(readCustomValue(form.customValues, field.fieldCode))
+      })),
+    blindPlateItemCount: blindPlateItems.value.length
+  }))
   const requiredCustomFieldRule = (label: string) => ({
     validator: (_rule: unknown, value: unknown, callback: (error?: Error) => void): void => {
       const empty =
@@ -795,6 +846,8 @@
     operationTypes.value = data.operationTypes
     tenantId.value = data.tenantId || data.row?.tenantId || null
     forcedOperationTypeCode.value = data.forcedOperationTypeCode || null
+    aiPrecheckPermission.value = data.aiPrecheckPermission
+    aiPrecheckRef.value?.reset()
     editingId.value = data.mode === 'copy' ? undefined : data.row?.id
     sourcePermitNo.value = data.mode === 'copy' ? undefined : data.row?.permitNo
     const forcedType = operationTypes.value.find(

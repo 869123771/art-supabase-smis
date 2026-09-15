@@ -24,7 +24,8 @@
     start: 'SmisLiftingOperationApplication:Start',
     requestAcceptance: 'SmisLiftingOperationApplication:RequestAcceptance',
     accept: 'SmisLiftingOperationApplication:Accept',
-    print: 'SmisLiftingOperationApplication:Print'
+    print: 'SmisLiftingOperationApplication:Print',
+    aiPrecheck: 'SmisLiftingOperationApplication:AiPrecheck'
   } satisfies SpecialOperationPagePermissions
 
   defineOptions({ name: 'SmisLiftingOperationApplication' })

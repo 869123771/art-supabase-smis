@@ -24,7 +24,8 @@
     start: 'SmisConfinedSpaceOperationApplication:Start',
     requestAcceptance: 'SmisConfinedSpaceOperationApplication:RequestAcceptance',
     accept: 'SmisConfinedSpaceOperationApplication:Accept',
-    print: 'SmisConfinedSpaceOperationApplication:Print'
+    print: 'SmisConfinedSpaceOperationApplication:Print',
+    aiPrecheck: 'SmisConfinedSpaceOperationApplication:AiPrecheck'
   } satisfies SpecialOperationPagePermissions
 
   defineOptions({ name: 'SmisConfinedSpaceOperationApplication' })

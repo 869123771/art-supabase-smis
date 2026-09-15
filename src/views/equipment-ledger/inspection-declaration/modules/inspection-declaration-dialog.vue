@@ -74,13 +74,21 @@
           <p class="inspection-dialog__upload-help">支持直接上传或从资源库选择，最多 9 张。</p>
         </template>
       </ArtForm>
+
+      <SmisAiDocumentOcrPanel
+        ref="ocrPanelRef"
+        mode="inspection"
+        permission="SmisInspectionDeclaration:AiAnalyze"
+        :image-urls="imageUrls"
+        @apply-inspection="applyOcrResult"
+      />
     </div>
   </ArtDialog>
 </template>
 
 <script setup lang="ts">
   import dayjs from 'dayjs'
-  import type { FormRules } from 'element-plus'
+  import { ElMessage, type FormRules } from 'element-plus'
   import type {
     DataSelectColumn,
     DataSelectFetchParams,
@@ -93,16 +101,20 @@
   import ArtUploadImage from '@/components/core/forms/art-upload-image/index.vue'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
   import SmisDataSourceEmptyActions from '@smis/views/components/smis-data-source-empty-actions.vue'
+  import SmisAiDocumentOcrPanel from '@smis/views/components/smis-ai-document-ocr-panel.vue'
   import { useDocumentNumberRule } from '@/hooks/core/useDocumentNumberRule'
   import { useUserStore } from '@/store/modules/user'
+  import { normalizeNullableText } from '@/utils/form/normalize'
   import {
     fetchEquipmentLedgerList,
     fetchInspectionCategoryList,
     fetchSupplierList,
+    reviewEquipmentInspectionReportOcr,
     saveEquipmentInspection,
     type SmisEquipmentInspection,
     type SmisEquipmentInspectionConclusion,
     type SmisEquipmentInspectionImage,
+    type SmisInspectionReportOcrResponse,
     type SmisEquipmentInspectionSavePayload,
     type SmisEquipmentInspectionStatus
   } from '@smis/api'
@@ -132,12 +144,16 @@
     clearValidate: () => void
     reloadOptions: (key?: string) => Promise<unknown>
   }
+  interface OcrPanelExpose {
+    reset: () => void
+  }
 
   const emit = defineEmits<{ success: [type: 'add' | 'edit'] }>()
   const userStore = useUserStore()
   const { getDictMap } = storeToRefs(userStore)
   const dialogRef = ref<ArtDialogExpose<InspectionDeclarationDialogOpenData>>()
   const formRef = ref<FormExpose>()
+  const ocrPanelRef = ref<OcrPanelExpose>()
   const equipmentSelection = shallowRef<DataSelectRecord[]>([])
   const institutionSelection = shallowRef<DataSelectRecord[]>([])
   const numberRule = useDocumentNumberRule('smis.equipment_inspection')
@@ -160,6 +176,7 @@
   const formModel = reactive<InspectionForm>(initialForm())
   const images = shallowRef<SmisEquipmentInspectionImage[]>([])
   const imageUrls = ref<string[]>([])
+  const ocrArtifactId = ref('')
 
   const dictOptions = (code: string) =>
     (getDictMap.value[code] ?? []).map((item) => ({
@@ -393,6 +410,8 @@
     Object.assign(form.model, initialForm())
     images.value = []
     imageUrls.value = []
+    ocrArtifactId.value = ''
+    ocrPanelRef.value?.reset()
     equipmentSelection.value = []
     institutionSelection.value = []
     await nextTick()
@@ -414,10 +433,65 @@
     remark: form.model.remark.trim(),
     imageAttachmentIds: images.value.map((item) => item.attachmentId)
   })
+  const applyOcrResult = (result: SmisInspectionReportOcrResponse): void => {
+    const appliedFields: string[] = []
+    const report = result.report
+    if (report.inspectionDate && form.model.inspectionDate === dayjs().format('YYYY-MM-DD')) {
+      form.model.inspectionDate = report.inspectionDate
+      appliedFields.push('检验日期')
+    }
+    if (!form.model.conclusion && report.conclusion) {
+      form.model.conclusion = report.conclusion
+      appliedFields.push('检验结论')
+    }
+    if (!form.model.nextDueDate && report.nextDueDate) {
+      form.model.nextDueDate = report.nextDueDate
+      appliedFields.push('下次检验日期')
+    }
+    if (!form.model.remark.trim()) {
+      const remarkParts = [
+        report.reportNumber ? `外部报告编号：${report.reportNumber}` : '',
+        report.remark || ''
+      ].filter(Boolean)
+      if (remarkParts.length) {
+        form.model.remark = remarkParts.join('；').slice(0, 1000)
+        appliedFields.push('备注')
+      }
+    }
+    ocrArtifactId.value = result.artifactId
+    const selectedEquipment = equipmentSelection.value[0]
+    if (
+      report.equipmentCode &&
+      selectedEquipment?.equipmentCode &&
+      report.equipmentCode.trim() !== String(selectedEquipment.equipmentCode).trim()
+    ) {
+      ElMessage.warning('报告设备编码与所选设备不一致，请重点核验后再保存')
+      return
+    }
+    ElMessage.success(
+      appliedFields.length
+        ? `已补充${appliedFields.join('、')}，请人工复核`
+        : '当前字段已有内容，识别结果未覆盖人工填写'
+    )
+  }
   const handleSubmit = async (): Promise<boolean> => {
     try {
       await formRef.value?.validate()
-      await saveEquipmentInspection(buildPayload())
+      const response = await saveEquipmentInspection(buildPayload())
+      const entityId = form.model.id || response.data
+      if (ocrArtifactId.value && entityId) {
+        const review = await reviewEquipmentInspectionReportOcr({
+          artifactId: ocrArtifactId.value,
+          entityId,
+          finalPayload: {
+            inspectionDate: form.model.inspectionDate,
+            conclusion: form.model.conclusion,
+            nextDueDate: form.model.nextDueDate || null,
+            remark: normalizeNullableText(form.model.remark)
+          }
+        })
+        if (review.error) console.warn('设备检验报告 OCR 反馈记录失败', review.error)
+      }
       emit('success', form.model.id ? 'edit' : 'add')
       return true
     } catch {
@@ -498,13 +572,16 @@
 
 <style scoped lang="scss">
   .inspection-dialog {
+    display: grid;
+    gap: var(--art-space-4);
+
     &__context {
       display: grid;
       grid-template-columns: 44px minmax(0, 1fr);
       gap: 12px;
       align-items: center;
       padding: 14px 16px;
-      margin-bottom: 18px;
+      margin-bottom: 0;
       background: color-mix(in srgb, var(--theme-color) 7%, var(--default-box-color));
       border-left: 3px solid var(--theme-color);
       border-radius: var(--el-border-radius-base);

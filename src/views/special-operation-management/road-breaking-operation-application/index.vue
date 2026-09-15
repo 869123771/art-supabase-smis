@@ -24,7 +24,8 @@
     start: 'SmisRoadBreakingOperationApplication:Start',
     requestAcceptance: 'SmisRoadBreakingOperationApplication:RequestAcceptance',
     accept: 'SmisRoadBreakingOperationApplication:Accept',
-    print: 'SmisRoadBreakingOperationApplication:Print'
+    print: 'SmisRoadBreakingOperationApplication:Print',
+    aiPrecheck: 'SmisRoadBreakingOperationApplication:AiPrecheck'
   } satisfies SpecialOperationPagePermissions
 
   defineOptions({ name: 'SmisRoadBreakingOperationApplication' })

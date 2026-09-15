@@ -24,7 +24,8 @@
     start: 'SmisHotWorkApplication:Start',
     requestAcceptance: 'SmisHotWorkApplication:RequestAcceptance',
     accept: 'SmisHotWorkApplication:Accept',
-    print: 'SmisHotWorkApplication:Print'
+    print: 'SmisHotWorkApplication:Print',
+    aiPrecheck: 'SmisHotWorkApplication:AiPrecheck'
   } satisfies SpecialOperationPagePermissions
 
   defineOptions({ name: 'SmisHotWorkApplication' })
