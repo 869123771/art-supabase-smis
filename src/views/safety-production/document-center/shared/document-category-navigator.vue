@@ -12,6 +12,7 @@
     @retry="emit('refresh')"
   >
     <template #actions>
+      <ArtTreeExpandToggle :tree="treeRef" :data="data" label="文档分类树" />
       <ArtIconButton
         v-auth="'SmisRequiredKnowledge:CategoryAdd'"
         icon="ri:add-line"
@@ -118,6 +119,7 @@
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
   import ArtSectionCard from '@/components/core/surfaces/art-section-card/index.vue'
   import ArtIconButton from '@/components/core/widget/art-icon-button/index.vue'
+  import ArtTreeExpandToggle from '@/components/core/widget/art-tree-expand-toggle/index.vue'
   import TreeUtils from '@/utils/tree'
   import type { SmisDocumentCategory } from '@smis/api'
 

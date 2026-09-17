@@ -1,6 +1,12 @@
 <template>
   <ArtSectionCard class="site-navigator" title="场所导航" subtitle="按场所层级筛选危险源">
     <template #actions>
+      <ArtTreeExpandToggle
+        :tree="treeRef"
+        :data="treeData"
+        label="场所树"
+        :default-expanded="true"
+      />
       <ElButton text circle aria-label="刷新场所树" @click="$emit('refresh')">
         <ArtSvgIcon icon="ri:refresh-line" />
       </ElButton>
@@ -17,6 +23,7 @@
         />
         <ElAlert v-if="error" :title="error" type="error" :closable="false" show-icon />
         <ElTree
+          ref="treeRef"
           v-else-if="treeData.length"
           :data="treeData"
           node-key="id"
@@ -40,7 +47,9 @@
 </template>
 
 <script setup lang="ts">
+  import type { ElTree } from 'element-plus'
   import ArtSectionCard from '@/components/core/surfaces/art-section-card/index.vue'
+  import ArtTreeExpandToggle from '@/components/core/widget/art-tree-expand-toggle/index.vue'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
   import ArtEmptyState from '@/components/core/feedback/art-empty-state/index.vue'
   import type { SmisHazardSite } from '@smis/api'
@@ -53,6 +62,7 @@
   }>()
   defineEmits<{ select: [key: string]; refresh: [] }>()
 
+  const treeRef = ref<InstanceType<typeof ElTree>>()
   const treeData = computed(() => [
     { id: 'all', siteName: '全部场所', organizationId: '', sort: -1, children: props.data }
   ])

@@ -9,6 +9,7 @@
     @retry="emit('refresh')"
   >
     <template #actions>
+      <ArtTreeExpandToggle :tree="treeRef" :data="activeTree" :label="`${dimensionLabel}树`" />
       <ArtIconButton
         icon="ri:refresh-line"
         label="刷新结构树"
@@ -69,6 +70,7 @@
 <script setup lang="ts">
   import type { ElTree, TreeNodeData } from 'element-plus'
   import ArtIconButton from '@/components/core/widget/art-icon-button/index.vue'
+  import ArtTreeExpandToggle from '@/components/core/widget/art-tree-expand-toggle/index.vue'
   import ArtSectionCard from '@/components/core/surfaces/art-section-card/index.vue'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
   import TreeUtils from '@/utils/tree'

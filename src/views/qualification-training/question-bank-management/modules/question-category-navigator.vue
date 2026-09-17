@@ -12,6 +12,7 @@
     @retry="emit('refresh')"
   >
     <template #actions>
+      <ArtTreeExpandToggle :tree="treeRef" :data="data" label="题库分类树" />
       <ArtIconButton
         v-auth="'SmisQuestionBankManagement:ManageCategory'"
         icon="ri:add-line"
@@ -116,6 +117,7 @@
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
   import ArtSectionCard from '@/components/core/surfaces/art-section-card/index.vue'
   import ArtIconButton from '@/components/core/widget/art-icon-button/index.vue'
+  import ArtTreeExpandToggle from '@/components/core/widget/art-tree-expand-toggle/index.vue'
   import TreeUtils from '@/utils/tree'
   import type { SmisQuestionCategory } from '@smis/api'
   import '../../../components/category-navigator.scss'

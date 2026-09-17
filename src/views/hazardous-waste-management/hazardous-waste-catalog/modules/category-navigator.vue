@@ -12,6 +12,7 @@
     @retry="emit('refresh')"
   >
     <template #actions>
+      <ArtTreeExpandToggle :tree="treeRef" :data="data" label="危废分类树" />
       <ArtIconButton
         v-auth="'SmisHazardousWasteCatalog:AddCategory'"
         icon="ri:add-line"
@@ -80,6 +81,7 @@
 <script setup lang="ts">
   import type { ElTree, TreeNodeData } from 'element-plus'
   import ArtIconButton from '@/components/core/widget/art-icon-button/index.vue'
+  import ArtTreeExpandToggle from '@/components/core/widget/art-tree-expand-toggle/index.vue'
   import ArtSectionCard from '@/components/core/surfaces/art-section-card/index.vue'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
   import TreeUtils from '@/utils/tree'

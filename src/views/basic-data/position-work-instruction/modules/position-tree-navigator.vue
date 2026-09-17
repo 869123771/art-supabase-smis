@@ -12,6 +12,12 @@
     @retry="emit('refresh')"
   >
     <template #actions>
+      <ArtTreeExpandToggle
+        :tree="treeRef"
+        :data="navigationData"
+        node-key="key"
+        label="岗位树"
+      />
       <ArtIconButton
         icon="ri:refresh-line"
         label="刷新岗位树"
@@ -93,6 +99,7 @@
   import { computed, nextTick, ref, watch } from 'vue'
   import type { ElTree, TreeNodeData } from 'element-plus'
   import ArtIconButton from '@/components/core/widget/art-icon-button/index.vue'
+  import ArtTreeExpandToggle from '@/components/core/widget/art-tree-expand-toggle/index.vue'
   import ArtSectionCard from '@/components/core/surfaces/art-section-card/index.vue'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
   import { flattenWorkInstructionTree, type WorkInstructionTreeNode } from './types'

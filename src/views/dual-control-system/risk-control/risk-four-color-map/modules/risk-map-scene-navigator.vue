@@ -12,6 +12,12 @@
     @retry="emit('refresh')"
   >
     <template #actions>
+      <ArtTreeExpandToggle
+        :tree="treeRef"
+        :data="treeData"
+        label="场景树"
+        :default-expanded="true"
+      />
       <ArtIconButton
         icon="ri:refresh-line"
         label="刷新四色图场景"
@@ -42,6 +48,7 @@
 
     <ElScrollbar class="risk-map-scene-navigator__scrollbar">
       <ElTree
+        ref="treeRef"
         :data="treeData"
         node-key="id"
         :props="treeProps"
@@ -88,7 +95,9 @@
 </template>
 
 <script setup lang="ts">
+  import type { ElTree } from 'element-plus'
   import ArtIconButton from '@/components/core/widget/art-icon-button/index.vue'
+  import ArtTreeExpandToggle from '@/components/core/widget/art-tree-expand-toggle/index.vue'
   import ArtSectionCard from '@/components/core/surfaces/art-section-card/index.vue'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
   import type { SmisRiskMapScene } from '@smis/api'
@@ -114,6 +123,7 @@
     delete: [scene: SmisRiskMapScene]
   }>()
 
+  const treeRef = ref<InstanceType<typeof ElTree>>()
   const treeProps = { label: 'sceneName', children: 'children' }
 </script>
 

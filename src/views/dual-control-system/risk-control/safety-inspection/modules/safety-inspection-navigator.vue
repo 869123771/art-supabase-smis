@@ -12,6 +12,13 @@
     @retry="emit('refresh')"
   >
     <template #actions>
+      <ArtTreeExpandToggle
+        v-if="activeTab === 'organization'"
+        :tree="treeRef"
+        :data="organizations"
+        label="组织树"
+        :default-expanded="true"
+      />
       <ArtIconButton
         icon="ri:refresh-line"
         label="刷新检查导航"
@@ -58,6 +65,7 @@
       <ElTabPane label="组织部门" name="organization">
         <ElScrollbar class="safety-inspection-navigator__scrollbar">
           <ElTree
+            ref="treeRef"
             :data="organizations"
             node-key="id"
             :props="treeProps"
@@ -75,7 +83,9 @@
 </template>
 
 <script setup lang="ts">
+  import type { ElTree } from 'element-plus'
   import ArtIconButton from '@/components/core/widget/art-icon-button/index.vue'
+  import ArtTreeExpandToggle from '@/components/core/widget/art-tree-expand-toggle/index.vue'
   import ArtSectionCard from '@/components/core/surfaces/art-section-card/index.vue'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
   import type { SmisSafetyInspectionOrganization, SmisSafetyInspectionTypeOption } from '@smis/api'
@@ -102,6 +112,7 @@
     refresh: []
   }>()
   const activeTab = ref<'type' | 'organization'>('type')
+  const treeRef = ref<InstanceType<typeof ElTree>>()
   const treeProps = { label: 'organizationName', children: 'children' }
   const selectedOrganizationId = computed(() =>
     props.modelValue.startsWith('organization:')

@@ -39,6 +39,12 @@
               @retry="loadStandards"
             >
               <template #actions>
+                <ArtTreeExpandToggle
+                  :tree="treeRef"
+                  :data="standardTree"
+                  label="排查标准树"
+                  default-expanded
+                />
                 <ArtIconButton
                   icon="ri:add-line"
                   label="新增一级标准"
@@ -164,6 +170,7 @@
   import { ElTag, ElTree } from 'element-plus'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import ArtIconButton from '@/components/core/widget/art-icon-button/index.vue'
+  import ArtTreeExpandToggle from '@/components/core/widget/art-tree-expand-toggle/index.vue'
   import ArtSectionCard from '@/components/core/surfaces/art-section-card/index.vue'
   import ArtWorkspaceSplitter from '@/components/core/layouts/art-workspace-splitter/index.vue'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'

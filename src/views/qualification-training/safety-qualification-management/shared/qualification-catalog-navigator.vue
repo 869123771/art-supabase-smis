@@ -11,13 +11,15 @@
     :min-height="340"
     @retry="emit('refresh')"
   >
-    <template #actions
-      ><ArtIconButton
+    <template #actions>
+      <ArtTreeExpandToggle :tree="treeRef" :data="data" :label="`${title}树`" />
+      <ArtIconButton
         icon="ri:refresh-line"
         :label="`刷新${title}`"
         :loading="loading"
         @click="emit('refresh')"
-    /></template>
+      />
+    </template>
     <div class="qualification-catalog-navigator__content">
       <ElInput v-model="keyword" clearable :placeholder="`搜索${title}名称或编码`"
         ><template #prefix><ArtSvgIcon icon="ri:search-line" /></template
@@ -77,6 +79,7 @@
 <script setup lang="ts">
   import type { ElTree, TreeNodeData } from 'element-plus'
   import ArtIconButton from '@/components/core/widget/art-icon-button/index.vue'
+  import ArtTreeExpandToggle from '@/components/core/widget/art-tree-expand-toggle/index.vue'
   import ArtSectionCard from '@/components/core/surfaces/art-section-card/index.vue'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
   import TreeUtils from '@/utils/tree'
