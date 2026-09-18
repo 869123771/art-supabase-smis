@@ -161,14 +161,13 @@
                       :precision="2"
                     /><span>分</span></div
                   >
-                  <ElButton
-                    circle
-                    text
-                    type="danger"
-                    aria-label="删除抽题规则"
+                  <ArtIconButton
+                    class="size-6.5! text-base!"
+                    icon="ri:delete-bin-line"
+                    tone="danger"
+                    label="删除抽题规则"
                     @click="paperForm.randomRule.splice(index, 1)"
-                    ><ArtSvgIcon icon="ri:delete-bin-line"
-                  /></ElButton>
+                  />
                 </div>
                 <div class="exam-page__rule-actions">
                   <small>随机生成会替换当前已选题目，生成后仍可逐题调整分值。</small>
@@ -445,6 +444,7 @@
   import { useAuth } from '@/hooks/core/useAuth'
   import { useUserStore } from '@/store/modules/user'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
+  import ArtIconButton from '@/components/core/widget/art-icon-button/index.vue'
   import ArtEmptyState from '@/components/core/feedback/art-empty-state/index.vue'
   import ArtButtonMore, {
     type ButtonMoreItem

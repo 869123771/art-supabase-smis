@@ -7,9 +7,7 @@
         label="场所树"
         :default-expanded="true"
       />
-      <ElButton text circle aria-label="刷新场所树" @click="$emit('refresh')">
-        <ArtSvgIcon icon="ri:refresh-line" />
-      </ElButton>
+      <ArtIconButton icon="ri:refresh-line" label="刷新场所树" @click="$emit('refresh')" />
     </template>
     <ElScrollbar class="site-navigator__scroll">
       <div class="site-navigator__body" :aria-busy="loading">
@@ -50,7 +48,7 @@
   import type { ElTree } from 'element-plus'
   import ArtSectionCard from '@/components/core/surfaces/art-section-card/index.vue'
   import ArtTreeExpandToggle from '@/components/core/widget/art-tree-expand-toggle/index.vue'
-  import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
+  import ArtIconButton from '@/components/core/widget/art-icon-button/index.vue'
   import ArtEmptyState from '@/components/core/feedback/art-empty-state/index.vue'
   import type { SmisHazardSite } from '@smis/api'
 

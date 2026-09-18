@@ -125,17 +125,16 @@
                   :placeholder="`请输入选项 ${option.key}`"
                   maxlength="1000"
                 />
-                <ElButton
+                <ArtIconButton
                   v-if="
                     questionForm.questionType !== 'judgement' && questionForm.options.length > 2
                   "
-                  circle
-                  text
-                  type="danger"
-                  aria-label="删除选项"
+                  class="size-6.5! text-base!"
+                  icon="ri:close-line"
+                  tone="danger"
+                  label="删除选项"
                   @click="removeOption(index)"
-                  ><ArtSvgIcon icon="ri:close-line"
-                /></ElButton>
+                />
               </div>
               <ElButton
                 v-if="questionForm.questionType !== 'judgement' && questionForm.options.length < 8"
@@ -171,6 +170,7 @@
   import { useArtFeedback } from '@/hooks/core/useArtFeedback'
   import { useUserStore } from '@/store/modules/user'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
+  import ArtIconButton from '@/components/core/widget/art-icon-button/index.vue'
   import ArtButtonMore, {
     type ButtonMoreItem
   } from '@/components/core/forms/art-button-more/index.vue'
