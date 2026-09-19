@@ -61,7 +61,7 @@
   import ArtPermissionGuard from '@/components/core/feedback/art-permission-guard/index.vue'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import ArtDictDisplay from '@/components/core/base/art-dict-display/index.vue'
-  import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
+  import BusinessTableIdentityCell from '@/components/business/business-table-identity-cell/index.vue'
   import BusinessTableWorkspaceActions from '@/components/business/business-table-workspace-actions/index.vue'
   import BusinessWorkspaceHeader, {
     type BusinessWorkspaceMetric
@@ -266,15 +266,11 @@
       minWidth: 300,
       fixed: 'left',
       formatter: (row) => (
-        <div class="hazard-factor-category-page__identity">
-          <span aria-hidden="true">
-            <ArtSvgIcon icon="ri:price-tag-3-line" />
-          </span>
-          <div>
-            <strong title={row.categoryName}>{row.categoryName}</strong>
-            <small>编号 {row.categoryCode}</small>
-          </div>
-        </div>
+        <BusinessTableIdentityCell
+          primary={row.categoryName}
+          secondary={`编号 ${row.categoryCode}`}
+          icon="ri:price-tag-3-line"
+        />
       )
     },
     {
@@ -438,45 +434,6 @@
   .hazard-factor-category-page {
     gap: 12px;
     min-width: 0;
-
-    :deep(.hazard-factor-category-page__identity) {
-      display: grid;
-      grid-template-columns: 36px minmax(0, 1fr);
-      gap: 11px;
-      align-items: center;
-      min-width: 0;
-
-      > span {
-        display: grid;
-        place-items: center;
-        width: 36px;
-        height: 36px;
-        color: var(--theme-color);
-        background: color-mix(in srgb, var(--theme-color) 9%, var(--el-bg-color));
-        border-radius: var(--el-border-radius-base);
-      }
-
-      > div {
-        min-width: 0;
-      }
-
-      strong,
-      small {
-        display: block;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-
-      strong {
-        color: var(--el-text-color-primary);
-      }
-
-      small {
-        margin-top: 3px;
-        color: var(--el-text-color-secondary);
-      }
-    }
 
     :deep(.hazard-factor-category-page__code) {
       display: inline-flex;

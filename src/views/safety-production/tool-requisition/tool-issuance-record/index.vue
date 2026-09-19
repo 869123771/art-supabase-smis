@@ -47,6 +47,7 @@
   import { escape } from 'lodash-es'
   import { fetchEmployeeSelectorList } from '@/api/integration/employees'
   import BusinessTableWorkspaceActions from '@/components/business/business-table-workspace-actions/index.vue'
+  import BusinessTableRowActions from '@/components/business/business-table-row-actions/index.vue'
   import BusinessWorkspaceHeader from '@/components/business/business-workspace-header/index.vue'
   import type { BusinessWorkspaceMetric } from '@/components/business/business-workspace-header/index.vue'
   import ArtButtonMore from '@/components/core/forms/art-button-more/index.vue'
@@ -480,7 +481,7 @@
       width: 210,
       fixed: 'right',
       formatter: (row) => (
-        <div class="row-actions">
+        <BusinessTableRowActions>
           <ArtButtonTable
             permission="SmisToolIssuanceRecord:Issue"
             icon="ri:send-plane-line"
@@ -521,7 +522,7 @@
               if (item.key === 'print') printRecord(row)
             }}
           />
-        </div>
+        </BusinessTableRowActions>
       )
     }
   ]
@@ -555,12 +556,6 @@
     :deep(.document-no) {
       font-variant-numeric: tabular-nums;
       color: var(--theme-color);
-    }
-
-    :deep(.row-actions) {
-      display: flex;
-      gap: 8px;
-      align-items: center;
     }
   }
 </style>

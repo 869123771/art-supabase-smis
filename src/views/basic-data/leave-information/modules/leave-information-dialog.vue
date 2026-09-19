@@ -1,13 +1,11 @@
 <template>
   <ArtDialog ref="dialogRef" size="lg">
     <div class="leave-dialog">
-      <div class="leave-dialog__context" role="note">
-        <span aria-hidden="true"><ArtSvgIcon icon="ri:shield-user-line" /></span>
-        <div>
-          <strong>花名册联动与审计快照</strong>
-          <p>申请人和代理人来自员工花名册；身份证号自动带出，并按本次请假保存快照。</p>
-        </div>
-      </div>
+      <ArtEntitySummary spaced>
+        <template #icon><ArtSvgIcon icon="ri:shield-user-line" /></template>
+        <strong>花名册联动与审计快照</strong>
+        <p>申请人和代理人来自员工花名册；身份证号自动带出，并按本次请假保存快照。</p>
+      </ArtEntitySummary>
 
       <ArtForm
         ref="formRef"
@@ -428,39 +426,6 @@
 
 <style scoped lang="scss">
   .leave-dialog {
-    &__context {
-      display: grid;
-      grid-template-columns: 38px minmax(0, 1fr);
-      gap: 12px;
-      align-items: center;
-      padding: 11px 13px;
-      margin-bottom: 18px;
-      background: color-mix(in srgb, var(--theme-color) 7%, var(--default-box-color));
-      border-left: 3px solid var(--theme-color);
-      border-radius: var(--el-border-radius-base);
-
-      > span {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 38px;
-        height: 38px;
-        color: var(--theme-color);
-        background: var(--default-box-color);
-        border-radius: var(--el-border-radius-base);
-      }
-
-      strong {
-        color: var(--el-text-color-primary);
-      }
-
-      p {
-        margin: 3px 0 0;
-        font-size: 12px;
-        color: var(--el-text-color-secondary);
-      }
-    }
-
     &__full-control {
       width: 100%;
     }

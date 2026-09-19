@@ -1,13 +1,11 @@
 <template>
   <ArtDialog ref="dialogRef" size="md">
     <div class="inspection-type-dialog">
-      <div class="inspection-type-dialog__note">
-        <ArtSvgIcon icon="ri:price-tag-3-line" />
-        <div>
-          <strong>租户自定义排查场景</strong>
-          <p>编码用于业务规则识别；颜色与标签样式用于任务列表和统计看板中的快速辨识。</p>
-        </div>
-      </div>
+      <ArtEntitySummary spaced>
+        <template #icon><ArtSvgIcon icon="ri:price-tag-3-line" /></template>
+        <strong>租户自定义排查场景</strong>
+        <p>编码用于业务规则识别；颜色与标签样式用于任务列表和统计看板中的快速辨识。</p>
+      </ArtEntitySummary>
       <ArtForm
         ref="formRef"
         v-model="form.model"
@@ -201,32 +199,4 @@
   defineExpose({ handleOpen })
 </script>
 
-<style scoped lang="scss">
-  .inspection-type-dialog__note {
-    display: grid;
-    grid-template-columns: 38px minmax(0, 1fr);
-    gap: 12px;
-    align-items: center;
-    padding: 12px 14px;
-    margin-bottom: 18px;
-    color: var(--el-text-color-regular);
-    background: color-mix(in srgb, var(--theme-color) 7%, var(--default-box-color));
-    border-left: 3px solid var(--theme-color);
-    border-radius: var(--el-border-radius-base);
-
-    > svg {
-      font-size: 22px;
-      color: var(--theme-color);
-    }
-
-    strong {
-      color: var(--el-text-color-primary);
-    }
-
-    p {
-      margin: 3px 0 0;
-      font-size: 12px;
-      color: var(--el-text-color-secondary);
-    }
-  }
-</style>
+<style scoped lang="scss"></style>

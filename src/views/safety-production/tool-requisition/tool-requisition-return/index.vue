@@ -59,6 +59,7 @@
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
   import ArtDictDisplay from '@/components/core/base/art-dict-display/index.vue'
   import ArtPermissionGuard from '@/components/core/feedback/art-permission-guard/index.vue'
+  import BusinessTableRowActions from '@/components/business/business-table-row-actions/index.vue'
   import ArtButtonMore from '@/components/core/forms/art-button-more/index.vue'
   import type { ButtonMoreItem } from '@/components/core/forms/art-button-more/index.vue'
   import type { SearchFormItem } from '@/components/core/forms/art-search-bar/index.vue'
@@ -251,7 +252,7 @@
       width: 168,
       fixed: 'right',
       formatter: (row) => (
-        <div class="row-actions">
+        <BusinessTableRowActions>
           <ArtButtonTable
             type="edit"
             permission="SmisToolRequisitionReturn:Edit"
@@ -287,7 +288,7 @@
               if (item.key === 'delete') void handleDelete([row])
             }}
           />
-        </div>
+        </BusinessTableRowActions>
       )
     }
   ]
@@ -438,12 +439,6 @@
     :deep(.document-no) {
       font-variant-numeric: tabular-nums;
       color: var(--theme-color);
-    }
-
-    :deep(.row-actions) {
-      display: flex;
-      gap: 8px;
-      align-items: center;
     }
   }
 

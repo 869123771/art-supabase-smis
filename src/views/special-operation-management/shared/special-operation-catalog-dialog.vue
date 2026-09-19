@@ -1,13 +1,11 @@
 <template>
   <ArtDialog ref="dialogRef" size="lg">
     <div class="special-operation-catalog-dialog">
-      <div class="special-operation-catalog-dialog__context" role="note">
-        <span aria-hidden="true"><ArtSvgIcon :icon="contextIcon" /></span>
-        <div>
-          <strong>{{ targetTenantName }} · {{ title }}</strong>
-          <p>{{ contextDescription }}</p>
-        </div>
-      </div>
+      <ArtEntitySummary spaced>
+        <template #icon><ArtSvgIcon :icon="contextIcon" /></template>
+        <strong>{{ targetTenantName }} · {{ title }}</strong>
+        <p>{{ contextDescription }}</p>
+      </ArtEntitySummary>
 
       <div class="special-operation-catalog-dialog__preview" aria-live="polite">
         <span>显示预览</span>
@@ -335,34 +333,6 @@
 
 <style scoped lang="scss">
   .special-operation-catalog-dialog {
-    &__context {
-      display: grid;
-      grid-template-columns: 42px minmax(0, 1fr);
-      gap: 12px;
-      align-items: center;
-      padding: 12px 14px;
-      margin-bottom: 14px;
-      background: color-mix(in srgb, var(--theme-color) 7%, var(--default-box-color));
-      border-left: 3px solid var(--theme-color);
-      border-radius: var(--el-border-radius-base);
-
-      > span {
-        display: grid;
-        place-items: center;
-        width: 42px;
-        height: 42px;
-        color: var(--theme-color);
-        background: var(--default-box-color);
-        border-radius: var(--el-border-radius-base);
-      }
-
-      p {
-        margin: 3px 0 0;
-        font-size: 12px;
-        color: var(--el-text-color-secondary);
-      }
-    }
-
     &__preview {
       display: flex;
       flex-wrap: wrap;

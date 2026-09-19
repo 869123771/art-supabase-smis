@@ -75,7 +75,7 @@
   import TreeUtils from '@/utils/tree'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import ArtDictDisplay from '@/components/core/base/art-dict-display/index.vue'
-  import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
+  import BusinessTableIdentityCell from '@/components/business/business-table-identity-cell/index.vue'
   import ArtPermissionGuard from '@/components/core/feedback/art-permission-guard/index.vue'
   import ArtWorkspaceSplitter from '@/components/core/layouts/art-workspace-splitter/index.vue'
   import BusinessTableWorkspaceActions from '@/components/business/business-table-workspace-actions/index.vue'
@@ -278,15 +278,11 @@
       minWidth: 220,
       fixed: 'left',
       formatter: (row) => (
-        <div class="qualification-catalog-page__identity">
-          <span>
-            <ArtSvgIcon icon={row.childCount ? 'ri:folder-3-line' : config.value.icon} />
-          </span>
-          <span>
-            <strong title={row.itemName}>{row.itemName}</strong>
-            <small>{row.itemCode}</small>
-          </span>
-        </div>
+        <BusinessTableIdentityCell
+          primary={row.itemName}
+          secondary={row.itemCode}
+          icon={row.childCount ? 'ri:folder-3-line' : config.value.icon}
+        />
       )
     },
     ...(isPermittedOperationItem.value
@@ -400,42 +396,6 @@
     &__table {
       min-width: 0;
       min-height: 0;
-    }
-
-    :deep(.qualification-catalog-page__identity) {
-      display: grid;
-      grid-template-columns: 36px minmax(0, 1fr);
-      gap: 10px;
-      align-items: center;
-      min-width: 0;
-
-      > span:first-child {
-        display: grid;
-        place-items: center;
-        width: 36px;
-        height: 36px;
-        color: var(--theme-color);
-        background: color-mix(in srgb, var(--theme-color) 9%, var(--el-bg-color));
-        border-radius: var(--el-border-radius-base);
-      }
-
-      > span:last-child {
-        display: grid;
-        min-width: 0;
-      }
-
-      strong,
-      small {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-
-      small {
-        margin-top: 2px;
-        font-size: 11px;
-        color: var(--el-text-color-secondary);
-      }
     }
 
     :deep(.qualification-catalog-page__actions) {

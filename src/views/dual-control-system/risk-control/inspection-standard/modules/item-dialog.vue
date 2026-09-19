@@ -1,12 +1,11 @@
 <template>
   <ArtDialog ref="dialogRef" size="md">
     <div class="item-dialog">
-      <div class="item-dialog__context"
-        ><ArtSvgIcon icon="ri:checkbox-multiple-line" /><div
-          ><strong>{{ standardName || '排查标准' }}</strong
-          ><p>排查内容将作为后续计划和岗位任务的基础检查口径。</p></div
-        ></div
-      >
+      <ArtEntitySummary spaced>
+        <template #icon><ArtSvgIcon icon="ri:checkbox-multiple-line" /></template>
+        <strong>{{ standardName || '排查标准' }}</strong
+        ><p>排查内容将作为后续计划和岗位任务的基础检查口径。</p>
+      </ArtEntitySummary>
       <ArtForm
         ref="formRef"
         v-model="model"
@@ -192,31 +191,4 @@
   }
   defineExpose({ handleOpen })
 </script>
-<style scoped lang="scss">
-  .item-dialog__context {
-    display: grid;
-    grid-template-columns: 38px minmax(0, 1fr);
-    gap: 12px;
-    align-items: center;
-    padding: 12px 14px;
-    margin-bottom: 18px;
-    background: color-mix(in srgb, var(--theme-color) 7%, var(--default-box-color));
-    border-left: 3px solid var(--theme-color);
-    border-radius: var(--el-border-radius-base);
-
-    svg {
-      font-size: 22px;
-      color: var(--theme-color);
-    }
-
-    strong {
-      color: var(--el-text-color-primary);
-    }
-
-    p {
-      margin: 3px 0 0;
-      font-size: 12px;
-      color: var(--el-text-color-secondary);
-    }
-  }
-</style>
+<style scoped lang="scss"></style>

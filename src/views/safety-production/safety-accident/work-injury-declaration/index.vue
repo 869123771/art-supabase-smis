@@ -72,6 +72,7 @@
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import ArtDictDisplay from '@/components/core/base/art-dict-display/index.vue'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
+  import BusinessTableIdentityCell from '@/components/business/business-table-identity-cell/index.vue'
   import BusinessWorkspaceHeader, {
     type BusinessWorkspaceMetric
   } from '@/components/business/business-workspace-header/index.vue'
@@ -225,15 +226,18 @@
       minWidth: 210,
       fixed: 'left',
       formatter: (row) => (
-        <div class="injury-page__identity">
-          <span class={`is-${row.injuryType}`}>
-            <ArtSvgIcon icon="ri:first-aid-kit-line" />
-          </span>
-          <span>
-            <strong>{row.declarantNameSnapshot}</strong>
-            <small>{row.declarationNo}</small>
-          </span>
-        </div>
+        <BusinessTableIdentityCell
+          primary={row.declarantNameSnapshot}
+          secondary={row.declarationNo}
+          icon="ri:first-aid-kit-line"
+          iconTone={
+            row.injuryType === 'fatal'
+              ? 'danger'
+              : row.injuryType === 'serious'
+                ? 'warning'
+                : 'primary'
+          }
+        />
       )
     },
     { prop: 'declarationDate', label: '申报时间', width: 118 },
@@ -456,53 +460,6 @@
       flex: 1;
       min-width: 0;
       min-height: 0;
-    }
-
-    :deep(.injury-page__identity) {
-      display: grid;
-      grid-template-columns: 36px minmax(0, 1fr);
-      gap: 10px;
-      align-items: center;
-      min-width: 0;
-
-      > span:first-child {
-        display: grid;
-        place-items: center;
-        width: 36px;
-        height: 36px;
-        color: var(--el-color-primary);
-        background: var(--el-color-primary-light-9);
-        border-radius: var(--el-border-radius-base);
-      }
-
-      > span:first-child.is-serious {
-        color: var(--el-color-warning-dark-2);
-        background: var(--el-color-warning-light-9);
-      }
-
-      > span:first-child.is-fatal {
-        color: var(--el-color-danger);
-        background: var(--el-color-danger-light-9);
-      }
-
-      > span:last-child {
-        display: grid;
-        min-width: 0;
-      }
-
-      strong,
-      small {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-
-      small {
-        margin-top: 2px;
-        font-family: var(--art-font-family-mono, Consolas, monospace);
-        font-size: 11px;
-        color: var(--el-text-color-secondary);
-      }
     }
 
     @media (width <= 900px) {

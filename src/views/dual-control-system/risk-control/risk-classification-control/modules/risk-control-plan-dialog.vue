@@ -1,13 +1,11 @@
 <template>
   <ArtDialog ref="dialogRef" size="xl">
     <div class="risk-control-dialog">
-      <div class="risk-control-dialog__notice">
-        <span aria-hidden="true"><ArtSvgIcon icon="ri:git-merge-line" /></span>
-        <div>
-          <strong>按组织层级落实风险管控责任</strong>
-          <p>每个层级配置一名责任人和巡查频率；系统据此自动生成风险巡查任务。</p>
-        </div>
-      </div>
+      <ArtEntitySummary spaced>
+        <template #icon><ArtSvgIcon icon="ri:git-merge-line" /></template>
+        <strong>按组织层级落实风险管控责任</strong>
+        <p>每个层级配置一名责任人和巡查频率；系统据此自动生成风险巡查任务。</p>
+      </ArtEntitySummary>
 
       <ElForm ref="formRef" :model="form" :rules="rules" label-position="top">
         <ArtSectionTitle title="管控对象" subtitle="可选择已维护有效危险源的风险点" />
@@ -316,34 +314,6 @@
 
 <style scoped lang="scss">
   .risk-control-dialog {
-    &__notice {
-      display: grid;
-      grid-template-columns: 44px minmax(0, 1fr);
-      gap: 12px;
-      align-items: center;
-      padding: 14px 16px;
-      margin-bottom: 18px;
-      background: color-mix(in srgb, var(--theme-color) 7%, var(--default-box-color));
-      border-left: 3px solid var(--theme-color);
-      border-radius: var(--el-border-radius-base);
-    }
-
-    &__notice > span {
-      display: grid;
-      place-items: center;
-      width: 44px;
-      height: 44px;
-      color: var(--theme-color);
-      background: var(--default-box-color);
-      border-radius: var(--el-border-radius-base);
-    }
-
-    &__notice p {
-      margin: 3px 0 0;
-      font-size: 12px;
-      color: var(--el-text-color-secondary);
-    }
-
     &__grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));

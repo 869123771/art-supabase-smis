@@ -55,7 +55,7 @@
     type ButtonMoreItem
   } from '@/components/core/forms/art-button-more/index.vue'
   import ArtDictDisplay from '@/components/core/base/art-dict-display/index.vue'
-  import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
+  import BusinessTableIdentityCell from '@/components/business/business-table-identity-cell/index.vue'
   import BusinessWorkspaceHeader, {
     type BusinessWorkspaceMetric
   } from '@/components/business/business-workspace-header/index.vue'
@@ -290,21 +290,14 @@
       minWidth: 260,
       fixed: 'left',
       formatter: (row) => (
-        <div class="training-plan-page__identity">
-          <span class={row.warningStatus === 'warning' ? 'is-warning' : ''}>
-            <ArtSvgIcon
-              icon={
-                row.warningStatus === 'warning'
-                  ? 'ri:alarm-warning-line'
-                  : 'ri:calendar-schedule-line'
-              }
-            />
-          </span>
-          <span>
-            <strong title={row.subject}>{row.subject}</strong>
-            <small>{row.planNo}</small>
-          </span>
-        </div>
+        <BusinessTableIdentityCell
+          primary={row.subject}
+          secondary={row.planNo}
+          icon={
+            row.warningStatus === 'warning' ? 'ri:alarm-warning-line' : 'ri:calendar-schedule-line'
+          }
+          iconTone={row.warningStatus === 'warning' ? 'warning' : 'primary'}
+        />
       )
     },
     {
@@ -468,48 +461,6 @@
       flex: 1;
       min-width: 0;
       min-height: 0;
-    }
-
-    :deep(.training-plan-page__identity) {
-      display: grid;
-      grid-template-columns: 36px minmax(0, 1fr);
-      gap: 10px;
-      align-items: center;
-      min-width: 0;
-
-      > span:first-child {
-        display: grid;
-        place-items: center;
-        width: 36px;
-        height: 36px;
-        color: var(--theme-color);
-        background: color-mix(in srgb, var(--theme-color) 9%, var(--el-bg-color));
-        border-radius: var(--el-border-radius-base);
-      }
-
-      > span:first-child.is-warning {
-        color: var(--el-color-warning);
-        background: var(--el-color-warning-light-9);
-      }
-
-      > span:last-child {
-        display: grid;
-        min-width: 0;
-      }
-
-      strong,
-      small {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-
-      small {
-        margin-top: 2px;
-        font-family: var(--art-font-family-mono, Consolas, monospace);
-        font-size: 11px;
-        color: var(--el-text-color-secondary);
-      }
     }
   }
 </style>

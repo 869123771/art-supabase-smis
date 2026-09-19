@@ -1,12 +1,10 @@
 <template>
   <ArtDialog ref="dialogRef" size="lg">
     <div class="hazardous-category-dialog">
-      <div class="hazardous-category-dialog__context" role="note"
-        ><ArtSvgIcon icon="ri:node-tree" /><div
-          ><strong>维护危废分类口径</strong
-          ><p>分类停用后保留历史关联，但不可再用于新增危废名录。</p></div
-        ></div
-      >
+      <ArtEntitySummary spaced>
+        <template #icon><ArtSvgIcon icon="ri:node-tree" /></template>
+        <strong>维护危废分类口径</strong><p>分类停用后保留历史关联，但不可再用于新增危废名录。</p>
+      </ArtEntitySummary>
       <ArtForm
         ref="formRef"
         v-model="form.model"
@@ -201,31 +199,3 @@
   }
   defineExpose({ handleOpen })
 </script>
-<style scoped lang="scss">
-  .hazardous-category-dialog {
-    &__context {
-      display: grid;
-      grid-template-columns: 40px 1fr;
-      gap: 12px;
-      align-items: center;
-      padding: 12px 14px;
-      margin-bottom: 18px;
-      background: color-mix(in srgb, var(--theme-color) 7%, var(--default-box-color));
-      border-left: 3px solid var(--theme-color);
-      border-radius: var(--el-border-radius-base);
-
-      > svg {
-        width: 24px;
-        height: 24px;
-        margin: auto;
-        color: var(--theme-color);
-      }
-
-      p {
-        margin: 3px 0 0;
-        font-size: 12px;
-        color: var(--el-text-color-secondary);
-      }
-    }
-  }
-</style>

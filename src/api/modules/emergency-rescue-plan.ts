@@ -1,7 +1,7 @@
 import { normalizeNullableText } from '@/utils/form/normalize'
 import { omit } from 'lodash-es'
 import { useSupabase } from '@/hooks'
-import TreeUtils from '@/utils/tree'
+import { buildOrganizationTree } from './organization-tree'
 import type {
   SmisEmergencyRescuePlanListResult,
   SmisEmergencyRescuePlanSavePayload,
@@ -10,18 +10,6 @@ import type {
 } from '@smis/api/types'
 
 const { supabase, keysToSnakeDeep, responseHandle } = useSupabase()
-const organizationTreeUtils = new TreeUtils({
-  idKey: 'id',
-  parentKey: 'parentId',
-  childrenKey: 'children'
-})
-
-const toOrganizationTree = (organizations: SmisTreeOrganization[]) =>
-  organizationTreeUtils.listToTree(organizations, (a, b) => {
-    const sortDiff = (a.sort ?? 0) - (b.sort ?? 0)
-    return sortDiff || a.organizationName.localeCompare(b.organizationName, 'zh-CN')
-  })
-
 export async function fetchEmergencyRescuePlanList(
   params: SmisEmergencyRescuePlanSearchParams = {}
 ) {
@@ -43,7 +31,7 @@ export async function fetchEmergencyRescuePlanList(
     data: result.data?.records ?? [],
     total: result.data?.total ?? 0,
     overview: result.data?.overview ?? { total: 0, valid: 0, warning: 0, submitted: 0 },
-    organizations: toOrganizationTree(result.data?.organizations ?? []),
+    organizations: buildOrganizationTree<SmisTreeOrganization>(result.data?.organizations ?? []),
     positions: result.data?.positions ?? [],
     error: result.error
   }

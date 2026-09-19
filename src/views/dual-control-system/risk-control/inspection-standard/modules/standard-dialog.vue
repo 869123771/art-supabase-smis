@@ -1,13 +1,11 @@
 <template>
   <ArtDialog ref="dialogRef" size="md">
     <div class="standard-dialog">
-      <div class="standard-dialog__note">
-        <ArtSvgIcon icon="ri:node-tree" />
-        <div
-          ><strong>标准层级节点</strong
-          ><p>上级标准决定导航层级；有下级或排查项的标准需先完成业务迁移后再删除。</p></div
-        >
-      </div>
+      <ArtEntitySummary spaced>
+        <template #icon><ArtSvgIcon icon="ri:node-tree" /></template>
+        <strong>标准层级节点</strong
+        ><p>上级标准决定导航层级；有下级或排查项的标准需先完成业务迁移后再删除。</p>
+      </ArtEntitySummary>
       <ArtForm
         ref="formRef"
         v-model="model"
@@ -215,34 +213,3 @@
   }
   defineExpose({ handleOpen })
 </script>
-
-<style scoped lang="scss">
-  .standard-dialog {
-    &__note {
-      display: grid;
-      grid-template-columns: 38px minmax(0, 1fr);
-      gap: 12px;
-      align-items: center;
-      padding: 12px 14px;
-      margin-bottom: 18px;
-      background: color-mix(in srgb, var(--theme-color) 7%, var(--default-box-color));
-      border-left: 3px solid var(--theme-color);
-      border-radius: var(--el-border-radius-base);
-
-      svg {
-        font-size: 22px;
-        color: var(--theme-color);
-      }
-
-      strong {
-        color: var(--el-text-color-primary);
-      }
-
-      p {
-        margin: 3px 0 0;
-        font-size: 12px;
-        color: var(--el-text-color-secondary);
-      }
-    }
-  }
-</style>

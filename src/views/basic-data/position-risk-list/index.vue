@@ -407,7 +407,7 @@
             是
           </ElTag>
         ) : (
-          <span class="position-risk-page__muted">否</span>
+          <span class="text-[var(--el-text-color-secondary)]">否</span>
         )
     },
     {
@@ -416,7 +416,7 @@
       width: 112,
       fixed: 'right',
       formatter: (row) => (
-        <div class="position-risk-page__row-actions">
+        <div class="flex items-center">
           <ArtButtonTable
             type="edit"
             permission="SmisPositionRiskList:Edit"
@@ -685,8 +685,7 @@
       }
     }
 
-    &__unit,
-    &__muted {
+    &__unit {
       color: var(--el-text-color-secondary);
     }
 
@@ -708,11 +707,6 @@
 
     &__table {
       flex: 1 1 auto;
-    }
-
-    &__row-actions {
-      display: flex;
-      align-items: center;
     }
 
     :deep(.el-table__row) {

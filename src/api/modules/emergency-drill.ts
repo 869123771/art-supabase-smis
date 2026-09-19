@@ -1,7 +1,7 @@
 import { normalizeNullableText } from '@/utils/form/normalize'
 import { omit } from 'lodash-es'
 import { useSupabase } from '@/hooks'
-import TreeUtils from '@/utils/tree'
+import { buildOrganizationTree } from './organization-tree'
 import type {
   SmisEmergencyDrillPlanListResult,
   SmisEmergencyDrillPlanSavePayload,
@@ -15,18 +15,6 @@ import type {
 } from '@smis/api/types'
 
 const { supabase, keysToSnakeDeep, responseHandle } = useSupabase()
-const organizationTreeUtils = new TreeUtils({
-  idKey: 'id',
-  parentKey: 'parentId',
-  childrenKey: 'children'
-})
-
-const toOrganizationTree = (organizations: SmisTreeOrganization[]) =>
-  organizationTreeUtils.listToTree(organizations, (a, b) => {
-    const sortDiff = (a.sort ?? 0) - (b.sort ?? 0)
-    return sortDiff || a.organizationName.localeCompare(b.organizationName, 'zh-CN')
-  })
-
 export async function fetchEmergencyDrillPlanList(params: SmisEmergencyDrillPlanSearchParams = {}) {
   const from = Math.max(params.from ?? 0, 0)
   const result = await responseHandle<Partial<SmisEmergencyDrillPlanListResult>>(
@@ -47,7 +35,7 @@ export async function fetchEmergencyDrillPlanList(params: SmisEmergencyDrillPlan
     data: result.data?.records ?? [],
     total: result.data?.total ?? 0,
     overview: result.data?.overview ?? { total: 0, planned: 0, completed: 0, warning: 0 },
-    organizations: toOrganizationTree(result.data?.organizations ?? []),
+    organizations: buildOrganizationTree<SmisTreeOrganization>(result.data?.organizations ?? []),
     error: result.error
   }
 }
@@ -103,7 +91,7 @@ export async function fetchEmergencyDrillRecordList(
     total: result.data?.total ?? 0,
     overview: result.data?.overview ?? { total: 0, draft: 0, submitted: 0, late: 0 },
     planOptions: result.data?.planOptions ?? [],
-    organizations: toOrganizationTree(result.data?.organizations ?? []),
+    organizations: buildOrganizationTree(result.data?.organizations ?? []),
     error: result.error
   }
 }

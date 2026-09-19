@@ -274,7 +274,7 @@
       label: '完成率',
       width: 150,
       formatter: (row) => (
-        <div class="inspection-record-page__rate">
+        <div class="mx-auto w-[126px]">
           <ElProgress percentage={row.completionRate} strokeWidth={7} />
         </div>
       )
@@ -373,11 +373,6 @@
       gap: var(--art-space-4);
       min-width: 0;
       padding-bottom: var(--art-space-1);
-    }
-
-    &__rate {
-      width: 126px;
-      margin-inline: auto;
     }
   }
 </style>

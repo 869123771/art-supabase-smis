@@ -53,7 +53,7 @@
   import { useArtFeedback } from '@/hooks/core/useArtFeedback'
   import { useUserStore } from '@/store/modules/user'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
-  import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
+  import BusinessTableIdentityCell from '@/components/business/business-table-identity-cell/index.vue'
   import BusinessTableWorkspaceActions from '@/components/business/business-table-workspace-actions/index.vue'
   import BusinessWorkspaceHeader, {
     type BusinessWorkspaceMetric
@@ -247,15 +247,11 @@
       minWidth: 230,
       fixed: 'left',
       formatter: (row) => (
-        <div class="supplier-page__identity">
-          <span aria-hidden="true">
-            <ArtSvgIcon icon="ri:building-4-line" />
-          </span>
-          <span>
-            <strong title={row.supplierName}>{row.supplierName}</strong>
-            <small title={row.supplierCode}>{row.supplierCode}</small>
-          </span>
-        </div>
+        <BusinessTableIdentityCell
+          primary={row.supplierName}
+          secondary={row.supplierCode}
+          icon="ri:building-4-line"
+        />
       )
     },
     {
@@ -378,46 +374,6 @@
   .supplier-page {
     gap: 12px;
     min-width: 0;
-
-    :deep(.supplier-page__identity) {
-      display: grid;
-      grid-template-columns: 36px minmax(0, 1fr);
-      gap: 10px;
-      align-items: center;
-      min-width: 0;
-
-      > span:first-child {
-        display: grid;
-        place-items: center;
-        width: 36px;
-        height: 36px;
-        color: var(--theme-color);
-        background: color-mix(in srgb, var(--theme-color) 9%, var(--el-bg-color));
-        border-radius: var(--el-border-radius-base);
-      }
-
-      > span:last-child,
-      strong,
-      small {
-        min-width: 0;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-
-      > span:last-child,
-      strong,
-      small {
-        display: block;
-      }
-
-      small {
-        margin-top: 2px;
-        font-family: var(--art-font-family-mono, Consolas, monospace);
-        font-size: 11px;
-        color: var(--el-text-color-secondary);
-      }
-    }
 
     :deep(.supplier-page__stack) {
       display: grid;

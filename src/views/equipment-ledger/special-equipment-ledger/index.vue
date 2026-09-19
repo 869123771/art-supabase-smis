@@ -72,7 +72,7 @@
   import { useUserStore } from '@/store/modules/user'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import ArtDictDisplay from '@/components/core/base/art-dict-display/index.vue'
-  import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
+  import BusinessTableIdentityCell from '@/components/business/business-table-identity-cell/index.vue'
   import BusinessTableWorkspaceActions from '@/components/business/business-table-workspace-actions/index.vue'
   import ArtSectionCard from '@/components/core/surfaces/art-section-card/index.vue'
   import BusinessWorkspaceHeader, {
@@ -223,17 +223,11 @@
       minWidth: 220,
       fixed: 'left',
       formatter: (row) => (
-        <div class="special-equipment-page__identity">
-          <span aria-hidden="true">
-            <ArtSvgIcon
-              icon={row.equipmentKind === 'boiler' ? 'ri:fire-line' : 'ri:shield-star-line'}
-            />
-          </span>
-          <span>
-            <strong title={row.equipmentName}>{row.equipmentName}</strong>
-            <small title={row.equipmentCode}>{row.equipmentCode}</small>
-          </span>
-        </div>
+        <BusinessTableIdentityCell
+          primary={row.equipmentName}
+          secondary={row.equipmentCode}
+          icon={row.equipmentKind === 'boiler' ? 'ri:fire-line' : 'ri:shield-star-line'}
+        />
       )
     },
     {
@@ -285,7 +279,7 @@
       label: '重点标识',
       width: 155,
       formatter: (row) => (
-        <div class="special-equipment-page__flags">
+        <div class="flex flex-wrap gap-1">
           {row.isSpecialEquipment && (
             <ElTag size="small" type="warning">
               特种设备
@@ -320,7 +314,7 @@
       width: 120,
       fixed: 'right',
       formatter: (row) => (
-        <div class="special-equipment-page__actions">
+        <div class="flex flex-wrap gap-1">
           <ArtButtonTable
             permission="SmisEquipmentReminder:Manage"
             icon="ri:notification-3-line"
@@ -439,53 +433,6 @@
 
     &__category-report small {
       color: var(--el-text-color-secondary);
-    }
-
-    :deep(.special-equipment-page__identity) {
-      display: grid;
-      grid-template-columns: 36px minmax(0, 1fr);
-      gap: 10px;
-      align-items: center;
-      min-width: 0;
-
-      > span:first-child {
-        display: grid;
-        place-items: center;
-        width: 36px;
-        height: 36px;
-        color: var(--theme-color);
-        background: color-mix(in srgb, var(--theme-color) 9%, var(--el-bg-color));
-        border-radius: var(--el-border-radius-base);
-      }
-
-      > span:last-child {
-        display: grid;
-        min-width: 0;
-      }
-
-      strong,
-      small {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-
-      strong {
-        color: var(--el-text-color-primary);
-      }
-
-      small {
-        margin-top: 2px;
-        font-size: 11px;
-        color: var(--el-text-color-secondary);
-      }
-    }
-
-    &__flags,
-    &__actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 4px;
     }
   }
 </style>

@@ -313,7 +313,7 @@
       width: 112,
       fixed: 'right',
       formatter: (row) => (
-        <div class="inspection-page__actions">
+        <div class="flex gap-1">
           <ArtButtonTable
             permission="SmisInspectionDeclaration:Edit"
             type="edit"
@@ -455,11 +455,6 @@
       height: 32px;
       object-fit: cover;
       border-radius: calc(var(--el-border-radius-small) - 1px);
-    }
-
-    &__actions {
-      display: flex;
-      gap: 4px;
     }
   }
 </style>

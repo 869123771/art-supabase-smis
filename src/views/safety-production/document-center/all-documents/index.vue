@@ -356,9 +356,24 @@
           </main>
         </div>
       </section>
-      <DocumentDialog ref="documentDialogRef" @success="handleDocumentSaved" />
-      <CategoryDialog ref="categoryDialogRef" @success="handleCategorySaved" />
-      <ShareDialog ref="shareDialogRef" @success="handleShareSuccess" />
+      <component
+        :is="documentDialogComponent"
+        v-if="documentDialogComponent"
+        ref="documentDialogRef"
+        @success="handleDocumentSaved"
+      />
+      <component
+        :is="categoryDialogComponent"
+        v-if="categoryDialogComponent"
+        ref="categoryDialogRef"
+        @success="handleCategorySaved"
+      />
+      <component
+        :is="shareDialogComponent"
+        v-if="shareDialogComponent"
+        ref="shareDialogRef"
+        @success="handleShareSuccess"
+      />
     </div>
   </ArtPermissionGuard>
 </template>
@@ -372,6 +387,7 @@
   import { useTable } from '@/hooks/core/useTable'
   import { useWorkspaceFocus } from '@/hooks/core/useWorkspaceFocus'
   import { useArtFeedback } from '@/hooks/core/useArtFeedback'
+  import { useLazyComponent } from '@/hooks/core/useLazyComponent'
   import { useUserStore } from '@/store/modules/user'
   import type { ColumnOption } from '@/types'
   import { pageInfoHandler } from '@/utils/table/tableUtils'
@@ -405,14 +421,9 @@
     type SmisDocumentStatus,
     type SmisDocumentViewMode
   } from '@smis/api'
-  import DocumentDialog, {
-    type DocumentDialogMode,
-    type DocumentDialogOpenData
-  } from './modules/document-dialog.vue'
-  import CategoryDialog, {
-    type DocumentCategoryDialogOpenData as CategoryDialogOpenData
-  } from '../shared/document-category-dialog.vue'
-  import ShareDialog, { type ShareDialogOpenData } from './modules/share-dialog.vue'
+  import type { DocumentDialogMode, DocumentDialogOpenData } from './modules/document-dialog.vue'
+  import type { DocumentCategoryDialogOpenData as CategoryDialogOpenData } from '../shared/document-category-dialog.vue'
+  import type { ShareDialogOpenData } from './modules/share-dialog.vue'
 
   defineOptions({ name: 'SmisAllDocuments' })
   type TableParams = SmisDocumentSearchParams &
@@ -436,6 +447,15 @@
   const { focusMode, setFocusMode } = useWorkspaceFocus()
   const userStore = useUserStore()
   const { getDictMap } = storeToRefs(userStore)
+  const { component: documentDialogComponent, load: loadDocumentDialog } = useLazyComponent(
+    () => import('./modules/document-dialog.vue')
+  )
+  const { component: categoryDialogComponent, load: loadCategoryDialog } = useLazyComponent(
+    () => import('../shared/document-category-dialog.vue')
+  )
+  const { component: shareDialogComponent, load: loadShareDialog } = useLazyComponent(
+    () => import('./modules/share-dialog.vue')
+  )
   const documentDialogRef = ref<DocumentDialogExpose>()
   const categoryDialogRef = ref<CategoryDialogExpose>()
   const shareDialogRef = ref<ShareDialogExpose>()
@@ -693,7 +713,7 @@
           <ArtButtonTable
             type="edit"
             permission="SmisAllDocuments:Edit"
-            onClick={() => openDocumentDialog('edit', row)}
+            onClick={() => void openDocumentDialog('edit', row)}
           />
           <ArtButtonMore
             list={rowActions(row)}
@@ -811,32 +831,38 @@
   const handleSelectionChange = (rows: SmisDocument[]): void => {
     selectedRows.value = rows
   }
-  const openDocumentDialog = (dialogMode: DocumentDialogMode, row?: SmisDocument): void => {
-    void documentDialogRef.value?.handleOpen({
+  const openDocumentDialog = async (
+    dialogMode: DocumentDialogMode,
+    row?: SmisDocument
+  ): Promise<void> => {
+    await loadDocumentDialog()
+    await documentDialogRef.value?.handleOpen({
       mode: dialogMode,
       categories: categories.value,
       row,
       presetCategoryId: selectedCategoryId.value
     })
   }
-  const openCategoryDialog = (row?: SmisDocumentCategory): void => {
-    void categoryDialogRef.value?.handleOpen({
+  const openCategoryDialog = async (row?: SmisDocumentCategory): Promise<void> => {
+    await loadCategoryDialog()
+    await categoryDialogRef.value?.handleOpen({
       categories: categories.value,
       row,
       parentId: row ? undefined : selectedCategoryId.value
     })
   }
-  const openShareDialog = (row: SmisDocument): void => {
-    void shareDialogRef.value?.handleOpen({ row })
+  const openShareDialog = async (row: SmisDocument): Promise<void> => {
+    await loadShareDialog()
+    await shareDialogRef.value?.handleOpen({ row })
   }
   const handleRowAction = (item: ButtonMoreItem, row: SmisDocument): void => {
-    if (item.key === 'upload') openDocumentDialog('upload', row)
+    if (item.key === 'upload') void openDocumentDialog('upload', row)
     if (item.key === 'follow') void handleFollow(row)
-    if (item.key === 'share') openShareDialog(row)
+    if (item.key === 'share') void openShareDialog(row)
     if (item.key === 'delete') void handleDeleteDocument(row)
   }
   const handleCardCommand = (command: string, row: SmisDocument): void => {
-    if (command === 'edit') openDocumentDialog('edit', row)
+    if (command === 'edit') void openDocumentDialog('edit', row)
     else handleRowAction({ key: command, label: command }, row)
   }
   const handleFollow = async (row: SmisDocument): Promise<void> => {

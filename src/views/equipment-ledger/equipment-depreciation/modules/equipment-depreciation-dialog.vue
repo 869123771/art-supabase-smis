@@ -1,13 +1,11 @@
 <template>
   <ArtDialog ref="dialogRef" size="lg">
     <div class="equipment-depreciation-dialog">
-      <div class="equipment-depreciation-dialog__context">
-        <span><ArtSvgIcon icon="ri:percent-line" /></span>
-        <div>
-          <strong>折旧期限由系统自动换算</strong>
-          <p>填写折旧年限后，系统按“折旧年限 × 12”生成只读折旧期限，并同步生成年度折旧率行。</p>
-        </div>
-      </div>
+      <ArtEntitySummary spaced>
+        <template #icon><ArtSvgIcon icon="ri:percent-line" /></template>
+        <strong>折旧期限由系统自动换算</strong>
+        <p>填写折旧年限后，系统按“折旧年限 × 12”生成只读折旧期限，并同步生成年度折旧率行。</p>
+      </ArtEntitySummary>
 
       <ArtForm
         ref="formRef"
@@ -333,49 +331,11 @@
     display: grid;
     gap: var(--art-space-4);
 
-    &__context {
-      display: grid;
-      grid-template-columns: 42px minmax(0, 1fr);
-      gap: var(--art-space-3);
-      align-items: center;
-      padding: var(--art-space-3) var(--art-space-4);
-      background: color-mix(in srgb, var(--theme-color) 7%, var(--default-box-color));
-      border-left: 3px solid var(--theme-color);
-      border-radius: var(--el-border-radius-base);
-
-      > span {
-        display: grid;
-        place-items: center;
-        width: 42px;
-        height: 42px;
-        color: var(--theme-color);
-        background: var(--default-box-color);
-        border-radius: var(--el-border-radius-base);
-      }
-
-      p {
-        margin: var(--art-space-1) 0 0;
-        font-size: var(--art-font-size-caption);
-        line-height: 1.6;
-        color: var(--el-text-color-secondary);
-      }
-    }
-
     &__rates {
       min-width: 0;
 
       :deep(.el-input-number) {
         width: min(100%, 320px);
-      }
-    }
-
-    @media (width <= 640px) {
-      &__context {
-        grid-template-columns: 1fr;
-
-        > span {
-          display: none;
-        }
       }
     }
   }

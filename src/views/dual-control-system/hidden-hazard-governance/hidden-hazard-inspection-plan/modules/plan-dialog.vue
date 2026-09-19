@@ -1,13 +1,11 @@
 <template>
   <ArtDialog ref="dialogRef" size="xl" :loading="loading" loading-text="正在加载计划详情…">
     <div class="hidden-hazard-plan-dialog">
-      <div class="hidden-hazard-plan-dialog__context">
-        <span aria-hidden="true"><ArtSvgIcon icon="ri:calendar-check-line" /></span>
-        <div>
-          <strong>建立可自动派发的隐患排查计划</strong>
-          <p>提醒时间与提醒方式不在此维护；后续统一由消息提醒场景配置负责。</p>
-        </div>
-      </div>
+      <ArtEntitySummary spaced>
+        <template #icon><ArtSvgIcon icon="ri:calendar-check-line" /></template>
+        <strong>建立可自动派发的隐患排查计划</strong>
+        <p>提醒时间与提醒方式不在此维护；后续统一由消息提醒场景配置负责。</p>
+      </ArtEntitySummary>
       <ArtForm
         ref="formRef"
         v-model="form.model"
@@ -360,35 +358,3 @@
 
   defineExpose({ handleOpen })
 </script>
-
-<style scoped lang="scss">
-  .hidden-hazard-plan-dialog {
-    &__context {
-      display: grid;
-      grid-template-columns: 44px minmax(0, 1fr);
-      gap: var(--art-space-3);
-      align-items: center;
-      padding: var(--art-space-3) var(--art-space-4);
-      margin-bottom: var(--art-space-4);
-      background: color-mix(in srgb, var(--theme-color) 7%, var(--default-box-color));
-      border-left: 3px solid var(--theme-color);
-      border-radius: var(--el-border-radius-base);
-
-      > span {
-        display: grid;
-        place-items: center;
-        width: 44px;
-        height: 44px;
-        color: var(--theme-color);
-        background: var(--default-box-color);
-        border-radius: var(--el-border-radius-base);
-      }
-
-      p {
-        margin: 3px 0 0;
-        font-size: var(--art-font-size-caption);
-        color: var(--el-text-color-secondary);
-      }
-    }
-  }
-</style>

@@ -79,7 +79,7 @@
   import TreeUtils from '@/utils/tree'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import ArtDictDisplay from '@/components/core/base/art-dict-display/index.vue'
-  import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
+  import BusinessTableIdentityCell from '@/components/business/business-table-identity-cell/index.vue'
   import BusinessTableWorkspaceActions from '@/components/business/business-table-workspace-actions/index.vue'
   import BusinessWorkspaceHeader, {
     type BusinessWorkspaceMetric
@@ -230,15 +230,11 @@
       minWidth: 220,
       fixed: 'left',
       formatter: (row) => (
-        <div class="material-category-page__identity">
-          <span aria-hidden="true">
-            <ArtSvgIcon icon={row.childCount ? 'ri:folder-3-line' : 'ri:price-tag-3-line'} />
-          </span>
-          <span>
-            <strong title={row.categoryName}>{row.categoryName}</strong>
-            <small title={row.categoryCode}>{row.categoryCode}</small>
-          </span>
-        </div>
+        <BusinessTableIdentityCell
+          primary={row.categoryName}
+          secondary={row.categoryCode}
+          icon={row.childCount ? 'ri:folder-3-line' : 'ri:price-tag-3-line'}
+        />
       )
     },
     {
@@ -284,7 +280,7 @@
       width: 132,
       fixed: 'right',
       formatter: (row) => (
-        <div class="material-category-page__actions">
+        <div class="flex items-center gap-1">
           <ArtButtonTable
             permission="SmisMaterialCategory:Edit"
             type="edit"
@@ -349,52 +345,6 @@
     &__table {
       min-width: 0;
       min-height: 0;
-    }
-
-    :deep(.material-category-page__identity) {
-      display: grid;
-      grid-template-columns: 36px minmax(0, 1fr);
-      gap: 10px;
-      align-items: center;
-      min-width: 0;
-
-      > span:first-child {
-        display: grid;
-        place-items: center;
-        width: 36px;
-        height: 36px;
-        color: var(--theme-color);
-        background: color-mix(in srgb, var(--theme-color) 9%, var(--el-bg-color));
-        border-radius: var(--el-border-radius-base);
-      }
-
-      > span:last-child {
-        display: grid;
-        min-width: 0;
-      }
-
-      strong,
-      small {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-
-      strong {
-        color: var(--el-text-color-primary);
-      }
-
-      small {
-        margin-top: 2px;
-        font-size: 11px;
-        color: var(--el-text-color-secondary);
-      }
-    }
-
-    &__actions {
-      display: flex;
-      gap: 4px;
-      align-items: center;
     }
   }
 </style>

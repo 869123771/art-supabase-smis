@@ -1,12 +1,11 @@
 <template>
   <ArtDialog ref="dialogRef" size="lg">
     <div class="hazardous-catalog-dialog">
-      <div class="hazardous-catalog-dialog__context" role="note"
-        ><ArtSvgIcon icon="ri:flask-line" /><div
-          ><strong>建立危废识别与处置口径</strong
-          ><p>安全措施和危险特性均引用系统字典，确保单据与导出口径一致。</p></div
-        ></div
-      >
+      <ArtEntitySummary spaced>
+        <template #icon><ArtSvgIcon icon="ri:flask-line" /></template>
+        <strong>建立危废识别与处置口径</strong
+        ><p>安全措施和危险特性均引用系统字典，确保单据与导出口径一致。</p>
+      </ArtEntitySummary>
       <ArtForm
         ref="formRef"
         v-model="form.model"
@@ -236,31 +235,3 @@
   }
   defineExpose({ handleOpen })
 </script>
-<style scoped lang="scss">
-  .hazardous-catalog-dialog {
-    &__context {
-      display: grid;
-      grid-template-columns: 40px 1fr;
-      gap: 12px;
-      align-items: center;
-      padding: 12px 14px;
-      margin-bottom: 18px;
-      background: color-mix(in srgb, var(--theme-color) 7%, var(--default-box-color));
-      border-left: 3px solid var(--theme-color);
-      border-radius: var(--el-border-radius-base);
-
-      > svg {
-        width: 24px;
-        height: 24px;
-        margin: auto;
-        color: var(--theme-color);
-      }
-
-      p {
-        margin: 3px 0 0;
-        font-size: 12px;
-        color: var(--el-text-color-secondary);
-      }
-    }
-  }
-</style>

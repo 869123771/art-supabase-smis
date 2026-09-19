@@ -63,6 +63,7 @@
   import ArtButtonMore from '@/components/core/forms/art-button-more/index.vue'
   import ArtDictDisplay from '@/components/core/base/art-dict-display/index.vue'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
+  import BusinessTableIdentityCell from '@/components/business/business-table-identity-cell/index.vue'
   import BusinessTableWorkspaceActions from '@/components/business/business-table-workspace-actions/index.vue'
   import BusinessWorkspaceHeader, {
     type BusinessWorkspaceMetric
@@ -307,15 +308,11 @@
       minWidth: 220,
       fixed: 'left',
       formatter: (row) => (
-        <div class="risk-identification-page__identity">
-          <span aria-hidden="true">
-            <ArtSvgIcon icon="ri:map-pin-range-line" />
-          </span>
-          <div>
-            <strong title={row.pointName}>{row.pointName}</strong>
-            <small>{riskTypeLabel.value.get(row.riskType) || '未选择'}</small>
-          </div>
-        </div>
+        <BusinessTableIdentityCell
+          primary={row.pointName}
+          secondary={riskTypeLabel.value.get(row.riskType) || '未选择'}
+          icon="ri:map-pin-range-line"
+        />
       )
     },
     {
@@ -615,43 +612,6 @@
       color: var(--theme-color);
       background: color-mix(in srgb, var(--theme-color) 8%, var(--el-bg-color));
       border-radius: var(--el-border-radius-small);
-    }
-
-    :deep(.risk-identification-page__identity) {
-      display: grid;
-      grid-template-columns: 36px minmax(0, 1fr);
-      gap: 10px;
-      align-items: center;
-      min-width: 0;
-
-      > span {
-        display: grid;
-        place-items: center;
-        width: 36px;
-        height: 36px;
-        color: var(--theme-color);
-        background: color-mix(in srgb, var(--theme-color) 9%, var(--el-bg-color));
-        border-radius: var(--el-border-radius-base);
-      }
-
-      > div,
-      strong,
-      small {
-        min-width: 0;
-      }
-
-      strong,
-      small {
-        display: block;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-
-      small {
-        margin-top: 3px;
-        color: var(--el-text-color-secondary);
-      }
     }
 
     :deep(.risk-identification-page__stack) {

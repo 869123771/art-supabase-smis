@@ -1,13 +1,12 @@
 <template>
   <ArtDialog ref="dialogRef" size="xl">
     <div class="hazard-dialog">
-      <div class="hazard-dialog__context">
-        <span><ArtSvgIcon icon="ri:alarm-warning-line" /></span>
-        <div>
-          <strong>危险源基础信息与管控责任</strong>
-          <p>危险源编号保存后按租户编号规则自动生成；提交后进入正式台账统计。</p>
-        </div>
-      </div>
+      <ArtEntitySummary
+        icon="ri:alarm-warning-line"
+        title="危险源基础信息与管控责任"
+        description="危险源编号保存后按租户编号规则自动生成；提交后进入正式台账统计。"
+        spaced
+      />
       <ArtForm
         ref="formRef"
         v-model="form"
@@ -95,7 +94,6 @@
   import ArtForm, { type FormItem } from '@/components/core/forms/art-form/index.vue'
   import ArtUploadImage from '@/components/core/forms/art-upload-image/index.vue'
   import ArtEmployeeSelect from '@/components/business/art-employee-select/index.vue'
-  import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
   import { useDocumentNumberRule } from '@/hooks/core/useDocumentNumberRule'
   import { useUserStore } from '@/store/modules/user'
   import {
@@ -390,34 +388,6 @@
 
 <style scoped lang="scss">
   .hazard-dialog {
-    &__context {
-      display: grid;
-      grid-template-columns: 44px minmax(0, 1fr);
-      gap: 12px;
-      align-items: center;
-      padding: 14px 16px;
-      margin-bottom: 18px;
-      background: color-mix(in srgb, var(--el-color-danger) 7%, var(--default-box-color));
-      border-left: 3px solid var(--el-color-danger);
-      border-radius: var(--el-border-radius-base);
-    }
-
-    &__context > span {
-      display: grid;
-      place-items: center;
-      width: 44px;
-      height: 44px;
-      color: var(--el-color-danger);
-      background: var(--default-box-color);
-      border-radius: var(--el-border-radius-base);
-    }
-
-    &__context p {
-      margin: 3px 0 0;
-      font-size: 12px;
-      color: var(--el-text-color-secondary);
-    }
-
     &__control {
       width: 100%;
     }

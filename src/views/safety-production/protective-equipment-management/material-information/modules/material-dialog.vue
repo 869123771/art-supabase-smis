@@ -1,13 +1,11 @@
 <template>
   <ArtDialog ref="dialogRef" size="xl">
     <div class="material-dialog">
-      <div class="material-dialog__context" role="note">
-        <span aria-hidden="true"><ArtSvgIcon icon="ri:archive-stack-line" /></span>
-        <div>
-          <strong>维护物料主数据</strong>
-          <p>分类、物料类型、计量单位与来源均直接沿用 MDM 物料编码主数据。</p>
-        </div>
-      </div>
+      <ArtEntitySummary spaced>
+        <template #icon><ArtSvgIcon icon="ri:archive-stack-line" /></template>
+        <strong>维护物料主数据</strong>
+        <p>分类、物料类型、计量单位与来源均直接沿用 MDM 物料编码主数据。</p>
+      </ArtEntitySummary>
       <ArtForm
         ref="formRef"
         v-model="form.model"
@@ -417,39 +415,3 @@
   }
   defineExpose({ handleOpen })
 </script>
-
-<style scoped lang="scss">
-  .material-dialog {
-    &__context {
-      display: grid;
-      grid-template-columns: 40px minmax(0, 1fr);
-      gap: 12px;
-      align-items: center;
-      padding: 12px 14px;
-      margin-bottom: 18px;
-      background: color-mix(in srgb, var(--theme-color) 7%, var(--default-box-color));
-      border-left: 3px solid var(--theme-color);
-      border-radius: var(--el-border-radius-base);
-
-      > span {
-        display: grid;
-        place-items: center;
-        width: 40px;
-        height: 40px;
-        color: var(--theme-color);
-        background: var(--default-box-color);
-        border-radius: var(--el-border-radius-base);
-      }
-
-      strong {
-        color: var(--el-text-color-primary);
-      }
-
-      p {
-        margin: 3px 0 0;
-        font-size: 12px;
-        color: var(--el-text-color-secondary);
-      }
-    }
-  }
-</style>

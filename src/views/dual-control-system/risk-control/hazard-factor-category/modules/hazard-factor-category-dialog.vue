@@ -1,13 +1,11 @@
 <template>
   <ArtDialog ref="dialogRef" size="md">
     <div class="hazard-factor-category-dialog">
-      <div class="hazard-factor-category-dialog__context" role="note">
-        <span aria-hidden="true"><ArtSvgIcon icon="ri:shield-check-line" /></span>
-        <div>
-          <strong>{{ targetTenantName }} · 风险辨识基础口径</strong>
-          <p>因素类型用于一级分组，类别用于具体风险项；禁用后保留历史数据。</p>
-        </div>
-      </div>
+      <ArtEntitySummary spaced>
+        <template #icon><ArtSvgIcon icon="ri:shield-check-line" /></template>
+        <strong>{{ targetTenantName }} · 风险辨识基础口径</strong>
+        <p>因素类型用于一级分组，类别用于具体风险项；禁用后保留历史数据。</p>
+      </ArtEntitySummary>
 
       <div class="hazard-factor-category-dialog__preview" aria-live="polite">
         <span class="hazard-factor-category-dialog__preview-label">标签预览</span>
@@ -320,38 +318,6 @@
 
 <style scoped lang="scss">
   .hazard-factor-category-dialog {
-    &__context {
-      display: grid;
-      grid-template-columns: 40px minmax(0, 1fr);
-      gap: 12px;
-      align-items: center;
-      padding: 12px 14px;
-      margin-bottom: 12px;
-      background: color-mix(in srgb, var(--theme-color) 7%, var(--default-box-color));
-      border-left: 3px solid var(--theme-color);
-      border-radius: var(--el-border-radius-base);
-
-      > span {
-        display: grid;
-        place-items: center;
-        width: 40px;
-        height: 40px;
-        color: var(--theme-color);
-        background: var(--default-box-color);
-        border-radius: var(--el-border-radius-base);
-      }
-
-      strong {
-        color: var(--el-text-color-primary);
-      }
-
-      p {
-        margin: 3px 0 0;
-        font-size: 12px;
-        color: var(--el-text-color-secondary);
-      }
-    }
-
     &__preview {
       display: flex;
       gap: 10px;

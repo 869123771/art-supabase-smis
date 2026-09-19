@@ -64,6 +64,7 @@
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import ArtDictDisplay from '@/components/core/base/art-dict-display/index.vue'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
+  import BusinessTableIdentityCell from '@/components/business/business-table-identity-cell/index.vue'
   import BusinessWorkspaceHeader, {
     type BusinessWorkspaceMetric
   } from '@/components/business/business-workspace-header/index.vue'
@@ -183,19 +184,14 @@
       minWidth: 260,
       fixed: 'left',
       formatter: (row) => (
-        <div class="historical-case-page__identity">
-          <span
-            class={{
-              'is-critical': ['major', 'severe', 'catastrophic'].includes(row.accidentLevel)
-            }}
-          >
-            <ArtSvgIcon icon="ri:file-warning-line" />
-          </span>
-          <span>
-            <strong title={row.accidentName}>{row.accidentName}</strong>
-            <small title={row.summary || '暂无概述'}>{row.summary || '暂无案例概述'}</small>
-          </span>
-        </div>
+        <BusinessTableIdentityCell
+          primary={row.accidentName}
+          secondary={row.summary || '暂无案例概述'}
+          icon="ri:file-warning-line"
+          iconTone={
+            ['major', 'severe', 'catastrophic'].includes(row.accidentLevel) ? 'danger' : 'primary'
+          }
+        />
       )
     },
     {
@@ -414,47 +410,6 @@
       flex: 1;
       min-width: 0;
       min-height: 0;
-    }
-
-    :deep(.historical-case-page__identity) {
-      display: grid;
-      grid-template-columns: 36px minmax(0, 1fr);
-      gap: 10px;
-      align-items: center;
-      min-width: 0;
-
-      > span:first-child {
-        display: grid;
-        place-items: center;
-        width: 36px;
-        height: 36px;
-        color: var(--theme-color);
-        background: color-mix(in srgb, var(--theme-color) 10%, transparent);
-        border-radius: var(--el-border-radius-base);
-
-        &.is-critical {
-          color: var(--el-color-danger);
-          background: var(--el-color-danger-light-9);
-        }
-      }
-
-      > span:last-child {
-        display: grid;
-        min-width: 0;
-      }
-
-      strong,
-      small {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-
-      small {
-        margin-top: 2px;
-        font-size: 11px;
-        color: var(--el-text-color-secondary);
-      }
     }
 
     @media (width <= 720px) {

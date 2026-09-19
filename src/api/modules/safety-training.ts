@@ -1,7 +1,7 @@
 import { normalizeNullableText } from '@/utils/form/normalize'
 import { omit } from 'lodash-es'
 import { useSupabase } from '@/hooks'
-import TreeUtils from '@/utils/tree'
+import { buildOrganizationTree } from './organization-tree'
 import type {
   SmisSafetyTrainingOrganizationOption,
   SmisSafetyTrainingPlanListResult,
@@ -15,18 +15,6 @@ import type {
 } from '@smis/api/types'
 
 const { supabase, keysToSnakeDeep, responseHandle } = useSupabase()
-const organizationTreeUtils = new TreeUtils({
-  idKey: 'id',
-  parentKey: 'parentId',
-  childrenKey: 'children'
-})
-
-const toOrganizationTree = (organizations: SmisSafetyTrainingOrganizationOption[]) =>
-  organizationTreeUtils.listToTree(organizations, (a, b) => {
-    const sortDiff = (a.sort ?? 0) - (b.sort ?? 0)
-    return sortDiff || a.organizationName.localeCompare(b.organizationName, 'zh-CN')
-  })
-
 export async function fetchSafetyTrainingPlanList(params: SmisSafetyTrainingPlanSearchParams = {}) {
   const from = Math.max(params.from ?? 0, 0)
   const result = await responseHandle<Partial<SmisSafetyTrainingPlanListResult>>(
@@ -55,7 +43,9 @@ export async function fetchSafetyTrainingPlanList(params: SmisSafetyTrainingPlan
       completed: 0,
       warning: 0
     },
-    organizations: toOrganizationTree(result.data?.organizations ?? []),
+    organizations: buildOrganizationTree<SmisSafetyTrainingOrganizationOption>(
+      result.data?.organizations ?? []
+    ),
     error: result.error
   }
 }
@@ -114,7 +104,7 @@ export async function fetchSafetyTrainingRecordList(
       presentCount: 0
     },
     planOptions: result.data?.planOptions ?? [],
-    organizations: toOrganizationTree(result.data?.organizations ?? []),
+    organizations: buildOrganizationTree(result.data?.organizations ?? []),
     error: result.error
   }
 }
@@ -175,7 +165,7 @@ export async function fetchSafetyTrainingReport(params: SmisSafetyTrainingReport
       outstandingPlans: [],
       organizationOptions: []
     }),
-    organizationOptions: toOrganizationTree(result.data?.organizationOptions ?? []),
+    organizationOptions: buildOrganizationTree(result.data?.organizationOptions ?? []),
     error: result.error
   }
 }

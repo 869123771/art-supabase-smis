@@ -59,6 +59,7 @@
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import ArtDictDisplay from '@/components/core/base/art-dict-display/index.vue'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
+  import BusinessTableIdentityCell from '@/components/business/business-table-identity-cell/index.vue'
   import BusinessTableWorkspaceActions from '@/components/business/business-table-workspace-actions/index.vue'
   import BusinessWorkspaceHeader, {
     type BusinessWorkspaceMetric
@@ -308,15 +309,11 @@
       minWidth: 236,
       fixed: 'left',
       formatter: (row) => (
-        <div class="operation-type-page__identity">
-          <span aria-hidden="true">
-            <ArtSvgIcon icon="ri:tools-line" />
-          </span>
-          <div>
-            <strong title={row.typeName}>{row.typeName}</strong>
-            <small>{row.typeCode}</small>
-          </div>
-        </div>
+        <BusinessTableIdentityCell
+          primary={row.typeName}
+          secondary={row.typeCode}
+          icon="ri:tools-line"
+        />
       )
     },
     { prop: 'preview', label: '标签预览', minWidth: 180, formatter: renderTypePreview },
@@ -486,41 +483,6 @@
   .operation-type-page {
     gap: 12px;
     min-width: 0;
-
-    :deep(.operation-type-page__identity) {
-      display: grid;
-      grid-template-columns: 36px minmax(0, 1fr);
-      gap: 10px;
-      align-items: center;
-      min-width: 0;
-
-      > span {
-        display: grid;
-        place-items: center;
-        width: 36px;
-        height: 36px;
-        color: var(--theme-color);
-        background: color-mix(in srgb, var(--theme-color) 9%, var(--el-bg-color));
-        border-radius: var(--el-border-radius-base);
-      }
-
-      > div,
-      strong,
-      small {
-        display: block;
-        min-width: 0;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-
-      small {
-        margin-top: 2px;
-        font-family: var(--art-font-family-mono, Consolas, monospace);
-        font-size: 11px;
-        color: var(--el-text-color-secondary);
-      }
-    }
 
     :deep(.operation-type-page__plain-preview),
     :deep(.operation-type-page__color-value),

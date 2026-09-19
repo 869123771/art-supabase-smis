@@ -1,13 +1,11 @@
 <template>
   <ArtDialog ref="dialogRef" size="xl">
     <div class="risk-point-dialog">
-      <div class="risk-point-dialog__context">
-        <span aria-hidden="true"><ArtSvgIcon icon="ri:map-pin-user-line" /></span>
-        <div>
-          <strong>以场所为主线建立风险点</strong>
-          <p>编号保存时自动生成 5 位流水码；风险等级由关联危害因素的定量评价自动汇总。</p>
-        </div>
-      </div>
+      <ArtEntitySummary spaced>
+        <template #icon><ArtSvgIcon icon="ri:map-pin-user-line" /></template>
+        <strong>以场所为主线建立风险点</strong>
+        <p>编号保存时自动生成 5 位流水码；风险等级由关联危害因素的定量评价自动汇总。</p>
+      </ArtEntitySummary>
 
       <ElForm ref="formRef" :model="form" :rules="rules" label-position="top">
         <ArtSectionTitle title="基本信息" subtitle="明确风险点身份、场所和风险类型" />
@@ -338,34 +336,6 @@
 
 <style scoped lang="scss">
   .risk-point-dialog {
-    &__context {
-      display: grid;
-      grid-template-columns: 44px minmax(0, 1fr);
-      gap: 12px;
-      align-items: center;
-      padding: 14px 16px;
-      margin-bottom: 18px;
-      background: color-mix(in srgb, var(--theme-color) 7%, var(--default-box-color));
-      border-left: 3px solid var(--theme-color);
-      border-radius: var(--el-border-radius-base);
-
-      > span {
-        display: grid;
-        place-items: center;
-        width: 44px;
-        height: 44px;
-        color: var(--theme-color);
-        background: var(--default-box-color);
-        border-radius: var(--el-border-radius-base);
-      }
-
-      p {
-        margin: 3px 0 0;
-        font-size: 12px;
-        color: var(--el-text-color-secondary);
-      }
-    }
-
     &__grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));

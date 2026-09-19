@@ -1,13 +1,11 @@
 <template>
   <ArtDialog ref="dialogRef" size="lg">
     <div class="safety-inspection-dialog">
-      <div class="safety-inspection-dialog__context">
-        <span><ArtSvgIcon icon="ri:shield-check-line" /></span>
-        <div>
-          <strong>形成可追溯的安全检查记录</strong>
-          <p>检查类别、组织与员工均引用当前租户主数据；记录同时保留检查时点名称快照。</p>
-        </div>
-      </div>
+      <ArtEntitySummary spaced>
+        <template #icon><ArtSvgIcon icon="ri:shield-check-line" /></template>
+        <strong>形成可追溯的安全检查记录</strong>
+        <p>检查类别、组织与员工均引用当前租户主数据；记录同时保留检查时点名称快照。</p>
+      </ArtEntitySummary>
       <ArtForm
         ref="formRef"
         v-model="form.model"
@@ -239,35 +237,3 @@
 
   defineExpose({ handleOpen })
 </script>
-
-<style scoped lang="scss">
-  .safety-inspection-dialog {
-    &__context {
-      display: grid;
-      grid-template-columns: 44px minmax(0, 1fr);
-      gap: var(--art-space-3);
-      align-items: center;
-      padding: var(--art-space-3) var(--art-space-4);
-      margin-bottom: var(--art-space-4);
-      background: color-mix(in srgb, var(--theme-color) 7%, var(--default-box-color));
-      border-left: 3px solid var(--theme-color);
-      border-radius: var(--el-border-radius-base);
-
-      > span {
-        display: grid;
-        place-items: center;
-        width: 44px;
-        height: 44px;
-        color: var(--theme-color);
-        background: var(--default-box-color);
-        border-radius: var(--el-border-radius-base);
-      }
-
-      p {
-        margin: 3px 0 0;
-        font-size: var(--art-font-size-caption);
-        color: var(--el-text-color-secondary);
-      }
-    }
-  }
-</style>

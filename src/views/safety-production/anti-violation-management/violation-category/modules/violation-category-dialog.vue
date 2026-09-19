@@ -1,13 +1,11 @@
 <template>
   <ArtDialog ref="dialogRef" size="md">
     <div class="violation-category-dialog">
-      <div class="violation-category-dialog__context" role="note">
-        <span aria-hidden="true"><ArtSvgIcon icon="ri:node-tree" /></span>
-        <div>
-          <strong>统一违章分类口径</strong>
-          <p>分类用于标准库归档和三违教育追溯；停用后保留历史关联，不再用于新增标准。</p>
-        </div>
-      </div>
+      <ArtEntitySummary spaced>
+        <template #icon><ArtSvgIcon icon="ri:node-tree" /></template>
+        <strong>统一违章分类口径</strong>
+        <p>分类用于标准库归档和三违教育追溯；停用后保留历史关联，不再用于新增标准。</p>
+      </ArtEntitySummary>
 
       <ArtForm
         ref="formRef"
@@ -228,35 +226,3 @@
 
   defineExpose({ handleOpen })
 </script>
-
-<style scoped lang="scss">
-  .violation-category-dialog {
-    &__context {
-      display: grid;
-      grid-template-columns: 40px minmax(0, 1fr);
-      gap: 12px;
-      align-items: center;
-      padding: 12px 14px;
-      margin-bottom: 18px;
-      background: color-mix(in srgb, var(--theme-color) 7%, var(--default-box-color));
-      border-left: 3px solid var(--theme-color);
-      border-radius: var(--el-border-radius-base);
-
-      > span {
-        display: grid;
-        place-items: center;
-        width: 40px;
-        height: 40px;
-        color: var(--theme-color);
-        background: var(--default-box-color);
-        border-radius: var(--el-border-radius-base);
-      }
-
-      p {
-        margin: 3px 0 0;
-        font-size: 12px;
-        color: var(--el-text-color-secondary);
-      }
-    }
-  }
-</style>

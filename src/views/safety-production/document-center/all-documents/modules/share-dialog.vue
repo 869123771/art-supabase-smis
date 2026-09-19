@@ -1,13 +1,11 @@
 <template>
   <ArtDialog ref="dialogRef" size="md">
     <div class="document-share-dialog">
-      <div class="document-share-dialog__context">
-        <span aria-hidden="true"><ArtSvgIcon icon="ri:share-forward-2-line" /></span>
-        <div>
-          <strong>{{ document?.title }}</strong>
-          <p>分享对象仅限当前租户的启用用户；对方会在顶部通知中心收到消息。</p>
-        </div>
-      </div>
+      <ArtEntitySummary spaced>
+        <template #icon><ArtSvgIcon icon="ri:share-forward-2-line" /></template>
+        <strong>{{ document?.title }}</strong>
+        <p>分享对象仅限当前租户的启用用户；对方会在顶部通知中心收到消息。</p>
+      </ArtEntitySummary>
       <ArtForm
         ref="formRef"
         v-model="form"
@@ -160,40 +158,3 @@
 
   defineExpose({ handleOpen })
 </script>
-
-<style scoped lang="scss">
-  .document-share-dialog {
-    &__context {
-      display: grid;
-      grid-template-columns: 44px minmax(0, 1fr);
-      gap: 12px;
-      align-items: center;
-      padding: 14px 16px;
-      margin-bottom: 18px;
-      background: color-mix(in srgb, var(--theme-color) 7%, var(--default-box-color));
-      border-left: 3px solid var(--theme-color);
-      border-radius: var(--el-border-radius-base);
-
-      > span {
-        display: grid;
-        place-items: center;
-        width: 44px;
-        height: 44px;
-        color: var(--theme-color);
-        background: var(--default-box-color);
-        border-radius: var(--el-border-radius-base);
-      }
-
-      strong,
-      p {
-        overflow-wrap: anywhere;
-      }
-
-      p {
-        margin: 3px 0 0;
-        font-size: 12px;
-        color: var(--el-text-color-secondary);
-      }
-    }
-  }
-</style>

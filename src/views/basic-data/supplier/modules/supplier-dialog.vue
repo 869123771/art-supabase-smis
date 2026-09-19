@@ -1,13 +1,11 @@
 <template>
   <ArtDialog ref="dialogRef" size="xl">
     <div class="supplier-dialog">
-      <div class="supplier-dialog__context" role="note">
-        <span aria-hidden="true"><ArtSvgIcon icon="ri:git-merge-line" /></span>
-        <div>
-          <strong>一处建档，多系统复用</strong>
-          <p>单位编码与名称用于唯一识别；地图选点会同步回填详细地址、经度和纬度。</p>
-        </div>
-      </div>
+      <ArtEntitySummary spaced>
+        <template #icon><ArtSvgIcon icon="ri:git-merge-line" /></template>
+        <strong>一处建档，多系统复用</strong>
+        <p>单位编码与名称用于唯一识别；地图选点会同步回填详细地址、经度和纬度。</p>
+      </ArtEntitySummary>
 
       <ArtForm
         ref="formRef"
@@ -318,39 +316,3 @@
 
   defineExpose({ handleOpen })
 </script>
-
-<style scoped lang="scss">
-  .supplier-dialog {
-    &__context {
-      display: grid;
-      grid-template-columns: 40px minmax(0, 1fr);
-      gap: 12px;
-      align-items: center;
-      padding: 12px 14px;
-      margin-bottom: 18px;
-      background: color-mix(in srgb, var(--theme-color) 7%, var(--default-box-color));
-      border-left: 3px solid var(--theme-color);
-      border-radius: var(--el-border-radius-base);
-
-      > span {
-        display: grid;
-        place-items: center;
-        width: 40px;
-        height: 40px;
-        color: var(--theme-color);
-        background: var(--default-box-color);
-        border-radius: var(--el-border-radius-base);
-      }
-
-      strong {
-        color: var(--el-text-color-primary);
-      }
-
-      p {
-        margin: 3px 0 0;
-        font-size: 12px;
-        color: var(--el-text-color-secondary);
-      }
-    }
-  }
-</style>

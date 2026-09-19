@@ -250,7 +250,7 @@
       label: '班组自查涵盖率',
       width: 190,
       formatter: (row) => (
-        <div class="team-coverage-page__rate">
+        <div class="mx-auto w-[158px]">
           <ElProgress
             percentage={row.coverageRate}
             strokeWidth={7}
@@ -335,11 +335,6 @@
       grid-template-columns: minmax(0, 1.2fr) minmax(420px, 0.8fr);
       gap: var(--art-space-4);
       min-width: 0;
-    }
-
-    &__rate {
-      width: 158px;
-      margin-inline: auto;
     }
 
     @media (width <= 1180px) {

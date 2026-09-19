@@ -477,7 +477,7 @@
       width: 112,
       fixed: 'right',
       formatter: (row) => (
-        <div class="position-safety-page__row-actions">
+        <div class="flex items-center">
           <ArtButtonTable
             type="edit"
             permission="SmisPositionSafetyResponsibility:Edit"
@@ -958,11 +958,6 @@
 
     &__table {
       flex: 1 1 auto;
-    }
-
-    &__row-actions {
-      display: flex;
-      align-items: center;
     }
 
     :deep(.el-table__row) {

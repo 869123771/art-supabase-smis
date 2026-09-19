@@ -1,19 +1,17 @@
 <template>
   <ArtDialog ref="dialogRef" size="md">
     <div class="qualification-catalog-dialog">
-      <div class="qualification-catalog-dialog__context" role="note">
-        <span aria-hidden="true"><ArtSvgIcon icon="ri:node-tree" /></span>
-        <div>
-          <strong>维护{{ config.title }}层级</strong>
-          <p>
-            {{
-              isPermittedOperationItem
-                ? '准操项目按作业类别归集，并可在类别内继续维护上下级。'
-                : '编码用于业务联动；停用节点保留历史引用，不再用于新增证件。'
-            }}
-          </p>
-        </div>
-      </div>
+      <ArtEntitySummary spaced>
+        <template #icon><ArtSvgIcon icon="ri:node-tree" /></template>
+        <strong>维护{{ config.title }}层级</strong>
+        <p>
+          {{
+            isPermittedOperationItem
+              ? '准操项目按作业类别归集，并可在类别内继续维护上下级。'
+              : '编码用于业务联动；停用节点保留历史引用，不再用于新增证件。'
+          }}
+        </p>
+      </ArtEntitySummary>
       <ArtForm
         ref="formRef"
         v-model="form.model"
@@ -276,32 +274,4 @@
   defineExpose({ handleOpen })
 </script>
 
-<style scoped lang="scss">
-  .qualification-catalog-dialog__context {
-    display: grid;
-    grid-template-columns: 40px minmax(0, 1fr);
-    gap: 12px;
-    align-items: center;
-    padding: 12px 14px;
-    margin-bottom: 18px;
-    background: color-mix(in srgb, var(--theme-color) 7%, var(--default-box-color));
-    border-left: 3px solid var(--theme-color);
-    border-radius: var(--el-border-radius-base);
-
-    > span {
-      display: grid;
-      place-items: center;
-      width: 40px;
-      height: 40px;
-      color: var(--theme-color);
-      background: var(--default-box-color);
-      border-radius: var(--el-border-radius-base);
-    }
-
-    p {
-      margin: 3px 0 0;
-      font-size: 12px;
-      color: var(--el-text-color-secondary);
-    }
-  }
-</style>
+<style scoped lang="scss"></style>

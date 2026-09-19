@@ -1,13 +1,11 @@
 <template>
   <ArtDialog ref="dialogRef" size="xl">
     <div class="issuance-dialog">
-      <div class="issuance-dialog__intro">
-        <ArtSvgIcon icon="ri:tools-line" />
-        <div
-          ><strong>配置发放口径</strong
-          ><p>适用岗位或组织至少选择一项；保存时按编号规则自动生成 3 位流水标准编号。</p></div
-        >
-      </div>
+      <ArtEntitySummary spaced>
+        <template #icon><ArtSvgIcon icon="ri:tools-line" /></template>
+        <strong>配置发放口径</strong
+        ><p>适用岗位或组织至少选择一项；保存时按编号规则自动生成 3 位流水标准编号。</p>
+      </ArtEntitySummary>
       <ArtForm
         ref="formRef"
         v-model="form"
@@ -537,29 +535,6 @@
 
 <style scoped lang="scss">
   .issuance-dialog {
-    &__intro {
-      display: grid;
-      grid-template-columns: 40px 1fr;
-      gap: 12px;
-      align-items: center;
-      padding: 14px 16px;
-      margin-bottom: 18px;
-      background: color-mix(in srgb, var(--theme-color) 7%, var(--default-box-color));
-      border-left: 3px solid var(--theme-color);
-      border-radius: var(--el-border-radius-base);
-
-      svg {
-        font-size: 24px;
-        color: var(--theme-color);
-      }
-
-      p {
-        margin: 3px 0 0;
-        font-size: 12px;
-        color: var(--el-text-color-secondary);
-      }
-    }
-
     .el-select,
     .el-input-number {
       width: 100%;

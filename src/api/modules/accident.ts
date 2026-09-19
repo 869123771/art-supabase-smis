@@ -1,7 +1,7 @@
 import { normalizeNullableText } from '@/utils/form/normalize'
 import { omit } from 'lodash-es'
 import { useSupabase } from '@/hooks'
-import TreeUtils from '@/utils/tree'
+import { buildOrganizationTree } from './organization-tree'
 import type {
   SmisAccidentEmployee,
   SmisAccidentAnalysisListResult,
@@ -23,18 +23,6 @@ import type {
 } from '@smis/api/types'
 
 const { supabase, keysToSnakeDeep, responseHandle } = useSupabase()
-const organizationTree = new TreeUtils({
-  idKey: 'id',
-  parentKey: 'parentId',
-  childrenKey: 'children'
-})
-
-const toOrganizationTree = (rows: SmisTreeOrganization[]): SmisTreeOrganization[] =>
-  organizationTree.listToTree(rows, (left, right) => {
-    const sortDifference = (left.sort ?? 0) - (right.sort ?? 0)
-    return sortDifference || left.organizationName.localeCompare(right.organizationName, 'zh-CN')
-  })
-
 const accidentOverview = () => ({ total: 0, currentMonth: 0, highSeverity: 0, affectedPeople: 0 })
 const accidentAnalysisOverview = () => ({ total: 0, complete: 0, pending: 0, participantCount: 0 })
 const workInjuryOverview = () => ({ total: 0, slight: 0, minor: 0, serious: 0, fatal: 0 })
@@ -94,7 +82,7 @@ export async function fetchAccidentReportList(params: SmisAccidentReportSearchPa
     data: result.data?.records ?? [],
     total: result.data?.total ?? 0,
     overview: result.data?.overview ?? accidentOverview(),
-    organizations: toOrganizationTree(result.data?.organizations ?? []),
+    organizations: buildOrganizationTree<SmisTreeOrganization>(result.data?.organizations ?? []),
     currentEmployee: result.data?.currentEmployee ?? null,
     error: result.error
   }
@@ -143,7 +131,7 @@ export async function fetchHistoricalAccidentCaseList(
     data: result.data?.records ?? [],
     total: result.data?.total ?? 0,
     overview: result.data?.overview ?? historicalCaseOverview(),
-    organizations: toOrganizationTree(result.data?.organizations ?? []),
+    organizations: buildOrganizationTree(result.data?.organizations ?? []),
     error: result.error
   }
 }
@@ -185,7 +173,7 @@ export async function fetchSafetyAccidentStatistics(
   const data = result.data ?? accidentStatistics()
   return {
     ...data,
-    organizationOptions: toOrganizationTree(data.organizationOptions),
+    organizationOptions: buildOrganizationTree(data.organizationOptions),
     error: result.error
   }
 }

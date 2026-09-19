@@ -1,13 +1,11 @@
 <template>
   <ArtDialog ref="dialogRef" size="xl">
     <div class="plan-dialog">
-      <div class="plan-dialog__context">
-        <span><ArtSvgIcon icon="ri:file-shield-2-line" /></span>
-        <div
-          ><strong>预案适用范围与演练规则</strong
-          ><p>预案编码保存后自动生成；预案级别随适用单位自动联动，不允许手工篡改。</p></div
-        >
-      </div>
+      <ArtEntitySummary spaced>
+        <template #icon><ArtSvgIcon icon="ri:file-shield-2-line" /></template>
+        <strong>预案适用范围与演练规则</strong
+        ><p>预案编码保存后自动生成；预案级别随适用单位自动联动，不允许手工篡改。</p>
+      </ArtEntitySummary>
       <ArtForm
         ref="formRef"
         v-model="form"
@@ -377,34 +375,6 @@
 
 <style scoped lang="scss">
   .plan-dialog {
-    &__context {
-      display: grid;
-      grid-template-columns: 44px minmax(0, 1fr);
-      gap: 12px;
-      align-items: center;
-      padding: 14px 16px;
-      margin-bottom: 18px;
-      background: color-mix(in srgb, var(--theme-color) 7%, var(--default-box-color));
-      border-left: 3px solid var(--theme-color);
-      border-radius: var(--el-border-radius-base);
-
-      > span {
-        display: grid;
-        place-items: center;
-        width: 44px;
-        height: 44px;
-        color: var(--theme-color);
-        background: var(--default-box-color);
-        border-radius: var(--el-border-radius-base);
-      }
-
-      p {
-        margin: 3px 0 0;
-        font-size: 12px;
-        color: var(--el-text-color-secondary);
-      }
-    }
-
     &__control {
       width: 100%;
     }

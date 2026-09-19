@@ -1,13 +1,11 @@
 <template>
   <ArtDialog ref="dialogRef" size="lg">
     <div class="anti-violation-standard-dialog">
-      <div class="anti-violation-standard-dialog__context" role="note">
-        <span aria-hidden="true"><ArtSvgIcon icon="ri:shield-check-line" /></span>
-        <div>
-          <strong>标准条目决定三违认定口径</strong>
-          <p>违章编号在租户内唯一；停用条目继续保留历史引用，但不再进入新增教育记录的可选范围。</p>
-        </div>
-      </div>
+      <ArtEntitySummary spaced>
+        <template #icon><ArtSvgIcon icon="ri:shield-check-line" /></template>
+        <strong>标准条目决定三违认定口径</strong>
+        <p>违章编号在租户内唯一；停用条目继续保留历史引用，但不再进入新增教育记录的可选范围。</p>
+      </ArtEntitySummary>
 
       <ArtForm
         ref="formRef"
@@ -248,35 +246,3 @@
 
   defineExpose({ handleOpen })
 </script>
-
-<style scoped lang="scss">
-  .anti-violation-standard-dialog {
-    &__context {
-      display: grid;
-      grid-template-columns: 42px minmax(0, 1fr);
-      gap: 12px;
-      align-items: center;
-      padding: 12px 14px;
-      margin-bottom: 18px;
-      background: color-mix(in srgb, var(--theme-color) 7%, var(--default-box-color));
-      border-left: 3px solid var(--theme-color);
-      border-radius: var(--el-border-radius-base);
-
-      > span {
-        display: grid;
-        place-items: center;
-        width: 42px;
-        height: 42px;
-        color: var(--theme-color);
-        background: var(--default-box-color);
-        border-radius: var(--el-border-radius-base);
-      }
-
-      p {
-        margin: 3px 0 0;
-        font-size: 12px;
-        color: var(--el-text-color-secondary);
-      }
-    }
-  }
-</style>

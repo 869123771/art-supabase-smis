@@ -53,7 +53,7 @@
   import { useArtFeedback } from '@/hooks/core/useArtFeedback'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import ArtDictDisplay from '@/components/core/base/art-dict-display/index.vue'
-  import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
+  import BusinessTableIdentityCell from '@/components/business/business-table-identity-cell/index.vue'
   import BusinessWorkspaceHeader, {
     type BusinessWorkspaceMetric
   } from '@/components/business/business-workspace-header/index.vue'
@@ -233,17 +233,12 @@
       minWidth: 260,
       fixed: 'left',
       formatter: (row) => (
-        <div class="training-record-page__identity">
-          <span>
-            <ArtSvgIcon icon="ri:clipboard-check-line" />
-          </span>
-          <span>
-            <strong title={row.subject}>{row.subject}</strong>
-            <small>
-              {row.recordNo} · {row.planNo}
-            </small>
-          </span>
-        </div>
+        <BusinessTableIdentityCell
+          primary={row.subject}
+          secondary={`${row.recordNo} · ${row.planNo}`}
+          icon="ri:clipboard-check-line"
+          iconTone="success"
+        />
       )
     },
     {
@@ -413,43 +408,6 @@
       flex: 1;
       min-width: 0;
       min-height: 0;
-    }
-
-    :deep(.training-record-page__identity) {
-      display: grid;
-      grid-template-columns: 36px minmax(0, 1fr);
-      gap: 10px;
-      align-items: center;
-      min-width: 0;
-    }
-
-    :deep(.training-record-page__identity > span:first-child) {
-      display: grid;
-      place-items: center;
-      width: 36px;
-      height: 36px;
-      color: var(--el-color-success);
-      background: color-mix(in srgb, var(--el-color-success) 9%, var(--el-bg-color));
-      border-radius: var(--el-border-radius-base);
-    }
-
-    :deep(.training-record-page__identity > span:last-child) {
-      display: grid;
-      min-width: 0;
-    }
-
-    :deep(.training-record-page__identity strong),
-    :deep(.training-record-page__identity small) {
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    :deep(.training-record-page__identity small) {
-      margin-top: 2px;
-      font-family: var(--art-font-family-mono, Consolas, monospace);
-      font-size: 11px;
-      color: var(--el-text-color-secondary);
     }
 
     :deep(.training-record-page__attendance) {

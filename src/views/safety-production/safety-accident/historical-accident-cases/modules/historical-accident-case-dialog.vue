@@ -1,13 +1,11 @@
 <template>
   <ArtDialog ref="dialogRef" size="xl">
     <div class="historical-case-dialog">
-      <div class="historical-case-dialog__context" role="note">
-        <span aria-hidden="true"><ArtSvgIcon icon="ri:book-open-line" /></span>
-        <div>
-          <strong>把事故经过沉淀为可检索、可复用的安全知识</strong>
-          <p>事故单位与适用公司均来自系统组织管理，类别支持多选，便于后续统计与精准检索。</p>
-        </div>
-      </div>
+      <ArtEntitySummary spaced>
+        <template #icon><ArtSvgIcon icon="ri:book-open-line" /></template>
+        <strong>把事故经过沉淀为可检索、可复用的安全知识</strong>
+        <p>事故单位与适用公司均来自系统组织管理，类别支持多选，便于后续统计与精准检索。</p>
+      </ArtEntitySummary>
 
       <ArtForm
         ref="formRef"
@@ -290,34 +288,6 @@
 <style scoped lang="scss">
   .historical-case-dialog {
     min-width: 0;
-
-    &__context {
-      display: grid;
-      grid-template-columns: 44px minmax(0, 1fr);
-      gap: 12px;
-      align-items: center;
-      padding: 14px 16px;
-      margin-bottom: 18px;
-      background: color-mix(in srgb, var(--theme-color) 7%, var(--default-box-color));
-      border-left: 3px solid var(--theme-color);
-      border-radius: var(--el-border-radius-base);
-
-      > span {
-        display: grid;
-        place-items: center;
-        width: 44px;
-        height: 44px;
-        color: var(--theme-color);
-        background: var(--default-box-color);
-        border-radius: var(--el-border-radius-base);
-      }
-
-      p {
-        margin: 3px 0 0;
-        font-size: 12px;
-        color: var(--el-text-color-secondary);
-      }
-    }
 
     :deep(.art-upload) {
       display: flex;

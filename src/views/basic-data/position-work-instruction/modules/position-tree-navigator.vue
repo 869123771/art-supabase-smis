@@ -12,12 +12,7 @@
     @retry="emit('refresh')"
   >
     <template #actions>
-      <ArtTreeExpandToggle
-        :tree="treeRef"
-        :data="navigationData"
-        node-key="key"
-        label="岗位树"
-      />
+      <ArtTreeExpandToggle :tree="treeRef" :data="navigationData" node-key="key" label="岗位树" />
       <ArtIconButton
         icon="ri:refresh-line"
         label="刷新岗位树"

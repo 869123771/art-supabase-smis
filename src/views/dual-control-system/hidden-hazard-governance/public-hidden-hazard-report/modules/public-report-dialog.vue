@@ -1,13 +1,11 @@
 <template>
   <ArtDialog ref="dialogRef" size="xl">
     <div class="public-report-dialog">
-      <div class="public-report-dialog__context" role="note">
-        <span aria-hidden="true"><ArtSvgIcon icon="ri:megaphone-line" /></span>
-        <div>
-          <strong>登记公众反馈并纳入隐患闭环</strong>
-          <p>举报人信息用于核实线索；登记操作人由系统自动留痕，保存后状态为待核准。</p>
-        </div>
-      </div>
+      <ArtEntitySummary spaced>
+        <template #icon><ArtSvgIcon icon="ri:megaphone-line" /></template>
+        <strong>登记公众反馈并纳入隐患闭环</strong>
+        <p>举报人信息用于核实线索；登记操作人由系统自动留痕，保存后状态为待核准。</p>
+      </ArtEntitySummary>
       <ArtForm
         ref="formRef"
         v-model="form.model"
@@ -253,34 +251,6 @@
 <style scoped lang="scss">
   .public-report-dialog {
     min-width: 0;
-
-    &__context {
-      display: grid;
-      grid-template-columns: 44px minmax(0, 1fr);
-      gap: var(--art-space-3);
-      align-items: center;
-      padding: var(--art-space-3) var(--art-space-4);
-      margin-bottom: var(--art-space-4);
-      background: color-mix(in srgb, var(--theme-color) 7%, var(--default-box-color));
-      border-left: 3px solid var(--theme-color);
-      border-radius: var(--el-border-radius-base);
-    }
-
-    &__context > span {
-      display: grid;
-      place-items: center;
-      width: 44px;
-      height: 44px;
-      color: var(--theme-color);
-      background: var(--default-box-color);
-      border-radius: var(--el-border-radius-base);
-    }
-
-    &__context p {
-      margin: 3px 0 0;
-      font-size: var(--art-font-size-caption);
-      color: var(--el-text-color-secondary);
-    }
 
     &__control {
       width: 100%;

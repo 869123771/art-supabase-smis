@@ -1,13 +1,11 @@
 <template>
   <ArtDialog ref="dialogRef" size="xl">
     <div class="operation-type-dialog">
-      <div class="operation-type-dialog__context" role="note">
-        <span aria-hidden="true"><ArtSvgIcon icon="ri:tools-line" /></span>
-        <div>
-          <strong>{{ targetTenantName }} · 作业类型主数据</strong>
-          <p>基础信息统一作业票入口；专有字段仅对当前作业类型生效，可按现场业务继续扩展。</p>
-        </div>
-      </div>
+      <ArtEntitySummary spaced>
+        <template #icon><ArtSvgIcon icon="ri:tools-line" /></template>
+        <strong>{{ targetTenantName }} · 作业类型主数据</strong>
+        <p>基础信息统一作业票入口；专有字段仅对当前作业类型生效，可按现场业务继续扩展。</p>
+      </ArtEntitySummary>
 
       <div class="operation-type-dialog__preview" aria-live="polite">
         <span>标签预览</span>
@@ -520,34 +518,6 @@
 
 <style scoped lang="scss">
   .operation-type-dialog {
-    &__context {
-      display: grid;
-      grid-template-columns: 44px minmax(0, 1fr);
-      gap: 12px;
-      align-items: center;
-      padding: 12px 14px;
-      margin-bottom: 14px;
-      background: color-mix(in srgb, var(--theme-color) 7%, var(--default-box-color));
-      border-left: 3px solid var(--theme-color);
-      border-radius: var(--el-border-radius-base);
-
-      > span {
-        display: grid;
-        place-items: center;
-        width: 44px;
-        height: 44px;
-        color: var(--theme-color);
-        background: var(--default-box-color);
-        border-radius: var(--el-border-radius-base);
-      }
-
-      p {
-        margin: 3px 0 0;
-        font-size: 12px;
-        color: var(--el-text-color-secondary);
-      }
-    }
-
     &__preview {
       display: flex;
       gap: 10px;

@@ -1,13 +1,11 @@
 <template>
   <ArtDialog ref="dialogRef" size="md">
     <div class="inspection-category-dialog">
-      <div class="inspection-category-dialog__context" role="note">
-        <span aria-hidden="true"><ArtSvgIcon icon="ri:filter-3-line" /></span>
-        <div>
-          <strong>{{ targetTenantName }} · 租户专属分类口径</strong>
-          <p>编码用于系统识别，名称面向业务人员；停用后保留历史数据但不再用于新业务。</p>
-        </div>
-      </div>
+      <ArtEntitySummary spaced>
+        <template #icon><ArtSvgIcon icon="ri:filter-3-line" /></template>
+        <strong>{{ targetTenantName }} · 租户专属分类口径</strong>
+        <p>编码用于系统识别，名称面向业务人员；停用后保留历史数据但不再用于新业务。</p>
+      </ArtEntitySummary>
 
       <ArtForm
         ref="formRef"
@@ -245,39 +243,3 @@
 
   defineExpose({ handleOpen })
 </script>
-
-<style scoped lang="scss">
-  .inspection-category-dialog {
-    &__context {
-      display: grid;
-      grid-template-columns: 38px minmax(0, 1fr);
-      gap: 12px;
-      align-items: center;
-      padding: 11px 13px;
-      margin-bottom: 18px;
-      background: color-mix(in srgb, var(--theme-color) 7%, var(--default-box-color));
-      border-left: 3px solid var(--theme-color);
-      border-radius: var(--el-border-radius-base);
-
-      > span {
-        display: grid;
-        place-items: center;
-        width: 38px;
-        height: 38px;
-        color: var(--theme-color);
-        background: var(--default-box-color);
-        border-radius: var(--el-border-radius-base);
-      }
-
-      strong {
-        color: var(--el-text-color-primary);
-      }
-
-      p {
-        margin: 3px 0 0;
-        font-size: 12px;
-        color: var(--el-text-color-secondary);
-      }
-    }
-  }
-</style>

@@ -768,7 +768,7 @@
       width: 198,
       fixed: 'right',
       formatter: (row) => (
-        <div class="equipment-ledger-page__actions">
+        <div class="flex items-center gap-1">
           <ArtButtonTable
             permission="SmisEquipmentLedger:View"
             type="view"
@@ -958,12 +958,6 @@
         font-size: 11px;
         color: var(--el-text-color-secondary);
       }
-    }
-
-    &__actions {
-      display: flex;
-      gap: 4px;
-      align-items: center;
     }
 
     &__lifecycle-link {

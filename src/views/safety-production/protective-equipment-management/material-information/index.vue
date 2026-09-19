@@ -411,7 +411,7 @@
       width: 190,
       fixed: 'right',
       formatter: (row) => (
-        <div class="material-information-page__actions">
+        <div class="flex items-center gap-1">
           <ArtButtonTable icon="ri:file-list-3-line" label="详情" onClick={() => openDetail(row)} />
           <ArtButtonTable
             permission="SmisMaterialInformation:Edit"
@@ -532,12 +532,6 @@
       outline: 2px solid var(--theme-color);
       outline-offset: 2px;
       border-radius: var(--el-border-radius-small);
-    }
-
-    &__actions {
-      display: flex;
-      gap: 4px;
-      align-items: center;
     }
   }
 </style>

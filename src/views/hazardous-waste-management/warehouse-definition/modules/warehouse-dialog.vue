@@ -1,13 +1,11 @@
 <template>
   <ArtDialog ref="dialogRef" size="lg">
     <div class="hazardous-warehouse-dialog">
-      <div class="hazardous-warehouse-dialog__context" role="note">
-        <span aria-hidden="true"><ArtSvgIcon icon="ri:archive-drawer-line" /></span>
-        <div>
-          <strong>建立危废库房责任边界</strong>
-          <p>库管员与负责人均来自员工花名册；停用仓库保留历史单据，但不能再用于新增入出库。</p>
-        </div>
-      </div>
+      <ArtEntitySummary spaced>
+        <template #icon><ArtSvgIcon icon="ri:archive-drawer-line" /></template>
+        <strong>建立危废库房责任边界</strong>
+        <p>库管员与负责人均来自员工花名册；停用仓库保留历史单据，但不能再用于新增入出库。</p>
+      </ArtEntitySummary>
 
       <ArtForm
         ref="formRef"
@@ -309,39 +307,3 @@
   }
   defineExpose({ handleOpen })
 </script>
-
-<style scoped lang="scss">
-  .hazardous-warehouse-dialog {
-    &__context {
-      display: grid;
-      grid-template-columns: 40px minmax(0, 1fr);
-      gap: 12px;
-      align-items: center;
-      padding: 12px 14px;
-      margin-bottom: 18px;
-      background: color-mix(in srgb, var(--theme-color) 7%, var(--default-box-color));
-      border-left: 3px solid var(--theme-color);
-      border-radius: var(--el-border-radius-base);
-
-      > span {
-        display: grid;
-        place-items: center;
-        width: 40px;
-        height: 40px;
-        color: var(--theme-color);
-        background: var(--default-box-color);
-        border-radius: var(--el-border-radius-base);
-      }
-
-      strong {
-        color: var(--el-text-color-primary);
-      }
-
-      p {
-        margin: 3px 0 0;
-        font-size: 12px;
-        color: var(--el-text-color-secondary);
-      }
-    }
-  }
-</style>

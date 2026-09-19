@@ -75,7 +75,7 @@
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import ArtDictDisplay from '@/components/core/base/art-dict-display/index.vue'
   import ArtPermissionGuard from '@/components/core/feedback/art-permission-guard/index.vue'
-  import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
+  import BusinessTableIdentityCell from '@/components/business/business-table-identity-cell/index.vue'
   import ArtWorkspaceSplitter from '@/components/core/layouts/art-workspace-splitter/index.vue'
   import BusinessTableWorkspaceActions from '@/components/business/business-table-workspace-actions/index.vue'
   import BusinessWorkspaceHeader, {
@@ -247,13 +247,11 @@
       minWidth: 220,
       fixed: 'left',
       formatter: (row) => (
-        <div class="hazardous-catalog-page__identity">
-          <ArtSvgIcon icon="ri:flask-line" />
-          <span>
-            <strong>{row.wasteName}</strong>
-            <small>{row.wasteCode}</small>
-          </span>
-        </div>
+        <BusinessTableIdentityCell
+          primary={row.wasteName}
+          secondary={row.wasteCode}
+          icon="ri:flask-line"
+        />
       )
     },
     {
@@ -414,41 +412,6 @@
     &__table {
       min-width: 0;
       min-height: 0;
-    }
-
-    :deep(.hazardous-catalog-page__identity) {
-      display: grid;
-      grid-template-columns: 36px minmax(0, 1fr);
-      gap: 10px;
-      align-items: center;
-      min-width: 0;
-
-      > svg {
-        box-sizing: content-box;
-        width: 20px;
-        height: 20px;
-        padding: 8px;
-        color: var(--theme-color);
-        background: color-mix(in srgb, var(--theme-color) 9%, var(--el-bg-color));
-        border-radius: var(--el-border-radius-base);
-      }
-
-      span {
-        display: grid;
-        min-width: 0;
-      }
-
-      strong,
-      small {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-
-      small {
-        font: 11px var(--art-font-family-mono, Consolas, monospace);
-        color: var(--el-text-color-secondary);
-      }
     }
 
     :deep(.hazardous-catalog-page__actions) {

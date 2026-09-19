@@ -1,13 +1,11 @@
 <template>
   <ArtDialog ref="dialogRef" size="xl">
     <div class="inspection-dialog">
-      <div class="inspection-dialog__context" role="note">
-        <span><ArtSvgIcon icon="ri:shield-check-line" /></span>
-        <div>
-          <strong>检验结果将同步进入设备全生命周期</strong>
-          <p>报告编号按租户规则自动生成；检验类别、机构和图片证据均保留结构化关联。</p>
-        </div>
-      </div>
+      <ArtEntitySummary spaced>
+        <template #icon><ArtSvgIcon icon="ri:shield-check-line" /></template>
+        <strong>检验结果将同步进入设备全生命周期</strong>
+        <p>报告编号按租户规则自动生成；检验类别、机构和图片证据均保留结构化关联。</p>
+      </ArtEntitySummary>
 
       <ArtForm
         ref="formRef"
@@ -574,36 +572,6 @@
   .inspection-dialog {
     display: grid;
     gap: var(--art-space-4);
-
-    &__context {
-      display: grid;
-      grid-template-columns: 44px minmax(0, 1fr);
-      gap: 12px;
-      align-items: center;
-      padding: 14px 16px;
-      margin-bottom: 0;
-      background: color-mix(in srgb, var(--theme-color) 7%, var(--default-box-color));
-      border-left: 3px solid var(--theme-color);
-      border-radius: var(--el-border-radius-base);
-
-      > span {
-        display: grid;
-        place-items: center;
-        width: 44px;
-        height: 44px;
-        font-size: 21px;
-        color: var(--theme-color);
-        background: var(--default-box-color);
-        border-radius: var(--el-border-radius-base);
-      }
-
-      p {
-        margin: 3px 0 0;
-        font-size: 12px;
-        line-height: 1.6;
-        color: var(--el-text-color-secondary);
-      }
-    }
 
     &__upload-help {
       margin: 7px 0 0;

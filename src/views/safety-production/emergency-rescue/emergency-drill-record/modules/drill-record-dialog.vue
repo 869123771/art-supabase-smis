@@ -1,15 +1,12 @@
 <template>
   <ArtDialog ref="dialogRef" size="xl">
     <div class="drill-record-dialog">
-      <div class="drill-record-dialog__context"
-        ><span><ArtSvgIcon icon="ri:clipboard-check-line" /></span
-        ><div
-          ><strong>以演练记录兑现计划</strong
-          ><p
-            >选择计划后自动带入预案、类别、级别、组织、负责人、地点和科目；提交后计划转为已完成。</p
-          ></div
-        ></div
-      >
+      <ArtEntitySummary
+        icon="ri:clipboard-check-line"
+        title="以演练记录兑现计划"
+        description="选择计划后自动带入预案、类别、级别、组织、负责人、地点和科目；提交后计划转为已完成。"
+        spaced
+      />
       <ArtForm
         ref="formRef"
         v-model="form"
@@ -110,7 +107,6 @@
   import ArtForm, { type FormItem } from '@/components/core/forms/art-form/index.vue'
   import ArtUploadFile from '@/components/core/forms/art-upload-file/index.vue'
   import ArtUploadImage from '@/components/core/forms/art-upload-image/index.vue'
-  import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
   import {
     saveEmergencyDrillRecord,
     type SmisEmergencyDrillPlanOption,
@@ -339,34 +335,6 @@
 
 <style scoped lang="scss">
   .drill-record-dialog {
-    &__context {
-      display: grid;
-      grid-template-columns: 44px minmax(0, 1fr);
-      gap: 12px;
-      align-items: center;
-      padding: 14px 16px;
-      margin-bottom: 18px;
-      background: color-mix(in srgb, var(--el-color-success) 7%, var(--default-box-color));
-      border-left: 3px solid var(--el-color-success);
-      border-radius: var(--el-border-radius-base);
-
-      > span {
-        display: grid;
-        place-items: center;
-        width: 44px;
-        height: 44px;
-        color: var(--el-color-success);
-        background: var(--default-box-color);
-        border-radius: var(--el-border-radius-base);
-      }
-
-      p {
-        margin: 3px 0 0;
-        font-size: 12px;
-        color: var(--el-text-color-secondary);
-      }
-    }
-
     &__plan {
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));

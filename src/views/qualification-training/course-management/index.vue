@@ -183,6 +183,7 @@
   } from '@/components/core/forms/art-button-more/index.vue'
   import ArtDictDisplay from '@/components/core/base/art-dict-display/index.vue'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
+  import BusinessTableIdentityCell from '@/components/business/business-table-identity-cell/index.vue'
   import ArtDialog from '@/components/core/dialogs/art-dialog/index.vue'
   import type { ArtDialogExpose } from '@/components/core/dialogs/art-dialog/types'
   import ArtForm, { type FormItem } from '@/components/core/forms/art-form/index.vue'
@@ -572,15 +573,11 @@
       minWidth: 260,
       fixed: 'left',
       formatter: (row) => (
-        <div class="course-page__identity">
-          <span>
-            <ArtSvgIcon icon="ri:book-open-line" />
-          </span>
-          <span>
-            <strong>{row.courseName}</strong>
-            <small>{row.courseNo}</small>
-          </span>
-        </div>
+        <BusinessTableIdentityCell
+          primary={row.courseName}
+          secondary={row.courseNo}
+          icon="ri:book-open-line"
+        />
       )
     },
     {
@@ -832,41 +829,6 @@
     flex: 1;
     min-width: 0;
     min-height: 0;
-  }
-
-  :deep(.course-page__identity) {
-    display: grid;
-    grid-template-columns: 36px minmax(0, 1fr);
-    gap: 10px;
-    align-items: center;
-    min-width: 0;
-
-    > span:first-child {
-      display: grid;
-      place-items: center;
-      width: 36px;
-      height: 36px;
-      color: var(--theme-color);
-      background: color-mix(in srgb, var(--theme-color) 9%, transparent);
-      border-radius: var(--el-border-radius-base);
-    }
-
-    > span:last-child {
-      display: grid;
-      min-width: 0;
-    }
-
-    strong,
-    small {
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    small {
-      margin-top: 2px;
-      color: var(--el-text-color-secondary);
-    }
   }
 
   .course-page__helper {
