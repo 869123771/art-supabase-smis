@@ -219,7 +219,6 @@
       await formRef.value?.validate()
       const tableValidation = await detailTableRef.value?.validate()
       if (tableValidation && !tableValidation.valid) {
-        ElMessage.warning(tableValidation.firstError?.message || '请完善发放明细')
         return false
       }
       await pushToolRequisitionItems(

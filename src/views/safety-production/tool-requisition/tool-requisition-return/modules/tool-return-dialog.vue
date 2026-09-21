@@ -329,7 +329,6 @@
       }
       const tableValidation = await detailTableRef.value?.validate()
       if (tableValidation?.valid === false) {
-        ElMessage.warning(tableValidation.firstError?.message || '请完整填写归还明细')
         return false
       }
       const result = await saveToolReturn(

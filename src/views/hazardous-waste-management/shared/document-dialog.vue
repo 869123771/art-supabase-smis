@@ -412,7 +412,6 @@
       }
       const tableValidation = await detailTableRef.value?.validate()
       if (tableValidation?.valid === false) {
-        ElMessage.warning(tableValidation.firstError?.message || '请完整填写危废明细')
         return false
       }
       await saveHazardousWasteDocument(direction.value, {

@@ -349,9 +349,6 @@
       await formRef.value?.validate()
       const measuresValidation = await measuresEditorRef.value?.validate()
       if (measuresValidation && !measuresValidation.valid) {
-        ElMessage.warning(
-          measuresValidation.firstError?.message || '请补充完整计划防范措施，或删除空白措施'
-        )
         return false
       }
       await saveAccidentReport({

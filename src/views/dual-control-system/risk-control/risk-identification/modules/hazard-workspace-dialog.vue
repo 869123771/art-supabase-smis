@@ -171,8 +171,17 @@
         <span aria-hidden="true"><ArtSvgIcon icon="ri:route-line" /></span>
         <p>用清晰的动作名称和关键步骤描述本项作业，便于后续准确关联危害因素。</p>
       </div>
-      <ElForm label-position="top">
-        <ElFormItem label="作业活动" required>
+      <ArtForm
+        ref="activityFormRef"
+        v-model="activityForm"
+        :items="[]"
+        :rules="activityRules"
+        custom-layout
+        :show-reset="false"
+        :show-submit="false"
+        root-class="p-0! md:p-0!"
+      >
+        <ElFormItem label="作业活动" prop="activityName" required>
           <ElInput
             v-model="activityForm.activityName"
             maxlength="300"
@@ -180,7 +189,7 @@
             placeholder="例如：设备停机检修"
           />
         </ElFormItem>
-        <ElFormItem label="关键作业步骤" required>
+        <ElFormItem label="关键作业步骤" prop="workStep" required>
           <ElInput
             v-model="activityForm.workStep"
             type="textarea"
@@ -191,7 +200,7 @@
             placeholder="按实际顺序描述关键操作步骤"
           />
         </ElFormItem>
-      </ElForm>
+      </ArtForm>
     </div>
   </ArtDialog>
 
@@ -201,12 +210,21 @@
         <span aria-hidden="true"><ArtSvgIcon icon="ri:alert-line" /></span>
         <p>先明确危害来源，再补充可能导致的事故、影响后果及相关作业活动。</p>
       </div>
-      <ElForm label-position="top">
+      <ArtForm
+        ref="hazardFormRef"
+        v-model="hazardForm"
+        :items="[]"
+        :rules="hazardRules"
+        custom-layout
+        :show-reset="false"
+        :show-submit="false"
+        root-class="p-0! md:p-0!"
+      >
         <div class="hazard-editor__grid">
           <ElFormItem label="危害编号">
             <ElInput :model-value="hazardForm.hazardNo" disabled placeholder="保存后自动生成" />
           </ElFormItem>
-          <ElFormItem label="危害因素类别" required>
+          <ElFormItem label="危害因素类别" prop="factorCategoryId" required>
             <ElSelect
               v-model="hazardForm.factorCategoryId"
               filterable
@@ -222,7 +240,7 @@
             </ElSelect>
           </ElFormItem>
         </div>
-        <ElFormItem label="危害因素" required>
+        <ElFormItem label="危害因素" prop="hazardFactor" required>
           <ElInput
             v-model="hazardForm.hazardFactor"
             type="textarea"
@@ -277,7 +295,7 @@
             placeholder="说明可能造成的人员、设备、环境或经营影响"
           />
         </ElFormItem>
-      </ElForm>
+      </ArtForm>
     </div>
   </ArtDialog>
 </template>
@@ -285,8 +303,10 @@
 <script setup lang="ts">
   import { normalizeNullableText } from '@/utils/form/normalize'
   import { Plus } from '@element-plus/icons-vue'
+  import type { FormRules } from 'element-plus'
   import { ElMessage } from 'element-plus'
   import ArtDialog from '@/components/core/dialogs/art-dialog/index.vue'
+  import ArtForm from '@/components/core/forms/art-form/index.vue'
   import type { ArtDialogExpose } from '@/components/core/dialogs/art-dialog/types'
   import ArtSectionCard from '@/components/core/surfaces/art-section-card/index.vue'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
@@ -333,6 +353,8 @@
   const dialogRef = ref<ArtDialogExpose<HazardWorkspaceDialogOpenData>>()
   const activityDialogRef = ref<ArtDialogExpose<SmisRiskActivity | undefined>>()
   const hazardDialogRef = ref<ArtDialogExpose<SmisRiskHazard | undefined>>()
+  const activityFormRef = ref<InstanceType<typeof ArtForm>>()
+  const hazardFormRef = ref<InstanceType<typeof ArtForm>>()
   const userStore = useUserStore()
   const { getDictMap } = storeToRefs(userStore)
   const { confirmAction, confirmDelete } = useArtFeedback()
@@ -358,6 +380,16 @@
     activityIds: [],
     sort: 0
   })
+  const activityRules: FormRules<ActivityForm> = {
+    activityName: [
+      { required: true, whitespace: true, message: '请填写作业活动', trigger: 'blur' }
+    ],
+    workStep: [{ required: true, whitespace: true, message: '请填写关键作业步骤', trigger: 'blur' }]
+  }
+  const hazardRules: FormRules<HazardForm> = {
+    factorCategoryId: [{ required: true, message: '请选择危害因素类别', trigger: 'change' }],
+    hazardFactor: [{ required: true, whitespace: true, message: '请填写危害因素', trigger: 'blur' }]
+  }
   const accidentTypeOptions = computed(() =>
     (getDictMap.value.smisAccidentCategory ?? []).map((item) => ({
       label: item.label || item.name,
@@ -381,8 +413,9 @@
   }
   const submitActivity = async (): Promise<boolean> => {
     if (!riskPoint.value) return false
-    if (!activityForm.activityName.trim() || !activityForm.workStep.trim()) {
-      ElMessage.warning('请完整填写作业活动和关键作业步骤')
+    try {
+      await activityFormRef.value?.validate()
+    } catch {
       return false
     }
     await saveRiskActivity({
@@ -402,6 +435,7 @@
       workStep: row?.workStep ?? '',
       sort: row?.sort ?? activities.value.length * 10
     })
+    void nextTick(() => activityFormRef.value?.clearValidate())
     await activityDialogRef.value?.handleOpen(row, {
       title: row ? '编辑作业活动' : '新增作业活动',
       subtitle: row ? row.activityName : '维护活动名称与关键作业步骤',
@@ -421,8 +455,9 @@
   }
   const submitHazard = async (): Promise<boolean> => {
     if (!riskPoint.value) return false
-    if (!hazardForm.hazardFactor.trim() || !hazardForm.factorCategoryId) {
-      ElMessage.warning('请完整填写危害因素和危害因素类别')
+    try {
+      await hazardFormRef.value?.validate()
+    } catch {
       return false
     }
     await saveRiskHazard({
@@ -450,6 +485,7 @@
       activityIds: [...(row?.activityIds ?? [])],
       sort: row?.sort ?? hazards.value.length * 10
     })
+    void nextTick(() => hazardFormRef.value?.clearValidate())
     await hazardDialogRef.value?.handleOpen(row, {
       title: row ? '编辑危害因素' : '新增危害因素',
       subtitle: row?.hazardNo || '完善危害来源、事故类型与关联活动',

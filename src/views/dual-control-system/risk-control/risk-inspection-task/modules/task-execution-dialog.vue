@@ -1,6 +1,6 @@
 <template>
   <ArtDialog ref="dialogRef" size="xl" :loading="loading" loading-text="正在加载巡查项目…">
-    <div v-if="detail" class="task-execution-dialog">
+    <div v-if="detail" ref="contentRef" class="task-execution-dialog">
       <div class="task-execution-dialog__context">
         <span aria-hidden="true"><ArtSvgIcon icon="ri:task-line" /></span>
         <div
@@ -12,7 +12,17 @@
         >
       </div>
 
-      <ElForm ref="formRef" :model="form" :rules="rules" label-position="top">
+      <ArtForm
+        ref="formRef"
+        v-model="form"
+        :items="[]"
+        :rules="rules"
+        custom-layout
+        scroll-to-error
+        :show-reset="false"
+        :show-submit="false"
+        root-class="p-0! md:p-0!"
+      >
         <ArtSectionTitle title="执行信息" subtitle="选择实际执行人并记录现场巡查总结" />
         <div class="task-execution-dialog__grid">
           <ElFormItem label="实际执行人" prop="actualExecutorEmployeeId">
@@ -60,21 +70,43 @@
               ><div
                 ><strong>{{ detail.items[index]?.hazardSource || '风险控制措施' }}</strong
                 ><small>{{ detail.items[index]?.hazardNo || '历史任务快照' }}</small></div
-              ><ElRadioGroup v-model="item.result" size="small"
-                ><ElRadioButton value="normal">正常</ElRadioButton
-                ><ElRadioButton value="abnormal">异常</ElRadioButton></ElRadioGroup
+              ><ElFormItem
+                :prop="`items.${index}.result`"
+                :rules="completeMode ? [{ validator: validateItemResult, trigger: 'change' }] : []"
+                class="task-execution-dialog__result-field"
+                ><ElRadioGroup v-model="item.result" size="small"
+                  ><ElRadioButton value="normal">正常</ElRadioButton
+                  ><ElRadioButton value="abnormal">异常</ElRadioButton></ElRadioGroup
+                ></ElFormItem
               ></header
             >
             <p>{{ detail.items[index]?.inspectionContent }}</p>
             <div class="task-execution-dialog__item-fields">
-              <ElInput
-                v-model="item.remark"
-                type="textarea"
-                :rows="4"
-                maxlength="1000"
-                show-word-limit
-                placeholder="填写检查说明；异常项请描述问题位置、现象与处置建议"
-              />
+              <ElFormItem
+                :prop="`items.${index}.remark`"
+                :rules="
+                  completeMode && item.result === 'abnormal'
+                    ? [
+                        {
+                          required: true,
+                          whitespace: true,
+                          message: '异常项目必须填写问题说明',
+                          trigger: 'blur'
+                        }
+                      ]
+                    : []
+                "
+                class="task-execution-dialog__remark-field"
+              >
+                <ElInput
+                  v-model="item.remark"
+                  type="textarea"
+                  :rows="4"
+                  maxlength="1000"
+                  show-word-limit
+                  placeholder="填写检查说明；异常项请描述问题位置、现象与处置建议"
+                />
+              </ElFormItem>
               <ArtUploadImage
                 v-model="item.attachmentUrls"
                 multiple
@@ -85,7 +117,7 @@
             </div>
           </article>
         </div>
-      </ElForm>
+      </ArtForm>
     </div>
 
     <template #footer="{ api }">
@@ -107,9 +139,11 @@
   import { createDateTimeFormatter } from '@/utils/ui/format'
 
   import { normalizeNullableText } from '@/utils/form/normalize'
-  import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
+  import { focusFirstInvalidFormField } from '@/utils/form/validation'
+  import type { FormRules } from 'element-plus'
   import type { EmployeeIntegrationItem } from '@/api/integration/employees'
   import ArtDialog from '@/components/core/dialogs/art-dialog/index.vue'
+  import ArtForm from '@/components/core/forms/art-form/index.vue'
   import type { ArtDialogExpose } from '@/components/core/dialogs/art-dialog/types'
   import ArtSectionTitle from '@/components/core/surfaces/art-section-title/index.vue'
   import ArtEmployeeSelect from '@/components/business/art-employee-select/index.vue'
@@ -140,11 +174,13 @@
   }
   const emit = defineEmits<{ success: [] }>()
   const dialogRef = ref<ArtDialogExpose<TaskExecutionDialogOpenData>>()
-  const formRef = ref<FormInstance>()
+  const formRef = ref<InstanceType<typeof ArtForm>>()
+  const contentRef = ref<HTMLElement>()
   const detail = shallowRef<SmisRiskInspectionTaskDetail | null>(null)
   const executorSelection = shallowRef<EmployeeIntegrationItem[]>([])
   const loading = ref(false)
   const submitting = ref(false)
+  const completeMode = ref(false)
   const form = reactive<ExecutionForm>({
     actualExecutorEmployeeId: undefined,
     executionSummary: '',
@@ -153,6 +189,13 @@
   })
   const rules: FormRules<ExecutionForm> = {
     actualExecutorEmployeeId: [{ required: true, message: '请选择实际执行人', trigger: 'change' }]
+  }
+  const validateItemResult = (
+    _rule: unknown,
+    value: unknown,
+    callback: (error?: Error) => void
+  ) => {
+    callback(value === 'pending' || !value ? new Error('请选择巡查结果') : undefined)
   }
   const completedCount = computed(
     () => form.items.filter((item) => item.result !== 'pending').length
@@ -194,16 +237,17 @@
   }
   const handleSubmit = async (complete: boolean): Promise<void> => {
     if (!detail.value || submitting.value) return
+    completeMode.value = complete
+    await nextTick()
     try {
       await formRef.value?.validate()
-      if (complete && form.items.some((item) => item.result === 'pending'))
-        return void ElMessage.warning('提交完成前请填写全部巡查项目结果')
-      const abnormalWithoutRemark = form.items.some(
-        (item) => item.result === 'abnormal' && !item.remark.trim()
-      )
-      if (complete && abnormalWithoutRemark)
-        return void ElMessage.warning('异常项目必须填写问题说明')
-      submitting.value = true
+    } catch {
+      await nextTick()
+      focusFirstInvalidFormField(contentRef)
+      return
+    }
+    submitting.value = true
+    try {
       await saveRiskInspectionExecution({
         id: detail.value.id,
         actualExecutorEmployeeId: form.actualExecutorEmployeeId!,
@@ -215,12 +259,13 @@
       emit('success')
       dialogRef.value?.handleClose(true)
     } catch {
-      /* 表单与响应层统一提示 */
+      /* 响应层统一提示 */
     } finally {
       submitting.value = false
     }
   }
   const handleOpen = async (data: TaskExecutionDialogOpenData): Promise<void> => {
+    completeMode.value = false
     detail.value = null
     executorSelection.value = []
     loading.value = true
@@ -325,6 +370,18 @@
     align-items: center;
   }
 
+  .task-execution-dialog__result-field,
+  .task-execution-dialog__remark-field {
+    min-width: 0;
+    margin-bottom: 0;
+  }
+
+  .task-execution-dialog__result-field :deep(.el-form-item__error),
+  .task-execution-dialog__remark-field :deep(.el-form-item__error) {
+    position: static;
+    margin-top: 4px;
+  }
+
   .task-execution-dialog__item header > span {
     display: grid;
     place-items: center;
@@ -386,7 +443,7 @@
       grid-template-columns: 34px minmax(0, 1fr);
     }
 
-    .task-execution-dialog__item header .el-radio-group {
+    .task-execution-dialog__item header .task-execution-dialog__result-field {
       grid-column: 1 / -1;
     }
 

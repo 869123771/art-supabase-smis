@@ -923,7 +923,6 @@
       }
       const questionValidation = await selectedQuestionTableRef.value?.validate()
       if (questionValidation && !questionValidation.valid) {
-        ElMessage.warning(questionValidation.firstError?.message || '请完善试题分值')
         return
       }
       if (totalScore.value <= 0) {

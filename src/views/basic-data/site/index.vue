@@ -89,7 +89,7 @@
   import { useArtFeedback } from '@/hooks/core/useArtFeedback'
   import { useUserStore } from '@/store/modules/user'
   import { useTenantScopeStore } from '@/store/modules/tenantScope'
-  import { fetchGetOrganizationTree } from '@/api/system-manage'
+  import { fetchGetOrganizationOptionsTree } from '@/api/system-manage'
   import { getFriendlySupabaseErrorMessage } from '@/utils/supabase/error'
   import TreeUtils from '@/utils/tree'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
@@ -555,7 +555,7 @@
     try {
       organizationState.tree =
         (
-          await fetchGetOrganizationTree({
+          await fetchGetOrganizationOptionsTree({
             status: '1',
             tenantId: effectiveTenantId.value ?? undefined
           })

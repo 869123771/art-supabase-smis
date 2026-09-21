@@ -442,7 +442,6 @@
       }
       const tableValidation = await detailTableRef.value?.validate()
       if (tableValidation && !tableValidation.valid) {
-        ElMessage.warning(tableValidation.firstError?.message || '请完善工器具明细')
         return false
       }
       await saveToolIssuanceRecord({

@@ -1,6 +1,6 @@
 import { computed, shallowRef } from 'vue'
 import { storeToRefs } from 'pinia'
-import { fetchGetOrganizationTree } from '@/api/system-manage'
+import { fetchGetOrganizationOptionsTree } from '@/api/system-manage'
 import { useUserStore } from '@/store/modules/user'
 import TreeUtils from '@/utils/tree'
 
@@ -40,7 +40,7 @@ export function useChecklistOptions(dictionaryCodes: readonly string[] = []) {
     value ? dictionaryOptions(code).find((item) => item.value === value)?.label || value : '—'
   const loadOptions = async (): Promise<void> => {
     const [organizationResponse] = await Promise.all([
-      fetchGetOrganizationTree({ status: '1' }),
+      fetchGetOrganizationOptionsTree({ status: '1' }),
       ...dictionaryCodes.map((code) => userStore.ensureDictLoaded(code))
     ])
     organizationTree.value = organizationResponse.data ?? []

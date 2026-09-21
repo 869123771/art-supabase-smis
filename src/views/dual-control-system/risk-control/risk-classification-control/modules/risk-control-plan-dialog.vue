@@ -7,7 +7,17 @@
         <p>每个层级配置一名责任人和巡查频率；系统据此自动生成风险巡查任务。</p>
       </ArtEntitySummary>
 
-      <ElForm ref="formRef" :model="form" :rules="rules" label-position="top">
+      <ArtForm
+        ref="formRef"
+        v-model="form"
+        :items="[]"
+        :rules="rules"
+        custom-layout
+        scroll-to-error
+        :show-reset="false"
+        :show-submit="false"
+        root-class="p-0! md:p-0!"
+      >
         <ArtSectionTitle title="管控对象" subtitle="可选择已维护有效危险源的风险点" />
         <div class="risk-control-dialog__grid">
           <ElFormItem label="风险点" prop="riskPointId">
@@ -54,23 +64,25 @@
           title="管控层级"
           subtitle="可多选；每个层级独立设置责任人、频率和管控要求"
         />
-        <ElCheckboxGroup
-          v-model="selectedLevels"
-          class="risk-control-dialog__level-picker"
-          @change="syncAssignments"
-        >
-          <ElCheckboxButton
-            v-for="item in controlLevelOptions"
-            :key="item.value"
-            :value="item.value"
+        <ElFormItem prop="assignments" class="risk-control-dialog__levels-field">
+          <ElCheckboxGroup
+            v-model="selectedLevels"
+            class="risk-control-dialog__level-picker"
+            @change="syncAssignments"
           >
-            {{ item.label }}
-          </ElCheckboxButton>
-        </ElCheckboxGroup>
+            <ElCheckboxButton
+              v-for="item in controlLevelOptions"
+              :key="item.value"
+              :value="item.value"
+            >
+              {{ item.label }}
+            </ElCheckboxButton>
+          </ElCheckboxGroup>
+        </ElFormItem>
 
         <div v-if="form.assignments.length" class="risk-control-dialog__assignments">
           <section
-            v-for="assignment in form.assignments"
+            v-for="(assignment, index) in form.assignments"
             :key="assignment.controlLevel"
             class="risk-control-dialog__assignment"
           >
@@ -84,7 +96,12 @@
               >
             </header>
             <div class="risk-control-dialog__grid risk-control-dialog__grid--assignment">
-              <ElFormItem label="管控责任人" required>
+              <ElFormItem
+                label="管控责任人"
+                :prop="`assignments.${index}.responsibleEmployeeId`"
+                :rules="[{ required: true, message: '请选择管控责任人', trigger: 'change' }]"
+                required
+              >
                 <ArtEmployeeSelect
                   v-model="assignment.responsibleEmployeeId"
                   v-model:selected-data="assignment.employeeSelection"
@@ -92,7 +109,12 @@
                   :subtitle="`${controlLevelLabel.get(assignment.controlLevel)}责任人来自当前租户员工花名册`"
                 />
               </ElFormItem>
-              <ElFormItem label="管控频率" required>
+              <ElFormItem
+                label="管控频率"
+                :prop="`assignments.${index}.duplicateConfigurationId`"
+                :rules="[{ required: true, message: '请选择管控频率', trigger: 'change' }]"
+                required
+              >
                 <ElSelect
                   v-model="assignment.duplicateConfigurationId"
                   class="w-full"
@@ -126,7 +148,7 @@
           description="选择层级后可继续配置责任人与排查周期。"
           :visual-size="96"
         />
-      </ElForm>
+      </ArtForm>
     </div>
 
     <template #footer="{ api }">
@@ -146,9 +168,10 @@
 <script setup lang="ts">
   import { normalizeNullableText } from '@/utils/form/normalize'
   import dayjs from 'dayjs'
-  import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
+  import type { FormRules } from 'element-plus'
   import type { EmployeeIntegrationItem } from '@/api/integration/employees'
   import ArtDialog from '@/components/core/dialogs/art-dialog/index.vue'
+  import ArtForm from '@/components/core/forms/art-form/index.vue'
   import ArtEmptyState from '@/components/core/feedback/art-empty-state/index.vue'
   import type { ArtDialogExpose } from '@/components/core/dialogs/art-dialog/types'
   import ArtSectionTitle from '@/components/core/surfaces/art-section-title/index.vue'
@@ -176,7 +199,7 @@
 
   const emit = defineEmits<{ success: [type: 'add' | 'edit'] }>()
   const dialogRef = ref<ArtDialogExpose<RiskControlPlanDialogOpenData>>()
-  const formRef = ref<FormInstance>()
+  const formRef = ref<InstanceType<typeof ArtForm>>()
   const row = shallowRef<SmisRiskControlPoint>()
   const options = shallowRef<SmisRiskControlOptions>({
     riskPoints: [],
@@ -206,7 +229,16 @@
   const form = reactive<ControlForm>(initial())
   const rules: FormRules<ControlForm> = {
     riskPointId: [{ required: true, message: '请选择风险点', trigger: 'change' }],
-    controlStartAt: [{ required: true, message: '请选择管控开始时间', trigger: 'change' }]
+    controlStartAt: [{ required: true, message: '请选择管控开始时间', trigger: 'change' }],
+    assignments: [
+      {
+        type: 'array',
+        min: 1,
+        required: true,
+        message: '请至少选择一个管控层级',
+        trigger: 'change'
+      }
+    ]
   }
 
   const emptyAssignment = (controlLevel: SmisRiskControlLevel, sort: number): AssignmentForm => ({
@@ -248,14 +280,6 @@
     if (submitting.value) return
     try {
       await formRef.value?.validate()
-      if (!form.assignments.length) return void ElMessage.warning('请至少选择一个管控层级')
-      const incomplete = form.assignments.find(
-        (item) => !item.responsibleEmployeeId || !item.duplicateConfigurationId
-      )
-      if (incomplete)
-        return void ElMessage.warning(
-          `请完善${controlLevelLabel.get(incomplete.controlLevel)}的责任人与管控频率`
-        )
       submitting.value = true
       await saveRiskControlPlan({
         id: form.id,

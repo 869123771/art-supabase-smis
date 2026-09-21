@@ -446,7 +446,6 @@
       }
       const tableValidation = await detailTableRef.value?.validate()
       if (tableValidation && !tableValidation.valid) {
-        ElMessage.warning(tableValidation.firstError?.message || '请完善防护用品明细')
         return false
       }
       await savePpeIssuanceStandard({

@@ -6,25 +6,37 @@
       :closable="false"
       show-icon
     />
-    <ElForm label-position="top" class="workflow-form">
-      <ElFormItem v-if="action === 'start'" label="审批结果" required>
-        <ElRadioGroup v-model="result"
+    <ArtForm
+      ref="formRef"
+      v-model="form"
+      :items="[]"
+      :rules="rules"
+      :validate-on-rule-change="false"
+      custom-layout
+      scroll-to-error
+      :show-reset="false"
+      :show-submit="false"
+      root-class="workflow-form p-0! md:p-0!"
+    >
+      <ElFormItem v-if="action === 'start'" label="审批结果" prop="result" required>
+        <ElRadioGroup v-model="form.result"
           ><ElRadio value="approved">审批通过并开始作业</ElRadio
           ><ElRadio value="rejected">拒绝申请</ElRadio></ElRadioGroup
         >
       </ElFormItem>
-      <ElFormItem v-if="action === 'accept'" label="验收结果" required>
-        <ElRadioGroup v-model="result"
+      <ElFormItem v-if="action === 'accept'" label="验收结果" prop="result" required>
+        <ElRadioGroup v-model="form.result"
           ><ElRadio value="passed">验收通过</ElRadio
           ><ElRadio value="returned">退回整改</ElRadio></ElRadioGroup
         >
       </ElFormItem>
       <ElFormItem
         :label="action === 'void' ? '作废原因' : '处理说明'"
+        prop="description"
         :required="action === 'void'"
       >
         <ElInput
-          v-model="description"
+          v-model="form.description"
           type="textarea"
           :rows="4"
           maxlength="500"
@@ -32,7 +44,7 @@
           :placeholder="descriptionPlaceholder"
         />
       </ElFormItem>
-    </ElForm>
+    </ArtForm>
     <template #footer="{ api }">
       <ElButton :disabled="submitting" @click="api.handleClose()">取消</ElButton>
       <ElButton
@@ -46,8 +58,10 @@
 </template>
 
 <script setup lang="ts">
-  import { ElMessage } from 'element-plus'
+  import { computed, nextTick, reactive, ref, shallowRef } from 'vue'
+  import type { FormRules } from 'element-plus'
   import ArtDialog from '@/components/core/dialogs/art-dialog/index.vue'
+  import ArtForm from '@/components/core/forms/art-form/index.vue'
   import type { ArtDialogExpose } from '@/components/core/dialogs/art-dialog/types'
   import {
     transitionSpecialOperationPermit,
@@ -61,10 +75,22 @@
   }
   const emit = defineEmits<{ success: [] }>()
   const dialogRef = ref<ArtDialogExpose<OpenData>>()
+  const formRef = ref<InstanceType<typeof ArtForm>>()
   const current = shallowRef<OpenData>()
   const action = computed(() => current.value?.action || 'start')
-  const result = ref('approved')
-  const description = ref('')
+  const form = reactive({ result: 'approved', description: '' })
+  const rules = computed<FormRules>(() => ({
+    ...(action.value === 'start' || action.value === 'accept'
+      ? { result: [{ required: true, message: '请选择审批结果', trigger: 'change' }] }
+      : {}),
+    ...(action.value === 'void'
+      ? {
+          description: [
+            { required: true, whitespace: true, message: '请填写作废原因', trigger: 'blur' }
+          ]
+        }
+      : {})
+  }))
   const submitting = ref(false)
   const titleMap: Record<SmisSpecialOperationTransitionAction, string> = {
     start: '审批作业票',
@@ -94,15 +120,16 @@
 
   const submit = async (): Promise<void> => {
     if (!current.value) return
-    if (action.value === 'void' && !description.value.trim()) {
-      ElMessage.warning('请填写作废原因')
+    try {
+      await formRef.value?.validate()
+    } catch {
       return
     }
     submitting.value = true
     try {
       await transitionSpecialOperationPermit(current.value.row.id, action.value, {
-        result: ['start', 'accept'].includes(action.value) ? result.value : null,
-        description: description.value,
+        result: ['start', 'accept'].includes(action.value) ? form.result : null,
+        description: form.description,
         tenantId: current.value.row.tenantId
       })
       await dialogRef.value?.handleClose()
@@ -113,8 +140,9 @@
   }
   const handleOpen = async (data: OpenData): Promise<void> => {
     current.value = data
-    result.value = data.action === 'accept' ? 'passed' : 'approved'
-    description.value = ''
+    form.result = data.action === 'accept' ? 'passed' : 'approved'
+    form.description = ''
+    void nextTick(() => formRef.value?.clearValidate())
     await dialogRef.value?.handleOpen(data, {
       title: titleMap[data.action],
       subtitle: data.row.permitNo

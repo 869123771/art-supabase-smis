@@ -40,7 +40,7 @@
 </template>
 
 <script setup lang="tsx">
-  import { ElInputNumber, ElMessage, type FormRules } from 'element-plus'
+  import { ElInputNumber, type FormRules } from 'element-plus'
   import type { ColumnOption } from '@/types'
   import ArtDialog from '@/components/core/dialogs/art-dialog/index.vue'
   import type { ArtDialogExpose } from '@/components/core/dialogs/art-dialog/types'
@@ -273,7 +273,6 @@
       await formRef.value?.validate()
       const tableValidation = await rateTableRef.value?.validate()
       if (tableValidation && !tableValidation.valid) {
-        ElMessage.warning(tableValidation.firstError?.message || '请完善年折旧率')
         return false
       }
       await saveEquipmentDepreciation(buildPayload())

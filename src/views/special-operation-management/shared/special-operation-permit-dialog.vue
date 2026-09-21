@@ -19,7 +19,7 @@
       root-class="permit-form-shell"
       scroll-to-error
     >
-      <div class="permit-form">
+      <div ref="formContentRef" class="permit-form">
         <ArtSectionCard title="基础信息" subtitle="明确作业范围、时段与责任主体">
           <div class="permit-form__grid">
             <ElFormItem label="作业证编号">
@@ -130,7 +130,7 @@
                 />
               </ElSelect>
             </ElFormItem>
-            <ElFormItem label="危害因素" class="permit-form__span-2">
+            <ElFormItem label="危害因素" prop="hazardFactorIds" class="permit-form__span-2">
               <ElSelect
                 v-model="form.hazardFactorIds"
                 multiple
@@ -183,7 +183,9 @@
           title="盲板抽堵配置"
           subtitle="按现场隔离方案逐块登记盲板工况、规格和标识"
         >
-          <SpecialOperationBlindPlateItems ref="blindPlateItemsRef" v-model="blindPlateItems" />
+          <ElFormItem prop="customValues.blind_plate_items" class="permit-form__table-field">
+            <SpecialOperationBlindPlateItems ref="blindPlateItemsRef" v-model="blindPlateItems" />
+          </ElFormItem>
         </ArtSectionCard>
 
         <ArtSectionCard title="责任与交底" subtitle="人员均来自当前租户员工花名册">
@@ -243,16 +245,18 @@
           title="作业人员明细"
           subtitle="批量选择后自动带入员工与证书信息，允许按本次作业修正"
         >
-          <div class="permit-form__section-action">
-            <SpecialOperationEmployeeMultipleSelect
-              v-model="form.workerIds"
-              v-model:selected-data="selection.workers"
-              :tenant-id="tenantId"
-              title="批量添加作业人员"
-              placeholder="批量选择作业人员"
-              @confirm="handleWorkerConfirm"
-            />
-          </div>
+          <ElFormItem prop="workers" class="permit-form__table-field">
+            <div class="permit-form__section-action">
+              <SpecialOperationEmployeeMultipleSelect
+                v-model="form.workerIds"
+                v-model:selected-data="selection.workers"
+                :tenant-id="tenantId"
+                title="批量添加作业人员"
+                placeholder="批量选择作业人员"
+                @confirm="handleWorkerConfirm"
+              />
+            </div>
+          </ElFormItem>
           <ArtTable
             :data="form.workers"
             :pagination="false"
@@ -385,11 +389,12 @@
 </template>
 
 <script setup lang="ts">
-  import { ElMessage, type FormRules } from 'element-plus'
+  import type { FormRules } from 'element-plus'
   import type { EmployeeIntegrationItem } from '@/api/integration/employees'
   import ArtDialog from '@/components/core/dialogs/art-dialog/index.vue'
   import type { ArtDialogExpose } from '@/components/core/dialogs/art-dialog/types'
   import ArtForm from '@/components/core/forms/art-form/index.vue'
+  import { focusFirstInvalidFormField } from '@/utils/form/validation'
   import ArtDictDisplay from '@/components/core/base/art-dict-display/index.vue'
   import ArtEmployeeSelect from '@/components/business/art-employee-select/index.vue'
   import ArtSectionCard from '@/components/core/surfaces/art-section-card/index.vue'
@@ -461,6 +466,7 @@
   const { getDictMap } = storeToRefs(userStore)
   const dialogRef = ref<ArtDialogExpose<SpecialOperationPermitDialogOpenData>>()
   const formRef = ref<InstanceType<typeof ArtForm>>()
+  const formContentRef = ref<HTMLElement>()
   const blindPlateItemsRef = ref<InstanceType<typeof SpecialOperationBlindPlateItems>>()
   const aiPrecheckRef = ref<InstanceType<typeof SpecialOperationAiPrecheckPanel>>()
   const loading = ref(false)
@@ -524,6 +530,34 @@
         required: true,
         min: 1,
         message: '请至少选择一种动火方式',
+        trigger: 'change'
+      }
+    ],
+    hazardFactorIds: [
+      {
+        type: 'array',
+        required: true,
+        min: 1,
+        message: '请至少选择一项危害因素',
+        trigger: 'change'
+      }
+    ],
+    workers: [
+      {
+        type: 'array',
+        required: true,
+        min: 1,
+        message: '请至少添加一名作业人员',
+        trigger: 'change'
+      }
+    ],
+    'customValues.blind_plate_items': [
+      {
+        validator: (_rule, value: unknown, callback) => {
+          callback(
+            Array.isArray(value) && value.length ? undefined : new Error('请至少添加一项盲板明细')
+          )
+        },
         trigger: 'change'
       }
     ]
@@ -805,23 +839,14 @@
       const validation = currentForm.validate()
       if (!validation) return
       const valid = await validation.catch(() => false)
-      if (!valid) return
-      if (isHotWork.value && !form.hazardFactorIds.length) {
-        ElMessage.warning('请至少选择一项危害因素')
-        return
-      }
-      if (!form.workers.length) {
-        ElMessage.warning('请至少添加一名作业人员')
+      if (!valid) {
+        await nextTick()
+        focusFirstInvalidFormField(formContentRef)
         return
       }
       if (isBlindPlate.value) {
-        if (!blindPlateItems.value.length) {
-          ElMessage.warning('请至少添加一项盲板明细')
-          return
-        }
         const tableValidation = await blindPlateItemsRef.value?.validate()
         if (tableValidation && !tableValidation.valid) {
-          ElMessage.warning(tableValidation.firstError?.message || '请完善盲板明细')
           return
         }
       }
@@ -898,7 +923,6 @@
 
     &__section-action {
       width: min(480px, 100%);
-      margin-bottom: 12px;
     }
 
     &__measure-list {
@@ -934,6 +958,11 @@
   }
 
   :deep(.permit-form .art-section-card__body) {
+    min-width: 0;
+  }
+
+  :deep(.permit-form__table-field .el-form-item__content) {
+    width: 100%;
     min-width: 0;
   }
 

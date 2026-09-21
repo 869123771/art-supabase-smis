@@ -642,7 +642,6 @@
     }
     const tableValidation = await itemTableRef.value?.validate()
     if (tableValidation?.valid === false) {
-      ElMessage.warning(tableValidation.firstError?.message || '请完整填写证件项目')
       return false
     }
     if (uniqBy(form.items, 'catalogId').length !== form.items.length) {

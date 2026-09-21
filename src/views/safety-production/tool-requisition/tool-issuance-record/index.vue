@@ -44,7 +44,6 @@
 
 <script setup lang="tsx">
   import dayjs from 'dayjs'
-  import { escape } from 'lodash-es'
   import { fetchEmployeeSelectorList } from '@/api/integration/employees'
   import BusinessTableWorkspaceActions from '@/components/business/business-table-workspace-actions/index.vue'
   import BusinessTableRowActions from '@/components/business/business-table-row-actions/index.vue'
@@ -66,6 +65,7 @@
   } from '@/components/core/tables/art-table-query/index.vue'
   import type { ColumnOption } from '@/types/component'
   import { exportExcel } from '@/utils/file'
+  import { printIssuanceRecord } from '../../issuance-print'
   import {
     deleteToolIssuanceRecords,
     fetchMaterialList,
@@ -300,21 +300,7 @@
   }
 
   const printRecord = (row: SmisToolIssuanceRecord): void => {
-    const popup = window.open('', '_blank', 'noopener,noreferrer,width=980,height=760')
-    if (!popup) {
-      ElMessage.warning('浏览器阻止了打印窗口，请允许本站打开弹窗后重试')
-      return
-    }
-    const itemRows = row.items
-      .map(
-        (item, index) =>
-          `<tr><td>${index + 1}</td><td>${escape(item.materialName)}</td><td>${escape(item.specificationModel || '—')}</td><td>${item.issueQuantity}</td><td>${escape(unitLabel(item.unit))}</td><td>${escape(item.remark || '')}</td></tr>`
-      )
-      .join('')
-    popup.document.write(
-      `<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>${escape(row.issuanceNo)}</title><style>body{font:14px/1.5 sans-serif;color:#1f2937;padding:32px}h1{text-align:center;font-size:22px}.meta{display:grid;grid-template-columns:repeat(3,1fr);gap:8px 24px;margin:24px 0}table{width:100%;border-collapse:collapse}th,td{padding:9px;border:1px solid #9ca3af;text-align:left}.sign{display:flex;justify-content:space-between;margin-top:48px}@media print{body{padding:0}}</style></head><body><h1>工器具发放单</h1><div class="meta"><span>单据编号：${escape(row.issuanceNo)}</span><span>领用人：${escape(row.employeeName)}</span><span>员工工号：${escape(row.employeeNo)}</span><span>所属组织：${escape(row.organizationName || '—')}</span><span>发放仓库：${escape(row.warehouseName)}</span><span>发放日期：${escape(row.issueDate)}</span></div><table><thead><tr><th>序号</th><th>工器具</th><th>规格型号</th><th>发放数量</th><th>单位</th><th>备注</th></tr></thead><tbody>${itemRows}</tbody></table><div class="sign"><span>领用人签字：____________</span><span>发放人：${escape(row.issuerName)}</span><span>日期：____________</span></div><script>window.onload=()=>window.print()<${'/script'}></body></html>`
-    )
-    popup.document.close()
+    printIssuanceRecord(row, '工器具', unitLabel)
   }
 
   const headerActions = computed<ArtTableQueryHeaderAction[]>(() => [

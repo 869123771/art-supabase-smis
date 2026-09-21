@@ -103,7 +103,7 @@
   import type { ColumnOption } from '@/types'
   import { useArtFeedback } from '@/hooks/core/useArtFeedback'
   import { useUserStore } from '@/store/modules/user'
-  import { fetchGetOrganizationTree } from '@/api/system-manage'
+  import { fetchGetOrganizationOptionsTree } from '@/api/system-manage'
   import { exportExcel } from '@/utils/file'
   import { pageInfoHandler } from '@/utils/table/tableUtils'
   import { getFriendlySupabaseErrorMessage } from '@/utils/supabase/error'
@@ -476,7 +476,7 @@
     organizationState.loading = true
     organizationState.error = null
     try {
-      const response = await fetchGetOrganizationTree({ status: '1' })
+      const response = await fetchGetOrganizationOptionsTree({ status: '1' })
       organizationState.tree = response.data ?? []
       if (
         organizationState.selectedKey !== ALL_KEY &&

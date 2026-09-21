@@ -40,7 +40,7 @@
 
 <script setup lang="tsx">
   import dayjs from 'dayjs'
-  import { fetchGetOrganizationTree } from '@/api/system-manage'
+  import { fetchGetOrganizationOptionsTree } from '@/api/system-manage'
   import type { SearchFormItem } from '@/components/core/forms/art-search-bar/index.vue'
   import type {
     ArtTableQueryExpose,
@@ -343,7 +343,7 @@
 
   onMounted(async () => {
     const [organizations, categories] = await Promise.all([
-      fetchGetOrganizationTree({ status: '1' }),
+      fetchGetOrganizationOptionsTree({ status: '1' }),
       fetchInspectionCategoryList({ status: 'enabled', from: 0, to: 9999 }),
       ...[
         'smisEquipmentInspectionConclusion',

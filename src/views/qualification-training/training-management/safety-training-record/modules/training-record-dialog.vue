@@ -796,9 +796,6 @@
       if (submit) {
         const attendanceValidation = await attendanceTableRef.value?.validate()
         if (attendanceValidation && !attendanceValidation.valid) {
-          ElMessage.warning(
-            attendanceValidation.firstError?.message || '归档前请完成全部参训人员的签到状态'
-          )
           return
         }
       }

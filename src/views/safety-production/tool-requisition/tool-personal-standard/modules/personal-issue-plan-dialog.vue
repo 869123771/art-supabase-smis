@@ -139,7 +139,6 @@
     }
     const tableValidation = await planTableRef.value?.validate()
     if (tableValidation?.valid === false) {
-      ElMessage.warning(tableValidation.firstError?.message || '请完整填写个人领用计划')
       return false
     }
     try {
