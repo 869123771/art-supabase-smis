@@ -21,7 +21,6 @@ const requiredPaths = [
   'src/index.ts',
   'src/main.ts',
   'src/views/README.md',
-  'src/views/components/smis-page-placeholder.vue',
   'src/views/basic-data',
   'src/views/equipment-ledger',
   'src/views/safety-production/emergency-rescue',
