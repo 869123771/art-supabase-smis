@@ -42,7 +42,7 @@
               accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar,image/*"
               title="选择文档附件"
               tip="支持常见文档、表格、演示稿、压缩包与图片，单个文件不超过 20 MB"
-              @upload-success="handleUploadSuccess"
+              @resource-change="handleUploadSuccess"
             />
             <p v-if="mode === 'edit' && existingAttachmentName">
               <ArtSvgIcon icon="ri:attachment-2" /> 当前附件：{{
@@ -284,7 +284,9 @@
     ]
   }
 
-  const handleUploadSuccess = (resource: Api.DataCenter.Resources.ResourceListItem): void => {
+  const handleUploadSuccess = (resources: Api.DataCenter.Resources.ResourceListItem[]): void => {
+    const resource = resources[0]
+    if (!resource) return
     form.attachmentUrl = resource.url ?? ''
     form.attachmentName =
       resource.originName || decodeURIComponent(resource.url?.split('/').pop() || '')

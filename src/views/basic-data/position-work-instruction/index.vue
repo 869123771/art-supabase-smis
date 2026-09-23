@@ -36,19 +36,6 @@
           </template>
 
           <main class="work-instruction-page__main">
-            <div class="work-instruction-page__scope-bar">
-              <div class="work-instruction-page__scope-identity">
-                <span aria-hidden="true"><ArtSvgIcon :icon="selectedScopeIcon" /></span>
-                <span
-                  ><small>当前查看范围</small><strong>{{ selectedScopeLabel }}</strong></span
-                >
-              </div>
-              <div class="work-instruction-page__scope-hint">
-                <ArtSvgIcon icon="ri:git-merge-line" />
-                组织节点查看本部门全部指导书，岗位节点查看精准适用文件
-              </div>
-            </div>
-
             <ArtTableQuery
               ref="tableQueryRef"
               v-model="tableState.searchQuery"
@@ -299,13 +286,13 @@
     },
     {
       prop: 'fileUrl',
-      label: '文件地址',
-      minWidth: 160,
+      label: '关联文件',
+      minWidth: 190,
       formatter: (row) =>
         row.fileUrl ? (
           <ArtAttachmentLink
             file={{
-              name: row.originalFileName || row.fileNumber || row.instructionName,
+              name: row.originalFileName || row.instructionName,
               url: row.fileUrl,
               fileType: row.fileType || undefined
             }}
@@ -478,69 +465,6 @@
       flex: 1 1 auto;
     }
 
-    &__scope-bar {
-      display: flex;
-      flex: 0 0 auto;
-      gap: 16px;
-      align-items: center;
-      justify-content: space-between;
-      min-height: 56px;
-      padding: 8px 14px 8px 12px;
-      background: var(--art-gray-100);
-      border-left: 3px solid var(--theme-color);
-      border-radius: var(--el-border-radius-base);
-    }
-
-    &__scope-identity {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-      min-width: 0;
-    }
-
-    &__scope-identity > span:first-child {
-      display: inline-flex;
-      flex: 0 0 32px;
-      align-items: center;
-      justify-content: center;
-      width: 32px;
-      height: 32px;
-      color: var(--theme-color);
-      background: color-mix(in srgb, var(--theme-color) 10%, var(--default-box-color));
-      border-radius: var(--el-border-radius-base);
-    }
-
-    &__scope-identity > span:last-child {
-      display: grid;
-      min-width: 0;
-    }
-
-    &__scope-identity small {
-      font-size: 11px;
-      color: var(--el-text-color-secondary);
-    }
-
-    &__scope-identity strong {
-      margin-top: 2px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      color: var(--el-text-color-primary);
-      white-space: nowrap;
-    }
-
-    &__scope-hint {
-      display: inline-flex;
-      flex: none;
-      gap: 6px;
-      align-items: center;
-      font-size: 12px;
-      color: var(--el-text-color-secondary);
-    }
-
-    &__scope-hint :deep(svg) {
-      color: var(--theme-color);
-    }
-
     :deep(.work-instruction-page__document) {
       display: grid;
       grid-template-columns: 34px minmax(0, 1fr);
@@ -618,12 +542,6 @@
     :deep(.work-instruction-page__row-actions .art-button-table) {
       flex: 0 0 32px;
       margin-right: 0;
-    }
-
-    @media (width <= 1080px) {
-      &__scope-hint {
-        display: none;
-      }
     }
 
     @media (width <= 820px) {

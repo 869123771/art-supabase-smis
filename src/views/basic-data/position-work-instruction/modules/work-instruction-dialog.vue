@@ -1,12 +1,12 @@
 <template>
-  <ArtDialog ref="dialogRef" size="xl">
+  <ArtDialog ref="dialogRef" size="lg">
     <ArtForm
       ref="formRef"
       v-model="form"
       :items="formItems"
       :rules="formRules"
       :span="12"
-      :gutter="24"
+      :gutter="16"
       label-position="top"
       :show-reset="false"
       :show-submit="false"
@@ -46,27 +46,62 @@
       </template>
 
       <template #fileUrl>
-        <div class="work-instruction-dialog__file-field">
+        <div class="work-instruction-dialog__attachment">
+          <div class="work-instruction-dialog__attachment-icon" aria-hidden="true">
+            <ArtSvgIcon :icon="form.fileUrl ? 'ri:file-text-line' : 'ri:file-add-line'" />
+          </div>
+          <div class="work-instruction-dialog__attachment-copy">
+            <template v-if="form.fileUrl">
+              <span class="work-instruction-dialog__attachment-caption">已关联文件</span>
+              <ArtAttachmentLink
+                :file="{
+                  name: attachmentName,
+                  url: form.fileUrl,
+                  fileType: form.fileType
+                }"
+              />
+              <span class="work-instruction-dialog__attachment-caption">
+                {{ attachmentTypeLabel }} · 点击文件名预览
+              </span>
+            </template>
+            <template v-else>
+              <strong>尚未关联文件</strong>
+              <span class="work-instruction-dialog__attachment-caption">
+                从资源库选择作业指导文件，也可填写外部链接。
+              </span>
+            </template>
+          </div>
+          <div class="work-instruction-dialog__attachment-actions">
+            <ElButton
+              :type="form.fileUrl ? 'default' : 'primary'"
+              @click="resourcePickerVisible = true"
+            >
+              <ArtSvgIcon icon="ri:attachment-2" />
+              {{ form.fileUrl ? '更换文件' : '选择文件' }}
+            </ElButton>
+            <ElButton v-if="form.fileUrl" type="danger" plain @click="removeAttachment">
+              移除
+            </ElButton>
+          </div>
+        </div>
+        <ElButton
+          class="work-instruction-dialog__link-toggle"
+          link
+          type="primary"
+          @click="showLinkInput = !showLinkInput"
+        >
+          <ArtSvgIcon icon="ri:link-m" />
+          {{ showLinkInput ? '收起文件链接' : form.fileUrl ? '查看或修改链接' : '填写文件链接' }}
+        </ElButton>
+        <div v-if="showLinkInput" class="work-instruction-dialog__link-field">
+          <label for="work-instruction-file-url">文件链接</label>
           <ElInput
+            id="work-instruction-file-url"
             v-model="form.fileUrl"
             clearable
             maxlength="2048"
-            placeholder="选择系统资源，或粘贴可访问的文件地址"
-          >
-            <template #prefix><ArtSvgIcon icon="ri:link-m" /></template>
-          </ElInput>
-          <ElButton @click="resourcePickerVisible = true">
-            <ArtSvgIcon icon="ri:attachment-2" />选择文件
-          </ElButton>
-        </div>
-        <div v-if="form.fileUrl" class="work-instruction-dialog__file-ready">
-          <span><ArtSvgIcon icon="ri:checkbox-circle-line" />文件地址已就绪</span>
-          <ArtAttachmentLink
-            :file="{
-              name: form.originalFileName || form.fileNumber || form.instructionName,
-              url: form.fileUrl,
-              fileType: form.fileType
-            }"
+            placeholder="粘贴可访问的文件链接"
+            @input="handleFileUrlInput"
           />
         </div>
       </template>
@@ -139,6 +174,7 @@
   const selectedScopeNodes = ref<WorkInstructionTreeNode[]>([])
   const resourcePickerVisible = ref(false)
   const resourcePickerValue = ref<string>()
+  const showLinkInput = ref(false)
 
   const createInitialForm = (): WorkInstructionForm => ({
     instructionName: '',
@@ -169,6 +205,12 @@
     }
     return options
   })
+  const attachmentName = computed(
+    () => form.originalFileName.trim() || form.instructionName.trim() || '关联文件'
+  )
+  const attachmentTypeLabel = computed(
+    () => fileTypeOptions.value.find((item) => item.value === form.fileType)?.label || '文件'
+  )
 
   const formRules = computed<FormRules<WorkInstructionForm>>(() => ({
     instructionName: [
@@ -186,7 +228,7 @@
     ]
   }))
   const formItems = computed<FormItem[]>(() => [
-    { label: '指导书基本信息', key: 'basicSection', type: 'divider', span: 24 },
+    { label: '适用信息', key: 'basicSection', type: 'divider', span: 24 },
     {
       label: '作业指导名称',
       key: 'instructionName',
@@ -202,17 +244,19 @@
       props: { maxlength: 50, placeholder: '例如：V1.0' }
     },
     { label: '适用组织岗位', key: 'scopeKeys', type: 'text', span: 24 },
-    { label: '文件信息', key: 'fileSection', type: 'divider', span: 24 },
+    { label: '文件与版本', key: 'fileSection', type: 'divider', span: 24 },
     {
       label: '文件编号',
       key: 'fileNumber',
       type: 'input',
+      span: 8,
       props: { maxlength: 100, placeholder: '填写企业文件编号' }
     },
     {
       label: '文件类型',
       key: 'fileType',
       type: 'select',
+      span: 8,
       options: fileTypeOptions.value,
       props: {
         clearable: true,
@@ -224,6 +268,7 @@
       label: '上传日期',
       key: 'uploadDate',
       type: 'date',
+      span: 8,
       props: {
         type: 'date',
         valueFormat: 'YYYY-MM-DD',
@@ -231,7 +276,7 @@
         placeholder: '请选择上传日期'
       }
     },
-    { label: '文件地址', key: 'fileUrl', type: 'text', span: 24 }
+    { label: '关联文件', key: 'fileUrl', type: 'text', span: 24 }
   ])
 
   const handleSelectedDataUpdate = (rows: Record<string, unknown>[]): void => {
@@ -247,12 +292,24 @@
     form.fileType = getResourceExtension(resource) || form.fileType
     form.uploadDate = dayjs().format('YYYY-MM-DD')
     resourcePickerValue.value = resource.url
+    showLinkInput.value = false
+  }
+  const handleFileUrlInput = (): void => {
+    form.originalFileName = ''
+    resourcePickerValue.value = undefined
+  }
+  const removeAttachment = (): void => {
+    form.fileUrl = ''
+    form.originalFileName = ''
+    resourcePickerValue.value = undefined
+    showLinkInput.value = false
   }
   const resetForm = async (): Promise<void> => {
     Object.assign(form, createInitialForm())
     selectedScopeNodes.value = []
     resourcePickerValue.value = undefined
     resourcePickerVisible.value = false
+    showLinkInput.value = false
     await nextTick()
     formRef.value?.clearValidate()
   }
@@ -352,44 +409,85 @@
       color: var(--theme-color);
     }
 
-    &__file-field {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
-      gap: 10px;
-      width: 100%;
+    &__attachment {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      min-width: 0;
+      padding: 14px 16px;
+      background: var(--art-gray-100);
+      border: 1px solid var(--el-border-color-lighter);
+      border-radius: var(--art-surface-radius);
     }
 
-    &__file-ready {
+    &__attachment-icon {
       display: flex;
-      gap: 16px;
+      flex: 0 0 40px;
       align-items: center;
-      justify-content: space-between;
-      min-width: 0;
-      padding: 8px 10px;
-      margin-top: 8px;
-      font-size: 12px;
-      background: var(--el-color-success-light-9);
-      border: 1px solid var(--el-color-success-light-7);
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      font-size: 20px;
+      color: var(--theme-color);
+      background: color-mix(in srgb, var(--theme-color) 10%, var(--default-box-color));
       border-radius: var(--el-border-radius-base);
     }
 
-    &__file-ready > span {
-      display: inline-flex;
+    &__attachment-copy {
+      display: flex;
+      flex: 1 1 auto;
+      flex-direction: column;
+      align-items: flex-start;
+      min-width: 0;
+    }
+
+    &__attachment-copy > strong {
+      color: var(--el-text-color-primary);
+    }
+
+    &__attachment-copy :deep(.art-attachment-link) {
+      max-width: 100%;
+      margin: 2px 0;
+    }
+
+    &__attachment-caption {
+      font-size: 12px;
+      color: var(--el-text-color-secondary);
+    }
+
+    &__attachment-actions {
+      display: flex;
       flex: none;
-      gap: 5px;
-      align-items: center;
-      color: var(--el-color-success-dark-2);
+      gap: 8px;
+
+      .el-button + .el-button {
+        margin-left: 0;
+      }
+    }
+
+    &__link-toggle {
+      margin-top: 8px;
+    }
+
+    &__link-field {
+      display: grid;
+      gap: 8px;
+      margin-top: 10px;
+
+      label {
+        font-size: 12px;
+        color: var(--el-text-color-regular);
+      }
     }
 
     @media (width <= 640px) {
-      &__file-field {
-        grid-template-columns: 1fr;
+      &__attachment {
+        flex-wrap: wrap;
       }
 
-      &__file-ready {
-        flex-direction: column;
-        gap: 6px;
-        align-items: flex-start;
+      &__attachment-actions {
+        width: 100%;
+        padding-left: 54px;
       }
     }
   }

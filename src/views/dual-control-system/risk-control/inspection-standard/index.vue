@@ -186,6 +186,7 @@
   } from '@/components/core/tables/art-table-query/index.vue'
   import type { ColumnOption } from '@/types'
   import { pageInfoHandler } from '@/utils/table/tableUtils'
+  import TreeUtils from '@/utils/tree'
   import { useArtFeedback } from '@/hooks/core/useArtFeedback'
   import { useUserStore } from '@/store/modules/user'
   import { useTenantScopeStore } from '@/store/modules/tenantScope'
@@ -243,6 +244,18 @@
     return roots
   }
   const standardTree = computed(() => toTree(treeState.rows))
+  const standardTreeUtils = new TreeUtils({
+    idKey: 'id',
+    parentKey: 'parentId',
+    childrenKey: 'children'
+  })
+  const selectedStandardIds = computed(() => {
+    if (!selectedId.value) return undefined
+    const ids = standardTreeUtils
+      .getDescendants(standardTree.value, selectedId.value, true)
+      .map((standard) => String(standard.id))
+    return ids.length ? ids : [selectedId.value]
+  })
   const selectedStandard = computed(() => treeState.rows.find((row) => row.id === selectedId.value))
   const statusOptions = computed(() =>
     (getDictMap.value.smisConfigStatus ?? []).map((item) => ({
@@ -327,7 +340,7 @@
         const result = await fetchInspectionItems({
           ...(searchParams as SmisInspectionItemSearchParams),
           tenantId: effectiveTenantId.value,
-          standardId: selectedId.value || undefined,
+          ancestorStandardIds: selectedStandardIds.value,
           ids: selectedIds.map(String),
           to: Math.max((maxRows ?? 10000) - 1, 0)
         })
@@ -440,7 +453,7 @@
     const result = await fetchInspectionItems({
       ...params,
       tenantId: effectiveTenantId.value,
-      standardId: selectedId.value || undefined,
+      ancestorStandardIds: selectedStandardIds.value,
       from,
       to
     })

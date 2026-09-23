@@ -299,6 +299,14 @@
   const selectedOrganizationLabel = computed(
     () => selectedOrganization.value?.organizationName || '全部组织'
   )
+  const selectedOrganizationIds = computed(() =>
+    selectedOrganization.value?.id
+      ? organizationTreeUtils
+          .getDescendants(organizationState.tree, selectedOrganization.value.id, true)
+          .map((organization) => organization.id)
+          .filter((id): id is string => Boolean(id))
+      : []
+  )
   const selectedPosition = computed(() =>
     positionState.rows.find((position) => position.id === positionState.selectedId)
   )
@@ -306,7 +314,7 @@
     Boolean(selectedOrganization.value?.id && selectedPosition.value?.id)
   )
   const positionSectionSubtitle = computed(
-    () => `${selectedOrganizationLabel.value} · 共 ${positionState.total} 个可用岗位`
+    () => `${selectedOrganizationLabel.value}及下级 · 共 ${positionState.total} 个可用岗位`
   )
 
   const workspaceTags: BusinessWorkspaceTag[] = [
@@ -318,7 +326,7 @@
     {
       label: '当前组织',
       value: selectedOrganizationLabel.value,
-      description: selectedOrganization.value ? '当前组织精确范围' : '跨组织浏览模式',
+      description: selectedOrganization.value ? '包含本级及全部下级组织' : '跨组织浏览模式',
       icon: 'ri:node-tree'
     },
     {
@@ -692,6 +700,7 @@
       ...params,
       positionId,
       organizationId: selectedOrganization.value?.id,
+      organizationIds: selectedOrganization.value ? selectedOrganizationIds.value : undefined,
       from,
       to
     })

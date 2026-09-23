@@ -43,7 +43,7 @@
               accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar,image/*"
               title="选择要上传的文件"
               tip="请先选择分类；支持常见文档、表格、演示稿、压缩包与图片，单个文件不超过 20 MB"
-              @upload-success="handleUploadSuccess"
+              @resource-change="handleUploadSuccess"
             />
             <p v-if="!form.categoryId" class="document-dialog__upload-hint">
               <ArtSvgIcon icon="ri:information-line" /> 选择文档分类后即可上传并执行同名查重
@@ -301,7 +301,9 @@
     if (form.fileName) void checkDuplicate()
   }
 
-  const handleUploadSuccess = (resource: Api.DataCenter.Resources.ResourceListItem): void => {
+  const handleUploadSuccess = (resources: Api.DataCenter.Resources.ResourceListItem[]): void => {
+    const resource = resources[0]
+    if (!resource) return
     form.fileUrl = resource.url ?? ''
     form.fileName = resource.originName || decodeURIComponent(resource.url?.split('/').pop() || '')
     form.fileType = resource.suffix || resource.mimeType || ''

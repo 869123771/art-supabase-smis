@@ -58,7 +58,8 @@ export async function fetchPositionSafetyResponsibilityList(
     .order('create_time', { ascending: false })
     .range(from, to)
 
-  if (params.organizationId) query = query.eq('organization_id', params.organizationId)
+  if (params.organizationIds?.length) query = query.in('organization_id', params.organizationIds)
+  else if (params.organizationId) query = query.eq('organization_id', params.organizationId)
   if (params.primaryHazardCategory) {
     query = query.eq('primary_hazard_category', params.primaryHazardCategory)
   }

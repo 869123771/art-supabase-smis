@@ -41,17 +41,6 @@
         </template>
 
         <main class="site-page__main">
-          <div class="site-page__scope-bar">
-            <div class="site-page__scope-identity">
-              <span aria-hidden="true"><ArtSvgIcon :icon="selectedOrganizationIcon" /></span>
-              <span>
-                <small>当前部门范围</small>
-                <strong>{{ selectedOrganizationLabel }}</strong>
-              </span>
-            </div>
-            <p><ArtSvgIcon icon="ri:git-merge-line" />选择部门节点时自动包含其下级部门</p>
-          </div>
-
           <ArtTableQuery
             ref="tableQueryRef"
             v-model="searchQuery"
@@ -168,16 +157,6 @@
     organizationState.selectedKey === ALL_ORGANIZATIONS_KEY
       ? undefined
       : organizationTreeUtils.findNode(organizationState.tree, organizationState.selectedKey)
-  )
-  const selectedOrganizationLabel = computed(
-    () => selectedOrganization.value?.organizationName || '全部部门'
-  )
-  const selectedOrganizationIcon = computed(() =>
-    selectedOrganization.value?.organizationType === 'company'
-      ? 'ri:building-4-line'
-      : selectedOrganization.value
-        ? 'ri:team-line'
-        : 'ri:organization-chart'
   )
   const selectedOrganizationIds = computed(() => {
     if (!selectedOrganization.value?.id) return []
@@ -652,69 +631,6 @@
       flex: 1 1 auto;
     }
 
-    &__scope-bar {
-      display: flex;
-      flex: 0 0 auto;
-      gap: 16px;
-      align-items: center;
-      justify-content: space-between;
-      min-height: 56px;
-      padding: 8px 14px 8px 12px;
-      background: var(--art-gray-100);
-      border-left: 3px solid var(--theme-color);
-      border-radius: var(--el-border-radius-base);
-
-      > p {
-        display: inline-flex;
-        gap: 6px;
-        align-items: center;
-        margin: 0;
-        font-size: 12px;
-        color: var(--el-text-color-secondary);
-
-        :deep(svg) {
-          color: var(--theme-color);
-        }
-      }
-    }
-
-    &__scope-identity {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-      min-width: 0;
-
-      > span:first-child {
-        display: inline-flex;
-        flex: 0 0 32px;
-        align-items: center;
-        justify-content: center;
-        width: 32px;
-        height: 32px;
-        color: var(--theme-color);
-        background: color-mix(in srgb, var(--theme-color) 10%, var(--default-box-color));
-        border-radius: var(--el-border-radius-base);
-      }
-
-      > span:last-child {
-        display: grid;
-        min-width: 0;
-      }
-
-      small {
-        font-size: 11px;
-        color: var(--el-text-color-secondary);
-      }
-
-      strong {
-        margin-top: 2px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        color: var(--el-text-color-primary);
-        white-space: nowrap;
-      }
-    }
-
     :deep(.site-tree-row.is-root > td) {
       background: color-mix(in srgb, var(--theme-color) 3%, var(--el-bg-color));
     }
@@ -805,12 +721,6 @@
     :deep(.site-page__actions .art-button-table) {
       flex: 0 0 32px;
       margin-right: 0;
-    }
-
-    @media (width <= 1080px) {
-      &__scope-bar > p {
-        display: none;
-      }
     }
 
     @media (width <= 820px) {

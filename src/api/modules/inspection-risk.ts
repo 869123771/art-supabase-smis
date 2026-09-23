@@ -123,9 +123,9 @@ export async function fetchInspectionItems(
     .order('sort')
     .order('item_code')
   if (params.tenantId) query = query.eq('tenant_id', params.tenantId)
-  if (params.standardId) query = query.eq('standard_id', params.standardId)
   if (params.ancestorStandardIds?.length)
     query = query.in('standard_id', params.ancestorStandardIds)
+  else if (params.standardId) query = query.eq('standard_id', params.standardId)
   if (params.status) query = query.eq('status', params.status)
   if (params.ids?.length) query = query.in('id', params.ids)
   if (params.keyword?.trim()) {

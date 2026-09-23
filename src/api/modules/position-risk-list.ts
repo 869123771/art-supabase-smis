@@ -55,10 +55,13 @@ export async function fetchPositionRiskControlList(
   let query = supabase
     .from(TABLE_NAME)
     .select('*', { count: 'exact' })
-    .eq('organization_id', params.organizationId)
     .eq('position_id', params.positionId)
     .order('update_time', { ascending: false })
     .range(from, to)
+
+  query = params.organizationIds?.length
+    ? query.in('organization_id', params.organizationIds)
+    : query.eq('organization_id', params.organizationId)
 
   if (params.controlMeasureCategory) {
     query = query.eq('control_measure_category', params.controlMeasureCategory)

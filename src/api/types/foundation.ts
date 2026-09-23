@@ -39,6 +39,7 @@ export interface PositionSafetyResponsibility {
 
 export interface PositionSafetyResponsibilitySearchParams {
   organizationId?: string
+  organizationIds?: string[]
   positionId: string
   primaryHazardCategory?: string
   hazardLevel?: string
@@ -74,6 +75,7 @@ export interface PositionRiskControl {
 
 export interface PositionRiskControlSearchParams {
   organizationId: string
+  organizationIds?: string[]
   positionId: string
   controlMeasureCategory?: string
   controlLevel?: string

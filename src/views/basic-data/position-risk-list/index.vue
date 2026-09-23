@@ -38,7 +38,7 @@
           <main class="position-risk-page__main">
             <ArtSectionCard
               class="position-risk-page__positions"
-              title="组织机构岗位"
+              title="岗位选择"
               :subtitle="positionSectionSubtitle"
               :loading="positionState.loading"
               :error="positionState.error"
@@ -74,59 +74,47 @@
                 :data="positionState.rows"
                 :row-key="(row: SmisPositionOption) => row.id"
                 :current-row-key="positionState.selectedId || undefined"
-                height="142"
+                height="100%"
                 highlight-current-row
                 table-layout="fixed"
                 @row-click="handlePositionSelect"
               >
-                <ElTableColumn
-                  prop="positionName"
-                  label="岗位信息"
-                  min-width="280"
-                  show-overflow-tooltip
-                >
+                <ElTableColumn prop="positionName" label="岗位信息" min-width="260">
                   <template #default="{ row }">
                     <div class="position-risk-page__position-identity">
-                      <span class="position-risk-page__position-icon" aria-hidden="true"
-                        ><ArtSvgIcon icon="ri:briefcase-4-line"
-                      /></span>
+                      <span class="position-risk-page__position-icon" aria-hidden="true">
+                        <ArtSvgIcon icon="ri:briefcase-4-line" />
+                      </span>
                       <span class="position-risk-page__position-copy">
-                        <strong>{{ row.positionName }}</strong>
+                        <strong :title="row.positionName">{{ row.positionName }}</strong>
                         <small
-                          ><span translate="no">{{ row.positionCode }}</span
-                          ><i aria-hidden="true"></i>{{ row.description || 'HR 岗位主数据' }}</small
+                          :title="`${row.positionCode} · ${row.description || 'HR 岗位主数据'}`"
                         >
+                          <span translate="no">{{ row.positionCode }}</span>
+                          <i aria-hidden="true"></i>
+                          {{ row.description || 'HR 岗位主数据' }}
+                        </small>
+                      </span>
+                      <span class="position-risk-page__position-meta">
+                        <span class="position-risk-page__employee-count">
+                          <strong>{{ row.employeeCount }}</strong
+                          ><small> 人</small>
+                        </span>
+                        <span
+                          class="position-risk-page__position-state"
+                          :class="{ 'is-current': row.id === positionState.selectedId }"
+                        >
+                          <ArtSvgIcon
+                            :icon="
+                              row.id === positionState.selectedId
+                                ? 'ri:check-line'
+                                : 'ri:arrow-right-s-line'
+                            "
+                          />
+                          {{ row.id === positionState.selectedId ? '已选择' : '选择' }}
+                        </span>
                       </span>
                     </div>
-                  </template>
-                </ElTableColumn>
-                <ElTableColumn prop="employeeCount" label="在岗人数" width="92" align="right">
-                  <template #default="{ row }"
-                    ><strong>{{ row.employeeCount }}</strong
-                    ><small class="position-risk-page__unit"> 人</small></template
-                  >
-                </ElTableColumn>
-                <ElTableColumn prop="controlCount" label="控制措施" width="96" align="right">
-                  <template #default="{ row }"
-                    ><strong>{{ row.controlCount || 0 }}</strong
-                    ><small class="position-risk-page__unit"> 条</small></template
-                  >
-                </ElTableColumn>
-                <ElTableColumn label="当前范围" width="104" align="center">
-                  <template #default="{ row }">
-                    <span
-                      class="position-risk-page__position-state"
-                      :class="{ 'is-current': row.id === positionState.selectedId }"
-                    >
-                      <ArtSvgIcon
-                        :icon="
-                          row.id === positionState.selectedId
-                            ? 'ri:check-line'
-                            : 'ri:arrow-right-s-line'
-                        "
-                      />
-                      {{ row.id === positionState.selectedId ? '已选择' : '选择' }}
-                    </span>
                   </template>
                 </ElTableColumn>
               </ArtTable>
@@ -154,7 +142,7 @@
                 emptyText: positionState.selectedId ? '暂无隐患控制措施标准' : '请先选择岗位',
                 emptyDescription: positionState.selectedId
                   ? '可新增当前组织、岗位的危害因素与控制措施。'
-                  : '从上方平铺岗位列表选择一个岗位后查看清单。',
+                  : '从中间岗位列表选择一个岗位后查看清单。',
                 showOverflowTooltip: true
               }"
               :on-success="handleTableSuccess"
@@ -267,12 +255,20 @@
   const selectedOrganization = computed(() =>
     flatOrganizations.value.find((item) => item.id === organizationState.selectedKey)
   )
+  const selectedOrganizationIds = computed(() =>
+    selectedOrganization.value?.id
+      ? treeUtils
+          .getDescendants(organizationState.tree, selectedOrganization.value.id, true)
+          .map((organization) => organization.id)
+          .filter((id): id is string => Boolean(id))
+      : []
+  )
   const selectedPosition = computed(() =>
     positionState.rows.find((item) => item.id === positionState.selectedId)
   )
   const positionSectionSubtitle = computed(() =>
     selectedOrganization.value
-      ? `${selectedOrganization.value.organizationName} · 共 ${positionState.total} 个可用岗位`
+      ? `${selectedOrganization.value.organizationName}及下级 · 共 ${positionState.total} 个可用岗位`
       : '请先选择组织部门'
   )
   const canMaintain = computed(() =>
@@ -287,7 +283,7 @@
     {
       label: '当前组织',
       value: selectedOrganization.value?.organizationName || '未选择',
-      description: selectedOrganization.value?.organizationCode || '从左侧组织树选择',
+      description: selectedOrganization.value ? '包含本级及全部下级组织' : '从左侧组织树选择',
       icon: 'ri:node-tree'
     },
     {
@@ -365,6 +361,14 @@
   const columnsFactory = (): ColumnOption<PositionRiskControl>[] => [
     { type: 'selection', width: 50, reserveSelection: true },
     { type: 'globalIndex', label: '序号', width: 68 },
+    {
+      prop: 'organizationId',
+      label: '组织',
+      minWidth: 150,
+      formatter: (row) =>
+        flatOrganizations.value.find((organization) => organization.id === row.organizationId)
+          ?.organizationName || '--'
+    },
     { prop: 'hazardFactor', label: '危害因素', minWidth: 210, showOverflowTooltip: true },
     { prop: 'controlMeasure', label: '管控措施', minWidth: 260, showOverflowTooltip: true },
     {
@@ -466,7 +470,14 @@
     if (!organizationId || !positionId)
       return Promise.resolve({ data: [], count: 0, total: 0, error: null })
     const { from, to } = pageInfoHandler({ current: params.current, size: params.size })
-    return fetchPositionRiskControlList({ ...params, organizationId, positionId, from, to })
+    return fetchPositionRiskControlList({
+      ...params,
+      organizationId,
+      organizationIds: selectedOrganizationIds.value,
+      positionId,
+      from,
+      to
+    })
   }
   const handleTableSuccess: NonNullable<ArtTableQueryProps['onSuccess']> = (_rows, response) => {
     tableState.total = response.total ?? 0
@@ -553,8 +564,10 @@
       return
     }
     void dialogRef.value?.handleOpen({
-      organizationId: organization.id,
-      organizationName: organization.organizationName,
+      organizationId: row?.organizationId || organization.id,
+      organizationName:
+        flatOrganizations.value.find((item) => item.id === row?.organizationId)?.organizationName ||
+        organization.organizationName,
       positionId: position.id,
       positionName: position.positionName,
       positionCode: position.positionCode,
@@ -619,24 +632,31 @@
     }
 
     &__main {
-      display: flex;
-      flex-direction: column;
+      display: grid;
+      grid-template-columns: minmax(288px, 320px) minmax(0, 1fr);
       gap: 12px;
     }
 
     &__positions {
-      flex: 0 0 244px;
+      display: flex;
+      flex-direction: column;
       overflow: hidden;
-    }
 
-    &__positions :deep(.art-section-card__body),
-    &__positions :deep(.art-async-state),
-    &__positions :deep(.art-async-state__content) {
-      min-height: 0;
+      :deep(.art-section-card__body),
+      :deep(.art-async-state),
+      :deep(.art-async-state__content) {
+        min-height: 0;
+      }
+
+      :deep(.art-section-card__body) {
+        flex: 1 1 auto;
+        overflow: hidden;
+      }
     }
 
     &__position-search {
       width: 220px;
+      max-width: calc(100% - 44px);
     }
 
     &__position-identity {
@@ -661,6 +681,7 @@
 
     &__position-copy {
       display: grid;
+      flex: 1 1 auto;
       min-width: 0;
 
       strong,
@@ -677,6 +698,11 @@
         margin-top: 2px;
         font-size: 11px;
         color: var(--el-text-color-secondary);
+
+        span {
+          flex: none;
+          font-variant-numeric: tabular-nums;
+        }
       }
 
       i {
@@ -688,17 +714,31 @@
       }
     }
 
-    &__unit {
-      color: var(--el-text-color-secondary);
+    &__position-meta {
+      display: grid;
+      flex: none;
+      gap: 2px;
+      justify-items: end;
+    }
+
+    &__employee-count {
+      font-variant-numeric: tabular-nums;
+
+      strong {
+        color: var(--el-text-color-primary);
+      }
+
+      small {
+        color: var(--el-text-color-secondary);
+      }
     }
 
     &__position-state {
       display: inline-flex;
       gap: 4px;
       align-items: center;
-      justify-content: center;
-      min-width: 64px;
-      min-height: 28px;
+      justify-content: flex-end;
+      min-height: 20px;
       font-size: 12px;
       color: var(--el-text-color-secondary);
 
@@ -725,9 +765,14 @@
       background: var(--theme-color);
     }
 
-    @media (width <= 1080px) {
-      &__position-search {
-        width: 180px;
+    @media (width <= 1280px) {
+      &__main {
+        display: flex;
+        flex-direction: column;
+      }
+
+      &__positions {
+        flex: 0 0 244px;
       }
     }
 
