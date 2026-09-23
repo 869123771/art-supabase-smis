@@ -68,7 +68,9 @@
                 />
               </template>
 
-              <ElTable
+              <ArtTable
+                :pagination="false"
+                :show-table-header="false"
                 :data="positionState.rows"
                 :row-key="(row: SmisPositionOption) => row.id"
                 :current-row-key="positionState.selectedId || undefined"
@@ -127,7 +129,7 @@
                     </span>
                   </template>
                 </ElTableColumn>
-              </ElTable>
+              </ArtTable>
             </ArtSectionCard>
 
             <ArtTableQuery
@@ -169,6 +171,7 @@
 </template>
 
 <script setup lang="tsx">
+  import ArtTable from '@/components/core/tables/art-table/index.vue'
   import { computed, onMounted, reactive, ref } from 'vue'
   import { storeToRefs } from 'pinia'
   import { ElMessage, ElTag } from 'element-plus'

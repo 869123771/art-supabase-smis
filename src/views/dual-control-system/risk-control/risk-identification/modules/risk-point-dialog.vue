@@ -7,7 +7,15 @@
         <p>编号保存时自动生成 5 位流水码；风险等级由关联危害因素的定量评价自动汇总。</p>
       </ArtEntitySummary>
 
-      <ElForm ref="formRef" :model="form" :rules="rules" label-position="top">
+      <ArtForm
+        custom-layout
+        :show-reset="false"
+        :show-submit="false"
+        ref="formRef"
+        v-model="form"
+        :rules="rules"
+        label-position="top"
+      >
         <ArtSectionTitle title="基本信息" subtitle="明确风险点身份、场所和风险类型" />
         <div class="risk-point-dialog__grid">
           <ElFormItem label="风险点编号">
@@ -128,7 +136,7 @@
             />
           </ElFormItem>
         </div>
-      </ElForm>
+      </ArtForm>
     </div>
 
     <template #footer="{ api }">
@@ -147,8 +155,11 @@
 </template>
 
 <script setup lang="ts">
+  import { computed, nextTick, onDeactivated, reactive, ref, shallowRef } from 'vue'
+  import { storeToRefs } from 'pinia'
+  import ArtForm from '@/components/core/forms/art-form/index.vue'
   import { normalizeNullableText } from '@/utils/form/normalize'
-  import type { FormInstance, FormRules } from 'element-plus'
+  import type { FormRules } from 'element-plus'
   import ArtDialog from '@/components/core/dialogs/art-dialog/index.vue'
   import type { ArtDialogExpose } from '@/components/core/dialogs/art-dialog/types'
   import ArtSectionTitle from '@/components/core/surfaces/art-section-title/index.vue'
@@ -178,7 +189,7 @@
 
   const emit = defineEmits<{ success: [type: 'add' | 'edit'] }>()
   const dialogRef = ref<ArtDialogExpose<RiskPointDialogOpenData>>()
-  const formRef = ref<FormInstance>()
+  const formRef = ref<InstanceType<typeof ArtForm>>()
   const submitting = ref(false)
   const row = shallowRef<SmisRiskPoint>()
   const options = shallowRef<SmisRiskIdentificationOptions>({

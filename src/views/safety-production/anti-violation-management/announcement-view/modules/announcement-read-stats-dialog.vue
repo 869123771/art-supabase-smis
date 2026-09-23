@@ -21,7 +21,13 @@
           prefix-icon="Search"
         />
       </div>
-      <ElTable :data="filteredOrganizations" row-key="organizationName" table-layout="fixed">
+      <ArtTable
+        :pagination="false"
+        :show-table-header="false"
+        :data="filteredOrganizations"
+        row-key="organizationName"
+        table-layout="fixed"
+      >
         <ElTableColumn
           prop="organizationName"
           label="部门/组织"
@@ -44,12 +50,14 @@
             </div>
           </template>
         </ElTableColumn>
-      </ElTable>
+      </ArtTable>
     </div>
   </ArtDialog>
 </template>
 
 <script setup lang="ts">
+  import { computed, ref, shallowRef } from 'vue'
+  import ArtTable from '@/components/core/tables/art-table/index.vue'
   import ArtDialog from '@/components/core/dialogs/art-dialog/index.vue'
   import type { ArtDialogExpose } from '@/components/core/dialogs/art-dialog/types'
   import {

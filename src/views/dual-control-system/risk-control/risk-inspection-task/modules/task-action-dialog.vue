@@ -10,7 +10,15 @@
           ><p>{{ row?.riskPointName }} · {{ row?.riskPointNo }}</p></div
         >
       </div>
-      <ElForm ref="formRef" :model="form" :rules="rules" label-position="top">
+      <ArtForm
+        ref="formRef"
+        v-model="form"
+        :rules="rules"
+        label-position="top"
+        custom-layout
+        :show-reset="false"
+        :show-submit="false"
+      >
         <ElFormItem v-if="mode === 'transfer'" label="转交接收人" prop="employeeId">
           <ArtEmployeeSelect
             v-model="form.employeeId"
@@ -29,7 +37,7 @@
             :placeholder="mode === 'transfer' ? '说明转交原因和交接事项' : '说明取消任务的业务原因'"
           />
         </ElFormItem>
-      </ElForm>
+      </ArtForm>
     </div>
     <template #footer="{ api }">
       <ElButton @click="api.handleClose()">取消</ElButton>
@@ -45,7 +53,9 @@
 </template>
 
 <script setup lang="ts">
-  import type { FormInstance, FormRules } from 'element-plus'
+  import { nextTick, reactive, ref, shallowRef } from 'vue'
+  import type { FormRules } from 'element-plus'
+  import ArtForm from '@/components/core/forms/art-form/index.vue'
   import type { EmployeeIntegrationItem } from '@/api/integration/employees'
   import ArtDialog from '@/components/core/dialogs/art-dialog/index.vue'
   import type { ArtDialogExpose } from '@/components/core/dialogs/art-dialog/types'
@@ -67,7 +77,7 @@
   }
   const emit = defineEmits<{ success: [] }>()
   const dialogRef = ref<ArtDialogExpose<TaskActionDialogOpenData>>()
-  const formRef = ref<FormInstance>()
+  const formRef = ref<InstanceType<typeof ArtForm>>()
   const row = shallowRef<SmisRiskInspectionTask>()
   const mode = ref<'cancel' | 'transfer'>('transfer')
   const form = reactive<ActionForm>({ employeeId: undefined, reason: '' })

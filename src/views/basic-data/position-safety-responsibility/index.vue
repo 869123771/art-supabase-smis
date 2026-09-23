@@ -71,63 +71,56 @@
                 />
               </template>
 
-              <ElTable
+              <ArtTable
+                :pagination="false"
+                :show-table-header="false"
                 :data="positionState.rows"
                 :row-key="(row: SmisPositionOption) => row.id"
                 :current-row-key="positionState.selectedId || undefined"
-                height="142"
+                height="100%"
                 highlight-current-row
                 table-layout="fixed"
                 @row-click="handlePositionSelect"
               >
-                <ElTableColumn
-                  prop="positionName"
-                  label="岗位信息"
-                  min-width="280"
-                  show-overflow-tooltip
-                >
+                <ElTableColumn prop="positionName" label="岗位信息" min-width="260">
                   <template #default="{ row }">
                     <div class="position-safety-page__position-identity">
                       <span class="position-safety-page__position-icon" aria-hidden="true">
                         <ArtSvgIcon icon="ri:briefcase-4-line" />
                       </span>
                       <span class="position-safety-page__position-copy">
-                        <strong>{{ row.positionName }}</strong>
-                        <small>
+                        <strong :title="row.positionName">{{ row.positionName }}</strong>
+                        <small
+                          :title="`${row.positionCode} · ${row.description || 'HR 岗位主数据'}`"
+                        >
                           <span translate="no">{{ row.positionCode }}</span>
                           <i aria-hidden="true"></i>
                           {{ row.description || 'HR 岗位主数据' }}
                         </small>
                       </span>
+                      <span class="position-safety-page__position-meta">
+                        <span class="position-safety-page__employee-count">
+                          <strong>{{ row.employeeCount }}</strong
+                          ><small> 人</small>
+                        </span>
+                        <span
+                          class="position-safety-page__position-state"
+                          :class="{ 'is-current': row.id === positionState.selectedId }"
+                        >
+                          <ArtSvgIcon
+                            :icon="
+                              row.id === positionState.selectedId
+                                ? 'ri:check-line'
+                                : 'ri:arrow-right-s-line'
+                            "
+                          />
+                          {{ row.id === positionState.selectedId ? '已选择' : '选择' }}
+                        </span>
+                      </span>
                     </div>
                   </template>
                 </ElTableColumn>
-                <ElTableColumn prop="employeeCount" label="在岗人数" width="96" align="right">
-                  <template #default="{ row }">
-                    <span class="position-safety-page__employee-count">
-                      <strong>{{ row.employeeCount }}</strong
-                      ><small> 人</small>
-                    </span>
-                  </template>
-                </ElTableColumn>
-                <ElTableColumn label="当前范围" width="104" align="center">
-                  <template #default="{ row }">
-                    <span
-                      class="position-safety-page__position-state"
-                      :class="{ 'is-current': row.id === positionState.selectedId }"
-                    >
-                      <ArtSvgIcon
-                        :icon="
-                          row.id === positionState.selectedId
-                            ? 'ri:check-line'
-                            : 'ri:arrow-right-s-line'
-                        "
-                      />
-                      {{ row.id === positionState.selectedId ? '已选择' : '选择' }}
-                    </span>
-                  </template>
-                </ElTableColumn>
-              </ElTable>
+              </ArtTable>
             </ArtSectionCard>
 
             <ArtTableQuery
@@ -152,7 +145,7 @@
                 emptyText: positionState.selectedId ? '暂无隐患排查标准' : '请先选择岗位',
                 emptyDescription: positionState.selectedId
                   ? '可新增或导入当前组织、岗位的隐患排查标准。'
-                  : '从上方岗位列表选择一个岗位后查看标准。',
+                  : '从岗位列表选择一个岗位后查看标准。',
                 showOverflowTooltip: true
               }"
               :on-success="handleTableSuccess"
@@ -169,6 +162,7 @@
 </template>
 
 <script setup lang="tsx">
+  import ArtTable from '@/components/core/tables/art-table/index.vue'
   import { computed, onMounted, reactive, ref } from 'vue'
   import { storeToRefs } from 'pinia'
   import { ElMessage } from 'element-plus'
@@ -850,13 +844,14 @@
     }
 
     &__main {
-      display: flex;
-      flex-direction: column;
+      display: grid;
+      grid-template-columns: minmax(288px, 320px) minmax(0, 1fr);
       gap: 12px;
     }
 
     &__positions {
-      flex: 0 0 244px;
+      display: flex;
+      flex-direction: column;
       overflow: hidden;
 
       :deep(.art-section-card__body),
@@ -864,10 +859,16 @@
       :deep(.art-async-state__content) {
         min-height: 0;
       }
+
+      :deep(.art-section-card__body) {
+        flex: 1 1 auto;
+        overflow: hidden;
+      }
     }
 
     &__position-search {
       width: 220px;
+      max-width: calc(100% - 44px);
     }
 
     &__position-identity {
@@ -892,6 +893,7 @@
 
     &__position-copy {
       display: grid;
+      flex: 1 1 auto;
       min-width: 0;
 
       strong,
@@ -928,6 +930,13 @@
       }
     }
 
+    &__position-meta {
+      display: grid;
+      flex: none;
+      gap: 2px;
+      justify-items: end;
+    }
+
     &__employee-count {
       font-variant-numeric: tabular-nums;
 
@@ -944,9 +953,8 @@
       display: inline-flex;
       gap: 4px;
       align-items: center;
-      justify-content: center;
-      min-width: 64px;
-      min-height: 28px;
+      justify-content: flex-end;
+      min-height: 20px;
       font-size: 12px;
       color: var(--el-text-color-secondary);
 
@@ -973,9 +981,14 @@
       background: var(--theme-color);
     }
 
-    @media (width <= 1080px) {
-      &__position-search {
-        width: 180px;
+    @media (width <= 1280px) {
+      &__main {
+        display: flex;
+        flex-direction: column;
+      }
+
+      &__positions {
+        flex: 0 0 244px;
       }
     }
 

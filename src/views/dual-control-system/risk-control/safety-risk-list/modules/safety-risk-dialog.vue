@@ -7,7 +7,15 @@
         <p>危险编号由系统生成；完成定量评价后，该记录进入分级管控与巡查任务链路。</p>
       </ArtEntitySummary>
 
-      <ElForm ref="formRef" :model="form" :rules="rules" label-position="top">
+      <ArtForm
+        custom-layout
+        :show-reset="false"
+        :show-submit="false"
+        ref="formRef"
+        v-model="form"
+        :rules="rules"
+        label-position="top"
+      >
         <ArtSectionTitle title="风险身份" subtitle="选择已有风险点并明确危险源类别" />
         <div class="safety-risk-dialog__grid">
           <ElFormItem label="危险编号">
@@ -102,7 +110,7 @@
             <ElInputNumber v-model="form.sort" :min="0" :max="9999" class="w-full" />
           </ElFormItem>
         </div>
-      </ElForm>
+      </ArtForm>
     </div>
 
     <template #footer="{ api }">
@@ -119,8 +127,11 @@
 </template>
 
 <script setup lang="ts">
+  import { computed, nextTick, onDeactivated, reactive, ref, shallowRef } from 'vue'
+  import { storeToRefs } from 'pinia'
+  import ArtForm from '@/components/core/forms/art-form/index.vue'
   import { normalizeNullableText } from '@/utils/form/normalize'
-  import type { FormInstance, FormRules } from 'element-plus'
+  import type { FormRules } from 'element-plus'
   import ArtDialog from '@/components/core/dialogs/art-dialog/index.vue'
   import type { ArtDialogExpose } from '@/components/core/dialogs/art-dialog/types'
   import ArtSectionTitle from '@/components/core/surfaces/art-section-title/index.vue'
@@ -144,7 +155,7 @@
   const userStore = useUserStore()
   const { getDictMap } = storeToRefs(userStore)
   const dialogRef = ref<ArtDialogExpose<SafetyRiskDialogOpenData>>()
-  const formRef = ref<FormInstance>()
+  const formRef = ref<InstanceType<typeof ArtForm>>()
   const row = shallowRef<SmisSafetyRiskRecord>()
   const options = shallowRef<SmisSafetyRiskOptions>({ riskPoints: [], hazardCategories: [] })
   const activities = shallowRef<SmisRiskActivity[]>([])
