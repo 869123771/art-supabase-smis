@@ -254,16 +254,7 @@
   const handleOpen = async (data: MeasureDialogOpenData) => {
     Object.assign(model, initial(), { riskItemId: data.item.id })
     selectedPositionIds.value = []
-    const [positionResult] = await Promise.all([
-      fetchRiskPositionOptions('', 0, 499),
-      ...[
-        'smisControlMeasureCategory',
-        'smisControlLevel',
-        'smisHazardLevel',
-        'smisFrequencyUnit'
-      ].map((code) => userStore.ensureDictLoaded(code))
-    ])
-    positions.value = positionResult.data
+    positions.value = []
     if (data.row) {
       Object.assign(model, {
         id: data.row.id,
@@ -281,15 +272,31 @@
           frequencyUnit: i.frequencyUnit
         }))
       })
-      await nextTick()
       selectedPositionIds.value = model.positions.map((i) => i.positionId)
     }
-    await nextTick()
-    formRef.value?.clearValidate()
     await dialogRef.value?.handleOpen(data, {
       title: data.row ? '编辑防控措施' : '新增防控措施',
       subtitle: `${data.item.itemNo} · 完成评价后配置岗位责任和排查周期`,
       confirmText: '保存防控措施',
+      loading: true,
+      loadingText: '正在加载岗位与防控选项…',
+      onOpen: async (_openData, api) => {
+        formRef.value?.clearValidate()
+        try {
+          const [positionResult] = await Promise.all([
+            fetchRiskPositionOptions('', 0, 499),
+            ...[
+              'smisControlMeasureCategory',
+              'smisControlLevel',
+              'smisHazardLevel',
+              'smisFrequencyUnit'
+            ].map((code) => userStore.ensureDictLoaded(code))
+          ])
+          positions.value = positionResult.data
+        } finally {
+          api.setLoading(false)
+        }
+      },
       onConfirm: submit
     })
   }

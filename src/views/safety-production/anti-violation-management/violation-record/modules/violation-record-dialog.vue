@@ -1,6 +1,10 @@
 <template>
   <ArtDialog ref="dialogRef" size="xl">
     <div class="violation-record-dialog">
+      <ElAlert v-if="optionsError" type="error" :closable="false" show-icon>
+        <template #title>场所和违章标准加载失败</template>
+        <ElButton link type="primary" @click="loadOptions">重新加载</ElButton>
+      </ElAlert>
       <ArtForm
         ref="formRef"
         v-model="form.model"
@@ -89,6 +93,10 @@
     row?: SmisViolationRecord
     sites: SmisSite[]
     standards: SmisAntiViolationStandardOption[]
+    loadOptions?: () => Promise<{
+      sites: SmisSite[]
+      standards: SmisAntiViolationStandardOption[]
+    }>
   }
 
   interface ViolationRecordForm extends SmisViolationRecordSavePayload {
@@ -107,6 +115,8 @@
   const mode = ref<ViolationRecordDialogMode>('add')
   const sites = shallowRef<SmisSite[]>([])
   const standards = shallowRef<SmisAntiViolationStandardOption[]>([])
+  const optionsError = ref(false)
+  const optionsLoader = shallowRef<ViolationRecordDialogOpenData['loadOptions']>()
   const violatorSelection = shallowRef<EmployeeIntegrationItem[]>([])
   const checkerSelection = shallowRef<EmployeeIntegrationItem[]>([])
   const siteSelection = shallowRef<SmisSite[]>([])
@@ -311,6 +321,7 @@
   }
 
   const handleSubmit = async (): Promise<boolean> => {
+    if (optionsError.value) return false
     try {
       await formRef.value?.validate()
       const payload: SmisViolationRecordSavePayload = {
@@ -334,13 +345,27 @@
     }
   }
 
+  const loadOptions = async (): Promise<void> => {
+    if (!optionsLoader.value) return
+    optionsError.value = false
+    dialogRef.value?.setLoading(true)
+    try {
+      const options = await optionsLoader.value()
+      sites.value = options.sites
+      standards.value = options.standards
+    } catch {
+      optionsError.value = true
+    } finally {
+      dialogRef.value?.setLoading(false)
+    }
+  }
+
   const handleOpen = async (data: ViolationRecordDialogOpenData): Promise<void> => {
     mode.value = data.mode
     sites.value = data.sites
     standards.value = data.standards
-    await resetForm()
-    form.model.operation = data.mode
-    if (data.row) initializeFromRow(data.row)
+    optionsError.value = false
+    optionsLoader.value = data.loadOptions
     await dialogRef.value?.handleOpen(data, {
       title:
         data.mode === 'edit'
@@ -351,6 +376,18 @@
       subtitle: '违章编号由系统保存时自动生成；人员、场所与项目均来自权威主数据。',
       confirmText: '保存记录',
       contentMaxHeight: 'calc(100vh - 176px)',
+      loading: Boolean(data.loadOptions),
+      loadingText: '正在加载场所和违章标准…',
+      onOpen: async (_data, api) => {
+        try {
+          await resetForm()
+          form.model.operation = data.mode
+          if (data.row) initializeFromRow(data.row)
+          await loadOptions()
+        } finally {
+          api.setLoading(false)
+        }
+      },
       onConfirm: handleSubmit
     })
   }

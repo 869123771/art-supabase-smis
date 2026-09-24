@@ -466,7 +466,6 @@
   }
 
   const handleOpen = async (data: OpenData): Promise<void> => {
-    await userStore.ensureDictLoaded('smisMaterialUnit')
     await resetForm()
     if (data.row) initializeFromRecord(data.row, data.mode === 'copy')
     await dialogRef.value?.handleOpen(data, {
@@ -479,6 +478,15 @@
       subtitle: '维护领用人、发放仓库、发放人及工器具明细',
       confirmText: '保存草稿',
       contentMaxHeight: '78vh',
+      loading: true,
+      loadingText: '正在加载计量单位…',
+      onOpen: async (_openData, api) => {
+        try {
+          await userStore.ensureDictLoaded('smisMaterialUnit')
+        } finally {
+          api.setLoading(false)
+        }
+      },
       onConfirm: handleSubmit
     })
   }

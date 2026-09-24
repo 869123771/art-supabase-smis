@@ -129,8 +129,7 @@
   }
   const handleOpen = async (data: EvaluationDialogOpenData) => {
     Object.assign(item, data.item)
-    const result = await fetchRiskAssessmentModels(data.tenantId)
-    models.value = result.data ?? []
+    models.value = []
     model.methodCode = data.item.evaluation?.methodCode || 'LEC'
     Object.keys(factorValues).forEach((key) => delete factorValues[key as SmisRiskDimensionCode])
     if (data.item.evaluation)
@@ -144,6 +143,16 @@
       title: data.item.evaluation ? '重新评价危险有害因素' : '定量风险评价',
       subtitle: '选择各维度判定标准，系统自动计算分值并匹配风险等级',
       confirmText: '提交定量评价',
+      loading: true,
+      loadingText: '正在加载评价模型…',
+      onOpen: async (_openData, api) => {
+        try {
+          const result = await fetchRiskAssessmentModels(data.tenantId)
+          models.value = result.data ?? []
+        } finally {
+          api.setLoading(false)
+        }
+      },
       onConfirm: submit
     })
   }

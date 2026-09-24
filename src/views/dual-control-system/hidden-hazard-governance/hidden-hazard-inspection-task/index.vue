@@ -54,6 +54,7 @@
 </template>
 
 <script setup lang="tsx">
+  import BusinessTableIdentityCell from '@/components/business/business-table-identity-cell/index.vue'
   import dayjs from 'dayjs'
   import type { SearchFormItem } from '@/components/core/forms/art-search-bar/index.vue'
   import type {
@@ -287,7 +288,12 @@
       prop: 'executorEmployeeName',
       label: '执行人',
       minWidth: 140,
-      formatter: (row) => `${row.executorEmployeeName} · ${row.executorEmployeeNo}`
+      formatter: (row) => (
+        <BusinessTableIdentityCell
+          primary={row.executorEmployeeName}
+          secondary={row.executorEmployeeNo}
+        />
+      )
     },
     {
       prop: 'plannedStartAt',

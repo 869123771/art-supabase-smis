@@ -1,6 +1,10 @@
 <template>
   <ArtDialog ref="dialogRef" size="xl" @closed="emit('closed')">
     <div class="equipment-ledger-dialog">
+      <ElAlert v-if="loadError" type="error" :closable="false" show-icon>
+        <template #title>设备资料加载失败</template>
+        <ElButton link type="primary" @click="loadInitialData">重新加载</ElButton>
+      </ElAlert>
       <div class="equipment-ledger-dialog__context">
         <span><ArtSvgIcon icon="ri:qr-code-line" /></span>
         <div
@@ -192,6 +196,7 @@
 
   export interface EquipmentLedgerDialogOpenData {
     row?: SmisEquipment
+    loadDetail?: () => Promise<SmisEquipment | undefined>
     categoryTree: SmisEquipmentCategory[]
     locationTree: SmisStorageLocation[]
     presetCategoryId?: string
@@ -265,6 +270,8 @@
   const userStore = useUserStore()
   const { getDictMap, getUserInfo } = storeToRefs(userStore)
   const dialogRef = ref<ArtDialogExpose<EquipmentLedgerDialogOpenData>>()
+  const loadError = ref(false)
+  const currentOpenData = shallowRef<EquipmentLedgerDialogOpenData>()
   const formRef = ref<FormExpose>()
   const pressureGaugeSelectRef = ref<ArtDataSelectExpose>()
   const safetyValveSelectRef = ref<ArtDataSelectExpose>()
@@ -893,10 +900,11 @@
       return false
     }
   }
-  const handleOpen = async (data: EquipmentLedgerDialogOpenData): Promise<void> => {
+  const prepareForm = async (data: EquipmentLedgerDialogOpenData): Promise<void> => {
     await resetForm()
     source.categoryTree = data.categoryTree
     source.locationTree = data.locationTree
+    if (data.loadDetail) data.row = await data.loadDetail()
     if (data.row) {
       Object.assign(form.model, {
         ...data.row,
@@ -957,6 +965,38 @@
       form.model.locationId = data.presetLocationId
       form.model.equipmentKind = data.presetKind || form.model.equipmentKind
     }
+  }
+  const loadInitialData = async (): Promise<void> => {
+    const data = currentOpenData.value
+    if (!data) return
+    loadError.value = false
+    dialogRef.value?.setLoading(true)
+    try {
+      await prepareForm(data)
+      await Promise.all([
+        numberRule.loadRule(),
+        ...[
+          'smisEquipmentKind',
+          'smisEquipmentUseStatus',
+          'smisEquipmentOperationStatus',
+          'smisEquipmentAssetStatus',
+          'smisEquipmentImportanceLevel',
+          'smisEquipmentStatus',
+          'smisBoilerType',
+          'supplierCategory'
+        ].map((code) => userStore.ensureDictLoaded(code)),
+        formRef.value?.reloadOptions('usingOrganizationId'),
+        formRef.value?.reloadOptions('managingOrganizationId')
+      ])
+    } catch {
+      loadError.value = true
+    } finally {
+      dialogRef.value?.setLoading(false)
+    }
+  }
+  const handleOpen = async (data: EquipmentLedgerDialogOpenData): Promise<void> => {
+    currentOpenData.value = data
+    loadError.value = false
     await dialogRef.value?.handleOpen(data, {
       title: data.row
         ? '编辑设备台账'
@@ -969,29 +1009,12 @@
       confirmText: '保存设备台账',
       contentMaxHeight: 'calc(100vh - 168px)',
       loading: true,
-      onOpen: async (_data, api) => {
-        try {
-          await Promise.all([
-            numberRule.loadRule(),
-            ...[
-              'smisEquipmentKind',
-              'smisEquipmentUseStatus',
-              'smisEquipmentOperationStatus',
-              'smisEquipmentAssetStatus',
-              'smisEquipmentImportanceLevel',
-              'smisEquipmentStatus',
-              'smisBoilerType',
-              'supplierCategory'
-            ].map((code) => userStore.ensureDictLoaded(code)),
-            formRef.value?.reloadOptions('usingOrganizationId'),
-            formRef.value?.reloadOptions('managingOrganizationId')
-          ])
-        } finally {
-          api.setLoading(false)
-        }
-      },
-      onConfirm: handleSubmit,
-      onReset: () => void resetForm()
+      onOpen: loadInitialData,
+      onConfirm: async () => (loadError.value ? false : handleSubmit()),
+      onReset: () => {
+        currentOpenData.value = undefined
+        void resetForm()
+      }
     })
   }
   defineExpose({ handleOpen, openAccessorySelector })

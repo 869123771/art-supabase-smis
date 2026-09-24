@@ -296,9 +296,14 @@
       minWidth: 160,
       showOverflowTooltip: true,
       formatter: (row) =>
-        row.responsible
-          ? `${row.responsible.employeeName} · ${row.responsible.employeeNo}`
-          : '未配置'
+        row.responsible ? (
+          <BusinessTableIdentityCell
+            primary={row.responsible.employeeName}
+            secondary={row.responsible.employeeNo}
+          />
+        ) : (
+          '未配置'
+        )
     },
     {
       prop: 'detailLocation',

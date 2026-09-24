@@ -263,12 +263,24 @@
     }
   }
   const openDialog = async (row?: SmisRiskPoint): Promise<void> => {
-    if (!options.value.sites.length && !optionsLoading.value) await loadOptions()
-    await dialogRef.value?.handleOpen({ row, options: options.value })
+    await dialogRef.value?.handleOpen({
+      row,
+      options: options.value,
+      loadOptions: async () => {
+        await loadOptions()
+        return options.value
+      }
+    })
   }
   const openHazardWorkspace = async (row: SmisRiskPoint): Promise<void> => {
-    if (!options.value.hazardCategories.length && !optionsLoading.value) await loadOptions()
-    await hazardDialogRef.value?.handleOpen({ riskPoint: row, options: options.value })
+    await hazardDialogRef.value?.handleOpen({
+      riskPoint: row,
+      options: options.value,
+      loadOptions: async () => {
+        await loadOptions()
+        return options.value
+      }
+    })
   }
   const moreActions: ButtonMoreItem[] = [
     {

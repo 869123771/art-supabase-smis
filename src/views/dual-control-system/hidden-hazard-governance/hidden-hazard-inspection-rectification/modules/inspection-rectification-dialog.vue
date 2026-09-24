@@ -1,6 +1,10 @@
 <template>
   <ArtDialog ref="dialogRef" size="lg">
     <div class="inspection-rectification-dialog">
+      <ElAlert v-if="loadError" type="error" :closable="false" show-icon>
+        <template #title>待整改隐患加载失败</template>
+        <ElButton link type="primary" @click="loadRecords">重新加载</ElButton>
+      </ElAlert>
       <div v-if="selectedRecord" class="inspection-rectification-dialog__summary">
         <span aria-hidden="true"><ArtSvgIcon icon="ri:tools-line" /></span>
         <div>
@@ -58,6 +62,7 @@
   export interface InspectionRectificationDialogOpenData {
     records: SmisRectificationNoticeRecord[]
     selectedId?: string
+    loadRecords?: () => Promise<SmisRectificationNoticeRecord[]>
   }
   interface FormExpose {
     validate: () => Promise<boolean>
@@ -68,6 +73,8 @@
   const dialogRef = ref<ArtDialogExpose<InspectionRectificationDialogOpenData>>()
   const formRef = ref<FormExpose>()
   const records = ref<SmisRectificationNoticeRecord[]>([])
+  const loadError = ref(false)
+  const recordsLoader = shallowRef<(() => Promise<SmisRectificationNoticeRecord[]>) | undefined>()
   const initialModel = (): SmisInspectionRectificationPayload => ({
     id: '',
     completedAt: dayjs().format('YYYY-MM-DD HH:mm:ss'),
@@ -133,6 +140,7 @@
     { label: '整改照片', key: 'imageUrls', type: 'text', span: 24 }
   ])
   const handleSubmit = async (): Promise<boolean> => {
+    if (loadError.value) return false
     try {
       await formRef.value?.validate()
       await createInspectionRectification({
@@ -146,16 +154,33 @@
       return false
     }
   }
+  const loadRecords = async (): Promise<void> => {
+    if (!recordsLoader.value) return
+    loadError.value = false
+    dialogRef.value?.setLoading(true)
+    try {
+      records.value = await recordsLoader.value()
+    } catch {
+      loadError.value = true
+    } finally {
+      dialogRef.value?.setLoading(false)
+    }
+  }
   const handleOpen = async (data: InspectionRectificationDialogOpenData): Promise<void> => {
     records.value = data.records
+    loadError.value = false
+    recordsLoader.value = data.loadRecords
     Object.assign(form.model, initialModel(), { id: data.selectedId || '' })
-    await nextTick()
-    formRef.value?.clearValidate()
     await dialogRef.value?.handleOpen(data, {
       title: '新增整改落实记录',
       subtitle: '记录实际整改措施、完成时间和现场证据',
       confirmText: '提交整改结果',
       contentMaxHeight: 'calc(100vh - 150px)',
+      loading: Boolean(data.loadRecords),
+      loadingText: '正在加载待整改隐患…',
+      onOpen: async () => {
+        await Promise.all([nextTick().then(() => formRef.value?.clearValidate()), loadRecords()])
+      },
       onConfirm: handleSubmit
     })
   }

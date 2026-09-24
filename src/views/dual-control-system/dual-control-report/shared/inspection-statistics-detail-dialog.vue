@@ -50,6 +50,7 @@
 </template>
 
 <script setup lang="tsx">
+  import BusinessTableIdentityCell from '@/components/business/business-table-identity-cell/index.vue'
   import { createDateTimeFormatter } from '@/utils/ui/format'
 
   import dayjs from 'dayjs'
@@ -103,7 +104,9 @@
       prop: 'executorName',
       label: '执行人',
       minWidth: 150,
-      formatter: (row) => `${row.executorName} · ${row.executorNo}`
+      formatter: (row) => (
+        <BusinessTableIdentityCell primary={row.executorName} secondary={row.executorNo} />
+      )
     },
     {
       prop: 'status',
@@ -155,7 +158,9 @@
       prop: 'executorName',
       label: '排查人员',
       minWidth: 180,
-      formatter: (row) => `${row.executorName} · ${row.executorNo}`
+      formatter: (row) => (
+        <BusinessTableIdentityCell primary={row.executorName} secondary={row.executorNo} />
+      )
     },
     { prop: 'riskPointCount', label: '涉及风险点', width: 120, align: 'right' },
     { prop: 'pendingCount', label: '待排查任务', width: 120, align: 'right' },

@@ -132,8 +132,12 @@
   const formatDate = (value?: string | null) =>
     value ? dayjs(value).format('YYYY-MM-DD HH:mm') : '—'
   const openDialog = async (selectedId?: string): Promise<void> => {
-    const result = await fetchRectificationNoticeList({ rectifiableOnly: true, from: 0, to: 999 })
-    await dialogRef.value?.handleOpen({ records: result.data, selectedId })
+    await dialogRef.value?.handleOpen({
+      records: [],
+      selectedId,
+      loadRecords: async () =>
+        (await fetchRectificationNoticeList({ rectifiableOnly: true, from: 0, to: 999 })).data ?? []
+    })
   }
   const columnsFactory = (): ColumnOption<SmisRectificationNoticeRecord>[] => [
     { type: 'selection', width: 48 },

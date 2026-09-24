@@ -124,6 +124,7 @@
 </template>
 
 <script setup lang="tsx">
+  import BusinessTableIdentityCell from '@/components/business/business-table-identity-cell/index.vue'
   import dayjs from 'dayjs'
   import { ElTag } from 'element-plus'
   import type { SearchFormItem } from '@/components/core/forms/art-search-bar/index.vue'
@@ -456,7 +457,12 @@
       prop: 'executorEmployeeName',
       label: '检查人',
       minWidth: 140,
-      formatter: (row) => `${row.executorEmployeeName} · ${row.executorEmployeeNo}`
+      formatter: (row) => (
+        <BusinessTableIdentityCell
+          primary={row.executorEmployeeName}
+          secondary={row.executorEmployeeNo}
+        />
+      )
     },
     {
       prop: 'inspectedOrganizationName',

@@ -133,12 +133,20 @@
   const openSelector = async (): Promise<void> => {
     keyword.value = ''
     draftValue.value = props.modelValue
-    await userStore.ensureDictLoaded('smisSiteCategory')
     await dialogRef.value?.handleOpen(undefined, {
       title: '选择风险点场所',
       subtitle: '场所名称、所属组织与分类信息来自场所主数据',
       confirmText: '确认选择',
       contentMaxHeight: 'min(620px, calc(100vh - 180px))',
+      loading: true,
+      loadingText: '正在加载场所分类…',
+      onOpen: async (_data, api) => {
+        try {
+          await userStore.ensureDictLoaded('smisSiteCategory')
+        } finally {
+          api.setLoading(false)
+        }
+      },
       onConfirm: confirmSelection
     })
   }

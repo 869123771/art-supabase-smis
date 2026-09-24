@@ -444,11 +444,7 @@
     courseType: [{ required: true, message: '请选择课程类型', trigger: 'change' }]
   }
   const openCourse = async (row?: SmisLearningCourse, copy = false) => {
-    const papers = await fetchExamPaperList({ from: 0, to: 999 })
-    paperOptions.value = papers.data.map((paper: SmisExamPaper) => ({
-      label: `${paper.paperNo} · ${paper.paperTitle}`,
-      value: paper.id
-    }))
+    paperOptions.value = []
     Object.assign(
       courseForm,
       createCourse(),
@@ -465,7 +461,20 @@
     employeeSelection.value = []
     await courseDialogRef.value?.handleOpen(undefined, {
       title: copy ? '复制并新增课程' : row ? '编辑课程' : '新增课程',
-      contentMaxHeight: '74vh'
+      contentMaxHeight: '74vh',
+      loading: true,
+      loadingText: '正在加载可关联试卷…',
+      onOpen: async (_data, api) => {
+        try {
+          const papers = await fetchExamPaperList({ from: 0, to: 999 })
+          paperOptions.value = papers.data.map((paper: SmisExamPaper) => ({
+            label: `${paper.paperNo} · ${paper.paperTitle}`,
+            value: paper.id
+          }))
+        } finally {
+          api.setLoading(false)
+        }
+      }
     })
   }
   const submitCourse = async () => {

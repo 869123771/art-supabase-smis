@@ -842,9 +842,8 @@
     ]
   }
   const openPaper = async (row?: SmisExamPaper, copy = false) => {
-    const bank = await fetchQuestionBankList({ status: 'enabled', from: 0, to: 4999 })
-    questions.value = bank.data
-    categories.value = bank.categories
+    questions.value = []
+    categories.value = []
     Object.assign(
       paperForm,
       createExamPaperPayload(),
@@ -861,19 +860,30 @@
     employeeSelection.value = []
     selectedQuestions.value = []
     selectedQuestionIds.value = []
-    await nextTick()
-    selectedQuestionTableRef.value?.clearValidate()
-    if (row) {
-      const value = await fetchExamDetail(row.id, null, true)
-      selectedQuestions.value = (value?.questions ?? []).map((item) => ({
-        ...item,
-        questionId: item.id
-      }))
-      selectedQuestionIds.value = selectedQuestions.value.map((item) => item.questionId)
-    }
     await paperDialogRef.value?.handleOpen(undefined, {
       title: copy ? '复制并创建试卷' : row ? '编辑试卷' : '创建试卷',
-      contentMaxHeight: '78vh'
+      contentMaxHeight: '78vh',
+      loading: true,
+      loadingText: '正在加载题库与试卷…',
+      onOpen: async (_data, api) => {
+        try {
+          const [bank, value] = await Promise.all([
+            fetchQuestionBankList({ status: 'enabled', from: 0, to: 4999 }),
+            row ? fetchExamDetail(row.id, null, true) : Promise.resolve(undefined)
+          ])
+          questions.value = bank.data
+          categories.value = bank.categories
+          selectedQuestions.value = (value?.questions ?? []).map((item) => ({
+            ...item,
+            questionId: item.id
+          }))
+          selectedQuestionIds.value = selectedQuestions.value.map((item) => item.questionId)
+          await nextTick()
+          selectedQuestionTableRef.value?.clearValidate()
+        } finally {
+          api.setLoading(false)
+        }
+      }
     })
   }
   const randomGenerate = async () => {
@@ -951,10 +961,19 @@
     }
   }
   const showDetail = async (paperId: string, attemptId?: string, preview = true) => {
-    detail.value = (await fetchExamDetail(paperId, attemptId, preview)) ?? undefined
+    detail.value = undefined
     await detailDialogRef.value?.handleOpen(undefined, {
       title: attemptId ? '试卷详情' : '考试预览',
-      contentMaxHeight: '78vh'
+      contentMaxHeight: '78vh',
+      loading: true,
+      loadingText: '正在加载试卷详情…',
+      onOpen: async (_data, api) => {
+        try {
+          detail.value = (await fetchExamDetail(paperId, attemptId, preview)) ?? undefined
+        } finally {
+          api.setLoading(false)
+        }
+      }
     })
   }
   const beginExam = async (row: SmisExamPaper) => {

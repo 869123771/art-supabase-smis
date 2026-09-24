@@ -127,7 +127,7 @@
 </template>
 
 <script setup lang="ts">
-  import { computed, nextTick, onDeactivated, reactive, ref, shallowRef } from 'vue'
+  import { computed, onDeactivated, reactive, ref, shallowRef } from 'vue'
   import { storeToRefs } from 'pinia'
   import ArtForm from '@/components/core/forms/art-form/index.vue'
   import { normalizeNullableText } from '@/utils/form/normalize'
@@ -149,6 +149,7 @@
   export interface SafetyRiskDialogOpenData {
     row?: SmisSafetyRiskRecord
     options: SmisSafetyRiskOptions
+    loadOptions?: () => Promise<SmisSafetyRiskOptions>
   }
 
   const emit = defineEmits<{ success: [type: 'add' | 'edit'] }>()
@@ -238,19 +239,35 @@
         activityIds: [...data.row.activityIds]
       })
     }
-    await Promise.all([
-      userStore.ensureDictLoaded('smisAccidentCategory'),
-      form.riskPointId ? loadActivities(form.riskPointId) : Promise.resolve()
-    ])
     await dialogRef.value?.handleOpen(data, {
       title: data.row ? '编辑安全风险' : '新增安全风险',
       subtitle: data.row
         ? `${data.row.hazardNo} · ${data.row.riskName}`
         : '建立风险点下的危险源清单',
-      contentMaxHeight: 'calc(100vh - 150px)'
+      contentMaxHeight: 'calc(100vh - 150px)',
+      loading: true,
+      loadingText: '正在加载事故类别与作业活动…',
+      onOpen: async (_openData, api) => {
+        formRef.value?.clearValidate()
+        try {
+          await Promise.all([
+            userStore.ensureDictLoaded('smisAccidentCategory'),
+            form.riskPointId ? loadActivities(form.riskPointId) : Promise.resolve(),
+            ...(!data.options.riskPoints.length && data.loadOptions
+              ? [data.loadOptions().then((loaded) => (options.value = loaded))]
+              : [])
+          ])
+          if (data.row) {
+            form.factorCategoryId =
+              options.value.hazardCategories.find(
+                (item) => item.categoryName === data.row?.factorCategoryName
+              )?.id || null
+          }
+        } finally {
+          api.setLoading(false)
+        }
+      }
     })
-    await nextTick()
-    formRef.value?.clearValidate()
   }
 
   onDeactivated(() => dialogRef.value?.handleClose())

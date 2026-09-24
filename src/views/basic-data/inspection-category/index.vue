@@ -40,6 +40,7 @@
 </template>
 
 <script setup lang="tsx">
+  import BusinessTableIdentityCell from '@/components/business/business-table-identity-cell/index.vue'
   import dayjs from 'dayjs'
   import type { SearchFormItem } from '@/components/core/forms/art-search-bar/index.vue'
   import type {
@@ -238,9 +239,12 @@
             prop: 'tenantName',
             label: '所属租户',
             minWidth: 190,
-            showOverflowTooltip: true,
             formatter: (row: SmisInspectionCategory) =>
-              row.tenantName ? `${row.tenantName}（${row.tenantCode || '—'}）` : '—'
+              row.tenantName ? (
+                <BusinessTableIdentityCell primary={row.tenantName} secondary={row.tenantCode} />
+              ) : (
+                '—'
+              )
           }
         ]
       : []),

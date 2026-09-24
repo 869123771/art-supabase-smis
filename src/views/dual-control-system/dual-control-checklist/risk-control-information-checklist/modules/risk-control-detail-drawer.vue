@@ -129,13 +129,21 @@
   })
   const handleOpen = async (data: RiskControlDetailOpenData): Promise<void> => {
     current.value = data.row
-    await userStore.ensureDictLoaded('smisAccidentCategory')
     await drawerRef.value?.handleOpen(data, {
       title: '风险管控详情',
       subtitle: `${data.row.hazardNo} · ${data.row.identificationLocation}`,
       size: 'xl',
       showFooter: false,
-      contentHeight: 'calc(100vh - 120px)'
+      contentHeight: 'calc(100vh - 120px)',
+      loading: true,
+      loadingText: '正在加载事故类型…',
+      onOpen: async (_data, api) => {
+        try {
+          await userStore.ensureDictLoaded('smisAccidentCategory')
+        } finally {
+          api.setLoading(false)
+        }
+      }
     })
   }
 

@@ -331,6 +331,7 @@
   export interface HazardWorkspaceDialogOpenData {
     riskPoint: SmisRiskPoint
     options: SmisRiskIdentificationOptions
+    loadOptions?: () => Promise<SmisRiskIdentificationOptions>
   }
   interface ActivityForm {
     id?: string
@@ -531,7 +532,13 @@
       onOpen: async (_data, api) => {
         api.setLoading(true)
         try {
-          await Promise.all([loadWorkspace(), userStore.ensureDictLoaded('smisAccidentCategory')])
+          await Promise.all([
+            loadWorkspace(),
+            userStore.ensureDictLoaded('smisAccidentCategory'),
+            ...(!data.options.hazardCategories.length && data.loadOptions
+              ? [data.loadOptions().then((loaded) => (options.value = loaded))]
+              : [])
+          ])
         } finally {
           api.setLoading(false)
         }

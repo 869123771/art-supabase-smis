@@ -225,9 +225,14 @@
       minWidth: 145,
       showOverflowTooltip: true,
       formatter: (row) =>
-        row.keeperEmployeeName
-          ? `${row.keeperEmployeeName} · ${row.keeperEmployeeNo || '—'}`
-          : '未配置'
+        row.keeperEmployeeName ? (
+          <BusinessTableIdentityCell
+            primary={row.keeperEmployeeName}
+            secondary={row.keeperEmployeeNo}
+          />
+        ) : (
+          '未配置'
+        )
     },
     {
       prop: 'responsibleEmployeeName',
@@ -235,9 +240,14 @@
       minWidth: 145,
       showOverflowTooltip: true,
       formatter: (row) =>
-        row.responsibleEmployeeName
-          ? `${row.responsibleEmployeeName} · ${row.responsibleEmployeeNo || '—'}`
-          : '未配置'
+        row.responsibleEmployeeName ? (
+          <BusinessTableIdentityCell
+            primary={row.responsibleEmployeeName}
+            secondary={row.responsibleEmployeeNo}
+          />
+        ) : (
+          '未配置'
+        )
     },
     {
       prop: 'addressDetail',

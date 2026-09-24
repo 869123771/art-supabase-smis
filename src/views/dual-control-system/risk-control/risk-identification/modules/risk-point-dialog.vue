@@ -155,7 +155,7 @@
 </template>
 
 <script setup lang="ts">
-  import { computed, nextTick, onDeactivated, reactive, ref, shallowRef } from 'vue'
+  import { computed, onDeactivated, reactive, ref, shallowRef } from 'vue'
   import { storeToRefs } from 'pinia'
   import ArtForm from '@/components/core/forms/art-form/index.vue'
   import { normalizeNullableText } from '@/utils/form/normalize'
@@ -180,6 +180,7 @@
   export interface RiskPointDialogOpenData {
     row?: SmisRiskPoint
     options: SmisRiskIdentificationOptions
+    loadOptions?: () => Promise<SmisRiskIdentificationOptions>
   }
   interface RiskPointForm extends Omit<SmisRiskPointSavePayload, 'equipmentName' | 'equipmentId'> {
     equipmentValue: string
@@ -309,10 +310,6 @@
   const handleOpen = async (data: RiskPointDialogOpenData): Promise<void> => {
     row.value = data.row
     options.value = data.options
-    await Promise.all([
-      userStore.ensureDictLoaded('smisRiskPointType'),
-      userStore.ensureDictLoaded('smisSiteCategory')
-    ])
     Object.assign(form, initial())
     if (data.row) {
       Object.assign(form, {
@@ -336,10 +333,24 @@
       subtitle: data.row
         ? `${data.row.pointNo} · ${data.row.pointName}`
         : '完善场所、设备和辨识单位信息',
-      contentMaxHeight: 'calc(100vh - 150px)'
+      contentMaxHeight: 'calc(100vh - 150px)',
+      loading: true,
+      loadingText: '正在加载风险点选项…',
+      onOpen: async (_openData, api) => {
+        formRef.value?.clearValidate()
+        try {
+          await Promise.all([
+            userStore.ensureDictLoaded('smisRiskPointType'),
+            userStore.ensureDictLoaded('smisSiteCategory'),
+            ...(!data.options.sites.length && data.loadOptions
+              ? [data.loadOptions().then((loaded) => (options.value = loaded))]
+              : [])
+          ])
+        } finally {
+          api.setLoading(false)
+        }
+      }
     })
-    await nextTick()
-    formRef.value?.clearValidate()
   }
   onDeactivated(() => dialogRef.value?.handleClose())
   defineExpose({ handleOpen })

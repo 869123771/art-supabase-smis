@@ -380,9 +380,12 @@
             prop: 'tenantName',
             label: '所属租户',
             minWidth: 180,
-            showOverflowTooltip: true,
             formatter: (row: SmisSpecialOperationType) =>
-              row.tenantName ? `${row.tenantName}（${row.tenantCode || '—'}）` : '—'
+              row.tenantName ? (
+                <BusinessTableIdentityCell primary={row.tenantName} secondary={row.tenantCode} />
+              ) : (
+                '—'
+              )
           }
         ]
       : []),

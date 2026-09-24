@@ -438,12 +438,20 @@
   const handleOpen = async (data: DocumentDialogOpenData) => {
     await reset()
     if (data.row) initialize(data.row)
-    await userStore.ensureDictLoaded('smisMaterialUnit')
     await dialogRef.value?.handleOpen(data, {
       title: data.row ? `编辑${businessName.value}` : `新增${businessName.value}`,
       subtitle: '维护仓库、经办人和危废明细',
       confirmText: '保存草稿',
       contentMaxHeight: '78vh',
+      loading: true,
+      loadingText: '正在加载计量单位…',
+      onOpen: async (_openData, api) => {
+        try {
+          await userStore.ensureDictLoaded('smisMaterialUnit')
+        } finally {
+          api.setLoading(false)
+        }
+      },
       onConfirm: submit
     })
   }

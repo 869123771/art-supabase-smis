@@ -411,9 +411,11 @@
   ])
 
   const openDialog = async (row?: SmisEquipment): Promise<void> => {
-    const detail = row ? (await fetchEquipmentLedgerDetail(row.id)).data || row : undefined
     await dialogRef.value?.handleOpen({
-      row: detail,
+      row,
+      loadDetail: row
+        ? async () => (await fetchEquipmentLedgerDetail(row.id)).data || row
+        : undefined,
       categoryTree: tree.categoryTree,
       locationTree: tree.locationTree,
       presetCategoryId:

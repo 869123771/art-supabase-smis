@@ -127,6 +127,7 @@
 </template>
 
 <script setup lang="tsx">
+  import BusinessTableIdentityCell from '@/components/business/business-table-identity-cell/index.vue'
   import { createDateTimeFormatter } from '@/utils/ui/format'
 
   import type { SearchFormItem } from '@/components/core/forms/art-search-bar/index.vue'
@@ -423,7 +424,12 @@
       prop: 'reporterEmployeeName',
       label: '上报人',
       minWidth: 132,
-      formatter: (row) => `${row.reporterEmployeeName} · ${row.reporterEmployeeNo}`
+      formatter: (row) => (
+        <BusinessTableIdentityCell
+          primary={row.reporterEmployeeName}
+          secondary={row.reporterEmployeeNo}
+        />
+      )
     },
     {
       prop: 'reportedAt',

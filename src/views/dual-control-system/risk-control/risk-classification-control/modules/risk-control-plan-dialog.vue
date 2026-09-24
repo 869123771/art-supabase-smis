@@ -189,6 +189,7 @@
   export interface RiskControlPlanDialogOpenData {
     row?: SmisRiskControlPoint
     options: SmisRiskControlOptions
+    loadOptions?: () => Promise<SmisRiskControlOptions>
   }
   interface AssignmentForm extends SmisRiskControlAssignment {
     employeeSelection: EmployeeIntegrationItem[]
@@ -327,10 +328,19 @@
       subtitle: data.row
         ? `${data.row.riskPointNo} · ${data.row.riskPointName}`
         : '选择已维护危险源的风险点并落实分级责任',
-      contentMaxHeight: 'calc(100vh - 150px)'
+      contentMaxHeight: 'calc(100vh - 150px)',
+      loading: !data.options.riskPoints.length,
+      loadingText: '正在加载风险点…',
+      onOpen: async (_openData, api) => {
+        formRef.value?.clearValidate()
+        if (data.options.riskPoints.length || !data.loadOptions) return
+        try {
+          options.value = await data.loadOptions()
+        } finally {
+          api.setLoading(false)
+        }
+      }
     })
-    await nextTick()
-    formRef.value?.clearValidate()
   }
   onDeactivated(() => dialogRef.value?.handleClose())
   defineExpose({ handleOpen })

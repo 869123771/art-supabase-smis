@@ -41,6 +41,7 @@
   </ArtPermissionGuard>
 </template>
 <script setup lang="tsx">
+  import BusinessTableIdentityCell from '@/components/business/business-table-identity-cell/index.vue'
   import dayjs from 'dayjs'
   import type { SearchFormItem } from '@/components/core/forms/art-search-bar/index.vue'
   import type {
@@ -319,7 +320,12 @@
       prop: 'handlerEmployeeName',
       label: '经办人',
       minWidth: 130,
-      formatter: (row) => `${row.handlerEmployeeName} · ${row.handlerEmployeeNo}`
+      formatter: (row) => (
+        <BusinessTableIdentityCell
+          primary={row.handlerEmployeeName}
+          secondary={row.handlerEmployeeNo}
+        />
+      )
     },
     {
       prop: 'items',

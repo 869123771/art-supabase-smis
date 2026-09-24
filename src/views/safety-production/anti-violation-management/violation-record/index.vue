@@ -212,10 +212,11 @@
       imageCount: row.imageUrls.length
     }))
 
-  const loadMasterData = async (): Promise<void> => {
-    if (masterLoading.value) return
+  let masterLoadPromise: Promise<void> | null = null
+  const loadMasterData = (): Promise<void> => {
+    if (masterLoadPromise) return masterLoadPromise
     masterLoading.value = true
-    try {
+    masterLoadPromise = (async () => {
       const [siteResult, standardResult] = await Promise.all([
         fetchSiteList(),
         fetchAntiViolationStandardList({ status: 'enabled', from: 0, to: 999 })
@@ -229,16 +230,26 @@
         categoryName: item.categoryName,
         deductionPoints: Number(item.deductionPoints)
       }))
-    } finally {
+    })().finally(() => {
       masterLoading.value = false
-    }
+      masterLoadPromise = null
+    })
+    return masterLoadPromise
   }
   const openDialog = async (
     mode: ViolationRecordDialogMode,
     row?: SmisViolationRecord
   ): Promise<void> => {
-    await loadMasterData()
-    await dialogRef.value?.handleOpen({ mode, row, sites: sites.value, standards: standards.value })
+    await dialogRef.value?.handleOpen({
+      mode,
+      row,
+      sites: sites.value,
+      standards: standards.value,
+      loadOptions: async () => {
+        await loadMasterData()
+        return { sites: sites.value, standards: standards.value }
+      }
+    })
   }
 
   const headerActions = computed<ArtTableQueryHeaderAction[]>(() => [

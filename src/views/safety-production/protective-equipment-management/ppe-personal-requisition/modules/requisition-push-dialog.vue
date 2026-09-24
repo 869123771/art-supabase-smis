@@ -235,7 +235,6 @@
   }
 
   const handleOpen = async (selectedRows: SmisPpePersonalRequisitionItem[]): Promise<void> => {
-    await userStore.ensureDictLoaded('smisMaterialUnit')
     await resetForm()
     rows.value = selectedRows.map((row) => ({ ...row }))
     await dialogRef.value?.handleOpen(selectedRows, {
@@ -243,6 +242,15 @@
       subtitle: '同一领用人的多条领用明细将合并生成一张发放单',
       confirmText: '确认发放并过账',
       contentMaxHeight: '72vh',
+      loading: true,
+      loadingText: '正在加载计量单位…',
+      onOpen: async (_openData, api) => {
+        try {
+          await userStore.ensureDictLoaded('smisMaterialUnit')
+        } finally {
+          api.setLoading(false)
+        }
+      },
       onConfirm: handleSubmit
     })
   }
