@@ -185,6 +185,10 @@
       prop: 'employeeName',
       label: '人员信息',
       minWidth: 190,
+      link: {
+        permission: 'SmisDualControlPersonnelChecklist:ViewShift',
+        onClick: (row) => shiftDialogRef.value?.handleOpen({ employee: row })
+      },
       formatter: (row) => (
         <div class="personnel-checklist__identity">
           <span aria-hidden="true">{row.employeeName.slice(0, 1)}</span>

@@ -232,6 +232,10 @@
       label: '培训记录',
       minWidth: 260,
       fixed: 'left',
+      link: {
+        permission: 'SmisSafetyTrainingRecord:View',
+        onClick: (row) => openDialog(row, true)
+      },
       formatter: (row) => (
         <BusinessTableIdentityCell
           primary={row.subject}

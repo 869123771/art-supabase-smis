@@ -138,7 +138,13 @@
   const columnsFactory = (): ColumnOption<SmisRectificationNoticeRecord>[] => [
     { type: 'selection', width: 48 },
     { type: 'globalIndex', label: '序号', width: 68 },
-    { prop: 'hazardNo', label: '隐患编号', width: 154, fixed: 'left' },
+    {
+      prop: 'hazardNo',
+      label: '隐患编号',
+      width: 154,
+      fixed: 'left',
+      link: { onClick: (row) => void detailDialogRef.value?.handleOpen(row) }
+    },
     {
       prop: 'status',
       label: '隐患状态',

@@ -1,5 +1,5 @@
 <template>
-  <ArtDialog ref="dialogRef" size="lg">
+  <ArtDialog ref="dialogRef" size="lg" @focus-change="isFocusMode = $event">
     <ArtForm
       ref="formRef"
       v-model="form"
@@ -97,6 +97,7 @@
   const { getDictMap } = storeToRefs(userStore)
   const dialogRef = ref<ArtDialogExpose<ResponsibilityDialogOpenData>>()
   const formRef = ref<DialogFormExpose>()
+  const isFocusMode = ref(false)
   const context = reactive<DialogContext>({
     organizationName: '',
     positionName: '',
@@ -178,7 +179,9 @@
   }))
 
   const formItems = computed<FormItem[]>(() => [
-    { label: '适用岗位', key: 'context', type: 'text', span: 24 },
+    ...(!isFocusMode.value
+      ? [{ label: '适用岗位', key: 'context', type: 'text', span: 24 } as FormItem]
+      : []),
     { label: '隐患分类', key: 'categorySection', type: 'divider', span: 24 },
     {
       label: '一级隐患类别',
@@ -283,6 +286,7 @@
   ])
 
   const resetForm = async (): Promise<void> => {
+    isFocusMode.value = false
     Object.assign(form, createInitialForm())
     Object.assign(context, { organizationName: '', positionName: '', positionCode: '' })
     await nextTick()

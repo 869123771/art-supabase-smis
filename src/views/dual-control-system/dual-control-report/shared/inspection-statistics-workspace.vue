@@ -380,7 +380,12 @@
       label: '组织名称',
       minWidth: 170,
       fixed: 'left',
-      showOverflowTooltip: true
+      showOverflowTooltip: true,
+      link: {
+        permission: detailPermission.value,
+        disabled: (row) => !row.organizationId,
+        onClick: openDetail
+      }
     },
     { prop: 'generatedCount', label: '已生成任务', width: 112, align: 'right' }
   ]

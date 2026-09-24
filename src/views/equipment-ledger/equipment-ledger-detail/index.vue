@@ -360,7 +360,12 @@
       width: 140,
       dict: { code: 'smisEquipmentAttachmentType', display: 'tag' }
     },
-    { prop: 'attachment.originName', label: '附件名称', minWidth: 220 },
+    {
+      prop: 'attachment.originName',
+      label: '附件名称',
+      minWidth: 220,
+      link: { onClick: (row) => viewAttachment(row.attachment) }
+    },
     { prop: 'attachment.sizeInfo', label: '大小', width: 110 },
     {
       prop: 'operation',

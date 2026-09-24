@@ -256,7 +256,16 @@
     `${count || 1}${({ shift: '班', day: '日', week: '周', ten_day: '旬', month: '月', quarter: '季', year: '年' } as Record<string, string>)[unit] || unit}`
   const personnelColumns: ColumnOption<SmisHiddenHazardInspectionPersonnelStat>[] = [
     { type: 'globalIndex', label: '序号', width: 66 },
-    { prop: 'employeeName', label: '排查人', width: 116, fixed: 'left' },
+    {
+      prop: 'employeeName',
+      label: '排查人',
+      width: 116,
+      fixed: 'left',
+      link: {
+        permission: 'SmisDualControlHiddenHazardInspectionRecord:ViewDetail',
+        onClick: selectInspector
+      }
+    },
     { prop: 'employeeNo', label: '工号', width: 126 },
     { prop: 'organizationName', label: '所属组织', minWidth: 170, showOverflowTooltip: true },
     { prop: 'positionName', label: '岗位', minWidth: 140, showOverflowTooltip: true },

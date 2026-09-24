@@ -180,6 +180,10 @@
       prop: 'positionName',
       label: '岗位全称',
       minWidth: 220,
+      link: {
+        permission: 'SmisDualControlPositionRiskChecklist:ViewIdentificationUnit',
+        onClick: (row) => unitDialogRef.value?.handleOpen(row)
+      },
       formatter: (row) => (
         <div class="position-risk-checklist__stack">
           <strong>{row.positionName}</strong>

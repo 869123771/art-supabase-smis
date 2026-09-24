@@ -261,6 +261,10 @@
       minWidth: 180,
       fixed: 'left',
       showOverflowTooltip: true,
+      link: {
+        permission: 'SmisDualControlRiskEvaluationControl:View',
+        onClick: openMeasureManagement
+      },
       formatter: (row) => (
         <div class="risk-evaluation-page__risk-point">
           <strong>{row.riskPointRecord?.pointName || row.riskPoint || '—'}</strong>

@@ -373,6 +373,7 @@
       label: '被检查人',
       minWidth: 210,
       fixed: 'left',
+      link: { onClick: openDetail },
       formatter: (row) => (
         <div class="three-violation-page__employee">
           <ElAvatar size={38} src={row.avatarUrl || undefined}>

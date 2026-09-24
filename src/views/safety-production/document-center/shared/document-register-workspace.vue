@@ -471,7 +471,12 @@
       label: '文件名称',
       minWidth: 230,
       fixed: 'left',
-      showOverflowTooltip: true
+      showOverflowTooltip: true,
+      link: {
+        permission: permissionMap.legal_regulation.complianceView,
+        disabled: () => !config.value.isLegal,
+        onClick: (row) => emit('compliance', row)
+      }
     },
     { prop: 'documentCode', label: '文件编号', width: 156, showOverflowTooltip: true },
     { prop: 'effectiveDate', label: '生效日期', width: 120 },
