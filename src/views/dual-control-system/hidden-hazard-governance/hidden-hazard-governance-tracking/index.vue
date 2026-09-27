@@ -127,6 +127,7 @@
 </template>
 
 <script setup lang="tsx">
+  import { getFriendlySupabaseErrorMessage } from '@/utils/supabase'
   import BusinessTableIdentityCell from '@/components/business/business-table-identity-cell/index.vue'
   import { createDateTimeFormatter } from '@/utils/ui/format'
 
@@ -527,7 +528,7 @@
       optionsState.inspectionTypes = planOptions.inspectionTypes
       siteTree.value = sites.data ?? []
     } catch (error) {
-      optionsState.error = error instanceof Error ? error.message : '基础选项加载失败'
+      optionsState.error = getFriendlySupabaseErrorMessage(error, '基础选项加载失败')
     } finally {
       optionsState.loading = false
     }

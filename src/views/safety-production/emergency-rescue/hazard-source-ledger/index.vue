@@ -62,6 +62,7 @@
 </template>
 
 <script setup lang="tsx">
+  import { getFriendlySupabaseErrorMessage } from '@/utils/supabase'
   import { normalizeNullableText } from '@/utils/form/normalize'
   import dayjs from 'dayjs'
   import { ElImage, ElMessage } from 'element-plus'
@@ -485,7 +486,7 @@
       importColumns: excelColumns,
       importApi: importRows,
       onImportError: (error) => {
-        ElMessage.error(error instanceof Error ? error.message : '导入失败，请检查模板内容')
+        ElMessage.error(getFriendlySupabaseErrorMessage(error, '导入失败，请检查模板内容'))
       }
     },
     {

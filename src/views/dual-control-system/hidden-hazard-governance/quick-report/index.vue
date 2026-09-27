@@ -156,6 +156,7 @@
 </template>
 
 <script setup lang="ts">
+  import { getFriendlySupabaseErrorMessage } from '@/utils/supabase'
   import { normalizeNullableText } from '@/utils/form/normalize'
   import { ElMessage, type FormRules } from 'element-plus'
   import ArtForm, { type FormItem } from '@/components/core/forms/art-form/index.vue'
@@ -346,7 +347,7 @@
       state.organizations = options.organizations
       state.sites = options.sites
     } catch (error) {
-      state.error = error instanceof Error ? error.message : '上报基础数据加载失败'
+      state.error = getFriendlySupabaseErrorMessage(error, '上报基础数据加载失败')
     } finally {
       state.loading = false
     }

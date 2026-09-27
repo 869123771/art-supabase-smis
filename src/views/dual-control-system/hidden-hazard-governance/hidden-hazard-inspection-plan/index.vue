@@ -124,6 +124,7 @@
 </template>
 
 <script setup lang="tsx">
+  import { getFriendlySupabaseErrorMessage } from '@/utils/supabase'
   import BusinessTableIdentityCell from '@/components/business/business-table-identity-cell/index.vue'
   import dayjs from 'dayjs'
   import { ElTag } from 'element-plus'
@@ -535,7 +536,7 @@
     try {
       optionsState.data = await fetchHiddenHazardPlanOptions()
     } catch (error) {
-      optionsState.error = error instanceof Error ? error.message : '排查类型加载失败'
+      optionsState.error = getFriendlySupabaseErrorMessage(error, '排查类型加载失败')
     } finally {
       optionsState.loading = false
     }

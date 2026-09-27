@@ -166,6 +166,7 @@
 </template>
 
 <script setup lang="tsx">
+  import { getFriendlySupabaseErrorMessage } from '@/utils/supabase'
   import dayjs from 'dayjs'
   import { ElTag, ElTree } from 'element-plus'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
@@ -469,7 +470,7 @@
       if (selectedId.value && !treeState.rows.some((row) => row.id === selectedId.value))
         selectedId.value = null
     } catch (error) {
-      treeState.error = error instanceof Error ? error.message : '排查标准加载失败'
+      treeState.error = getFriendlySupabaseErrorMessage(error, '排查标准加载失败')
     } finally {
       treeState.loading = false
     }

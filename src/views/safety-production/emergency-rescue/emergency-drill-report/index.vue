@@ -230,6 +230,7 @@
 </template>
 
 <script setup lang="ts">
+  import { getFriendlySupabaseErrorMessage } from '@/utils/supabase'
   import { ElMessage } from 'element-plus'
   import { fetchGetEnableOrganizationTree } from '@/api/system-manage'
   import { useUserStore } from '@/store/modules/user'
@@ -473,7 +474,7 @@
       })
       ElMessage.success('应急演练报表已导出')
     } catch (error) {
-      ElMessage.error(error instanceof Error ? error.message : '报表导出失败，请重试')
+      ElMessage.error(getFriendlySupabaseErrorMessage(error, '报表导出失败，请重试'))
     } finally {
       exportLoading.value = false
     }
