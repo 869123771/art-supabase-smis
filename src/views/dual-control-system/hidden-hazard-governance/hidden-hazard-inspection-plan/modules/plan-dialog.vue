@@ -116,6 +116,7 @@
 </template>
 
 <script setup lang="ts">
+  import { useDictionaryOptions } from '@/hooks/core/useDictionaryOptions'
   import { normalizeNullableText } from '@/utils/form/normalize'
   import dayjs from 'dayjs'
   import type { FormRules } from 'element-plus'
@@ -137,6 +138,8 @@
   import OrganizationTreeSelect from '@smis/views/dual-control-system/shared/organization-tree-select.vue'
   import InspectionItemMultipleSelect from './inspection-item-multiple-select.vue'
 
+  const commonEnabledDisabledStatusOptions = useDictionaryOptions('commonEnabledDisabledStatus')
+
   export interface HiddenHazardPlanDialogOpenData {
     row?: SmisHiddenHazardInspectionPlan
     options: SmisHiddenHazardPlanOptions
@@ -154,17 +157,8 @@
   const executorSelection = shallowRef<EmployeeIntegrationItem[]>([])
   const itemSelection = shallowRef<SmisInspectionItem[]>([])
   const options = reactive<SmisHiddenHazardPlanOptions>({ inspectionTypes: [], organizations: [] })
-  const deadlineOptions = [
-    { label: '分钟', value: 'minute' },
-    { label: '小时', value: 'hour' },
-    { label: '天', value: 'day' }
-  ] as const
-  const cycleOptions = [
-    { label: '不循环', value: 'once' },
-    { label: '按天', value: 'day' },
-    { label: '按周', value: 'week' },
-    { label: '按月', value: 'month' }
-  ] as const
+  const deadlineOptions = useDictionaryOptions('commonDeadlineUnit')
+  const cycleOptions = useDictionaryOptions('commonPlanCycle')
   const initial = (): SmisHiddenHazardInspectionPlanPayload => ({
     planName: '',
     inspectionTypeId: '',
@@ -222,10 +216,7 @@
         key: 'status',
         type: 'select',
         props: {
-          options: [
-            { label: '启用', value: 'enabled' },
-            { label: '禁用', value: 'disabled' }
-          ]
+          options: commonEnabledDisabledStatusOptions
         }
       },
       {

@@ -1,1 +1,0 @@
-import{t as e}from"./_overArg-xg4vuygl.js";var t=e(Object.getPrototypeOf,Object);export{t};

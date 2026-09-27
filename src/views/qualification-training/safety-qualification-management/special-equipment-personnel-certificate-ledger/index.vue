@@ -175,7 +175,7 @@
       }))
     )
   const categoryOptions = dictOptions('smisCertificateCategory')
-  const warningOptions = dictOptions('smisCertificateWarningStatus')
+  const warningOptions = dictOptions('commonWarningStatus')
   const permissionCode = (action: CertificatePermissionAction): string =>
     certificatePermissionSets[permissionPrefix.value][action]
   const workspaceTags = computed<BusinessWorkspaceTag[]>(() => [
@@ -526,7 +526,7 @@
       label: '预警状态',
       width: 110,
       align: 'center',
-      dict: { code: 'smisCertificateWarningStatus', display: 'auto' }
+      dict: { code: 'commonWarningStatus', display: 'auto' }
     },
     {
       prop: 'nearestEffectiveDate',
@@ -603,7 +603,7 @@
       void Promise.all(
         [
           'smisCertificateCategory',
-          'smisCertificateWarningStatus',
+          'commonWarningStatus',
           'smisCertificateReminderDays',
           'smisCertificateDismissalReason',
           'smisSafetyManagerUnitType',

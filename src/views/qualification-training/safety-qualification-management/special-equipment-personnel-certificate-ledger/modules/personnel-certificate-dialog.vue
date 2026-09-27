@@ -231,7 +231,7 @@
       value: item.value
     }))
   const categoryOptions = dictOptions('smisCertificateCategory')
-  const warningOptions = dictOptions('smisCertificateWarningStatus')
+  const warningOptions = dictOptions('commonWarningStatus')
   const reminderOptions = dictOptions('smisCertificateReminderDays')
   const dismissalOptions = dictOptions('smisCertificateDismissalReason')
   const categoryMeta = computed(() => getCertificateCategoryMeta(form.certificateCategory))
@@ -772,7 +772,7 @@
           await Promise.all(
             [
               'smisCertificateCategory',
-              'smisCertificateWarningStatus',
+              'commonWarningStatus',
               'smisCertificateReminderDays',
               'smisCertificateDismissalReason',
               'smisSafetyManagerUnitType',

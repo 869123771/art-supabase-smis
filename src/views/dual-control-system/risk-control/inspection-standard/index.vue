@@ -259,7 +259,7 @@
   })
   const selectedStandard = computed(() => treeState.rows.find((row) => row.id === selectedId.value))
   const statusOptions = computed(() =>
-    (getDictMap.value.smisConfigStatus ?? []).map((item) => ({
+    (getDictMap.value.commonEnabledDisabledVoidedStatus ?? []).map((item) => ({
       label: item.label || item.name,
       value: item.value
     }))
@@ -524,7 +524,7 @@
   })
   onMounted(async () => {
     await Promise.all([
-      userStore.ensureDictLoaded('smisConfigStatus'),
+      userStore.ensureDictLoaded('commonEnabledDisabledVoidedStatus'),
       userStore.ensureDictLoaded('smisTagStyle'),
       tenantScopeStore.loadTenantOptions(),
       loadStandards()

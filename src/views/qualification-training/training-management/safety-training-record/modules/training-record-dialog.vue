@@ -862,7 +862,7 @@
             'smisSafetyTrainingAttendanceStatus',
             'smisSafetyTrainingSignMethod',
             'smisSafetyTrainingAssessmentResult',
-            'smisSafetyTrainingRecordStatus',
+            'commonDraftSubmittedStatus',
             'smisSafetyTrainingCategory',
             'smisSafetyTrainingType',
             'smisSafetyTrainingForm',

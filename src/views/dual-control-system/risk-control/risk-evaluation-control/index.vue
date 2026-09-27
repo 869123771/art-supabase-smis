@@ -92,6 +92,7 @@
   </ArtPermissionGuard>
 </template>
 <script setup lang="tsx">
+  import { useDictionaryOptions } from '@/hooks/core/useDictionaryOptions'
   import { ElTag } from 'element-plus'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
@@ -136,11 +137,7 @@
   const selectedItem = ref<SmisRiskItem>()
   const categories = ref<SmisRiskFactorCategoryOption[]>([])
   const listState = reactive({ total: 0, evaluated: 0, identified: 0, measures: 0 })
-  const statusOptions = [
-    { label: '待评价', value: 'identified' },
-    { label: '已评价', value: 'evaluated' },
-    { label: '已作废', value: 'voided' }
-  ]
+  const statusOptions = useDictionaryOptions('smisRiskEvaluationStatus')
   const searchItems = computed<SearchFormItem[]>(() => [
     {
       label: '关键字',

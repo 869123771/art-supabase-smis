@@ -84,7 +84,13 @@
               ><span>{{ item }}</span></li
             >
           </ul>
-          <p v-else>暂无已通过项，请先完善草稿。</p>
+          <ArtEmptyState
+            v-else
+            title="暂无已通过项"
+            description="请先完善草稿。"
+            size="compact"
+            :visual-size="56"
+          />
         </section>
         <section class="permit-ai-precheck__group is-recommendation">
           <header><ArtSvgIcon icon="ri:lightbulb-flash-line" /><strong>补充建议</strong></header>
@@ -102,6 +108,7 @@
 <script setup lang="ts">
   import { ElMessage } from 'element-plus'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
+  import ArtEmptyState from '@/components/core/feedback/art-empty-state/index.vue'
   import { getFriendlySupabaseErrorMessage } from '@/utils/supabase/error'
   import {
     precheckSpecialOperationPermitByAi,

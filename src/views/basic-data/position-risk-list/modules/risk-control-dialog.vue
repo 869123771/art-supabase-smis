@@ -32,6 +32,7 @@
 </template>
 
 <script setup lang="ts">
+  import { useDictionaryOptions } from '@/hooks/core/useDictionaryOptions'
   import { computed, nextTick, reactive, ref, toRaw } from 'vue'
   import { storeToRefs } from 'pinia'
   import type { FormRules } from 'element-plus'
@@ -50,6 +51,8 @@
     type PositionRiskControl,
     type PositionRiskControlSavePayload
   } from '@smis/api'
+
+  const commonBooleanOptions = useDictionaryOptions('commonBoolean', (value) => value === 'true')
 
   const DICTIONARY_CODES = [
     'smisControlLevel',
@@ -232,10 +235,7 @@
       label: '是否特种设备',
       key: 'isSpecialEquipment',
       type: 'segment',
-      options: [
-        { label: '否', value: false },
-        { label: '是', value: true }
-      ]
+      options: commonBooleanOptions
     }
   ])
 

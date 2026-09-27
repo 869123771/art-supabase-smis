@@ -95,7 +95,7 @@
   })
   const formModel = reactive<FormModel>(initial())
   const statusOptions = computed<FormItemOption[]>(() =>
-    (getDictMap.value.smisQualificationStatus ?? []).map((item) => ({
+    (getDictMap.value.commonEnabledStatus ?? []).map((item) => ({
       label: item.label || item.name,
       value: item.value
     }))
@@ -255,7 +255,7 @@
       onOpen: async (_openData, api) => {
         api.setLoading(true)
         try {
-          await userStore.ensureDictLoaded('smisQualificationStatus')
+          await userStore.ensureDictLoaded('commonEnabledStatus')
         } finally {
           api.setLoading(false)
         }

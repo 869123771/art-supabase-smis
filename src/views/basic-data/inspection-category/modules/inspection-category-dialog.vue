@@ -80,7 +80,7 @@
   })
 
   const statusOptions = computed<FormItemOption[]>(() =>
-    (getDictMap.value.smisInspectionCategoryStatus ?? []).map((item) => ({
+    (getDictMap.value.commonEnabledStatus ?? []).map((item) => ({
       label: item.label || item.name,
       value: item.value
     }))
@@ -230,7 +230,7 @@
         api.setLoading(true)
         try {
           await Promise.all([
-            userStore.ensureDictLoaded('smisInspectionCategoryStatus'),
+            userStore.ensureDictLoaded('commonEnabledStatus'),
             isPlatformSuper.value ? tenantScopeStore.loadTenantOptions() : Promise.resolve()
           ])
         } finally {

@@ -81,7 +81,7 @@
   })
 
   const statusOptions = computed<FormItemOption[]>(() =>
-    (getDictMap.value.smisAntiViolationStatus ?? []).map((item) => ({
+    (getDictMap.value.commonEnabledStatus ?? []).map((item) => ({
       label: item.label || item.name,
       value: item.value
     }))
@@ -215,7 +215,7 @@
       onOpen: async (_openData, api) => {
         api.setLoading(true)
         try {
-          await userStore.ensureDictLoaded('smisAntiViolationStatus')
+          await userStore.ensureDictLoaded('commonEnabledStatus')
         } finally {
           api.setLoading(false)
         }

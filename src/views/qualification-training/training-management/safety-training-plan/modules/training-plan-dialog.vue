@@ -198,7 +198,7 @@
       key: 'warningStatus',
       type: 'select',
       props: {
-        options: dictOptions('smisSafetyTrainingWarningStatus'),
+        options: dictOptions('commonWarningStatus'),
         clearable: false,
         placeholder: '请选择预警状态'
       }
@@ -416,7 +416,7 @@
         await Promise.all([
           numberRule.loadRule(),
           ...[
-            'smisSafetyTrainingWarningStatus',
+            'commonWarningStatus',
             'smisSafetyTrainingCategory',
             'smisSafetyTrainingType',
             'smisSafetyTrainingForm',

@@ -32,7 +32,7 @@
               <h1>{{ equipment?.equipmentName || '设备档案详情' }}</h1>
               <div v-if="equipment" class="equipment-archive-detail__statuses">
                 <ArtDictDisplay
-                  dict-code="smisEquipmentStatus"
+                  dict-code="commonEnabledStatus"
                   :value="equipment.status"
                   display="tag"
                 />

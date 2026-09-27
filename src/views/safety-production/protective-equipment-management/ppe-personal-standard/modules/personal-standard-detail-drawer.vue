@@ -91,7 +91,7 @@
                 <dt>发放规则</dt>
                 <dd>
                   <ArtDictDisplay
-                    dict-code="smisPpeIssuanceCycle"
+                    dict-code="commonIssuanceCycle"
                     :value="item.issuanceCycle"
                     display="text"
                   />
@@ -116,7 +116,7 @@
 
             <ArtDictDisplay
               class="ppe-detail__status"
-              dict-code="smisMaterialEnableStatus"
+              dict-code="commonEnabledStatus"
               :value="item.status"
               display="tag"
             />

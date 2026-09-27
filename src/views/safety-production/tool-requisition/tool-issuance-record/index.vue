@@ -43,6 +43,7 @@
 </template>
 
 <script setup lang="tsx">
+  import { useDictionaryOptions } from '@/hooks/core/useDictionaryOptions'
   import dayjs from 'dayjs'
   import { fetchEmployeeSelectorList } from '@/api/integration/employees'
   import BusinessTableWorkspaceActions from '@/components/business/business-table-workspace-actions/index.vue'
@@ -129,11 +130,7 @@
     quantity: 0
   })
 
-  const statusOptions = [
-    { label: '草稿', value: 'draft' },
-    { label: '已过账', value: 'posted' },
-    { label: '已作废', value: 'voided' }
-  ]
+  const statusOptions = useDictionaryOptions('commonIssuancePostingStatus')
   const metrics = computed<BusinessWorkspaceMetric[]>(() => [
     {
       label: '发放单据',
@@ -457,7 +454,7 @@
       width: 108,
       align: 'center',
       formatter: (row) => (
-        <ArtDictDisplay dictCode="smisToolIssuanceStatus" value={row.status} display="tag" />
+        <ArtDictDisplay dictCode="commonIssuancePostingStatus" value={row.status} display="tag" />
       )
     },
     { prop: 'remark', label: '备注', minWidth: 150, showOverflowTooltip: true },
@@ -529,7 +526,7 @@
     const [organizations] = await Promise.all([
       fetchToolScopeOptions('organization'),
       userStore.ensureDictLoaded('smisMaterialUnit'),
-      userStore.ensureDictLoaded('smisToolIssuanceStatus')
+      userStore.ensureDictLoaded('commonIssuancePostingStatus')
     ])
     organizationOptions.value = organizations.data
   })

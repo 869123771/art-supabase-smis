@@ -9,7 +9,7 @@
           <div class="three-violation-detail__identity">
             <strong>{{ record.employeeName }}</strong>
             <ArtDictDisplay
-              dict-code="smisThreeViolationWarningStatus"
+              dict-code="commonWarningStatus"
               :value="record.warningStatus"
               display="tag"
             />

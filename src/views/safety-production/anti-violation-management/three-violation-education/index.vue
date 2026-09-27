@@ -142,7 +142,7 @@
     }))
   )
   const warningStatusOptions = computed(() =>
-    (getDictMap.value.smisThreeViolationWarningStatus ?? []).map((item) => ({
+    (getDictMap.value.commonWarningStatus ?? []).map((item) => ({
       label: item.label || item.name,
       value: item.value
     }))
@@ -393,11 +393,7 @@
       width: 106,
       align: 'center',
       formatter: (row) => (
-        <ArtDictDisplay
-          dictCode="smisThreeViolationWarningStatus"
-          value={row.warningStatus}
-          display="tag"
-        />
+        <ArtDictDisplay dictCode="commonWarningStatus" value={row.warningStatus} display="tag" />
       )
     },
     {
@@ -538,7 +534,7 @@
   onMounted(
     () =>
       void Promise.all([
-        userStore.ensureDictLoaded('smisThreeViolationWarningStatus'),
+        userStore.ensureDictLoaded('commonWarningStatus'),
         userStore.ensureDictLoaded('smisThreeViolationEducationStatus')
       ])
   )

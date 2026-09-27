@@ -86,7 +86,7 @@
   })
   const formModel = reactive<MaterialCategoryForm>(initialForm())
   const statusOptions = computed<FormItemOption[]>(() =>
-    (getDictMap.value.smisMaterialEnableStatus ?? []).map((item) => ({
+    (getDictMap.value.commonEnabledStatus ?? []).map((item) => ({
       label: item.label || item.name,
       value: item.value
     }))
@@ -247,7 +247,7 @@
       onOpen: async (_openData, api) => {
         api.setLoading(true)
         try {
-          await userStore.ensureDictLoaded('smisMaterialEnableStatus')
+          await userStore.ensureDictLoaded('commonEnabledStatus')
         } finally {
           api.setLoading(false)
         }

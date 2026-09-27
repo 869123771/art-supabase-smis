@@ -157,7 +157,7 @@
       key: 'warningStatus',
       type: 'select',
       props: {
-        options: dictOptions('smisEmergencyPlanWarningStatus'),
+        options: dictOptions('commonWarningStatus'),
         clearable: true,
         placeholder: '全部状态'
       }
@@ -289,11 +289,7 @@
       label: '预警',
       width: 88,
       formatter: (row) => (
-        <ArtDictDisplay
-          dictCode="smisEmergencyPlanWarningStatus"
-          value={row.warningStatus}
-          display="tag"
-        />
+        <ArtDictDisplay dictCode="commonWarningStatus" value={row.warningStatus} display="tag" />
       )
     },
     {
@@ -373,7 +369,7 @@
         'smisEmergencyDrillForm',
         'smisEmergencyPlanCategory',
         'smisEmergencyPlanLevel',
-        'smisEmergencyPlanWarningStatus'
+        'commonWarningStatus'
       ].map((code) => userStore.ensureDictLoaded(code))
     )
   })

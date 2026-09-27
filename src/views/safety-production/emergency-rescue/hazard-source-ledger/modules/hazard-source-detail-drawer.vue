@@ -21,7 +21,7 @@
             display="tag"
           />
           <ArtDictDisplay
-            dict-code="smisHazardSourceRecordStatus"
+            dict-code="commonDraftSubmittedStatus"
             :value="detail.recordStatus"
             display="tag"
           />

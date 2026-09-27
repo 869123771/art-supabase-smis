@@ -1,5 +1,5 @@
 <div align="center">
-  <h1>Art Supabase SMIS</h1>
+  <h1>亿企工场 SMIS</h1>
   <p><strong>面向企业安全生产、设备治理与人员资质的一体化管理应用</strong></p>
   <p>连接安全基础资料、设备台账、资质培训、应急救援、反违章、劳动防护与事故闭环。</p>
 
@@ -16,7 +16,7 @@
 
 ## 项目定位
 
-Art Supabase SMIS 是 Art Supabase Pro 的安全生产管理业务应用。当前版本已经从早期空壳重建为覆盖安全主数据、设备设施、人员资质与生产安全过程的业务模块，并持续补齐流程和统计能力。
+亿企工场 SMIS 是亿企工场的安全生产管理业务应用。当前版本已经从早期空壳重建为覆盖安全主数据、设备设施、人员资质与生产安全过程的业务模块，并持续补齐流程和统计能力。
 
 本仓只维护 SMIS 页面、业务 API、领域类型与适配代码。认证、租户、权限、菜单、布局、路由、公共组件、Store 和 Supabase 公共客户端由 [`art-supabase-pro`](https://gitee.com/wangyanghub/art-supabase-pro) 统一提供。
 

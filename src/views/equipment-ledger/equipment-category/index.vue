@@ -146,7 +146,7 @@
   })
 
   const statusOptions = computed(() =>
-    (getDictMap.value.smisEquipmentCategoryStatus ?? []).map((item) => ({
+    (getDictMap.value.commonEnabledStatus ?? []).map((item) => ({
       label: item.label || item.name,
       value: item.value
     }))
@@ -306,7 +306,7 @@
       width: 106,
       align: 'center',
       formatter: (row) => (
-        <ArtDictDisplay dictCode="smisEquipmentCategoryStatus" value={row.status} display="tag" />
+        <ArtDictDisplay dictCode="commonEnabledStatus" value={row.status} display="tag" />
       )
     },
     {
@@ -399,7 +399,7 @@
   }
 
   onMounted(async () => {
-    await userStore.ensureDictLoaded('smisEquipmentCategoryStatus')
+    await userStore.ensureDictLoaded('commonEnabledStatus')
   })
 </script>
 

@@ -202,14 +202,14 @@
     optionsState.data.inspectionTypes.find((item) => item.id === searchQuery.value.inspectionTypeId)
   )
   const statusOptions = computed(() =>
-    (getDictMap.value.smisHiddenHazardPlanStatus ?? []).map((item) => ({
+    (getDictMap.value.commonEnabledDisabledVoidedStatus ?? []).map((item) => ({
       label: item.label || item.name,
       value: item.value
     }))
   )
   const deadlineLabels = computed(() =>
     Object.fromEntries(
-      (getDictMap.value.smisHiddenHazardDeadlineUnit ?? []).map((item) => [
+      (getDictMap.value.commonDeadlineUnit ?? []).map((item) => [
         item.value,
         item.label || item.name
       ])
@@ -217,10 +217,7 @@
   )
   const cycleLabels = computed(() =>
     Object.fromEntries(
-      (getDictMap.value.smisHiddenHazardCycleType ?? []).map((item) => [
-        item.value,
-        item.label || item.name
-      ])
+      (getDictMap.value.commonPlanCycle ?? []).map((item) => [item.value, item.label || item.name])
     )
   )
   const metrics = computed<BusinessWorkspaceMetric[]>(() => [
@@ -484,7 +481,11 @@
       width: 96,
       align: 'center',
       formatter: (row) => (
-        <ArtDictDisplay dictCode="smisHiddenHazardPlanStatus" value={row.status} display="tag" />
+        <ArtDictDisplay
+          dictCode="commonEnabledDisabledVoidedStatus"
+          value={row.status}
+          display="tag"
+        />
       )
     },
     { prop: 'createBy', label: '创建人', minWidth: 120, showOverflowTooltip: true },
@@ -548,9 +549,9 @@
   }
   onMounted(async () => {
     await Promise.all([
-      userStore.ensureDictLoaded('smisHiddenHazardPlanStatus'),
-      userStore.ensureDictLoaded('smisHiddenHazardDeadlineUnit'),
-      userStore.ensureDictLoaded('smisHiddenHazardCycleType'),
+      userStore.ensureDictLoaded('commonEnabledDisabledVoidedStatus'),
+      userStore.ensureDictLoaded('commonDeadlineUnit'),
+      userStore.ensureDictLoaded('commonPlanCycle'),
       loadOptions()
     ])
   })

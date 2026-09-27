@@ -726,7 +726,7 @@
       key: 'status',
       type: 'select',
       props: {
-        options: dictOptions('smisExamPaperStatus'),
+        options: dictOptions('commonDraftPublishedClosedStatus'),
         clearable: true,
         placeholder: '全部状态'
       }
@@ -1120,7 +1120,11 @@
       label: '状态',
       width: 90,
       formatter: (row) => (
-        <ArtDictDisplay dictCode="smisExamPaperStatus" value={row.status} display="tag" />
+        <ArtDictDisplay
+          dictCode="commonDraftPublishedClosedStatus"
+          value={row.status}
+          display="tag"
+        />
       )
     },
     {
@@ -1254,7 +1258,7 @@
         {
           key: 'status',
           title: '状态',
-          formatter: (value) => exportDictLabel('smisExamPaperStatus', value)
+          formatter: (value) => exportDictLabel('commonDraftPublishedClosedStatus', value)
         }
       ],
       exportApi: async () => ({
@@ -1307,9 +1311,12 @@
   }
   onMounted(async () => {
     await Promise.all(
-      ['smisQuestionType', 'smisExamAssemblyMode', 'smisExamPaperStatus', 'smisExamStatus'].map(
-        (code) => userStore.ensureDictLoaded(code)
-      )
+      [
+        'smisQuestionType',
+        'smisExamAssemblyMode',
+        'commonDraftPublishedClosedStatus',
+        'smisExamStatus'
+      ].map((code) => userStore.ensureDictLoaded(code))
     )
   })
 </script>

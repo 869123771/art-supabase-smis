@@ -95,7 +95,7 @@
       label: item.label || item.name,
       value: item.value
     }))
-  const statusOptions = computed(() => optionsOf('smisConfigStatus'))
+  const statusOptions = computed(() => optionsOf('commonEnabledDisabledVoidedStatus'))
   const tagOptions = computed(() => optionsOf('smisTagStyle'))
   const metrics = computed<BusinessWorkspaceMetric[]>(() => [
     {
@@ -310,7 +310,7 @@
   }
   onMounted(async () => {
     await Promise.all([
-      userStore.ensureDictLoaded('smisConfigStatus'),
+      userStore.ensureDictLoaded('commonEnabledDisabledVoidedStatus'),
       userStore.ensureDictLoaded('smisTagStyle'),
       tenantScopeStore.loadTenantOptions()
     ])

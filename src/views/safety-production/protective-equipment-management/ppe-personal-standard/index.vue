@@ -457,7 +457,7 @@
       fetchPpeScopeOptions('position').then((result) => {
         positionOptions.value = result.data ?? []
       }),
-      ...['smisPpeIssuanceCycle', 'smisMaterialEnableStatus', 'smisMaterialUnit'].map((code) =>
+      ...['commonIssuanceCycle', 'commonEnabledStatus', 'smisMaterialUnit'].map((code) =>
         userStore.ensureDictLoaded(code)
       )
     ])

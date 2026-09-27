@@ -9,7 +9,7 @@
           <div>
             <strong>{{ currentRow.employeeName }}</strong>
             <ArtDictDisplay
-              dict-code="smisThreeViolationWarningStatus"
+              dict-code="commonWarningStatus"
               :value="currentRow.warningStatus"
               display="tag"
             />

@@ -93,7 +93,7 @@
     regionCount: 0
   })
   const statusOptions = computed(() =>
-    (getDictMap.value.smisHazardousWasteEnableStatus ?? []).map((item) => ({
+    (getDictMap.value.commonEnabledDisabledStatus ?? []).map((item) => ({
       label: item.label || item.name,
       value: item.value
     }))
@@ -274,11 +274,7 @@
       width: 100,
       align: 'center',
       formatter: (row) => (
-        <ArtDictDisplay
-          dictCode="smisHazardousWasteEnableStatus"
-          value={row.status}
-          display="tag"
-        />
+        <ArtDictDisplay dictCode="commonEnabledDisabledStatus" value={row.status} display="tag" />
       )
     },
     {
@@ -330,7 +326,7 @@
       ? tableQueryRef.value?.refreshCreate()
       : tableQueryRef.value?.refreshUpdate())
   }
-  onMounted(() => void userStore.ensureDictLoaded('smisHazardousWasteEnableStatus'))
+  onMounted(() => void userStore.ensureDictLoaded('commonEnabledDisabledStatus'))
 </script>
 
 <style scoped lang="scss">

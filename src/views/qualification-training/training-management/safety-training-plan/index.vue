@@ -197,7 +197,7 @@
       key: 'warningStatus',
       type: 'select',
       props: {
-        options: dictOptions('smisSafetyTrainingWarningStatus'),
+        options: dictOptions('commonWarningStatus'),
         clearable: true,
         placeholder: '全部状态'
       }
@@ -445,7 +445,7 @@
         'smisSafetyTrainingPlanStatus',
         'smisSafetyTrainingExecutionStatus',
         'smisSafetyTrainingCategory',
-        'smisSafetyTrainingWarningStatus',
+        'commonWarningStatus',
         'smisSafetyTrainingForm'
       ].map((code) => userStore.ensureDictLoaded(code))
     )

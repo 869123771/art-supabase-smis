@@ -116,24 +116,23 @@
           :show-action="false"
           @edit-scene="emit('edit-scene')"
         />
-        <div class="risk-map-property-panel__guide">
-          <div class="risk-map-property-panel__guide-visual" aria-hidden="true">
-            <ArtSvgIcon :icon="scene ? 'ri:cursor-line' : 'ri:map-pin-range-line'" />
-          </div>
-          <strong>{{ scene ? '选择或添加一个图形' : '先选择一个场景' }}</strong>
-          <p>
-            {{
-              scene
-                ? '从画布点选图形后，可在这里统一配置位置、样式和关联风险点。'
-                : '从左侧场景树进入对应区域，再开始配置风险图。'
-            }}
-          </p>
+        <ArtEmptyState
+          class="risk-map-property-panel__guide"
+          :title="scene ? '选择或添加一个图形' : '先选择一个场景'"
+          :description="
+            scene
+              ? '从画布点选图形后，可在这里统一配置位置、样式和关联风险点。'
+              : '从左侧场景树进入对应区域，再开始配置风险图。'
+          "
+          size="compact"
+          :visual-size="64"
+        >
           <ol v-if="scene" aria-label="四色图配置步骤">
             <li><span>1</span>添加或选择图形</li>
             <li><span>2</span>拖拽定位并关联风险点</li>
             <li><span>3</span>检查样式后保存场景</li>
           </ol>
-        </div>
+        </ArtEmptyState>
       </div>
     </ElScrollbar>
   </ArtSectionCard>
@@ -144,6 +143,7 @@
   import ArtForm from '@/components/core/forms/art-form/index.vue'
   import ArtSectionCard from '@/components/core/surfaces/art-section-card/index.vue'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
+  import ArtEmptyState from '@/components/core/feedback/art-empty-state/index.vue'
   import type { SmisRiskMapPointOption, SmisRiskMapScene, SmisRiskMapShape } from '@smis/api'
   import SceneSummary from './risk-map-scene-summary.vue'
 
@@ -335,28 +335,15 @@
     }
 
     &__guide {
-      display: flex;
       flex: 1 1 auto;
-      flex-direction: column;
-      align-items: center;
       min-height: 0;
       padding: var(--art-space-4) var(--art-space-3);
-      text-align: center;
       background: color-mix(in srgb, var(--el-fill-color-light) 72%, transparent);
       border: 1px dashed var(--el-border-color-lighter);
       border-radius: var(--el-border-radius-base);
 
-      > strong {
-        margin-top: var(--art-space-2);
-        color: var(--el-text-color-primary);
-      }
-
-      > p {
-        max-width: 250px;
-        margin: var(--art-space-1) 0 var(--art-space-3);
-        font-size: var(--art-font-size-caption);
-        line-height: 1.7;
-        color: var(--el-text-color-secondary);
+      :deep(.art-empty-state__action) {
+        width: min(100%, 300px);
       }
 
       ol {
@@ -392,18 +379,6 @@
           border-radius: 50%;
         }
       }
-    }
-
-    &__guide-visual {
-      display: grid;
-      place-items: center;
-      width: 52px;
-      height: 52px;
-      font-size: 24px;
-      color: var(--theme-color);
-      background: color-mix(in srgb, var(--theme-color) 9%, var(--el-fill-color-blank));
-      border: 1px solid color-mix(in srgb, var(--theme-color) 18%, transparent);
-      border-radius: 16px;
     }
 
     :deep(.art-section-card__body),

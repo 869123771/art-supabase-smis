@@ -345,7 +345,7 @@
       align: 'center',
       formatter: (row) => (
         <ArtDictDisplay
-          dictCode="smisHazardSourceRecordStatus"
+          dictCode="commonDraftSubmittedStatus"
           value={row.recordStatus}
           display="tag"
         />
@@ -592,7 +592,7 @@
   }
   onMounted(async () => {
     await Promise.all(
-      ['smisHazardSourceLevel', 'smisHazardSourceRiskLevel', 'smisHazardSourceRecordStatus'].map(
+      ['smisHazardSourceLevel', 'smisHazardSourceRiskLevel', 'commonDraftSubmittedStatus'].map(
         (code) => userStore.ensureDictLoaded(code)
       )
     )

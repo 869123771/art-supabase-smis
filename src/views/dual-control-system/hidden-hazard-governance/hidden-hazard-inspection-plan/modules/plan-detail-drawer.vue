@@ -8,7 +8,7 @@
           ><p>{{ detail.planName }}</p></div
         >
         <ArtDictDisplay
-          dict-code="smisHiddenHazardPlanStatus"
+          dict-code="commonEnabledDisabledVoidedStatus"
           :value="detail.status"
           display="tag"
         />

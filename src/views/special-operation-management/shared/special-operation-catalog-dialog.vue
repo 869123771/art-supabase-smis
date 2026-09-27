@@ -148,7 +148,7 @@
     }))
   )
   const statusOptions = computed<FormItemOption[]>(() =>
-    (getDictMap.value.smisSpecialOperationStatus ?? [])
+    (getDictMap.value.commonEnabledDisabledVoidedStatus ?? [])
       .filter((item) => item.value !== 'voided')
       .map((item) => ({ label: item.label || item.name, value: item.value }))
   )
@@ -316,7 +316,7 @@
         api.setLoading(true)
         try {
           await Promise.all([
-            userStore.ensureDictLoaded('smisSpecialOperationStatus'),
+            userStore.ensureDictLoaded('commonEnabledDisabledVoidedStatus'),
             userStore.ensureDictLoaded('smisSpecialOperationRecordType'),
             userStore.ensureDictLoaded('smisTagStyle')
           ])

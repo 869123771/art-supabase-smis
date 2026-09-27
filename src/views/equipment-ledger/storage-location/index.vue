@@ -144,7 +144,7 @@
   })
 
   const statusOptions = computed(() =>
-    (getDictMap.value.smisStorageLocationStatus ?? []).map((item) => ({
+    (getDictMap.value.commonEnabledStatus ?? []).map((item) => ({
       label: item.label || item.name,
       value: item.value
     }))
@@ -318,7 +318,7 @@
       width: 106,
       align: 'center',
       formatter: (row) => (
-        <ArtDictDisplay dictCode="smisStorageLocationStatus" value={row.status} display="tag" />
+        <ArtDictDisplay dictCode="commonEnabledStatus" value={row.status} display="tag" />
       )
     },
     {
@@ -408,7 +408,7 @@
   }
 
   onMounted(async () => {
-    await userStore.ensureDictLoaded('smisStorageLocationStatus')
+    await userStore.ensureDictLoaded('commonEnabledStatus')
   })
 </script>
 

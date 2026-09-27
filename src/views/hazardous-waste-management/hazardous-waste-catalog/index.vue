@@ -127,7 +127,7 @@
     tree.selectedKey === ALL_KEY ? null : utils.findNode(tree.data, tree.selectedKey)
   )
   const options = computed(() =>
-    (getDictMap.value.smisHazardousWasteEnableStatus ?? []).map((item) => ({
+    (getDictMap.value.commonEnabledDisabledStatus ?? []).map((item) => ({
       label: item.label || item.name,
       value: item.value
     }))
@@ -305,11 +305,7 @@
       width: 100,
       align: 'center',
       formatter: (row) => (
-        <ArtDictDisplay
-          dictCode="smisHazardousWasteEnableStatus"
-          value={row.status}
-          display="tag"
-        />
+        <ArtDictDisplay dictCode="commonEnabledDisabledStatus" value={row.status} display="tag" />
       )
     },
     {
@@ -388,7 +384,7 @@
     () =>
       void Promise.all(
         [
-          'smisHazardousWasteEnableStatus',
+          'commonEnabledDisabledStatus',
           'smisHazardousWasteCharacteristic',
           'smisHazardousWasteSafetyMeasure',
           'smisMaterialUnit'

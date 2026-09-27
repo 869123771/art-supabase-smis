@@ -851,7 +851,7 @@
         'smisEquipmentImportanceLevel',
         'smisEquipmentAssetStatus',
         'smisEquipmentUseStatus',
-        'smisEquipmentStatus',
+        'commonEnabledStatus',
         'smisBoilerType',
         'smisEquipmentAttachmentType',
         'smisEquipmentInspectionConclusion',

@@ -61,6 +61,7 @@
   } from '@/components/core/tables/art-table-query/index.vue'
   import type { ColumnOption } from '@/types'
   import { pageInfoHandler } from '@/utils/table/tableUtils'
+  import { useDictionaryOptions } from '@/hooks/core/useDictionaryOptions'
   import {
     fetchPersonnelDualControlChecklist,
     type SmisPersonnelChecklistOverview,
@@ -83,6 +84,7 @@
   }
 
   const router = useRouter()
+  const genderOptions = useDictionaryOptions('sex')
   const tableQueryRef = ref<ArtTableQueryExpose>()
   const shiftDialogRef = ref<ShiftDialogExpose>()
   const searchQuery = ref<TableParams>({ current: 1, size: 20 })
@@ -159,10 +161,7 @@
       props: {
         clearable: true,
         placeholder: '全部',
-        options: [
-          { label: '男', value: '1' },
-          { label: '女', value: '2' }
-        ]
+        options: genderOptions
       }
     }
   ])

@@ -101,7 +101,7 @@
   })
 
   const statusOptions = computed(() =>
-    (getDictMap.value.smisInspectionCategoryStatus ?? []).map((item) => ({
+    (getDictMap.value.commonEnabledStatus ?? []).map((item) => ({
       label: item.label || item.name,
       value: item.value
     }))
@@ -254,7 +254,7 @@
       width: 106,
       align: 'center',
       formatter: (row) => (
-        <ArtDictDisplay dictCode="smisInspectionCategoryStatus" value={row.status} display="tag" />
+        <ArtDictDisplay dictCode="commonEnabledStatus" value={row.status} display="tag" />
       )
     },
     { prop: 'remark', label: '备注', minWidth: 280, showOverflowTooltip: true },
@@ -320,7 +320,7 @@
 
   onMounted(async () => {
     await Promise.all([
-      userStore.ensureDictLoaded('smisInspectionCategoryStatus'),
+      userStore.ensureDictLoaded('commonEnabledStatus'),
       tenantScopeStore.loadTenantOptions()
     ])
   })

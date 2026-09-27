@@ -114,7 +114,7 @@
   const formModel = reactive<StorageLocationForm>(initialForm())
 
   const statusOptions = computed<FormItemOption[]>(() =>
-    (getDictMap.value.smisStorageLocationStatus ?? []).map((item) => ({
+    (getDictMap.value.commonEnabledStatus ?? []).map((item) => ({
       label: item.label || item.name,
       value: item.value
     }))
@@ -356,7 +356,7 @@
       onOpen: async (_openData, api) => {
         try {
           await Promise.all([
-            userStore.ensureDictLoaded('smisStorageLocationStatus'),
+            userStore.ensureDictLoaded('commonEnabledStatus'),
             formRef.value?.reloadOptions('organizationId')
           ])
         } finally {

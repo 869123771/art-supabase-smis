@@ -51,6 +51,7 @@
 </template>
 
 <script setup lang="tsx">
+  import { useDictionaryOptions } from '@/hooks/core/useDictionaryOptions'
   import dayjs from 'dayjs'
   import BusinessTableWorkspaceActions from '@/components/business/business-table-workspace-actions/index.vue'
   import BusinessWorkspaceHeader, {
@@ -136,12 +137,7 @@
       tone: 'success'
     }
   ])
-  const statusOptions = [
-    { label: '草稿', value: 'draft' },
-    { label: '审批中', value: 'pending_approval' },
-    { label: '已完成', value: 'approved' },
-    { label: '已退回', value: 'rejected' }
-  ]
+  const statusOptions = useDictionaryOptions('smisToolReturnStatus')
   const searchItems = computed<SearchFormItem[]>(() => [
     {
       label: '归还日期',

@@ -41,6 +41,7 @@
   </ArtPermissionGuard>
 </template>
 <script setup lang="tsx">
+  import { useDictionaryOptions } from '@/hooks/core/useDictionaryOptions'
   import dayjs from 'dayjs'
   import { ElTag } from 'element-plus'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
@@ -70,6 +71,11 @@
     type SmisDuplicateConfigurationSearchParams
   } from '@smis/api'
   import DuplicateDialog, { type DuplicateDialogOpenData } from './modules/duplicate-dialog.vue'
+
+  const smisRiskRepeatFlagOptions = useDictionaryOptions(
+    'smisRiskRepeatFlag',
+    (value) => value === 'true'
+  )
   defineOptions({ name: 'SmisDualControlDuplicateConfiguration' })
   type TableParams = SmisDuplicateConfigurationSearchParams &
     Pick<Api.Common.PaginationParams, 'current' | 'size'>
@@ -88,7 +94,7 @@
   const overview = reactive({ total: 0, repeating: 0, once: 0, enabled: 0 })
   const dictOptions = (code: string) =>
     (getDictMap.value[code] ?? []).map((i) => ({ label: i.label || i.name, value: i.value }))
-  const statusOptions = computed(() => dictOptions('smisConfigStatus'))
+  const statusOptions = computed(() => dictOptions('commonEnabledDisabledVoidedStatus'))
   const unitOptions = computed(() => dictOptions('smisFrequencyUnit'))
   const menuOptions = computed(() =>
     menus.value.map((i) => ({
@@ -142,10 +148,7 @@
       key: 'repeatEnabled',
       type: 'select',
       props: {
-        options: [
-          { label: '不重复', value: false },
-          { label: '重复', value: true }
-        ],
+        options: smisRiskRepeatFlagOptions,
         clearable: true,
         placeholder: '全部'
       }
@@ -375,9 +378,12 @@
   }
   onMounted(async () => {
     await Promise.all(
-      ['smisConfigStatus', 'smisTagStyle', 'smisFrequencyUnit', 'smisCalendarType'].map((code) =>
-        userStore.ensureDictLoaded(code)
-      )
+      [
+        'commonEnabledDisabledVoidedStatus',
+        'smisTagStyle',
+        'smisFrequencyUnit',
+        'smisCalendarType'
+      ].map((code) => userStore.ensureDictLoaded(code))
     )
     await Promise.all([tenantScopeStore.loadTenantOptions(), loadMenus()])
   })

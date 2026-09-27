@@ -134,7 +134,7 @@
   })
 
   const warningOptions = computed<FormItemOption[]>(() =>
-    (getDictMap.value.smisThreeViolationWarningStatus ?? []).map((item) => ({
+    (getDictMap.value.commonWarningStatus ?? []).map((item) => ({
       label: item.label || item.name,
       value: item.value
     }))
@@ -342,7 +342,7 @@
         api.setLoading(true)
         try {
           await Promise.all([
-            userStore.ensureDictLoaded('smisThreeViolationWarningStatus'),
+            userStore.ensureDictLoaded('commonWarningStatus'),
             userStore.ensureDictLoaded('smisThreeViolationEducationStatus')
           ])
         } finally {

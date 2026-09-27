@@ -163,7 +163,7 @@
         label: '启用状态',
         key: 'status',
         type: 'select',
-        options: dictOptions('smisHazardousWasteEnableStatus')
+        options: dictOptions('commonEnabledDisabledStatus')
       },
       { label: '显示效果', key: 'presentation', type: 'input' },
       {
@@ -219,7 +219,7 @@
         try {
           await Promise.all(
             [
-              'smisHazardousWasteEnableStatus',
+              'commonEnabledDisabledStatus',
               'smisHazardousWasteSafetyMeasure',
               'smisHazardousWasteCharacteristic',
               'smisMaterialUnit',

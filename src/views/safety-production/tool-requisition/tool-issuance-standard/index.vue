@@ -112,7 +112,7 @@
     }
   ])
   const statusOptions = computed(() =>
-    (userStore.getDictMap.smisMaterialEnableStatus ?? []).map((item) => ({
+    (userStore.getDictMap.commonEnabledStatus ?? []).map((item) => ({
       label: item.label || item.name,
       value: item.value
     }))
@@ -232,7 +232,7 @@
       width: 110,
       align: 'center',
       formatter: (row) => (
-        <ArtDictDisplay dictCode="smisToolIssuanceCycle" value={row.issuanceCycle} display="tag" />
+        <ArtDictDisplay dictCode="commonIssuanceCycle" value={row.issuanceCycle} display="tag" />
       )
     },
     {
@@ -248,7 +248,7 @@
       width: 100,
       align: 'center',
       formatter: (row) => (
-        <ArtDictDisplay dictCode="smisMaterialEnableStatus" value={row.status} display="tag" />
+        <ArtDictDisplay dictCode="commonEnabledStatus" value={row.status} display="tag" />
       )
     },
     {
@@ -290,7 +290,7 @@
   onMounted(
     () =>
       void Promise.all(
-        ['smisToolIssuanceCycle', 'smisMaterialEnableStatus', 'smisMaterialUnit'].map((code) =>
+        ['commonIssuanceCycle', 'commonEnabledStatus', 'smisMaterialUnit'].map((code) =>
           userStore.ensureDictLoaded(code)
         )
       )

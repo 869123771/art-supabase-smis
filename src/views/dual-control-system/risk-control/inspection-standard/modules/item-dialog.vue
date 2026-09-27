@@ -64,7 +64,7 @@
     () => standards.value.find((item) => item.id === model.standardId)?.standardName || ''
   )
   const statusOptions = computed(() =>
-    (getDictMap.value.smisConfigStatus ?? [])
+    (getDictMap.value.commonEnabledDisabledVoidedStatus ?? [])
       .filter((i) => i.value !== 'voided')
       .map((i) => ({ label: i.label || i.name, value: i.value }))
   )
@@ -179,7 +179,7 @@
         api.setLoading(true)
         try {
           await Promise.all([
-            userStore.ensureDictLoaded('smisConfigStatus'),
+            userStore.ensureDictLoaded('commonEnabledDisabledVoidedStatus'),
             userStore.ensureDictLoaded('smisTagStyle')
           ])
         } finally {

@@ -43,6 +43,7 @@
 </template>
 
 <script setup lang="tsx">
+  import { useDictionaryOptions } from '@/hooks/core/useDictionaryOptions'
   import { ElTag } from 'element-plus'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import ArtPermissionGuard from '@/components/core/feedback/art-permission-guard/index.vue'
@@ -71,6 +72,8 @@
   import RiskControlDetailDrawer, {
     type RiskControlDetailOpenData
   } from './modules/risk-control-detail-drawer.vue'
+
+  const commonBooleanOptions = useDictionaryOptions('commonBoolean', (value) => value === 'true')
 
   defineOptions({ name: 'SmisDualControlRiskControlInformationChecklist' })
 
@@ -185,10 +188,7 @@
       props: {
         clearable: true,
         placeholder: '全部',
-        options: [
-          { label: '是', value: true },
-          { label: '否', value: false }
-        ]
+        options: commonBooleanOptions
       }
     }
   ])

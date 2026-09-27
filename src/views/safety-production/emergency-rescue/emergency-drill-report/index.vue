@@ -183,7 +183,7 @@
                   <ElTableColumn prop="warningStatus" label="状态" width="92"
                     ><template #default="{ row }"
                       ><ArtDictDisplay
-                        dict-code="smisEmergencyPlanWarningStatus"
+                        dict-code="commonWarningStatus"
                         :value="row.warningStatus"
                         display="tag" /></template
                   ></ElTableColumn>
@@ -463,7 +463,7 @@
         planNo: row.planNo,
         drillName: row.drillName,
         planEndDate: row.planEndDate || '',
-        warningStatus: dictLabel('smisEmergencyPlanWarningStatus', row.warningStatus)
+        warningStatus: dictLabel('commonWarningStatus', row.warningStatus)
       }))
       await exportExcel({
         data: [summary, ...groupedRows, ...outstandingRows],
@@ -487,11 +487,9 @@
         fetchGetEnableOrganizationTree({ tenantId: getUserInfo.value.tenantId }),
         fetchEmergencyDrillReport(),
         Promise.all(
-          [
-            'smisEmergencyPlanCategory',
-            'smisEmergencyPlanLevel',
-            'smisEmergencyPlanWarningStatus'
-          ].map((code) => userStore.ensureDictLoaded(code))
+          ['smisEmergencyPlanCategory', 'smisEmergencyPlanLevel', 'commonWarningStatus'].map(
+            (code) => userStore.ensureDictLoaded(code)
+          )
         )
       ])
       organizations.value = (tree.data ?? []) as SmisTreeOrganization[]

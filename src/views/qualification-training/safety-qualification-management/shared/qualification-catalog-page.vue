@@ -146,7 +146,7 @@
         ) as SmisQualificationCatalogNavigationNode | null)
   )
   const statusOptions = computed(() =>
-    (getDictMap.value.smisQualificationStatus ?? []).map((item) => ({
+    (getDictMap.value.commonEnabledStatus ?? []).map((item) => ({
       label: item.label || item.name,
       value: item.value
     }))
@@ -310,7 +310,7 @@
       width: 108,
       align: 'center',
       formatter: (row) => (
-        <ArtDictDisplay dictCode="smisQualificationStatus" value={row.status} display="tag" />
+        <ArtDictDisplay dictCode="commonEnabledStatus" value={row.status} display="tag" />
       )
     },
     { prop: 'remark', label: '备注', minWidth: 240, showOverflowTooltip: true },
@@ -377,7 +377,7 @@
   const refresh = async (): Promise<void> => {
     await tableRef.value?.getData()
   }
-  onMounted(() => void userStore.ensureDictLoaded('smisQualificationStatus'))
+  onMounted(() => void userStore.ensureDictLoaded('commonEnabledStatus'))
 </script>
 
 <style scoped lang="scss">

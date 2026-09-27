@@ -44,6 +44,7 @@
 </template>
 
 <script setup lang="tsx">
+  import { useDictionaryOptions } from '@/hooks/core/useDictionaryOptions'
   import dayjs from 'dayjs'
   import { ElImage, ElTag } from 'element-plus'
   import BusinessTableWorkspaceActions from '@/components/business/business-table-workspace-actions/index.vue'
@@ -113,13 +114,7 @@
     overdue: 0
   })
 
-  const statusOptions = [
-    { label: '待发放', value: 'pending_issue' },
-    { label: '待本人确认', value: 'issued_pending_confirmation' },
-    { label: '已确认', value: 'confirmed' },
-    { label: '已否认', value: 'denied' },
-    { label: '已取消', value: 'cancelled' }
-  ]
+  const statusOptions = useDictionaryOptions('commonRequisitionStatus')
   const metrics = computed<BusinessWorkspaceMetric[]>(() => [
     {
       label: '领用明细',
@@ -380,7 +375,7 @@
       width: 126,
       align: 'center',
       formatter: (row) => (
-        <ArtDictDisplay dictCode="smisToolRequisitionStatus" value={row.status} display="tag" />
+        <ArtDictDisplay dictCode="commonRequisitionStatus" value={row.status} display="tag" />
       )
     },
     { prop: 'denialReason', label: '领用否认原因', minWidth: 180, showOverflowTooltip: true },
@@ -467,7 +462,7 @@
       fetchToolScopeOptions('organization'),
       fetchToolSetting(),
       userStore.ensureDictLoaded('smisMaterialUnit'),
-      userStore.ensureDictLoaded('smisToolRequisitionStatus')
+      userStore.ensureDictLoaded('commonRequisitionStatus')
     ])
     organizationOptions.value = organizations.data
     autoConfirmDays.value = setting.data?.autoConfirmDays ?? 3

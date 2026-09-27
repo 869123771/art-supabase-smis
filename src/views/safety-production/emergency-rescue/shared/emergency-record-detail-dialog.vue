@@ -14,7 +14,7 @@
         <div class="emergency-record-detail__status">
           <ArtDictDisplay
             v-if="isRescuePlan"
-            dict-code="smisEmergencyPlanRecordStatus"
+            dict-code="commonDraftSubmittedStatus"
             :value="rescuePlan?.recordStatus"
             display="tag"
           />
@@ -30,11 +30,7 @@
             effect="light"
             >{{ drillRecord?.status === 'submitted' ? '已提交' : '草稿' }}</ElTag
           >
-          <ArtDictDisplay
-            dict-code="smisEmergencyPlanWarningStatus"
-            :value="warningStatus"
-            display="tag"
-          />
+          <ArtDictDisplay dict-code="commonWarningStatus" :value="warningStatus" display="tag" />
           <ElTag v-if="rescuePlan?.isPublicScope" type="success" effect="plain">公共</ElTag>
         </div>
       </header>
@@ -287,7 +283,7 @@
       key: 'warningStatus',
       label: '预警状态',
       field: 'warningStatus',
-      dictCode: 'smisEmergencyPlanWarningStatus',
+      dictCode: 'commonWarningStatus',
       dictDisplay: 'tag'
     }
   ]
@@ -363,7 +359,7 @@
       key: 'warningStatus',
       label: '预警状态',
       field: 'warningStatus',
-      dictCode: 'smisEmergencyPlanWarningStatus',
+      dictCode: 'commonWarningStatus',
       dictDisplay: 'tag'
     }
   ]

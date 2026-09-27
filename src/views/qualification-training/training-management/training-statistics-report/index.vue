@@ -374,11 +374,7 @@
       label: '状态',
       width: 92,
       formatter: (row) => (
-        <ArtDictDisplay
-          dictCode="smisSafetyTrainingWarningStatus"
-          value={row.warningStatus}
-          display="tag"
-        />
+        <ArtDictDisplay dictCode="commonWarningStatus" value={row.warningStatus} display="tag" />
       )
     }
   ]
@@ -435,7 +431,7 @@
         'smisSafetyTrainingType',
         'smisSafetyTrainingForm',
         'smisSafetyTrainingAttendanceStatus',
-        'smisSafetyTrainingWarningStatus'
+        'commonWarningStatus'
       ].map((code) => userStore.ensureDictLoaded(code))
     )
     await loadData()

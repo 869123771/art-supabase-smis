@@ -349,7 +349,7 @@
       key: 'status',
       type: 'select',
       props: {
-        options: dictOptions('smisQuestionStatus'),
+        options: dictOptions('commonEnabledStatus'),
         clearable: true,
         placeholder: '全部状态'
       }
@@ -373,7 +373,7 @@
       label: '启用状态',
       key: 'status',
       type: 'segment',
-      options: dictOptions('smisQuestionStatus')
+      options: dictOptions('commonEnabledStatus')
     },
     {
       label: '排序',
@@ -416,7 +416,7 @@
       label: '启用状态',
       key: 'status',
       type: 'segment',
-      options: dictOptions('smisQuestionStatus')
+      options: dictOptions('commonEnabledStatus')
     },
     { label: '题目内容', key: 'contentSection', type: 'divider', span: 24 },
     {
@@ -635,7 +635,7 @@
       label: '状态',
       width: 88,
       formatter: (row) => (
-        <ArtDictDisplay dictCode="smisQuestionStatus" value={row.status} display="tag" />
+        <ArtDictDisplay dictCode="commonEnabledStatus" value={row.status} display="tag" />
       )
     },
     { prop: 'updateTime', label: '最近更新', width: 168 },
@@ -703,7 +703,7 @@
         {
           key: 'status',
           title: '状态',
-          formatter: (value) => exportDictLabel('smisQuestionStatus', value)
+          formatter: (value) => exportDictLabel('commonEnabledStatus', value)
         }
       ],
       exportApi: async () => ({
@@ -726,7 +726,7 @@
   }
   onMounted(async () => {
     await Promise.all(
-      ['smisQuestionType', 'smisQuestionStatus'].map((code) => userStore.ensureDictLoaded(code))
+      ['smisQuestionType', 'commonEnabledStatus'].map((code) => userStore.ensureDictLoaded(code))
     )
   })
 </script>

@@ -119,7 +119,7 @@
   })
 
   const statusOptions = computed<FormItemOption[]>(() =>
-    (getDictMap.value.smisHazardFactorCategoryStatus ?? []).map((item) => ({
+    (getDictMap.value.commonEnabledDisabledStatus ?? []).map((item) => ({
       label: item.label || item.name,
       value: item.value
     }))
@@ -300,7 +300,7 @@
         api.setLoading(true)
         try {
           await Promise.all([
-            userStore.ensureDictLoaded('smisHazardFactorCategoryStatus'),
+            userStore.ensureDictLoaded('commonEnabledDisabledStatus'),
             userStore.ensureDictLoaded('smisHazardFactorType'),
             userStore.ensureDictLoaded('smisTagStyle'),
             isPlatformSuper.value ? tenantScopeStore.loadTenantOptions() : Promise.resolve()

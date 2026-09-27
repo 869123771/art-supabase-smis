@@ -23,6 +23,7 @@
   </ArtDialog>
 </template>
 <script setup lang="ts">
+  import { useDictionaryOptions } from '@/hooks/core/useDictionaryOptions'
   import { ElColorPicker, type FormRules } from 'element-plus'
   import ArtDialog from '@/components/core/dialogs/art-dialog/index.vue'
   import type { ArtDialogExpose } from '@/components/core/dialogs/art-dialog/types'
@@ -35,6 +36,11 @@
     type SmisDuplicateConfiguration,
     type SmisDuplicateConfigurationPayload
   } from '@smis/api'
+
+  const smisRiskRepeatFlagOptions = useDictionaryOptions(
+    'smisRiskRepeatFlag',
+    (value) => value === 'true'
+  )
   export interface DuplicateDialogOpenData {
     row?: SmisDuplicateConfiguration
     tenantId?: string | null
@@ -69,7 +75,7 @@
   const dictOptions = (code: string) =>
     (getDictMap.value[code] ?? []).map((i) => ({ label: i.label || i.name, value: i.value }))
   const statusOptions = computed(() =>
-    dictOptions('smisConfigStatus').filter((i) => i.value !== 'voided')
+    dictOptions('commonEnabledDisabledVoidedStatus').filter((i) => i.value !== 'voided')
   )
   const tagOptions = computed(() => dictOptions('smisTagStyle'))
   const unitOptions = computed(() => dictOptions('smisFrequencyUnit'))
@@ -110,10 +116,7 @@
       label: '重复',
       key: 'repeatEnabled',
       type: 'segment',
-      options: [
-        { label: '不重复', value: false },
-        { label: '重复', value: true }
-      ]
+      options: smisRiskRepeatFlagOptions
     },
     {
       label: '重复频次',
@@ -294,9 +297,12 @@
         api.setLoading(true)
         try {
           await Promise.all(
-            ['smisConfigStatus', 'smisTagStyle', 'smisFrequencyUnit', 'smisCalendarType'].map(
-              (code) => userStore.ensureDictLoaded(code)
-            )
+            [
+              'commonEnabledDisabledVoidedStatus',
+              'smisTagStyle',
+              'smisFrequencyUnit',
+              'smisCalendarType'
+            ].map((code) => userStore.ensureDictLoaded(code))
           )
         } finally {
           api.setLoading(false)

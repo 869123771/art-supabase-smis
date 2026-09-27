@@ -56,7 +56,7 @@
   const userStore = useUserStore()
   const { getDictMap } = storeToRefs(userStore)
   const cycleOptions = computed(() =>
-    (getDictMap.value.smisPpeIssuanceCycle ?? []).map((item) => ({
+    (getDictMap.value.commonIssuanceCycle ?? []).map((item) => ({
       label: item.label || item.name,
       value: item.value
     }))
@@ -172,7 +172,7 @@
         loading.value = true
         try {
           await Promise.all([
-            userStore.ensureDictLoaded('smisPpeIssuanceCycle'),
+            userStore.ensureDictLoaded('commonIssuanceCycle'),
             userStore.ensureDictLoaded('smisMaterialUnit')
           ])
           const result = await fetchPpePersonalStandardItems(row.employeeId)

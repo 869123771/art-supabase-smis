@@ -85,7 +85,7 @@
     used: 0
   })
   const statusOptions = computed(() =>
-    (getDictMap.value.smisAnnouncementCategoryStatus ?? []).map((item) => ({
+    (getDictMap.value.commonEnabledStatus ?? []).map((item) => ({
       label: item.label || item.name,
       value: item.value
     }))
@@ -195,11 +195,7 @@
       width: 100,
       align: 'center',
       formatter: (row) => (
-        <ArtDictDisplay
-          dictCode="smisAnnouncementCategoryStatus"
-          value={row.status}
-          display="tag"
-        />
+        <ArtDictDisplay dictCode="commonEnabledStatus" value={row.status} display="tag" />
       )
     },
     { prop: 'announcementCount', label: '公告数量', width: 110, align: 'right' },
@@ -240,7 +236,7 @@
     }
   }
   const handleSaveSuccess = (): void => void tableQueryRef.value?.getData()
-  onMounted(() => void userStore.ensureDictLoaded('smisAnnouncementCategoryStatus'))
+  onMounted(() => void userStore.ensureDictLoaded('commonEnabledStatus'))
 </script>
 
 <style scoped lang="scss">

@@ -32,10 +32,7 @@
               :value="item.id"
             />
             <template #empty>
-              <div class="drill-plan-dialog__source-empty">
-                <ArtSvgIcon icon="ri:information-line" />
-                <span>暂无已提交且有效的应急预案，请先完成预案提交。</span>
-              </div>
+              <ArtPickerEmpty title="暂无可选应急预案" description="请先提交有效的应急预案。" />
             </template>
           </ElSelect>
         </template>
@@ -85,7 +82,7 @@
         <template #warningStatus
           ><div class="drill-plan-dialog__derived"
             ><ArtDictDisplay
-              dict-code="smisEmergencyPlanWarningStatus"
+              dict-code="commonWarningStatus"
               :value="currentWarningStatus"
               display="tag"
             /><small>由计划期限与演练记录自动计算</small></div
@@ -135,6 +132,7 @@
   import ArtEmployeeSelect from '@/components/business/art-employee-select/index.vue'
   import ArtDictDisplay from '@/components/core/base/art-dict-display/index.vue'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
+  import ArtPickerEmpty from '@/components/core/feedback/art-picker-empty/index.vue'
   import { useDocumentNumberRule } from '@/hooks/core/useDocumentNumberRule'
   import { useUserStore } from '@/store/modules/user'
   import TreeUtils from '@/utils/tree'
@@ -443,7 +441,7 @@
               'smisEmergencyDrillForm',
               'smisEmergencyPlanCategory',
               'smisEmergencyPlanLevel',
-              'smisEmergencyPlanWarningStatus'
+              'commonWarningStatus'
             ].map((code) => userStore.ensureDictLoaded(code))
           ])
           rescuePlans.value = options as RescueOption[]
@@ -467,22 +465,6 @@
 
       small {
         color: var(--el-text-color-secondary);
-      }
-    }
-
-    &__source-empty {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-      justify-content: center;
-      min-height: 44px;
-      padding: 8px 12px;
-      font-size: 13px;
-      color: var(--el-text-color-secondary);
-
-      svg {
-        flex: 0 0 auto;
-        color: var(--theme-color);
       }
     }
 

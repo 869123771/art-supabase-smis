@@ -132,7 +132,7 @@
   })
   const tree = reactive<TreeGroup>({ data: [], selectedKey: ALL_KEY, loading: false, error: null })
   const statusOptions = computed(() =>
-    (getDictMap.value.smisMaterialEnableStatus ?? []).map((item) => ({
+    (getDictMap.value.commonEnabledStatus ?? []).map((item) => ({
       label: item.label || item.name,
       value: item.value
     }))
@@ -258,7 +258,7 @@
       width: 110,
       align: 'center',
       formatter: (row) => (
-        <ArtDictDisplay dictCode="smisMaterialEnableStatus" value={row.status} display="tag" />
+        <ArtDictDisplay dictCode="commonEnabledStatus" value={row.status} display="tag" />
       )
     },
     {
@@ -326,7 +326,7 @@
   const handleSaveSuccess = async (): Promise<void> => {
     await tableQueryRef.value?.getData()
   }
-  onMounted(() => void userStore.ensureDictLoaded('smisMaterialEnableStatus'))
+  onMounted(() => void userStore.ensureDictLoaded('commonEnabledStatus'))
 </script>
 
 <style scoped lang="scss">

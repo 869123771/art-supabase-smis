@@ -347,7 +347,11 @@
       label: '状态',
       key: 'status',
       type: 'select',
-      props: { options: dictOptions('smisCourseStatus'), clearable: true, placeholder: '全部状态' }
+      props: {
+        options: dictOptions('commonDraftPublishedClosedStatus'),
+        clearable: true,
+        placeholder: '全部状态'
+      }
     }
   ])
   const recordSearchItems = computed<SearchFormItem[]>(() => [
@@ -631,7 +635,11 @@
       label: '状态',
       width: 90,
       formatter: (row) => (
-        <ArtDictDisplay dictCode="smisCourseStatus" value={row.status} display="tag" />
+        <ArtDictDisplay
+          dictCode="commonDraftPublishedClosedStatus"
+          value={row.status}
+          display="tag"
+        />
       )
     },
     {
@@ -757,7 +765,7 @@
         {
           key: 'status',
           title: '状态',
-          formatter: (value) => exportDictLabel('smisCourseStatus', value)
+          formatter: (value) => exportDictLabel('commonDraftPublishedClosedStatus', value)
         }
       ],
       exportApi: async () => ({
@@ -805,9 +813,12 @@
   }
   onMounted(async () => {
     await Promise.all(
-      ['smisCourseStatus', 'smisCourseCategory', 'smisCourseType', 'smisCourseLearningStatus'].map(
-        (code) => userStore.ensureDictLoaded(code)
-      )
+      [
+        'commonDraftPublishedClosedStatus',
+        'smisCourseCategory',
+        'smisCourseType',
+        'smisCourseLearningStatus'
+      ].map((code) => userStore.ensureDictLoaded(code))
     )
   })
 </script>

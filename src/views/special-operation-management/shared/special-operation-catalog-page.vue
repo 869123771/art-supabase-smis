@@ -167,7 +167,7 @@
   })
 
   const statusOptions = computed(() =>
-    (getDictMap.value.smisSpecialOperationStatus ?? []).map((item) => ({
+    (getDictMap.value.commonEnabledDisabledVoidedStatus ?? []).map((item) => ({
       label: item.label || item.name,
       value: item.value
     }))
@@ -480,7 +480,11 @@
       width: 96,
       align: 'center',
       formatter: (row) => (
-        <ArtDictDisplay dictCode="smisSpecialOperationStatus" value={row.status} display="tag" />
+        <ArtDictDisplay
+          dictCode="commonEnabledDisabledVoidedStatus"
+          value={row.status}
+          display="tag"
+        />
       )
     },
     { prop: 'createBy', label: '创建人', width: 138, showOverflowTooltip: true },
@@ -619,7 +623,7 @@
 
   onMounted(async () => {
     await Promise.all([
-      userStore.ensureDictLoaded('smisSpecialOperationStatus'),
+      userStore.ensureDictLoaded('commonEnabledDisabledVoidedStatus'),
       userStore.ensureDictLoaded('smisSpecialOperationRecordType'),
       userStore.ensureDictLoaded('smisTagStyle'),
       tenantScopeStore.loadTenantOptions(),

@@ -183,8 +183,8 @@
       label: item.label || item.name,
       value: item.value
     }))
-  const cycleOptions = computed(() => toOptions('smisPpeIssuanceCycle'))
-  const statusOptions = computed(() => toOptions('smisMaterialEnableStatus'))
+  const cycleOptions = computed(() => toOptions('commonIssuanceCycle'))
+  const statusOptions = computed(() => toOptions('commonEnabledStatus'))
   const formItems = computed<FormItem[]>(() => [
     { label: '标准基础', key: 'basicSection', type: 'divider', span: 24 },
     {
@@ -518,7 +518,7 @@
         try {
           const [, organizations] = await Promise.all([
             Promise.all(
-              ['smisPpeIssuanceCycle', 'smisMaterialEnableStatus', 'smisMaterialUnit'].map((code) =>
+              ['commonIssuanceCycle', 'commonEnabledStatus', 'smisMaterialUnit'].map((code) =>
                 userStore.ensureDictLoaded(code)
               )
             ),

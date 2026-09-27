@@ -90,10 +90,7 @@
           </div>
         </li>
       </ul>
-      <div v-else class="task-detail-drawer__empty">
-        <ArtSvgIcon icon="ri:file-list-3-line" />
-        <span>暂无巡查项目</span>
-      </div>
+      <ArtEmptyState v-else title="暂无巡查项目" size="compact" :visual-size="64" />
 
       <ArtSectionTitle title="执行记录" subtitle="任务生成、转交、进度保存与完成事件" />
       <ElTimeline class="task-detail-drawer__timeline">
@@ -132,6 +129,7 @@
   import ArtSectionTitle from '@/components/core/surfaces/art-section-title/index.vue'
   import ArtDictDisplay from '@/components/core/base/art-dict-display/index.vue'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
+  import ArtEmptyState from '@/components/core/feedback/art-empty-state/index.vue'
   import {
     fetchRiskInspectionTaskDetail,
     type SmisRiskInspectionTask,
@@ -363,23 +361,6 @@
     display: grid;
     gap: 4px;
     justify-items: start;
-  }
-
-  .task-detail-drawer__empty {
-    display: grid;
-    gap: 8px;
-    place-items: center;
-    min-height: 120px;
-    margin-top: -8px;
-    font-size: 13px;
-    color: var(--el-text-color-placeholder);
-    background: var(--el-fill-color-extra-light);
-    border: 1px dashed var(--el-border-color);
-    border-radius: var(--el-border-radius-base);
-  }
-
-  .task-detail-drawer__empty .art-svg-icon {
-    font-size: 28px;
   }
 
   .task-detail-drawer__timeline {

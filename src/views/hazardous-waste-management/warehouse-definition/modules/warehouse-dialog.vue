@@ -135,7 +135,7 @@
     }))
   )
   const statusOptions = computed<FormItemOption[]>(() =>
-    (getDictMap.value.smisHazardousWasteEnableStatus ?? []).map((item) => ({
+    (getDictMap.value.commonEnabledDisabledStatus ?? []).map((item) => ({
       label: item.label || item.name,
       value: item.value
     }))
@@ -294,7 +294,7 @@
       onOpen: async (_open, api) => {
         try {
           await Promise.all([
-            userStore.ensureDictLoaded('smisHazardousWasteEnableStatus'),
+            userStore.ensureDictLoaded('commonEnabledDisabledStatus'),
             userStore.ensureDictLoaded('smisTagStyle')
           ])
         } finally {

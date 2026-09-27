@@ -78,6 +78,7 @@
 </template>
 
 <script setup lang="tsx">
+  import { useDictionaryOptions } from '@/hooks/core/useDictionaryOptions'
   import { createDateTimeFormatter } from '@/utils/ui/format'
 
   import dayjs from 'dayjs'
@@ -105,6 +106,11 @@
   import InspectionRecordDetailDrawer, {
     type InspectionRecordDetailDrawerExpose
   } from './modules/inspection-record-detail-drawer.vue'
+
+  const smisSpecialEquipmentFilterOptions = useDictionaryOptions(
+    'smisSpecialEquipmentFilter',
+    (value) => value === 'true'
+  )
 
   defineOptions({ name: 'SmisDualControlHiddenHazardInspectionRecord' })
 
@@ -198,10 +204,7 @@
       props: {
         clearable: true,
         placeholder: '全部设备',
-        options: [
-          { label: '仅特种设备', value: true },
-          { label: '非特种设备', value: false }
-        ]
+        options: smisSpecialEquipmentFilterOptions
       }
     }
   ])

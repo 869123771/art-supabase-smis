@@ -78,7 +78,7 @@
   })
   const model = reactive<FormModel>(initial())
   const statusOptions = computed<FormItemOption[]>(() =>
-    (getDictMap.value.smisHazardousWasteEnableStatus ?? []).map((item) => ({
+    (getDictMap.value.commonEnabledDisabledStatus ?? []).map((item) => ({
       label: item.label || item.name,
       value: item.value
     }))
@@ -187,7 +187,7 @@
         api.setLoading(true)
         try {
           await Promise.all([
-            userStore.ensureDictLoaded('smisHazardousWasteEnableStatus'),
+            userStore.ensureDictLoaded('commonEnabledDisabledStatus'),
             userStore.ensureDictLoaded('smisTagStyle')
           ])
         } finally {

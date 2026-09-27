@@ -10,9 +10,12 @@
     <template #action>
       <div class="hazard-ai-trend__actions">
         <ElSelect v-model="state.lookbackDays" aria-label="趋势回看周期" :disabled="state.loading">
-          <ElOption label="近 30 天" :value="30" />
-          <ElOption label="近 60 天" :value="60" />
-          <ElOption label="近 90 天" :value="90" />
+          <ElOption
+            v-for="option in lookbackOptions"
+            :key="option.value"
+            :label="option.label"
+            :value="option.value"
+          />
         </ElSelect>
         <ElButton type="primary" plain :loading="state.loading" @click="handleForecast">
           <ArtSvgIcon v-if="!state.loading" icon="ri:line-chart-line" />
@@ -89,6 +92,7 @@
 </template>
 
 <script setup lang="ts">
+  import { useDictionaryOptions } from '@/hooks/core/useDictionaryOptions'
   import { ElMessage } from 'element-plus'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
   import { getFriendlySupabaseErrorMessage } from '@/utils/supabase/error'
@@ -99,6 +103,8 @@
   } from '@smis/api'
   import SmisAiCapabilityGuide from '@smis/views/components/smis-ai-capability-guide.vue'
   import SmisAiPanelFrame from '@smis/views/components/smis-ai-panel-frame.vue'
+
+  const lookbackOptions = useDictionaryOptions('smisHazardTrendLookbackDays', Number)
 
   defineOptions({ name: 'SmisHazardAiTrendPanel' })
 

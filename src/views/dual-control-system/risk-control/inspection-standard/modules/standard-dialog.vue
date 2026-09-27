@@ -81,7 +81,7 @@
     return roots
   }
   const statusOptions = computed(() =>
-    (getDictMap.value.smisConfigStatus ?? [])
+    (getDictMap.value.commonEnabledDisabledVoidedStatus ?? [])
       .filter((item) => item.value !== 'voided')
       .map((item) => ({ label: item.label || item.name, value: item.value }))
   )
@@ -201,7 +201,7 @@
         api.setLoading(true)
         try {
           await Promise.all([
-            userStore.ensureDictLoaded('smisConfigStatus'),
+            userStore.ensureDictLoaded('commonEnabledDisabledVoidedStatus'),
             userStore.ensureDictLoaded('smisTagStyle')
           ])
         } finally {

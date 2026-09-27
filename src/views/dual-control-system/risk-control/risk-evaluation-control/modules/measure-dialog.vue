@@ -90,13 +90,14 @@
             </li>
           </ul>
         </ElScrollbar>
-        <div v-else class="measure-dialog__position-empty">
-          <ArtSvgIcon icon="ri:briefcase-4-line" />
-          <div>
-            <strong>尚未选择防控岗位</strong>
-            <small>从上方选择岗位后，可分别配置对应的排查频次。</small>
-          </div>
-        </div>
+        <ArtEmptyState
+          v-else
+          class="measure-dialog__position-empty"
+          title="尚未选择防控岗位"
+          description="从上方选择岗位后，可分别配置对应的排查频次。"
+          size="compact"
+          :visual-size="64"
+        />
       </div>
     </div>
   </ArtDialog>
@@ -109,6 +110,7 @@
   import ArtForm, { type FormItem } from '@/components/core/forms/art-form/index.vue'
   import ArtIconButton from '@/components/core/widget/art-icon-button/index.vue'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
+  import ArtEmptyState from '@/components/core/feedback/art-empty-state/index.vue'
   import { useUserStore } from '@/store/modules/user'
   import {
     fetchRiskPositionOptions,
@@ -460,31 +462,10 @@
   }
 
   .measure-dialog__position-empty {
-    display: grid;
-    grid-template-columns: 38px minmax(0, 1fr);
-    gap: 11px;
-    align-items: center;
-    min-height: 78px;
-    padding: 12px 14px;
-    color: var(--el-text-color-secondary);
+    min-height: 140px;
     background: var(--default-box-color);
     border: 1px dashed var(--el-border-color);
     border-radius: var(--el-border-radius-base);
-  }
-
-  .measure-dialog__position-empty > .art-svg-icon {
-    font-size: 24px;
-    color: var(--el-text-color-placeholder);
-  }
-
-  .measure-dialog__position-empty strong,
-  .measure-dialog__position-empty small {
-    display: block;
-  }
-
-  .measure-dialog__position-empty small {
-    margin-top: 3px;
-    font-size: 11px;
   }
 
   @media (width <= 1080px) {

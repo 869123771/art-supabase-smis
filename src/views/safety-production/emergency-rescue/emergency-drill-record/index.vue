@@ -39,6 +39,7 @@
 </template>
 
 <script setup lang="tsx">
+  import { useDictionaryOptions } from '@/hooks/core/useDictionaryOptions'
   import dayjs from 'dayjs'
   import { ElTag } from 'element-plus'
   import type { SearchFormItem } from '@/components/core/forms/art-search-bar/index.vue'
@@ -72,6 +73,8 @@
     type EmergencyRecordDetailOpenData
   } from '../shared/emergency-record-detail-dialog.vue'
 
+  const commonDraftSubmittedStatusOptions = useDictionaryOptions('commonDraftSubmittedStatus')
+
   defineOptions({ name: 'SmisEmergencyDrillRecord' })
   type TableParams = SmisEmergencyDrillRecordSearchParams &
     Pick<Api.Common.PaginationParams, 'current' | 'size'>
@@ -96,13 +99,8 @@
       value: item.value
     }))
   const recordStatusOptions = computed(() => {
-    const options = dictOptions('smisEmergencyDrillRecordStatus')
-    return options.length
-      ? options
-      : [
-          { label: '草稿', value: 'draft' },
-          { label: '已提交', value: 'submitted' }
-        ]
+    const options = dictOptions('commonDraftSubmittedStatus')
+    return options.length ? options : commonDraftSubmittedStatusOptions
   })
   const metrics = computed<BusinessWorkspaceMetric[]>(() => [
     {
@@ -345,7 +343,7 @@
   onMounted(async () => {
     await Promise.all(
       [
-        'smisEmergencyDrillRecordStatus',
+        'commonDraftSubmittedStatus',
         'smisEmergencyDrillForm',
         'smisEmergencyPlanCategory',
         'smisEmergencyPlanLevel'

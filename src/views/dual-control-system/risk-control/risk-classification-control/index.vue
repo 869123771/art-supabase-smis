@@ -52,6 +52,7 @@
 </template>
 
 <script setup lang="tsx">
+  import { useDictionaryOptions } from '@/hooks/core/useDictionaryOptions'
   import dayjs from 'dayjs'
   import { ElMessage, ElTag } from 'element-plus'
   import { fetchEmployeeSelectorList } from '@/api/integration/employees'
@@ -138,11 +139,7 @@
       value: item.value
     }))
   )
-  const statusOptions = [
-    { label: '未管控', value: 'uncontrolled' },
-    { label: '管控中', value: 'active' },
-    { label: '已停用', value: 'suspended' }
-  ]
+  const statusOptions = useDictionaryOptions('smisRiskControlStatus')
   const workspaceMetrics = computed<BusinessWorkspaceMetric[]>(() => [
     {
       label: '有效风险点',

@@ -457,7 +457,7 @@
       fetchToolScopeOptions('position').then((result) => {
         positionOptions.value = result.data ?? []
       }),
-      ...['smisToolIssuanceCycle', 'smisMaterialEnableStatus', 'smisMaterialUnit'].map((code) =>
+      ...['commonIssuanceCycle', 'commonEnabledStatus', 'smisMaterialUnit'].map((code) =>
         userStore.ensureDictLoaded(code)
       )
     ])

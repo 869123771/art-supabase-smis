@@ -50,14 +50,14 @@
               </ElButton>
             </div>
 
-            <div
+            <ArtEmptyState
               v-if="!form.model.fieldDefinitions.length"
               class="operation-type-dialog__field-empty"
-            >
-              <ArtSvgIcon icon="ri:input-field" />
-              <strong>暂无专有字段</strong>
-              <span>当前类型将只使用作业票通用字段，也可以点击“添加字段”扩展。</span>
-            </div>
+              title="暂无专有字段"
+              description="当前类型将只使用作业票通用字段，也可以点击“添加字段”扩展。"
+              size="compact"
+              :visual-size="64"
+            />
 
             <div v-else class="operation-type-dialog__field-list">
               <section
@@ -193,6 +193,7 @@
     type FormItemOption
   } from '@/components/core/forms/art-form/index.vue'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
+  import ArtEmptyState from '@/components/core/feedback/art-empty-state/index.vue'
   import { useUserStore } from '@/store/modules/user'
   import {
     saveSpecialOperationType,
@@ -275,7 +276,7 @@
   const formModel = reactive<FormModel>(createInitialModel())
   const previewName = computed(() => form.model.typeName.trim() || '示例作业类型')
   const statusOptions = computed<FormItemOption[]>(() =>
-    (getDictMap.value.smisSpecialOperationStatus ?? [])
+    (getDictMap.value.commonEnabledDisabledVoidedStatus ?? [])
       .filter((item) => item.value !== 'voided')
       .map((item) => ({ label: item.label || item.name, value: item.value }))
   )
@@ -501,7 +502,7 @@
         api.setLoading(true)
         try {
           await Promise.all([
-            userStore.ensureDictLoaded('smisSpecialOperationStatus'),
+            userStore.ensureDictLoaded('commonEnabledDisabledVoidedStatus'),
             userStore.ensureDictLoaded('smisSpecialOperationFieldType'),
             userStore.ensureDictLoaded('smisTagStyle')
           ])
@@ -588,27 +589,10 @@
     }
 
     &__field-empty {
-      display: grid;
-      place-items: center;
       min-height: 150px;
-      padding: 24px;
-      text-align: center;
       background: var(--art-gray-100);
       border: 1px dashed var(--el-border-color);
       border-radius: var(--el-border-radius-base);
-
-      svg {
-        width: 28px;
-        height: 28px;
-        margin-bottom: 8px;
-        color: var(--theme-color);
-      }
-
-      span {
-        margin-top: 4px;
-        font-size: 12px;
-        color: var(--el-text-color-secondary);
-      }
     }
 
     &__field-list {

@@ -607,7 +607,7 @@
         label: '启用状态',
         key: 'status',
         type: 'select',
-        options: dictOptions('smisEquipmentStatus')
+        options: dictOptions('commonEnabledStatus')
       },
       {
         label: '启用日期',
@@ -981,7 +981,7 @@
           'smisEquipmentOperationStatus',
           'smisEquipmentAssetStatus',
           'smisEquipmentImportanceLevel',
-          'smisEquipmentStatus',
+          'commonEnabledStatus',
           'smisBoilerType',
           'supplierCategory'
         ].map((code) => userStore.ensureDictLoaded(code)),

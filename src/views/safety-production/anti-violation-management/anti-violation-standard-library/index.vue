@@ -152,7 +152,7 @@
   const tree = reactive<TreeGroup>({ data: [], selectedKey: ALL_KEY, loading: false, error: null })
   const tableSearchQuery = reactive<SmisAntiViolationStandardSearchParams>({})
   const statusOptions = computed(() =>
-    (getDictMap.value.smisAntiViolationStatus ?? []).map((item) => ({
+    (getDictMap.value.commonEnabledStatus ?? []).map((item) => ({
       label: item.label || item.name,
       value: item.value
     }))
@@ -339,7 +339,7 @@
       width: 108,
       align: 'center',
       formatter: (row) => (
-        <ArtDictDisplay dictCode="smisAntiViolationStatus" value={row.status} display="tag" />
+        <ArtDictDisplay dictCode="commonEnabledStatus" value={row.status} display="tag" />
       )
     },
     {
@@ -407,7 +407,7 @@
     }
   }
 
-  onMounted(() => void userStore.ensureDictLoaded('smisAntiViolationStatus'))
+  onMounted(() => void userStore.ensureDictLoaded('commonEnabledStatus'))
 </script>
 
 <style scoped lang="scss">
