@@ -1,5 +1,6 @@
 <template>
   <ArtSectionCard
+    :show-scrollbar="false"
     class="ppe-org-nav smis-organization-navigator smis-category-navigator"
     title="组织导航"
     subtitle="按组织结构筛选员工花名册"

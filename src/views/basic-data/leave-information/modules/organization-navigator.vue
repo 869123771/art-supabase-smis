@@ -1,5 +1,6 @@
 <template>
   <ArtSectionCard
+    :show-scrollbar="false"
     class="leave-organization"
     title="组织导航"
     subtitle="数据来自系统管理 / 部门管理"

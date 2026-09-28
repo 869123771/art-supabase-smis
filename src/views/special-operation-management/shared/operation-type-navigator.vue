@@ -1,5 +1,6 @@
 <template>
   <ArtSectionCard
+    :show-scrollbar="false"
     class="operation-type-navigator"
     title="作业类型"
     subtitle="选择类型后同步筛选右侧配置"

@@ -23,6 +23,7 @@
 
       <div class="hazard-workspace__grid">
         <ArtSectionCard
+          :show-scrollbar="false"
           title="作业 / 活动信息"
           subtitle="维护作业活动与必经作业步骤"
           :loading="loading"
@@ -82,6 +83,7 @@
         </ArtSectionCard>
 
         <ArtSectionCard
+          :show-scrollbar="false"
           title="危害因素"
           subtitle="维护因素类别、事故类型、后果及关联活动"
           :loading="loading"

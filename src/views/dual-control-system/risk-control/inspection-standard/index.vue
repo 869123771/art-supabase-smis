@@ -28,6 +28,7 @@
         >
           <template #primary>
             <ArtSectionCard
+              :show-scrollbar="false"
               class="inspection-standard-page__navigation-card"
               title="排查标准导航"
               subtitle="选择层级后查看关联排查项"

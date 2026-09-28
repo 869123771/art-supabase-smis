@@ -188,6 +188,7 @@
           </section>
 
           <ArtSectionCard
+            :show-scrollbar="false"
             v-if="activeModel && activeMethod === 'LS'"
             title="LS 风险矩阵预览"
             subtitle="纵轴为可能性 L，横轴为严重性 S；颜色按当前等级阈值实时计算。"

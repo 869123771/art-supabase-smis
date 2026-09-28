@@ -1,5 +1,6 @@
 <template>
   <ArtSectionCard
+    :show-scrollbar="false"
     class="risk-map-property-panel"
     title="图形属性"
     :subtitle="model ? '调整图形后保存整张场景图' : '选择画布中的图形进行配置'"

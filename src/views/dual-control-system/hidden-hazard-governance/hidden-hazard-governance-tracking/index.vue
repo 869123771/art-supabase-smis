@@ -32,6 +32,7 @@
         >
           <template #primary>
             <ArtSectionCard
+              :show-scrollbar="false"
               class="hazard-governance-page__navigator-card"
               title="排查类型导航"
               subtitle="按隐患来源排查类型聚焦"

@@ -1,5 +1,6 @@
 <template>
   <ArtSectionCard
+    :show-scrollbar="false"
     class="equipment-category-navigator smis-category-navigator"
     title="设备分类层级"
     subtitle="父子结构实时同步"

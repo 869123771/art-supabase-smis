@@ -1,5 +1,6 @@
 <template>
   <ArtSectionCard
+    :show-scrollbar="false"
     class="question-category-navigator smis-category-navigator"
     title="题库分类"
     subtitle="按培训主题分层组织题目"

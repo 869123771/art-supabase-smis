@@ -1,5 +1,6 @@
 <template>
   <ArtSectionCard
+    :show-scrollbar="false"
     class="qualification-catalog-navigator"
     :title="`${title}层级`"
     subtitle="选择节点后同步筛选右侧数据"

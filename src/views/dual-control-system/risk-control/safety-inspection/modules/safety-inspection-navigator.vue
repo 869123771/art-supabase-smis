@@ -1,5 +1,6 @@
 <template>
   <ArtSectionCard
+    :show-scrollbar="false"
     class="safety-inspection-navigator"
     title="检查导航"
     subtitle="按排查类型或被检查组织快速定位"

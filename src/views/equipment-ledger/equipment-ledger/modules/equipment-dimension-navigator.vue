@@ -1,5 +1,6 @@
 <template>
   <ArtSectionCard
+    :show-scrollbar="false"
     class="equipment-dimension-navigator"
     title="台账结构"
     subtitle="按分类或位置切换视角"

@@ -37,6 +37,7 @@
         </ElInput>
 
         <ArtSectionCard
+          :show-scrollbar="false"
           class="risk-site-select__panel"
           title="可选场所"
           :subtitle="`共 ${filteredSites.length} 个符合条件的场所`"

@@ -1,5 +1,6 @@
 <template>
   <ArtSectionCard
+    :show-scrollbar="false"
     class="material-category-navigator smis-category-navigator"
     title="物料类别层级"
     subtitle="分类上下文与列表同步"

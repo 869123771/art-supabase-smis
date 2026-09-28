@@ -31,6 +31,7 @@
         >
           <template #primary>
             <ArtSectionCard
+              :show-scrollbar="false"
               class="hidden-hazard-plan-page__navigator-card"
               title="排查类型导航"
               subtitle="选择类型后聚焦对应计划"

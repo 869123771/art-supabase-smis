@@ -1,5 +1,6 @@
 <template>
   <ArtSectionCard
+    :show-scrollbar="false"
     class="storage-location-navigator smis-category-navigator"
     title="存放位置层级"
     subtitle="物理位置父子结构"

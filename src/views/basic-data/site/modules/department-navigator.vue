@@ -1,5 +1,6 @@
 <template>
   <ArtSectionCard
+    :show-scrollbar="false"
     class="site-department-navigator smis-category-navigator"
     title="部门导航"
     subtitle="数据来自系统管理 / 部门管理"

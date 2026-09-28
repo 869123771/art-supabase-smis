@@ -1,5 +1,6 @@
 <template>
   <ArtSectionCard
+    :show-scrollbar="false"
     class="work-position-tree"
     title="适用岗位导航"
     subtitle="组织部门 / HR 岗位"

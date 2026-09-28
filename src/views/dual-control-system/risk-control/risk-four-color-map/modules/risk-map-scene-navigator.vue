@@ -1,5 +1,6 @@
 <template>
   <ArtSectionCard
+    :show-scrollbar="false"
     class="risk-map-scene-navigator"
     title="场景层级"
     :subtitle="`共 ${rows.length} 个场景`"

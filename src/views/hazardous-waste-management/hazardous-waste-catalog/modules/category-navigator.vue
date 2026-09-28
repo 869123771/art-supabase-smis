@@ -1,5 +1,6 @@
 <template>
   <ArtSectionCard
+    :show-scrollbar="false"
     class="hazardous-category-nav"
     title="危废分类"
     subtitle="分类上下文与名录同步"

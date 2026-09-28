@@ -56,6 +56,7 @@
           <div class="risk-four-map-page__content">
             <main class="risk-four-map-page__canvas-panel">
               <ArtSectionCard
+                :show-scrollbar="false"
                 :title="selectedScene?.sceneName || '四色图画布'"
                 :subtitle="canvasSubtitle"
                 :empty="!sceneState.loading && !selectedScene"

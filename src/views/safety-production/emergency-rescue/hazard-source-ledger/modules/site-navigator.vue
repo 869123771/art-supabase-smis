@@ -1,5 +1,10 @@
 <template>
-  <ArtSectionCard class="site-navigator" title="场所导航" subtitle="按场所层级筛选危险源">
+  <ArtSectionCard
+    :show-scrollbar="false"
+    class="site-navigator"
+    title="场所导航"
+    subtitle="按场所层级筛选危险源"
+  >
     <template #actions>
       <ArtTreeExpandToggle
         :tree="treeRef"

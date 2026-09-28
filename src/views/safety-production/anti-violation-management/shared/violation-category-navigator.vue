@@ -1,5 +1,6 @@
 <template>
   <ArtSectionCard
+    :show-scrollbar="false"
     class="violation-category-navigator smis-category-navigator"
     title="违章分类层级"
     subtitle="选择节点后同步筛选右侧数据"

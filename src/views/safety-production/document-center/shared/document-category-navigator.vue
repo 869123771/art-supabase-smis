@@ -1,5 +1,6 @@
 <template>
   <ArtSectionCard
+    :show-scrollbar="false"
     class="document-category-navigator smis-category-navigator"
     title="文档分类"
     subtitle="树形结构由当前租户自定义维护"
