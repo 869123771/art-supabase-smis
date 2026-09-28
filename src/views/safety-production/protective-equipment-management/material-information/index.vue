@@ -412,7 +412,12 @@
       fixed: 'right',
       formatter: (row) => (
         <div class="flex items-center gap-1">
-          <ArtButtonTable icon="ri:file-list-3-line" label="详情" onClick={() => openDetail(row)} />
+          <ArtButtonTable
+            type="view"
+            icon="ri:file-list-3-line"
+            label="详情"
+            onClick={() => openDetail(row)}
+          />
           <ArtButtonTable
             permission="SmisMaterialInformation:Edit"
             type="edit"

@@ -455,6 +455,7 @@
           />
           <ArtButtonTable
             permission="SmisThreeViolationEducation:RecordEducation"
+            type="edit"
             icon="ri:graduation-cap-line"
             label={row.educationStatus === 'educated' ? '补充教育' : '记录教育'}
             onClick={() => void recordDialogRef.value?.handleOpen(row)}

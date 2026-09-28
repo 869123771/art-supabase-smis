@@ -420,18 +420,21 @@
       formatter: (row) => (
         <div class="personal-page__row-actions">
           <ArtButtonTable
+            type="view"
             icon="ri:file-list-3-line"
             label="查看明细"
             onClick={() => openDetails(row)}
           />
           <ArtButtonTable
             permission="SmisToolPersonalStandard:Generate"
+            type="add"
             icon="ri:magic-line"
             label={row.personalStandardId ? '重新生成' : '生成个人标准'}
             onClick={() => generate([row])}
           />
           <ArtButtonTable
             permission="SmisToolPersonalStandard:Schedule"
+            type="edit"
             icon="ri:calendar-schedule-line"
             label="设置领用计划"
             disabled={!row.personalStandardId}

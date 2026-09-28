@@ -312,6 +312,7 @@
         <div class="announcement-page__actions">
           <ArtButtonTable
             permission="SmisViolationAnnouncement:View"
+            type="view"
             icon="ri:eye-line"
             label="查看"
             onClick={() => void detailDialogRef.value?.handleOpen(row)}

@@ -340,10 +340,10 @@
     {
       prop: 'operation',
       label: '操作',
-      width: 92,
+      width: 96,
       fixed: 'right',
       formatter: (row) => (
-        <div class="leave-information-page__row-actions">
+        <>
           {row.status === 'draft' ? (
             <>
               <ArtButtonTable
@@ -364,7 +364,7 @@
               </span>
             </ArtTooltip>
           )}
-        </div>
+        </>
       )
     }
   ]
@@ -657,20 +657,6 @@
       justify-content: center;
       width: 28px;
       height: 28px;
-    }
-
-    :deep(.leave-information-page__row-actions) {
-      display: flex;
-      gap: 6px;
-      align-items: center;
-      justify-content: center;
-      min-width: 0;
-      white-space: nowrap;
-    }
-
-    :deep(.leave-information-page__row-actions .art-button-table) {
-      flex: 0 0 32px;
-      margin-right: 0;
     }
 
     @media (width <= 820px) {

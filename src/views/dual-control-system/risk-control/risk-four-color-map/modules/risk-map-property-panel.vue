@@ -24,6 +24,7 @@
           type="primary"
           @click="emit('edit-scene')"
         >
+          <template #icon><ArtSvgIcon icon="ri:settings-3-line" /></template>
           场景设置
         </ElButton>
       </div>

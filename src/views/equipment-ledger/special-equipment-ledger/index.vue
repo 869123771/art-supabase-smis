@@ -317,6 +317,7 @@
         <div class="flex flex-wrap gap-1">
           <ArtButtonTable
             permission="SmisEquipmentReminder:Manage"
+            type="edit"
             icon="ri:notification-3-line"
             label="配置到期提醒"
             onClick={() => void reminderDialogRef.value?.handleOpen({ equipment: row })}

@@ -407,6 +407,7 @@
         <BusinessTableRowActions>
           <ArtButtonTable
             permission="SmisToolPersonalRequisition:Push"
+            type="sign"
             icon="ri:send-plane-line"
             label="下推发放"
             disabled={row.status !== 'pending_issue'}

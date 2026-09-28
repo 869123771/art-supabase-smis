@@ -778,6 +778,7 @@
             onClick={() => openDetail(row)}
           />
           <ArtButtonTable
+            type="view"
             icon="ri:qr-code-line"
             label="查看二维码"
             onClick={() => void openQrCode(row)}

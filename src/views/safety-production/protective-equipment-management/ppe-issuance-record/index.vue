@@ -467,6 +467,7 @@
         <BusinessTableRowActions>
           <ArtButtonTable
             permission="SmisPpeIssuanceRecord:Issue"
+            type="sign"
             icon="ri:send-plane-line"
             label="发放过账"
             disabled={row.status !== 'draft'}

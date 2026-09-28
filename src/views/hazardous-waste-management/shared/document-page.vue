@@ -373,6 +373,7 @@
           {editable(row) && (
             <ArtButtonTable
               permission={permissions.value.submit}
+              type="sign"
               icon="ri:send-plane-line"
               label="提交"
               onClick={() => void handleSubmit(row)}
@@ -381,6 +382,7 @@
           {row.status === 'pending' && (
             <ArtButtonTable
               permission={permissions.value.review}
+              type="sign"
               icon="ri:checkbox-circle-line"
               label="通过"
               onClick={() => void handleReview(row, true)}
