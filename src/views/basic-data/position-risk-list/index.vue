@@ -37,6 +37,7 @@
 
           <main class="position-risk-page__main">
             <ArtSectionCard
+              :show-scrollbar="false"
               class="position-risk-page__positions"
               title="岗位选择"
               :subtitle="positionSectionSubtitle"

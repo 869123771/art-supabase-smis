@@ -40,6 +40,7 @@
 
           <main class="position-safety-page__main">
             <ArtSectionCard
+              :show-scrollbar="false"
               class="position-safety-page__positions"
               title="岗位选择"
               :subtitle="positionSectionSubtitle"
