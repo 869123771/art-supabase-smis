@@ -152,7 +152,7 @@
     <section class="hazard-ledger-detail__evidence" aria-label={props.title}>
       <strong>{props.title}</strong>
       {props.images.length ? (
-        <div>
+        <div class="hazard-ledger-detail__evidence-gallery">
           {props.images.map((url, index) => (
             <ElImage
               key={url}
@@ -164,7 +164,12 @@
           ))}
         </div>
       ) : (
-        <p>暂无{props.title}</p>
+        <ArtEmptyState
+          title={`暂无${props.title}`}
+          description="该记录尚未上传对应照片。"
+          size="compact"
+          visualSize={64}
+        />
       )}
     </section>
   )
@@ -285,14 +290,13 @@
     }
 
     &__narrative p,
-    &__evidence p,
     &__event p {
       margin: 6px 0 0;
       line-height: 1.7;
       white-space: pre-wrap;
     }
 
-    &__evidence > div {
+    &__evidence-gallery {
       display: flex;
       flex-wrap: wrap;
       gap: 10px;

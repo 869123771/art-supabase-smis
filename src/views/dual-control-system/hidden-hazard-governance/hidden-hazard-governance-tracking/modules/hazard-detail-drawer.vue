@@ -173,6 +173,7 @@
   import { ElImage } from 'element-plus'
   import ArtDrawer from '@/components/core/drawers/art-drawer/index.vue'
   import type { ArtDrawerExpose } from '@/components/core/drawers/art-drawer/types'
+  import ArtEmptyState from '@/components/core/feedback/art-empty-state/index.vue'
   import ArtSectionTitle from '@/components/core/surfaces/art-section-title/index.vue'
   import ArtDictDisplay from '@/components/core/base/art-dict-display/index.vue'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
@@ -194,7 +195,7 @@
     <section class="hazard-governance-detail__evidence" aria-label={props.title}>
       <strong>{props.title}</strong>
       {props.images.length ? (
-        <div>
+        <div class="hazard-governance-detail__evidence-gallery">
           {props.images.map((url, index) => (
             <ElImage
               key={url}
@@ -206,7 +207,12 @@
           ))}
         </div>
       ) : (
-        <p>暂无{props.title}</p>
+        <ArtEmptyState
+          title={`暂无${props.title}`}
+          description="该记录尚未上传对应照片。"
+          size="compact"
+          visualSize={64}
+        />
       )}
     </section>
   )
@@ -333,15 +339,14 @@
       border-radius: var(--el-border-radius-base);
     }
 
-    &__narrative p,
-    &__evidence p {
+    &__narrative p {
       margin: 0;
       line-height: 1.7;
       color: var(--el-text-color-regular);
       white-space: pre-wrap;
     }
 
-    &__evidence > div,
+    &__evidence-gallery,
     &__event-images {
       display: flex;
       flex-wrap: wrap;

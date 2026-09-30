@@ -24,7 +24,10 @@
         <div class="inspection-rectification-detail__evidence">
           <section>
             <strong>隐患照片</strong>
-            <div v-if="record.hazardImageUrls.length">
+            <div
+              v-if="record.hazardImageUrls.length"
+              class="inspection-rectification-detail__evidence-gallery"
+            >
               <ElImage
                 v-for="(url, index) in record.hazardImageUrls"
                 :key="url"
@@ -36,11 +39,20 @@
                 :alt="`隐患照片 ${index + 1}`"
               />
             </div>
-            <p v-else>暂无隐患照片</p>
+            <ArtEmptyState
+              v-else
+              title="暂无隐患照片"
+              description="该记录尚未上传现场照片。"
+              size="compact"
+              :visual-size="64"
+            />
           </section>
           <section>
             <strong>整改照片</strong>
-            <div v-if="record.rectificationImageUrls.length">
+            <div
+              v-if="record.rectificationImageUrls.length"
+              class="inspection-rectification-detail__evidence-gallery"
+            >
               <ElImage
                 v-for="(url, index) in record.rectificationImageUrls"
                 :key="url"
@@ -52,7 +64,13 @@
                 :alt="`整改照片 ${index + 1}`"
               />
             </div>
-            <p v-else>尚未上传整改照片</p>
+            <ArtEmptyState
+              v-else
+              title="尚未上传整改照片"
+              description="整改完成后可在记录中补充现场照片。"
+              size="compact"
+              :visual-size="64"
+            />
           </section>
         </div>
       </ArtSectionCard>
@@ -64,6 +82,7 @@
   import dayjs from 'dayjs'
   import ArtDialog from '@/components/core/dialogs/art-dialog/index.vue'
   import type { ArtDialogExpose } from '@/components/core/dialogs/art-dialog/types'
+  import ArtEmptyState from '@/components/core/feedback/art-empty-state/index.vue'
   import ArtDescriptions from '@/components/core/base/art-descriptions/index.vue'
   import type { ArtDescriptionItem } from '@/components/core/base/art-descriptions/types'
   import ArtDictDisplay from '@/components/core/base/art-dict-display/index.vue'
@@ -229,7 +248,7 @@
       color: var(--el-text-color-primary);
     }
 
-    &__evidence section > div {
+    &__evidence-gallery {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(108px, 1fr));
       gap: var(--art-space-2);
@@ -239,11 +258,6 @@
       width: 100%;
       height: 92px;
       border-radius: var(--el-border-radius-base);
-    }
-
-    &__evidence p {
-      margin: 0;
-      color: var(--el-text-color-placeholder);
     }
 
     @media (width <= 680px) {

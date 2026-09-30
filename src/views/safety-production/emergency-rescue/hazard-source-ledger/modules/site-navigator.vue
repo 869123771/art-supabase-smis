@@ -42,6 +42,14 @@
               <span :title="data.siteName">{{ data.siteName }}</span>
             </span>
           </template>
+          <template #empty>
+            <ArtEmptyState
+              title="暂无可显示内容"
+              description="请调整当前范围或稍后刷新。"
+              size="compact"
+              :visual-size="64"
+            />
+          </template>
         </ElTree>
         <ArtEmptyState v-else title="暂无场所" description="请先在场所维护中建立场所树。" />
       </div>

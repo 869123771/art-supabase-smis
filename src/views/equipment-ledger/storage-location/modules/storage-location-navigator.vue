@@ -90,6 +90,14 @@
               />
             </div>
           </template>
+          <template #empty>
+            <ArtEmptyState
+              title="未找到匹配项"
+              description="请调整关键词或清空筛选条件。"
+              size="compact"
+              :visual-size="64"
+            />
+          </template>
         </ElTree>
       </ElScrollbar>
     </div>
@@ -97,6 +105,7 @@
 </template>
 
 <script setup lang="ts">
+  import ArtEmptyState from '@/components/core/feedback/art-empty-state/index.vue'
   import '../../../components/category-navigator.scss'
 
   import { computed, nextTick, ref, watch } from 'vue'

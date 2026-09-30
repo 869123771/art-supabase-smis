@@ -63,12 +63,21 @@
             <ArtSvgIcon v-if="selectedKey === node.id" icon="ri:check-line" />
           </div>
         </template>
+        <template #empty>
+          <ArtEmptyState
+            title="未找到匹配项"
+            description="请调整关键词或清空筛选条件。"
+            size="compact"
+            :visual-size="64"
+          />
+        </template>
       </ElTree>
     </ElScrollbar>
   </ArtSectionCard>
 </template>
 
 <script setup lang="ts">
+  import ArtEmptyState from '@/components/core/feedback/art-empty-state/index.vue'
   import type { ElTree, TreeNodeData } from 'element-plus'
   import ArtIconButton from '@/components/core/widget/art-icon-button/index.vue'
   import ArtTreeExpandToggle from '@/components/core/widget/art-tree-expand-toggle/index.vue'

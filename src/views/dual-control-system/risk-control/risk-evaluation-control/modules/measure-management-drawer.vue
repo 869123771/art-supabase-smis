@@ -166,7 +166,13 @@
                   </span>
                 </div>
               </div>
-              <p v-else>暂未配置责任岗位，请编辑该措施补充岗位与排查周期。</p>
+              <ArtEmptyState
+                v-else
+                title="暂未配置责任岗位"
+                description="编辑该措施，补充责任岗位与排查周期。"
+                size="compact"
+                :visual-size="52"
+              />
             </div>
           </li>
         </ul>
@@ -183,6 +189,7 @@
   import ArtDictDisplay from '@/components/core/base/art-dict-display/index.vue'
   import ArtDrawer from '@/components/core/drawers/art-drawer/index.vue'
   import type { ArtDrawerExpose } from '@/components/core/drawers/art-drawer/types'
+  import ArtEmptyState from '@/components/core/feedback/art-empty-state/index.vue'
   import ArtSectionCard from '@/components/core/surfaces/art-section-card/index.vue'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
   import { useArtFeedback } from '@/hooks/core/useArtFeedback'
@@ -532,8 +539,7 @@
     color: var(--el-text-color-primary);
   }
 
-  .measure-management-drawer__positions-heading > small,
-  .measure-management-drawer__positions > p {
+  .measure-management-drawer__positions-heading > small {
     margin: 0;
     font-size: 12px;
     color: var(--el-text-color-secondary);
