@@ -74,9 +74,17 @@
             default-expand-all
             highlight-current
             :current-node-key="selectedOrganizationId"
-            empty-text="暂无组织部门"
             @node-click="handleOrganizationClick"
-          />
+          >
+            <template #empty>
+              <ArtEmptyState
+                title="暂无组织部门"
+                description="当前没有可选择的组织部门。"
+                size="compact"
+                :visual-size="64"
+              />
+            </template>
+          </ElTree>
         </ElScrollbar>
       </ElTabPane>
     </ElTabs>

@@ -520,7 +520,7 @@
         confirmButtonText: '删除',
         cancelButtonText: '取消',
         type: 'warning',
-        confirmButtonClass: 'el-button--danger'
+        confirmButtonType: 'danger'
       })
       await deleteLeaveInformation(ids)
       await tableQueryRef.value?.refreshRemove()

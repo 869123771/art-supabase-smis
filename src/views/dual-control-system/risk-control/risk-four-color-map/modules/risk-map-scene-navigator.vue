@@ -57,7 +57,6 @@
         default-expand-all
         highlight-current
         :current-node-key="selectedId"
-        empty-text="暂无匹配场景"
         @node-click="emit('select', $event)"
       >
         <template #default="{ data }">
@@ -92,8 +91,8 @@
         </template>
         <template #empty>
           <ArtEmptyState
-            title="暂无可显示内容"
-            description="请调整当前范围或稍后刷新。"
+            :title="keyword ? '暂无匹配场景' : '暂无可显示内容'"
+            :description="keyword ? '请更换关键词或清空搜索条件。' : '请稍后刷新。'"
             size="compact"
             :visual-size="64"
           />
