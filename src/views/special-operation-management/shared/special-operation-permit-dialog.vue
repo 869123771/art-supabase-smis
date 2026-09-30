@@ -352,6 +352,7 @@
           <ElFormItem label="作业现场照片">
             <ArtUploadImage
               v-model="form.sitePhotoUrls"
+              :resource-tenant-id="tenantId || ''"
               multiple
               :limit="6"
               :size="104"
