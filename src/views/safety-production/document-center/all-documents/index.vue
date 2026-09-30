@@ -333,18 +333,20 @@
                   :visual-size="112"
                 />
               </ElScrollbar>
-              <ElPagination
-                class="document-center-page__folder-pagination"
-                background
-                layout="total, prev, pager, next, sizes, jumper"
-                :total="pagination.total"
-                :current-page="pagination.current"
-                :page-size="pagination.size"
-                :page-sizes="[10, 20, 30, 50]"
-                :disabled="loading"
-                @size-change="handleSizeChange"
-                @current-change="handleCurrentChange"
-              />
+              <ElScrollbar class="document-center-page__folder-pagination-scroll">
+                <ElPagination
+                  class="document-center-page__folder-pagination"
+                  background
+                  layout="total, prev, pager, next, sizes, jumper"
+                  :total="pagination.total"
+                  :current-page="pagination.current"
+                  :page-size="pagination.size"
+                  :page-sizes="[10, 20, 30, 50]"
+                  :disabled="loading"
+                  @size-change="handleSizeChange"
+                  @current-change="handleCurrentChange"
+                />
+              </ElScrollbar>
             </template>
             <ArtTable
               v-else
@@ -1709,7 +1711,6 @@
 
       &__folder-pagination {
         justify-content: flex-start;
-        overflow-x: auto;
       }
     }
 

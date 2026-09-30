@@ -41,7 +41,7 @@
 
 <script setup lang="tsx">
   import dayjs from 'dayjs'
-  import { ElAvatar, ElButton, ElPopover, ElTag } from 'element-plus'
+  import { ElAvatar, ElButton, ElPopover, ElScrollbar, ElTag } from 'element-plus'
   import type { SearchFormItem } from '@/components/core/forms/art-search-bar/index.vue'
   import type {
     ArtTableQueryExcelColumn,
@@ -421,36 +421,38 @@
       type: 'expand',
       width: 48,
       formatter: (row) => (
-        <div class="certificate-ledger-page__details">
-          {row.items.map((item) => {
-            const meta = riskMeta(item.reminderState)
-            return (
-              <article class={`is-${item.reminderState}`}>
-                <div>
-                  <strong>{item.workName}</strong>
-                  <small>
-                    {item.workCode} · 提前 {item.reminderDays} 天提醒
-                  </small>
-                </div>
-                <span>
-                  <small>批准日期</small>
-                  {item.approvalDate}
-                </span>
-                <span>
-                  <small>有效日期</small>
-                  {item.effectiveDate}
-                </span>
-                <ElTag type={meta.type} effect="light">
-                  {meta.label}
-                </ElTag>
-                {item.dismissalReason ? (
-                  <em>{item.dismissalReason === 'trained' ? '已培训' : '已离岗'}</em>
-                ) : null}
-              </article>
-            )
-          })}
-          <footer>{renderHistory(row)}</footer>
-        </div>
+        <ElScrollbar class="certificate-ledger-page__details-scroll">
+          <div class="certificate-ledger-page__details">
+            {row.items.map((item) => {
+              const meta = riskMeta(item.reminderState)
+              return (
+                <article class={`is-${item.reminderState}`}>
+                  <div>
+                    <strong>{item.workName}</strong>
+                    <small>
+                      {item.workCode} · 提前 {item.reminderDays} 天提醒
+                    </small>
+                  </div>
+                  <span>
+                    <small>批准日期</small>
+                    {item.approvalDate}
+                  </span>
+                  <span>
+                    <small>有效日期</small>
+                    {item.effectiveDate}
+                  </span>
+                  <ElTag type={meta.type} effect="light">
+                    {meta.label}
+                  </ElTag>
+                  {item.dismissalReason ? (
+                    <em>{item.dismissalReason === 'trained' ? '已培训' : '已离岗'}</em>
+                  ) : null}
+                </article>
+              )
+            })}
+            <footer>{renderHistory(row)}</footer>
+          </div>
+        </ElScrollbar>
       )
     },
     {
@@ -777,7 +779,6 @@
 
     .certificate-ledger-page :deep(.certificate-ledger-page__details) {
       padding-left: 18px;
-      overflow-x: auto;
 
       article {
         min-width: 760px;

@@ -33,13 +33,12 @@ export function printIssuanceRecord(
     table { width: 100%; border-collapse: collapse; }
     th, td { padding: 9px; border: 1px solid #9ca3af; text-align: left; }
     .sign { display: flex; justify-content: space-between; margin-top: 48px; }
-    .scroll-hint { display: none; }
     @media screen and (max-width: 640px) {
-      body { padding: 16px; }
+      body { padding: 12px; }
       .meta { grid-template-columns: 1fr; }
-      table { display: block; overflow-x: auto; white-space: nowrap; }
+      table { table-layout: fixed; font-size: 11px; }
+      th, td { padding: 4px; overflow-wrap: anywhere; }
       .sign { flex-wrap: wrap; gap: 12px 24px; }
-      .scroll-hint { display: block; margin: 0 0 8px; color: #6b7280; font-size: 12px; }
     }
     @media print { body { padding: 0; } }
   </style>
@@ -54,7 +53,6 @@ export function printIssuanceRecord(
     <span>发放仓库：${escape(row.warehouseName)}</span>
     <span>发放日期：${escape(row.issueDate)}</span>
   </div>
-  <p class="scroll-hint">左右滑动表格查看完整明细</p>
   <table>
     <thead><tr><th>序号</th><th>${materialLabel}</th><th>规格型号</th><th>发放数量</th><th>单位</th><th>备注</th></tr></thead>
     <tbody>${itemRows}</tbody>

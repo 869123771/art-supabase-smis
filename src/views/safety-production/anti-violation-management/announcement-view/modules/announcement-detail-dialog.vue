@@ -24,7 +24,9 @@
         </p>
       </header>
 
-      <div class="announcement-detail-dialog__content" v-html="safeContent" />
+      <ElScrollbar class="announcement-detail-dialog__content-scroll">
+        <div class="announcement-detail-dialog__content" v-html="safeContent" />
+      </ElScrollbar>
 
       <section
         v-if="announcement.attachmentUrls.length"
@@ -157,9 +159,8 @@
     }
 
     &__content :deep(table) {
-      display: block;
-      max-width: 100%;
-      overflow-x: auto;
+      width: max-content;
+      max-width: none;
       border-collapse: collapse;
     }
 

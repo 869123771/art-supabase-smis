@@ -11,7 +11,7 @@
       </ElButton>
     </div>
 
-    <div class="blind-plate-items__table-scroll">
+    <ElScrollbar class="blind-plate-items__table-scroll">
       <ArtTable
         ref="tableRef"
         :data="modelValue"
@@ -21,7 +21,7 @@
         table-layout="fixed"
         empty-text="尚未添加盲板明细"
       />
-    </div>
+    </ElScrollbar>
   </div>
 </template>
 
@@ -151,7 +151,6 @@
 
     &__table-scroll {
       min-width: 0;
-      overflow-x: auto;
       border-radius: var(--art-control-radius);
     }
 

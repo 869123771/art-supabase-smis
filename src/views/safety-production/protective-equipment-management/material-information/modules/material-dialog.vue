@@ -20,6 +20,8 @@
         <template #imageUrls>
           <ArtUploadImage
             v-model="form.model.imageUrls"
+            :resource-tenant-id="selectedTenantId || ''"
+            :disabled="!selectedTenantId"
             title="上传物料图片"
             multiple
             :limit="5"
