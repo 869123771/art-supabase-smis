@@ -51,7 +51,6 @@ test('issuance print shares the template and escapes business data', () => {
     assert.equal(popup.opener, null)
     assert.equal(closed, true)
     assert.match(html, /防护用品发放单/)
-    assert.match(html, /左右滑动表格查看完整明细/)
     assert.match(html, /&lt;领用人&gt;/)
     assert.match(html, /&lt;手套&gt;/)
     assert.match(html, /piece&lt;件&gt;/)

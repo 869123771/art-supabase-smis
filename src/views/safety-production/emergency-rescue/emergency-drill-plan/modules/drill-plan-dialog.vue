@@ -364,7 +364,7 @@
       ? [
           {
             id: row.responsibleEmployeeId,
-            tenantId: row.tenantId,
+            tenantId: row.trainees[0]?.tenantId || '',
             organizationId: row.applicableOrganizationId,
             employeeNo: row.responsibleEmployeeNo || '',
             employeeName: row.responsibleEmployeeName || '未命名员工',
@@ -397,7 +397,7 @@
     }
   }
   const handleOpen = async (data: DrillPlanDialogOpenData) => {
-    recordTenantId.value = data.row?.tenantId
+    recordTenantId.value = data.row?.trainees[0]?.tenantId
     Object.assign(form, initial())
     organizations.value = data.organizations
     responsibleSelection.value = []

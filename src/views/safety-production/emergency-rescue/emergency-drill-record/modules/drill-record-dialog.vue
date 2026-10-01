@@ -298,7 +298,7 @@
     }
   }
   const handleOpen = async (data: DrillRecordDialogOpenData) => {
-    recordTenantId.value = data.row?.tenantId
+    recordTenantId.value = data.row?.participants[0]?.tenantId
     Object.assign(form, initial())
     planOptions.value = data.planOptions
     participantSelection.value = []

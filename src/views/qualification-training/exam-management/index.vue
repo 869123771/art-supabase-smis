@@ -279,7 +279,6 @@
                 v-if="hasAuth('SmisExamManagement:Assign')"
                 v-model:model-values="paperForm.employeeIds"
                 v-model:selected-data="employeeSelection"
-                :tenant-id="recordTenantId"
                 title="选择考试人员"
                 placeholder="批量选择考试人员"
               />
@@ -845,7 +844,6 @@
     ]
   }
   const openPaper = async (row?: SmisExamPaper, copy = false) => {
-    recordTenantId.value = row?.tenantId
     questions.value = []
     categories.value = []
     Object.assign(
