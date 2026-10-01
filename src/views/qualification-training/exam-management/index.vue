@@ -274,11 +274,14 @@
                   已选 {{ paperForm.employeeIds.length }} 人
                 </ElTag>
               </header>
-              <TrainingEmployeeMultipleSelect
+              <ArtEmployeeSelect
+                multiple
                 v-if="hasAuth('SmisExamManagement:Assign')"
-                v-model="paperForm.employeeIds"
+                v-model:model-values="paperForm.employeeIds"
                 v-model:selected-data="employeeSelection"
+                :tenant-id="recordTenantId"
                 title="选择考试人员"
+                placeholder="批量选择考试人员"
               />
               <ElAlert
                 v-else
@@ -460,7 +463,7 @@
     type BusinessWorkspaceMetric
   } from '@/components/business/business-workspace-header/index.vue'
   import BusinessTableWorkspaceActions from '@/components/business/business-table-workspace-actions/index.vue'
-  import TrainingEmployeeMultipleSelect from '../training-management/shared/training-employee-multiple-select.vue'
+  import ArtEmployeeSelect from '@/components/business/art-employee-select/index.vue'
   import {
     calculateExamTotalScore,
     createExamPaperPayload,
@@ -842,6 +845,7 @@
     ]
   }
   const openPaper = async (row?: SmisExamPaper, copy = false) => {
+    recordTenantId.value = row?.tenantId
     questions.value = []
     categories.value = []
     Object.assign(

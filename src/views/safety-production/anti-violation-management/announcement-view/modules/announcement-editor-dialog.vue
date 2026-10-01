@@ -13,11 +13,14 @@
         :show-submit="false"
       >
         <template #audienceEmployeeIds>
-          <AntiViolationEmployeeMultipleSelect
-            v-model="form.model.audienceEmployeeIds"
+          <ArtEmployeeSelect
+            multiple
+            v-model:model-values="form.model.audienceEmployeeIds"
             v-model:selected-data="employeeSelection"
+            :tenant-id="recordTenantId"
             title="选择公告接收人员"
             placeholder="从员工花名册批量选择"
+            :display-fields="['organization', 'jobTitle']"
           />
         </template>
 
@@ -85,7 +88,7 @@
     type SmisAnnouncementOrganization,
     type SmisAnnouncementSavePayload
   } from '@smis/api'
-  import AntiViolationEmployeeMultipleSelect from '../../shared/anti-violation-employee-multiple-select.vue'
+  import ArtEmployeeSelect from '@/components/business/art-employee-select/index.vue'
 
   export interface AnnouncementEditorDialogOpenData {
     row?: SmisAnnouncement
@@ -99,8 +102,9 @@
 
   const emit = defineEmits<{ success: [type: 'add' | 'edit'] }>()
   const userStore = useUserStore()
-  const { getDictMap, getUserInfo } = storeToRefs(userStore)
+  const { getDictMap } = storeToRefs(userStore)
   const dialogRef = ref<ArtDialogExpose<AnnouncementEditorDialogOpenData>>()
+  const recordTenantId = ref<string>()
   const formRef = ref<FormExpose>()
   const categories = shallowRef<SmisAnnouncementCategoryOption[]>([])
   const organizations = shallowRef<SmisAnnouncementOrganization[]>([])
@@ -253,7 +257,7 @@
   const toEmployeeSelection = (row: SmisAnnouncement): EmployeeIntegrationItem[] =>
     row.audienceEmployees.map((person) => ({
       id: person.id,
-      tenantId: getUserInfo.value.tenantId || '',
+      tenantId: row.tenantId,
       employeeNo: person.employeeNo,
       employeeName: person.employeeName,
       employmentStatus: 'active',
@@ -302,6 +306,7 @@
     }
   }
   const handleOpen = async (data: AnnouncementEditorDialogOpenData): Promise<void> => {
+    recordTenantId.value = data.row?.tenantId
     categories.value = data.categories
     organizations.value = data.organizations
     await resetForm()

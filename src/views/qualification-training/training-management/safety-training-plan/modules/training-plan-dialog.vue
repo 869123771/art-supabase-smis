@@ -45,16 +45,19 @@
           <ArtEmployeeSelect
             v-model="form.responsibleEmployeeId"
             v-model:selected-data="responsibleSelection"
-            :tenant-id="getUserInfo.tenantId"
+            :tenant-id="recordTenantId"
             title="选择计划负责人"
             subtitle="负责人来自当前租户员工花名册"
           />
         </template>
         <template #participantIds>
-          <TrainingEmployeeMultipleSelect
-            v-model="form.participantIds"
+          <ArtEmployeeSelect
+            multiple
+            v-model:model-values="form.participantIds"
             v-model:selected-data="participantSelection"
+            :tenant-id="recordTenantId"
             title="选择计划参训人员"
+            placeholder="批量选择参训员工"
           />
           <small class="training-plan-dialog__helper">
             已选择 {{ form.participantIds.length }} 人；发布后作为培训记录的默认签到名单。
@@ -109,7 +112,6 @@
     type SmisSafetyTrainingPlan,
     type SmisSafetyTrainingPlanSavePayload
   } from '@smis/api'
-  import TrainingEmployeeMultipleSelect from '../../shared/training-employee-multiple-select.vue'
 
   interface FormModel {
     id?: string
@@ -144,8 +146,9 @@
 
   const emit = defineEmits<{ success: [type: 'add' | 'edit'] }>()
   const userStore = useUserStore()
-  const { getUserInfo, getDictMap } = storeToRefs(userStore)
+  const { getDictMap } = storeToRefs(userStore)
   const dialogRef = ref<ArtDialogExpose<TrainingPlanDialogOpenData>>()
+  const recordTenantId = ref<string>()
   const formRef = ref<InstanceType<typeof ArtForm>>()
   const organizations = shallowRef<SmisSafetyTrainingOrganizationOption[]>([])
   const responsibleSelection = shallowRef<EmployeeIntegrationItem[]>([])
@@ -297,10 +300,11 @@
   }
 
   const toEmployeeSelection = (
-    participant: SmisSafetyTrainingPlan['participants'][number]
+    participant: SmisSafetyTrainingPlan['participants'][number],
+    tenantId: string
   ): EmployeeIntegrationItem => ({
     id: participant.employeeId,
-    tenantId: getUserInfo.value.tenantId || '',
+    tenantId,
     employeeNo: participant.employeeNo,
     employeeName: participant.employeeName,
     employmentStatus: 'active',
@@ -317,6 +321,7 @@
   })
 
   const initialize = (data: TrainingPlanDialogOpenData): void => {
+    recordTenantId.value = data.row?.tenantId
     Object.assign(form, createInitialForm())
     organizations.value = data.organizations
     responsibleSelection.value = []
@@ -347,12 +352,14 @@
       remark: row.remark || '',
       participantIds: row.participants.map((item) => item.employeeId)
     })
-    participantSelection.value = row.participants.map(toEmployeeSelection)
+    participantSelection.value = row.participants.map((participant) =>
+      toEmployeeSelection(participant, row.tenantId)
+    )
     if (row.responsibleEmployeeId && row.responsibleEmployeeName) {
       responsibleSelection.value = [
         {
           id: row.responsibleEmployeeId,
-          tenantId: getUserInfo.value.tenantId || '',
+          tenantId: row.tenantId,
           employeeNo: row.responsibleEmployeeNo || '',
           employeeName: row.responsibleEmployeeName,
           employmentStatus: 'active'

@@ -57,10 +57,13 @@
             :visual-size="48"
         /></template>
         <template #participantIds
-          ><EmergencyEmployeeMultipleSelect
-            v-model="form.participantIds"
+          ><ArtEmployeeSelect
+            multiple
+            v-model:model-values="form.participantIds"
             v-model:selected-data="participantSelection"
+            :tenant-id="recordTenantId"
             title="批量选择参演人员"
+            placeholder="批量选择员工"
         /></template>
         <template #imageUrls
           ><ArtUploadImage
@@ -112,7 +115,7 @@
     type SmisEmergencyDrillPlanOption,
     type SmisEmergencyDrillRecord
   } from '@smis/api'
-  import EmergencyEmployeeMultipleSelect from '../../shared/emergency-employee-multiple-select.vue'
+  import ArtEmployeeSelect from '@/components/business/art-employee-select/index.vue'
 
   export interface DrillRecordDialogOpenData {
     row?: SmisEmergencyDrillRecord
@@ -143,6 +146,7 @@
   }
   const emit = defineEmits<{ success: [type: 'add' | 'edit'] }>()
   const dialogRef = ref<ArtDialogExpose<DrillRecordDialogOpenData>>()
+  const recordTenantId = ref<string>()
   const formRef = ref<FormExpose>()
   const submitting = ref(false)
   const planOptions = shallowRef<SmisEmergencyDrillPlanOption[]>([])
@@ -294,6 +298,7 @@
     }
   }
   const handleOpen = async (data: DrillRecordDialogOpenData) => {
+    recordTenantId.value = data.row?.tenantId
     Object.assign(form, initial())
     planOptions.value = data.planOptions
     participantSelection.value = []

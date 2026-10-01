@@ -33,6 +33,7 @@
           <ArtEmployeeSelect
             v-model="form.model.inspectedEmployeeId"
             v-model:selected-data="inspectedSelection"
+            :tenant-id="recordTenantId"
             title="选择被检查人"
             subtitle="人员、照片、组织和岗位均来自当前租户员工花名册"
             placeholder="请选择被检查人"
@@ -42,15 +43,18 @@
           <ArtEmployeeSelect
             v-model="form.model.checkerEmployeeId"
             v-model:selected-data="checkerSelection"
+            :tenant-id="recordTenantId"
             title="选择检查人"
             subtitle="按姓名、工号、组织或岗位检索"
             placeholder="请选择检查人"
           />
         </template>
         <template #responsibleEmployeeIds>
-          <EmployeeMultipleSelect
-            v-model="form.model.responsibleEmployeeIds"
+          <ArtEmployeeSelect
+            multiple
+            v-model:model-values="form.model.responsibleEmployeeIds"
             v-model:selected-data="responsibleSelection"
+            :tenant-id="recordTenantId"
             title="选择教育负责人"
             subtitle="支持多选，教育台账将保留负责人快照"
             placeholder="请选择一名或多名教育负责人"
@@ -74,7 +78,6 @@
   } from '@/components/core/forms/art-form/index.vue'
   import ArtEmployeeSelect from '@/components/business/art-employee-select/index.vue'
   import ArtDictDisplay from '@/components/core/base/art-dict-display/index.vue'
-  import EmployeeMultipleSelect from '../../shared/employee-multiple-select.vue'
   import { useUserStore } from '@/store/modules/user'
   import {
     saveThreeViolationEducation,
@@ -116,6 +119,7 @@
   const formRef = ref<FormExpose>()
   const standards = shallowRef<SmisAntiViolationStandardOption[]>([])
   const currentMode = ref<ThreeViolationDialogMode>('add')
+  const recordTenantId = ref<string>()
   const inspectedSelection = ref<EmployeeIntegrationItem[]>([])
   const checkerSelection = ref<EmployeeIntegrationItem[]>([])
   const responsibleSelection = ref<EmployeeIntegrationItem[]>([])
@@ -291,6 +295,7 @@
 
   const handleOpen = async (data: ThreeViolationDialogOpenData): Promise<void> => {
     currentMode.value = data.mode
+    recordTenantId.value = data.row?.tenantId
     Object.assign(form.model, initial())
     standards.value = data.standards
     inspectedSelection.value = []

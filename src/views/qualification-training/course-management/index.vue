@@ -92,11 +92,14 @@
               :size="112"
           /></template>
           <template #employeeIds
-            ><TrainingEmployeeMultipleSelect
+            ><ArtEmployeeSelect
+              multiple
               v-if="hasAuth('SmisCourseManagement:Assign')"
-              v-model="courseForm.employeeIds"
+              v-model:model-values="courseForm.employeeIds"
               v-model:selected-data="employeeSelection"
+              :tenant-id="recordTenantId"
               title="选择学习人员"
+              placeholder="批量选择学习人员"
             /><ElAlert
               v-else
               title="当前账号可维护课程内容，但没有分配学习人员的权限。"
@@ -192,7 +195,7 @@
     type BusinessWorkspaceMetric
   } from '@/components/business/business-workspace-header/index.vue'
   import BusinessTableWorkspaceActions from '@/components/business/business-table-workspace-actions/index.vue'
-  import TrainingEmployeeMultipleSelect from '../training-management/shared/training-employee-multiple-select.vue'
+  import ArtEmployeeSelect from '@/components/business/art-employee-select/index.vue'
   import {
     deleteCourses,
     fetchCourseLearningRecordList,
@@ -243,6 +246,7 @@
   })
   const paperOptions = ref<Array<{ label: string; value: string }>>([])
   const employeeSelection = ref<EmployeeIntegrationItem[]>([])
+  const recordTenantId = ref<string>()
   const learningCourse = ref<SmisLearningCourse>()
   const learningOpenedAt = ref(0)
   const learningProgress = ref(0)
@@ -448,6 +452,7 @@
     courseType: [{ required: true, message: '请选择课程类型', trigger: 'change' }]
   }
   const openCourse = async (row?: SmisLearningCourse, copy = false) => {
+    recordTenantId.value = row?.tenantId
     paperOptions.value = []
     Object.assign(
       courseForm,

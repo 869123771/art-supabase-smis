@@ -37,9 +37,11 @@
         :show-submit="false"
       >
         <template #responsibleEmployeeIds>
-          <EmployeeMultipleSelect
-            v-model="form.model.responsibleEmployeeIds"
+          <ArtEmployeeSelect
+            multiple
+            v-model:model-values="form.model.responsibleEmployeeIds"
             v-model:selected-data="responsibleSelection"
+            :tenant-id="currentRow?.tenantId"
             title="选择教育负责人"
             subtitle="支持多选，提交后同步更新安全教育台账"
             placeholder="请选择一名或多名教育负责人"
@@ -69,7 +71,7 @@
   import ArtForm, { type FormItem } from '@/components/core/forms/art-form/index.vue'
   import ArtUploadFile from '@/components/core/forms/art-upload-file/index.vue'
   import ArtDictDisplay from '@/components/core/base/art-dict-display/index.vue'
-  import EmployeeMultipleSelect from '../../shared/employee-multiple-select.vue'
+  import ArtEmployeeSelect from '@/components/business/art-employee-select/index.vue'
   import {
     recordThreeViolationEducation,
     type SmisThreeViolationEducation,

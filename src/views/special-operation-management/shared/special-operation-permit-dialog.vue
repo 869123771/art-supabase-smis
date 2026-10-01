@@ -199,42 +199,47 @@
               />
             </ElFormItem>
             <ElFormItem label="现场监护人">
-              <SpecialOperationEmployeeMultipleSelect
-                v-model="form.guardianIds"
+              <ArtEmployeeSelect
+                multiple
+                v-model:model-values="form.guardianIds"
                 v-model:selected-data="selection.guardians"
-                :tenant-id="tenantId"
+                :tenant-id="tenantId || undefined"
                 placeholder="可多选现场监护人"
               />
             </ElFormItem>
             <ElFormItem label="作业验证人">
-              <SpecialOperationEmployeeMultipleSelect
-                v-model="form.verifierIds"
+              <ArtEmployeeSelect
+                multiple
+                v-model:model-values="form.verifierIds"
                 v-model:selected-data="selection.verifiers"
-                :tenant-id="tenantId"
+                :tenant-id="tenantId || undefined"
                 placeholder="可多选作业验证人"
               />
             </ElFormItem>
             <ElFormItem label="安全交底人">
-              <SpecialOperationEmployeeMultipleSelect
-                v-model="form.briefingGiverIds"
+              <ArtEmployeeSelect
+                multiple
+                v-model:model-values="form.briefingGiverIds"
                 v-model:selected-data="selection.briefingGivers"
-                :tenant-id="tenantId"
+                :tenant-id="tenantId || undefined"
                 placeholder="可多选安全交底人"
               />
             </ElFormItem>
             <ElFormItem label="接受交底人">
-              <SpecialOperationEmployeeMultipleSelect
-                v-model="form.briefingReceiverIds"
+              <ArtEmployeeSelect
+                multiple
+                v-model:model-values="form.briefingReceiverIds"
                 v-model:selected-data="selection.briefingReceivers"
-                :tenant-id="tenantId"
+                :tenant-id="tenantId || undefined"
                 placeholder="可多选接受交底人"
               />
             </ElFormItem>
             <ElFormItem label="现场分析人">
-              <SpecialOperationEmployeeMultipleSelect
-                v-model="form.analystIds"
+              <ArtEmployeeSelect
+                multiple
+                v-model:model-values="form.analystIds"
                 v-model:selected-data="selection.analysts"
-                :tenant-id="tenantId"
+                :tenant-id="tenantId || undefined"
                 placeholder="可多选现场分析人"
               />
             </ElFormItem>
@@ -247,13 +252,14 @@
         >
           <ElFormItem prop="workers" class="permit-form__table-field">
             <div class="permit-form__section-action">
-              <SpecialOperationEmployeeMultipleSelect
-                v-model="form.workerIds"
+              <ArtEmployeeSelect
+                multiple
+                v-model:model-values="form.workerIds"
                 v-model:selected-data="selection.workers"
-                :tenant-id="tenantId"
+                :tenant-id="tenantId || undefined"
                 title="批量添加作业人员"
                 placeholder="批量选择作业人员"
-                @confirm="handleWorkerConfirm"
+                @confirm-multiple="handleWorkerConfirm"
               />
             </div>
           </ElFormItem>
@@ -416,7 +422,6 @@
     type SmisSpecialOperationPrecheckDraft
   } from '@smis/api'
   import { useUserStore } from '@/store/modules/user'
-  import SpecialOperationEmployeeMultipleSelect from './special-operation-employee-multiple-select.vue'
   import SpecialOperationCustomField from './special-operation-custom-field.vue'
   import SpecialOperationBlindPlateItems from './special-operation-blind-plate-items.vue'
   import SpecialOperationAiPrecheckPanel from './special-operation-ai-precheck-panel.vue'

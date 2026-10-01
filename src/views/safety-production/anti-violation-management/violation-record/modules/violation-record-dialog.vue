@@ -17,11 +17,14 @@
         :show-submit="false"
       >
         <template #violatorEmployeeIds>
-          <AntiViolationEmployeeMultipleSelect
-            v-model="form.model.violatorEmployeeIds"
+          <ArtEmployeeSelect
+            multiple
+            v-model:model-values="form.model.violatorEmployeeIds"
             v-model:selected-data="violatorSelection"
+            :tenant-id="recordTenantId"
             title="选择违章人员"
             placeholder="从员工花名册批量选择"
+            :display-fields="['organization', 'jobTitle']"
           />
         </template>
 
@@ -45,6 +48,7 @@
           <ArtEmployeeSelect
             v-model="form.model.checkerEmployeeId"
             v-model:selected-data="checkerSelection"
+            :tenant-id="recordTenantId"
             title="选择检查人"
             subtitle="数据来自当前租户员工花名册"
             placeholder="从员工花名册选择"
@@ -75,7 +79,6 @@
   import ArtForm, { type FormItem } from '@/components/core/forms/art-form/index.vue'
   import ArtEmployeeSelect from '@/components/business/art-employee-select/index.vue'
   import ArtUploadImage from '@/components/core/forms/art-upload-image/index.vue'
-  import { useUserStore } from '@/store/modules/user'
   import {
     saveViolationRecord,
     type SmisAntiViolationStandardOption,
@@ -83,7 +86,6 @@
     type SmisViolationRecord,
     type SmisViolationRecordSavePayload
   } from '@smis/api'
-  import AntiViolationEmployeeMultipleSelect from '../../shared/anti-violation-employee-multiple-select.vue'
   import AntiViolationSiteSelect from '../../shared/anti-violation-site-select.vue'
   import AntiViolationStandardMultipleSelect from '../../shared/anti-violation-standard-multiple-select.vue'
 
@@ -108,9 +110,8 @@
   }
 
   const emit = defineEmits<{ success: [mode: ViolationRecordDialogMode] }>()
-  const userStore = useUserStore()
-  const { getUserInfo } = storeToRefs(userStore)
   const dialogRef = ref<ArtDialogExpose<ViolationRecordDialogOpenData>>()
+  const recordTenantId = ref<string>()
   const formRef = ref<FormExpose>()
   const mode = ref<ViolationRecordDialogMode>('add')
   const sites = shallowRef<SmisSite[]>([])
@@ -245,11 +246,12 @@
   )
 
   const toEmployeeSelection = (
-    people: SmisViolationRecord['violators']
+    people: SmisViolationRecord['violators'],
+    tenantId: string
   ): EmployeeIntegrationItem[] =>
     people.map((person) => ({
       id: person.id,
-      tenantId: getUserInfo.value.tenantId || '',
+      tenantId,
       organizationId: person.organizationId,
       employeeNo: person.employeeNo,
       employeeName: person.employeeName,
@@ -268,7 +270,7 @@
   const toCheckerSelection = (row: SmisViolationRecord): EmployeeIntegrationItem[] => [
     {
       id: row.checkerEmployeeId,
-      tenantId: getUserInfo.value.tenantId || '',
+      tenantId: row.tenantId,
       employeeNo: '',
       employeeName: row.checkerName,
       jobTitle: row.checkerPositionName,
@@ -307,7 +309,7 @@
       imageUrls: [...row.imageUrls],
       remark: row.remark || ''
     })
-    violatorSelection.value = toEmployeeSelection(row.violators)
+    violatorSelection.value = toEmployeeSelection(row.violators, row.tenantId)
     checkerSelection.value = toCheckerSelection(row)
     siteSelection.value = sites.value.filter((item) => item.id === row.siteId)
     standardSelection.value = row.items.map((item) => ({
@@ -362,6 +364,7 @@
 
   const handleOpen = async (data: ViolationRecordDialogOpenData): Promise<void> => {
     mode.value = data.mode
+    recordTenantId.value = data.row?.tenantId
     sites.value = data.sites
     standards.value = data.standards
     optionsError.value = false

@@ -66,7 +66,7 @@
           ><ArtEmployeeSelect
             v-model="form.responsibleEmployeeId"
             v-model:selected-data="responsibleSelection"
-            :tenant-id="getUserInfo.tenantId"
+            :tenant-id="recordTenantId"
             title="选择演练负责人"
             subtitle="数据来自当前租户员工花名册"
         /></template>
@@ -89,10 +89,13 @@
           ></template
         >
         <template #traineeIds
-          ><EmergencyEmployeeMultipleSelect
-            v-model="form.traineeIds"
+          ><ArtEmployeeSelect
+            multiple
+            v-model:model-values="form.traineeIds"
             v-model:selected-data="traineeSelection"
+            :tenant-id="recordTenantId"
             title="批量选择参训人员"
+            placeholder="批量选择员工"
         /></template>
         <template #attachmentUrls>
           <ArtUploadFile
@@ -146,7 +149,6 @@
     type SmisEmergencyPlanWarningStatus,
     type SmisTreeOrganization
   } from '@smis/api'
-  import EmergencyEmployeeMultipleSelect from '../../shared/emergency-employee-multiple-select.vue'
 
   interface RescueOption {
     id: string
@@ -187,8 +189,9 @@
 
   const emit = defineEmits<{ success: [type: 'add' | 'edit'] }>()
   const userStore = useUserStore()
-  const { getDictMap, getUserInfo } = storeToRefs(userStore)
+  const { getDictMap } = storeToRefs(userStore)
   const dialogRef = ref<ArtDialogExpose<DrillPlanDialogOpenData>>()
+  const recordTenantId = ref<string>()
   const formRef = ref<FormExpose>()
   const numberRule = useDocumentNumberRule('smis.emergency_drill_plan')
   const submitting = ref(false)
@@ -361,7 +364,7 @@
       ? [
           {
             id: row.responsibleEmployeeId,
-            tenantId: getUserInfo.value.tenantId || '',
+            tenantId: row.tenantId,
             organizationId: row.applicableOrganizationId,
             employeeNo: row.responsibleEmployeeNo || '',
             employeeName: row.responsibleEmployeeName || '未命名员工',
@@ -394,6 +397,7 @@
     }
   }
   const handleOpen = async (data: DrillPlanDialogOpenData) => {
+    recordTenantId.value = data.row?.tenantId
     Object.assign(form, initial())
     organizations.value = data.organizations
     responsibleSelection.value = []
