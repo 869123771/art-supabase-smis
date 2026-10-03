@@ -51,6 +51,7 @@
 </template>
 
 <script setup lang="tsx">
+  import type { TableRequestOptions } from '@/hooks/core/useTable'
   import { useDictionaryOptions } from '@/hooks/core/useDictionaryOptions'
   import dayjs from 'dayjs'
   import BusinessTableWorkspaceActions from '@/components/business/business-table-workspace-actions/index.vue'
@@ -380,9 +381,9 @@
     const size = params.size ?? params.pageSize ?? 20
     return { ...params, from: (page - 1) * size, to: page * size - 1 }
   }
-  const fetchTableData = async (params: TableParams) => {
+  const fetchTableData = async (params: TableParams, options?: TableRequestOptions) => {
     const result = await fetchToolReturnList(normalizePaginationParams(params))
-    Object.assign(overview, result.overview)
+    if (!options?.signal?.aborted) Object.assign(overview, result.overview)
     return { records: result.data, total: result.total }
   }
 

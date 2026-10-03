@@ -62,6 +62,7 @@
 </template>
 
 <script setup lang="tsx">
+  import type { TableRequestOptions } from '@/hooks/core/useTable'
   import { getFriendlySupabaseErrorMessage } from '@/utils/supabase'
   import { normalizeNullableText } from '@/utils/form/normalize'
   import dayjs from 'dayjs'
@@ -546,7 +547,7 @@
       }
     }
   ])
-  const fetchTableData = async (params: TableParams) => {
+  const fetchTableData = async (params: TableParams, options?: TableRequestOptions) => {
     const { from, to } = pageInfoHandler({ current: params.current, size: params.size })
     state.loading = true
     state.error = null
@@ -557,17 +558,19 @@
         from,
         to
       })
-      Object.assign(overview, response.overview)
-      state.sites = siteTree.listToTree(response.sites as SmisHazardSite[]) as SmisHazardSite[]
-      state.organizations = orgTree.listToTree(
-        response.organizations as SmisTreeOrganization[]
-      ) as SmisTreeOrganization[]
+      if (!options?.signal?.aborted) {
+        Object.assign(overview, response.overview)
+        state.sites = siteTree.listToTree(response.sites as SmisHazardSite[]) as SmisHazardSite[]
+        state.organizations = orgTree.listToTree(
+          response.organizations as SmisTreeOrganization[]
+        ) as SmisTreeOrganization[]
+      }
       return response
     } catch (error) {
-      state.error = '场所树加载失败，请稍后重试。'
+      if (!options?.signal?.aborted) state.error = '场所树加载失败，请稍后重试。'
       throw error
     } finally {
-      state.loading = false
+      if (!options?.signal?.aborted) state.loading = false
     }
   }
   const handleSiteSelect = (key: string): void => {

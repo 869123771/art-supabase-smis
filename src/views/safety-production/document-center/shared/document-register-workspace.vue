@@ -71,6 +71,7 @@
 <script setup lang="tsx">
   import { ElTag } from 'element-plus'
   import { watchDebounced } from '@vueuse/core'
+  import type { TableRequestOptions } from '@/hooks/core/useTable'
   import TreeUtils from '@/utils/tree'
   import type { SearchFormItem } from '@/components/core/forms/art-search-bar/index.vue'
   import type {
@@ -598,20 +599,25 @@
     return columns
   }
 
-  const fetchTableData = async (params: TableParams) => {
+  const fetchTableData = async (params: TableParams, options?: TableRequestOptions) => {
     const result = await fetchDocumentRegisterList({
       ...params,
       ...searchQuery,
       ...pageInfoHandler(params),
       kind: props.kind
     })
-    Object.assign(overview, result.overview)
+    if (!options?.signal?.aborted) Object.assign(overview, result.overview)
     return { records: result.data, total: result.total }
   }
   const reloadFromFilters = (): void => {
     void tableQueryRef.value?.getData()
   }
 
+  watch(
+    () => [searchQuery.fileName, searchQuery.documentCode],
+    () => tableQueryRef.value?.cancelRequest(),
+    { flush: 'sync' }
+  )
   watchDebounced(() => [searchQuery.fileName, searchQuery.documentCode], reloadFromFilters, {
     debounce: 360
   })
@@ -725,17 +731,6 @@
         flex: 1;
         flex-direction: column;
         min-height: 0;
-      }
-    }
-
-    :deep(.document-register-workspace__actions) {
-      display: flex;
-      gap: 4px;
-      align-items: center;
-      justify-content: center;
-
-      .art-button-table {
-        margin-right: 0;
       }
     }
 

@@ -452,11 +452,12 @@
       ? tableQueryRef.value?.refreshCreate()
       : tableQueryRef.value?.refreshUpdate())
   const printRectificationNotice = (row: SmisSafetyInspectionRecord): void => {
-    const popup = window.open('', '_blank', 'noopener,noreferrer,width=980,height=820')
+    const popup = window.open('', '_blank', 'width=980,height=820')
     if (!popup) {
       ElMessage.warning('浏览器阻止了打印窗口，请允许本站打开弹出式窗口')
       return
     }
+    popup.opener = null
     popup.document.write(buildRectificationNoticeHtml(row))
     popup.document.close()
   }

@@ -66,6 +66,7 @@
 </template>
 
 <script setup lang="tsx">
+  import type { TableRequestOptions } from '@/hooks/core/useTable'
   import dayjs from 'dayjs'
   import type { SearchFormItem } from '@/components/core/forms/art-search-bar/index.vue'
   import type {
@@ -337,7 +338,7 @@
     }
   ]
 
-  const fetchTableData = async (params: TableParams) => {
+  const fetchTableData = async (params: TableParams, options?: TableRequestOptions) => {
     const { from, to } = pageInfoHandler({ current: params.current, size: params.size })
     tree.loading = true
     tree.error = null
@@ -349,17 +350,19 @@
         from,
         to
       })
-      Object.assign(overview, response.overview)
-      Object.assign(tree, {
-        data: response.tree,
-        inspectionOptions: response.inspectionOptions
-      })
+      if (!options?.signal?.aborted) {
+        Object.assign(overview, response.overview)
+        Object.assign(tree, {
+          data: response.tree,
+          inspectionOptions: response.inspectionOptions
+        })
+      }
       return response
     } catch (error) {
-      tree.error = '设备分类树加载失败，请稍后重试。'
+      if (!options?.signal?.aborted) tree.error = '设备分类树加载失败，请稍后重试。'
       throw error
     } finally {
-      tree.loading = false
+      if (!options?.signal?.aborted) tree.loading = false
     }
   }
 

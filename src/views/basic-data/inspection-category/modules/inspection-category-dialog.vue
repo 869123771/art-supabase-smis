@@ -255,12 +255,12 @@
 </script>
 
 <style scoped lang="scss">
-  @media (max-width: 520px) {
+  @media (width <= 520px) {
     .inspection-category-dialog :deep(.art-entity-summary__content strong) {
       overflow: visible;
       text-overflow: clip;
-      white-space: normal;
       overflow-wrap: anywhere;
+      white-space: normal;
     }
   }
 </style>

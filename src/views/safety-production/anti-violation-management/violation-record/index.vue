@@ -53,6 +53,7 @@
 </template>
 
 <script setup lang="tsx">
+  import type { TableRequestOptions } from '@/hooks/core/useTable'
   import dayjs from 'dayjs'
   import { ElAvatar, ElTag } from 'element-plus'
   import TreeUtils from '@/utils/tree'
@@ -418,9 +419,9 @@
     }
   ]
 
-  const fetchTableData = async (params: TableParams) => {
+  const fetchTableData = async (params: TableParams, options?: TableRequestOptions) => {
     const result = await fetchViolationRecordList({ ...params, ...pageInfoHandler(params) })
-    Object.assign(overview, result.overview)
+    if (!options?.signal?.aborted) Object.assign(overview, result.overview)
     return { records: result.data, total: result.total }
   }
   const handleMoreAction = async (
@@ -493,13 +494,6 @@
         margin-left: -8px;
         box-shadow: 0 0 0 2px var(--el-bg-color);
       }
-    }
-
-    :deep(.violation-record-page__actions) {
-      display: flex;
-      gap: 4px;
-      align-items: center;
-      justify-content: center;
     }
   }
 </style>

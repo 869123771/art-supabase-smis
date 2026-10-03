@@ -48,6 +48,7 @@
 </template>
 
 <script setup lang="tsx">
+  import type { TableRequestOptions } from '@/hooks/core/useTable'
   import dayjs from 'dayjs'
   import { computed, onMounted, reactive, ref, shallowRef } from 'vue'
   import { storeToRefs } from 'pinia'
@@ -396,11 +397,11 @@
       }
     }
   ])
-  const fetchTableData = async (params: TableParams) => {
+  const fetchTableData = async (params: TableParams, options?: TableRequestOptions) => {
     const { current, size, ...filters } = params
     const { from, to } = pageInfoHandler({ current, size })
     const result = await fetchAccidentReportList({ ...toApiParams(filters), from, to })
-    Object.assign(overview, result.overview)
+    if (!options?.signal?.aborted) Object.assign(overview, result.overview)
     organizations.value = result.organizations
     currentEmployee.value = result.currentEmployee
     return result

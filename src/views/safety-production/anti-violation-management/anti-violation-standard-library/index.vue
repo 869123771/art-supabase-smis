@@ -439,11 +439,5 @@
       background: color-mix(in srgb, var(--theme-color) 8%, var(--el-bg-color));
       border-radius: var(--el-border-radius-small);
     }
-
-    :deep(.anti-violation-standard-page__actions) {
-      display: flex;
-      gap: 4px;
-      align-items: center;
-    }
   }
 </style>

@@ -62,7 +62,7 @@
   import { normalizeNullableText } from '@/utils/form/normalize'
   import dayjs from 'dayjs'
   import type { FormRules } from 'element-plus'
-  import { fetchGetEnableOrganizationTree } from '@/api/system-manage'
+  import { fetchEnabledOrganizationTree } from '@/api/system-manage'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
   import ArtDialog from '@/components/core/dialogs/art-dialog/index.vue'
   import type { ArtDialogExpose } from '@/components/core/dialogs/art-dialog/types'
@@ -213,7 +213,7 @@
             key: 'obtainedOrganizationId',
             type: 'treeSelect' as const,
             span: 12,
-            api: fetchGetEnableOrganizationTree,
+            api: fetchEnabledOrganizationTree,
             immediate: false,
             beforeFetch: () => ({ tenantId: getUserInfo.value.tenantId }),
             resultField: 'data',

@@ -65,6 +65,7 @@
 </template>
 
 <script setup lang="tsx">
+  import type { TableRequestOptions } from '@/hooks/core/useTable'
   import dayjs from 'dayjs'
   import { ElImage } from 'element-plus'
   import type { SearchFormItem } from '@/components/core/forms/art-search-bar/index.vue'
@@ -436,7 +437,7 @@
       )
     }
   ]
-  const fetchTableData = async (params: TableParams) => {
+  const fetchTableData = async (params: TableParams, options?: TableRequestOptions) => {
     tree.loading = !tree.data.length
     tree.error = null
     try {
@@ -448,7 +449,7 @@
       tree.data = result.categoryTree
       materialTypes.value = result.materialTypes
       units.value = result.units
-      Object.assign(overview, result.overview)
+      if (!options?.signal?.aborted) Object.assign(overview, result.overview)
       tree.error = result.error ? '物料分类结构加载失败，请重试。' : null
       return { records: result.data, total: result.total }
     } finally {

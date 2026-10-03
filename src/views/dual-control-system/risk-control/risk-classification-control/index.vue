@@ -52,6 +52,7 @@
 </template>
 
 <script setup lang="tsx">
+  import type { TableRequestOptions } from '@/hooks/core/useTable'
   import { useDictionaryOptions } from '@/hooks/core/useDictionaryOptions'
   import dayjs from 'dayjs'
   import { ElMessage, ElTag } from 'element-plus'
@@ -402,10 +403,10 @@
       )
     }
   ]
-  const fetchTableData = async (params: TableParams) => {
+  const fetchTableData = async (params: TableParams, options?: TableRequestOptions) => {
     const { from, to } = pageInfoHandler({ current: params.current, size: params.size })
     const response = await fetchRiskControlPointList({ ...params, from, to })
-    Object.assign(overview, response.overview)
+    if (!options?.signal?.aborted) Object.assign(overview, response.overview)
     return response
   }
   const split = (value?: string): string[] =>
@@ -647,12 +648,6 @@
 
     :deep(.risk-control-page__muted) {
       color: var(--el-text-color-placeholder);
-    }
-
-    :deep(.risk-control-page__actions) {
-      display: flex;
-      gap: 4px;
-      justify-content: center;
     }
   }
 </style>

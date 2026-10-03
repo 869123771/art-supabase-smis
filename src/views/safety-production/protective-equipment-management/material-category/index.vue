@@ -64,6 +64,7 @@
 </template>
 
 <script setup lang="tsx">
+  import type { TableRequestOptions } from '@/hooks/core/useTable'
   import dayjs from 'dayjs'
   import type { SearchFormItem } from '@/components/core/forms/art-search-bar/index.vue'
   import type {
@@ -299,7 +300,7 @@
       )
     }
   ]
-  const fetchTableData = async (params: TableParams) => {
+  const fetchTableData = async (params: TableParams, options?: TableRequestOptions) => {
     tree.loading = !tree.data.length
     tree.error = null
     try {
@@ -309,7 +310,7 @@
         ancestorId: tree.selectedKey === ALL_KEY ? undefined : tree.selectedKey
       })
       tree.data = result.tree
-      Object.assign(overview, result.overview)
+      if (!options?.signal?.aborted) Object.assign(overview, result.overview)
       tree.error = result.error ? '物料类别结构加载失败，请重试。' : null
       return { records: result.data, total: result.total }
     } finally {

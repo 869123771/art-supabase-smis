@@ -41,6 +41,7 @@
   </ArtPermissionGuard>
 </template>
 <script setup lang="tsx">
+  import type { TableRequestOptions } from '@/hooks/core/useTable'
   import BusinessTableIdentityCell from '@/components/business/business-table-identity-cell/index.vue'
   import dayjs from 'dayjs'
   import type { SearchFormItem } from '@/components/core/forms/art-search-bar/index.vue'
@@ -429,12 +430,12 @@
       )
     }
   ]
-  const fetchData = async (params: TableParams) => {
+  const fetchData = async (params: TableParams, options?: TableRequestOptions) => {
     const result = await fetchHazardousWasteDocumentList(direction.value, {
       ...params,
       ...pageInfoHandler(params)
     })
-    Object.assign(overview, result.overview)
+    if (!options?.signal?.aborted) Object.assign(overview, result.overview)
     return { records: result.data, total: result.total }
   }
   onMounted(async () => {
@@ -463,12 +464,6 @@
     :deep(.hazardous-document-page__number) {
       font-variant-numeric: tabular-nums;
       color: var(--theme-color);
-    }
-
-    :deep(.hazardous-document-page__actions) {
-      display: flex;
-      gap: 4px;
-      align-items: center;
     }
   }
 </style>

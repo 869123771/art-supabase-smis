@@ -40,6 +40,7 @@
 </template>
 
 <script setup lang="tsx">
+  import type { TableRequestOptions } from '@/hooks/core/useTable'
   import dayjs from 'dayjs'
   import type { SearchFormItem } from '@/components/core/forms/art-search-bar/index.vue'
   import type {
@@ -333,7 +334,7 @@
     }
   ]
 
-  const fetchTableData = async (params: TableParams) => {
+  const fetchTableData = async (params: TableParams, options?: TableRequestOptions) => {
     const { from, to } = pageInfoHandler({ current: params.current, size: params.size })
     const response = await fetchSupplierList({
       keyword: params.keyword,
@@ -344,7 +345,7 @@
       from,
       to
     })
-    Object.assign(overview, response.overview)
+    if (!options?.signal?.aborted) Object.assign(overview, response.overview)
     return response
   }
 
@@ -391,17 +392,6 @@
         margin-top: 2px;
         font-size: 11px;
         color: var(--el-text-color-secondary);
-      }
-    }
-
-    :deep(.supplier-page__actions) {
-      display: flex;
-      gap: 4px;
-      align-items: center;
-      justify-content: center;
-
-      .art-button-table {
-        margin-right: 0;
       }
     }
   }

@@ -59,6 +59,7 @@
   </ArtPermissionGuard>
 </template>
 <script setup lang="tsx">
+  import type { TableRequestOptions } from '@/hooks/core/useTable'
   import dayjs from 'dayjs'
   import { ElTag } from 'element-plus'
   import type { SearchFormItem } from '@/components/core/forms/art-search-bar/index.vue'
@@ -335,7 +336,7 @@
       )
     }
   ]
-  const fetchData = async (params: TableParams) => {
+  const fetchData = async (params: TableParams, options?: TableRequestOptions) => {
     tree.loading = !tree.data.length
     tree.error = null
     try {
@@ -344,14 +345,16 @@
         ...pageInfoHandler(params),
         categoryId: tree.selectedKey === ALL_KEY ? undefined : tree.selectedKey
       })
-      tree.data = result.categories
-      Object.assign(overview, result.overview)
+      if (!options?.signal?.aborted) {
+        tree.data = result.categories
+        Object.assign(overview, result.overview)
+      }
       return { records: result.data, total: result.total }
     } catch (error) {
-      tree.error = '危废分类加载失败，请稍后重试。'
+      if (!options?.signal?.aborted) tree.error = '危废分类加载失败，请稍后重试。'
       throw error
     } finally {
-      tree.loading = false
+      if (!options?.signal?.aborted) tree.loading = false
     }
   }
   const handleSelect = (key: string): void => {

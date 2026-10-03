@@ -394,7 +394,7 @@
   import dayjs from 'dayjs'
   import type { ElTree, TreeNodeData } from 'element-plus'
   import { ElMessage, ElTag } from 'element-plus'
-  import { useTable } from '@/hooks/core/useTable'
+  import { useTable, type TableRequestOptions } from '@/hooks/core/useTable'
   import { useWorkspaceFocus } from '@/hooks/core/useWorkspaceFocus'
   import { useArtFeedback } from '@/hooks/core/useArtFeedback'
   import { useLazyComponent } from '@/hooks/core/useLazyComponent'
@@ -733,7 +733,7 @@
       )
     }
   ]
-  const fetchTableData = async (params: TableParams) => {
+  const fetchTableData = async (params: TableParams, options?: TableRequestOptions) => {
     const { from, to } = pageInfoHandler({ current: params.current, size: params.size })
     const response = await fetchDocumentList({
       keyword: params.keyword,
@@ -743,7 +743,7 @@
       from,
       to
     })
-    Object.assign(overview, response.overview)
+    if (!options?.signal?.aborted) Object.assign(overview, response.overview)
     return response
   }
   const {
@@ -755,6 +755,7 @@
     replaceSearchParams,
     getData,
     refreshData,
+    cancelRequest,
     refreshCreate,
     refreshUpdate,
     refreshRemove,
@@ -829,6 +830,7 @@
     )
   }
   watch(categoryKeyword, (value) => categoryTreeRef.value?.filter(value))
+  watch(() => query.keyword, cancelRequest, { flush: 'sync' })
   watchDebounced(
     () => query.keyword,
     () => void reloadByContext(true),
@@ -1125,6 +1127,7 @@
     &__content {
       display: grid;
       flex: 1;
+      grid-template-rows: minmax(0, 1fr);
       grid-template-columns: 260px minmax(0, 1fr);
       min-width: 0;
       min-height: 0;
@@ -1352,7 +1355,7 @@
     }
 
     &__folder-scrollbar {
-      flex: 1;
+      flex: 1 1 auto;
       min-height: 0;
     }
 

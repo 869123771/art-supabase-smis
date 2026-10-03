@@ -184,7 +184,7 @@
   import type { ColumnOption } from '@/types'
   import { useArtFeedback } from '@/hooks/core/useArtFeedback'
   import { useUserStore } from '@/store/modules/user'
-  import { fetchGetOrganizationOptionsTree } from '@/api/system-manage'
+  import { fetchOrganizationOptionsTree } from '@/api/system-manage'
   import { pageInfoHandler } from '@/utils/table/table-utils'
   import { getFriendlySupabaseErrorMessage } from '@/utils/supabase/error'
   import TreeUtils from '@/utils/tree'
@@ -494,7 +494,7 @@
     organizationState.loading = true
     organizationState.error = null
     try {
-      const response = await fetchGetOrganizationOptionsTree({ status: '1' })
+      const response = await fetchOrganizationOptionsTree({ status: '1' })
       organizationState.tree = response.data ?? []
       if (!flatOrganizations.value.some((item) => item.id === organizationState.selectedKey)) {
         const initialOrganization =

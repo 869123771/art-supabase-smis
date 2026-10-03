@@ -40,6 +40,7 @@
 </template>
 
 <script setup lang="tsx">
+  import type { TableRequestOptions } from '@/hooks/core/useTable'
   import dayjs from 'dayjs'
   import { ElAvatar, ElButton, ElPopover, ElScrollbar, ElTag } from 'element-plus'
   import type { SearchFormItem } from '@/components/core/forms/art-search-bar/index.vue'
@@ -579,13 +580,13 @@
       )
     }
   ]
-  const fetchTableData = async (params: TableParams) => {
+  const fetchTableData = async (params: TableParams, options?: TableRequestOptions) => {
     const result = await fetchPersonnelCertificateList({
       ...params,
       ...pageInfoHandler(params),
       certificateCategory: category.value ?? params.certificateCategory
     })
-    Object.assign(overview, result.overview)
+    if (!options?.signal?.aborted) Object.assign(overview, result.overview)
     return { records: result.data, total: result.total }
   }
   const handleDelete = async (row: SmisPersonnelCertificate): Promise<void> => {
@@ -688,12 +689,6 @@
       small {
         color: var(--el-text-color-secondary);
       }
-    }
-
-    :deep(.certificate-ledger-page__actions) {
-      display: flex;
-      gap: 4px;
-      align-items: center;
     }
 
     :deep(.certificate-ledger-page__details) {

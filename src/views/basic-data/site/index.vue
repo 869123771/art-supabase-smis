@@ -78,7 +78,7 @@
   import { useArtFeedback } from '@/hooks/core/useArtFeedback'
   import { useUserStore } from '@/store/modules/user'
   import { useTenantScopeStore } from '@/store/modules/tenant-scope'
-  import { fetchGetOrganizationOptionsTree } from '@/api/system-manage'
+  import { fetchOrganizationOptionsTree } from '@/api/system-manage'
   import { getFriendlySupabaseErrorMessage } from '@/utils/supabase/error'
   import TreeUtils from '@/utils/tree'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
@@ -615,7 +615,7 @@
     organizationState.loading = true
     organizationState.error = null
     try {
-      const response = await fetchGetOrganizationOptionsTree(
+      const response = await fetchOrganizationOptionsTree(
         {
           status: '1',
           tenantId: effectiveTenantId.value ?? undefined
@@ -792,15 +792,6 @@
       width: 52px;
       height: 38px;
       border-radius: var(--el-border-radius-small);
-    }
-
-    :deep(.site-page__actions) {
-      display: flex;
-      gap: 4px;
-      align-items: center;
-      justify-content: center;
-      min-width: 0;
-      white-space: nowrap;
     }
 
     :deep(.site-page__actions .art-button-table) {

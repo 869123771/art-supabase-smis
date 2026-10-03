@@ -52,6 +52,7 @@
 </template>
 
 <script setup lang="tsx">
+  import type { TableRequestOptions } from '@/hooks/core/useTable'
   import dayjs from 'dayjs'
   import { ElProgress, ElTag } from 'element-plus'
   import ArtPermissionGuard from '@/components/core/feedback/art-permission-guard/index.vue'
@@ -309,10 +310,10 @@
       })
     }
   ])
-  const fetchTableData = async (params: TableParams) => {
+  const fetchTableData = async (params: TableParams, options?: TableRequestOptions) => {
     const { from, to } = pageInfoHandler({ current: params.current, size: params.size })
     const response = await fetchHiddenHazardInspectionReport(normalizeQuery(params, from, to))
-    Object.assign(overview, response.overview)
+    if (!options?.signal?.aborted) Object.assign(overview, response.overview)
     return response
   }
   onMounted(loadOptions)

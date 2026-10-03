@@ -163,7 +163,7 @@
     DataSelectFetchParams,
     DataSelectRecord
   } from '@/components/core/forms/art-data-select/types'
-  import { fetchGetEnableOrganizationTree } from '@/api/system-manage'
+  import { fetchEnabledOrganizationTree } from '@/api/system-manage'
   import ArtDialog from '@/components/core/dialogs/art-dialog/index.vue'
   import type { ArtDialogExpose } from '@/components/core/dialogs/art-dialog/types'
   import ArtForm, {
@@ -530,7 +530,7 @@
         label: '使用部门',
         key: 'usingOrganizationId',
         type: 'treeSelect',
-        api: fetchGetEnableOrganizationTree,
+        api: fetchEnabledOrganizationTree,
         immediate: false,
         beforeFetch: () => ({ tenantId: getUserInfo.value.tenantId }),
         resultField: 'data',
@@ -549,7 +549,7 @@
         label: '管理部门',
         key: 'managingOrganizationId',
         type: 'treeSelect',
-        api: fetchGetEnableOrganizationTree,
+        api: fetchEnabledOrganizationTree,
         immediate: false,
         beforeFetch: () => ({ tenantId: getUserInfo.value.tenantId }),
         resultField: 'data',

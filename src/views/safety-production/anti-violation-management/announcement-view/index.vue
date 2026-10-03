@@ -42,6 +42,7 @@
 </template>
 
 <script setup lang="tsx">
+  import type { TableRequestOptions } from '@/hooks/core/useTable'
   import dayjs from 'dayjs'
   import { ElTag } from 'element-plus'
   import type { SearchFormItem } from '@/components/core/forms/art-search-bar/index.vue'
@@ -363,12 +364,12 @@
       auth: 'SmisViolationAnnouncement:Delete'
     }
   ]
-  const fetchTableData = async (params: TableParams) => {
+  const fetchTableData = async (params: TableParams, options?: TableRequestOptions) => {
     const result = await fetchAnnouncementList({ ...params, ...pageInfoHandler(params) })
     categories.value = result.categories
     organizations.value = result.organizations
     canManage.value = result.canManage
-    Object.assign(overview, result.overview)
+    if (!options?.signal?.aborted) Object.assign(overview, result.overview)
     return { records: result.data, total: result.total }
   }
   const handlePublish = async (row: SmisAnnouncement): Promise<void> => {
@@ -479,13 +480,6 @@
       outline: 2px solid color-mix(in srgb, var(--theme-color) 45%, transparent);
       outline-offset: 2px;
       border-radius: var(--el-border-radius-small);
-    }
-
-    :deep(.announcement-page__actions) {
-      display: flex;
-      gap: 4px;
-      align-items: center;
-      justify-content: center;
     }
   }
 </style>

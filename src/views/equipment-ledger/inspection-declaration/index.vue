@@ -39,8 +39,9 @@
 </template>
 
 <script setup lang="tsx">
+  import type { TableRequestOptions } from '@/hooks/core/useTable'
   import dayjs from 'dayjs'
-  import { fetchGetOrganizationOptionsTree } from '@/api/system-manage'
+  import { fetchOrganizationOptionsTree } from '@/api/system-manage'
   import type { SearchFormItem } from '@/components/core/forms/art-search-bar/index.vue'
   import type {
     ArtTableQueryExpose,
@@ -332,9 +333,9 @@
       )
     }
   ]
-  const fetchTableData = async (params: TableParams) => {
+  const fetchTableData = async (params: TableParams, options?: TableRequestOptions) => {
     const result = await fetchEquipmentInspectionList({ ...pageInfoHandler(params), ...params })
-    Object.assign(overview, result.overview)
+    if (!options?.signal?.aborted) Object.assign(overview, result.overview)
     return { records: result.data, total: result.total }
   }
   const refreshTable = async (): Promise<void> => {
@@ -343,7 +344,7 @@
 
   onMounted(async () => {
     const [organizations, categories] = await Promise.all([
-      fetchGetOrganizationOptionsTree({ status: '1' }),
+      fetchOrganizationOptionsTree({ status: '1' }),
       fetchInspectionCategoryList({ status: 'enabled', from: 0, to: 9999 }),
       ...[
         'smisEquipmentInspectionConclusion',

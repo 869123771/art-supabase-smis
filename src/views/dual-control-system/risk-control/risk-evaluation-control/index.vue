@@ -513,16 +513,6 @@
         white-space: nowrap;
       }
     }
-
-    :deep(.risk-evaluation-page__actions) {
-      display: flex;
-      gap: 6px;
-      align-items: center;
-
-      .art-button-table {
-        margin-right: 0;
-      }
-    }
   }
 
   @media (width <= 1080px) {

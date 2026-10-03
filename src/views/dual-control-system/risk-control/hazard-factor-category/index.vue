@@ -45,6 +45,7 @@
 </template>
 
 <script setup lang="tsx">
+  import type { TableRequestOptions } from '@/hooks/core/useTable'
   import dayjs from 'dayjs'
   import { ElTag } from 'element-plus'
   import type { SearchFormItem } from '@/components/core/forms/art-search-bar/index.vue'
@@ -378,7 +379,7 @@
     }
   ]
 
-  const fetchTableData = async (params: TableParams) => {
+  const fetchTableData = async (params: TableParams, options?: TableRequestOptions) => {
     const { from, to } = pageInfoHandler({ current: params.current, size: params.size })
     const response = await fetchHazardFactorCategoryList({
       keyword: params.keyword,
@@ -389,7 +390,7 @@
       from,
       to
     })
-    Object.assign(overview, response.overview)
+    if (!options?.signal?.aborted) Object.assign(overview, response.overview)
     return response
   }
 

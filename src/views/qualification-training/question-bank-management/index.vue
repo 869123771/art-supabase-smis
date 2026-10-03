@@ -157,6 +157,7 @@
 </template>
 
 <script setup lang="tsx">
+  import type { TableRequestOptions } from '@/hooks/core/useTable'
   import type { FormRules } from 'element-plus'
   import type { SearchFormItem } from '@/components/core/forms/art-search-bar/index.vue'
   import type {
@@ -711,17 +712,19 @@
       })
     }
   ])
-  const fetchTableData = async (params: TableParams) => {
+  const fetchTableData = async (params: TableParams, options?: TableRequestOptions) => {
     categoryLoading.value = true
     try {
       const { from, to } = pageInfoHandler({ current: params.current, size: params.size })
       const result = await fetchQuestionBankList({ ...params, from, to })
-      categories.value = result.categories
-      Object.assign(overview, result.overview)
-      categoryError.value = result.error ? '分类加载失败，请稍后重试。' : null
+      if (!options?.signal?.aborted) {
+        categories.value = result.categories
+        Object.assign(overview, result.overview)
+        categoryError.value = result.error ? '分类加载失败，请稍后重试。' : null
+      }
       return result
     } finally {
-      categoryLoading.value = false
+      if (!options?.signal?.aborted) categoryLoading.value = false
     }
   }
   onMounted(async () => {

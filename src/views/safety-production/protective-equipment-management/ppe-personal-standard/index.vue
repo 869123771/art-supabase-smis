@@ -113,6 +113,7 @@
 </template>
 
 <script setup lang="tsx">
+  import type { TableRequestOptions } from '@/hooks/core/useTable'
   import dayjs from 'dayjs'
   import { useMediaQuery } from '@vueuse/core'
   import { ElAvatar, ElTag } from 'element-plus'
@@ -444,13 +445,13 @@
       )
     }
   ]
-  const fetchTableData = async (params: TableParams) => {
+  const fetchTableData = async (params: TableParams, options?: TableRequestOptions) => {
     const result = await fetchPpePersonalStandardList({
       ...pageInfoHandler(params),
       ...params,
       organizationIds: descendantIds.value
     })
-    Object.assign(overview, result.overview)
+    if (!options?.signal?.aborted) Object.assign(overview, result.overview)
     return { records: result.data, total: result.total }
   }
 

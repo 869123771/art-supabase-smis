@@ -36,7 +36,7 @@
   import { validateArtFormForSubmit } from '@/utils/form/validate-art-form'
   import { normalizeNullableText } from '@/utils/form/normalize'
   import type { FormRules } from 'element-plus'
-  import { fetchGetEnableOrganizationUserList } from '@/api/system-manage'
+  import { fetchEnabledOrganizationUserList } from '@/api/system-manage'
   import ArtDialog from '@/components/core/dialogs/art-dialog/index.vue'
   import type { ArtDialogExpose } from '@/components/core/dialogs/art-dialog/types'
   import ArtForm, { type FormItem } from '@/components/core/forms/art-form/index.vue'
@@ -102,7 +102,7 @@
     if (!tenantId) return
     loadingUsers.value = true
     try {
-      const response = await fetchGetEnableOrganizationUserList({ tenantId })
+      const response = await fetchEnabledOrganizationUserList({ tenantId })
       userOptions.value = (response.data ?? [])
         .filter((user) => user.id !== getUserInfo.value.userId)
         .map((user) => ({

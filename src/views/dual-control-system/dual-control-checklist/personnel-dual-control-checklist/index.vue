@@ -376,13 +376,6 @@
       color: var(--el-text-color-secondary);
     }
 
-    :deep(.personnel-checklist__coverage),
-    :deep(.personnel-checklist__actions) {
-      display: flex;
-      gap: 6px;
-      align-items: center;
-    }
-
     :deep(.personnel-checklist__actions .art-button-table) {
       margin-right: 0;
     }

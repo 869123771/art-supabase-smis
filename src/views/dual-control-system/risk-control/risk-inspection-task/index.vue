@@ -54,6 +54,7 @@
 </template>
 
 <script setup lang="tsx">
+  import type { TableRequestOptions } from '@/hooks/core/useTable'
   import dayjs from 'dayjs'
   import type { EmployeeIntegrationItem } from '@/api/integration/employees'
   import { fetchEmployeeSelectorList } from '@/api/integration/employees'
@@ -426,7 +427,7 @@
       )
     }
   ]
-  const fetchTableData = async (params: TableParams) => {
+  const fetchTableData = async (params: TableParams, options?: TableRequestOptions) => {
     const { from, to } = pageInfoHandler({ current: params.current, size: params.size })
     const response = await fetchRiskInspectionTaskList({
       ...params,
@@ -435,7 +436,7 @@
       from,
       to
     })
-    Object.assign(overview, response.overview)
+    if (!options?.signal?.aborted) Object.assign(overview, response.overview)
     return response
   }
   const headerActions = computed<ArtTableQueryHeaderAction[]>(() => [
@@ -577,13 +578,6 @@
 
     :deep(.risk-task-page__muted) {
       color: var(--el-text-color-placeholder);
-    }
-
-    :deep(.risk-task-page__actions) {
-      display: flex;
-      gap: 2px;
-      align-items: center;
-      justify-content: center;
     }
   }
 </style>

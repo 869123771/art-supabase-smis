@@ -79,6 +79,7 @@
 </template>
 
 <script setup lang="tsx">
+  import type { TableRequestOptions } from '@/hooks/core/useTable'
   import dayjs from 'dayjs'
   import type { SearchFormItem } from '@/components/core/forms/art-search-bar/index.vue'
   import type {
@@ -89,6 +90,7 @@
   } from '@/components/core/tables/art-table-query/index.vue'
   import type { ColumnOption } from '@/types'
   import { pageInfoHandler } from '@/utils/table/table-utils'
+  import { mapWithConcurrency } from '@/utils/async'
   import { useArtFeedback } from '@/hooks/core/useArtFeedback'
   import { useUserStore } from '@/store/modules/user'
   import { useTenantScopeStore } from '@/store/modules/tenant-scope'
@@ -340,15 +342,16 @@
           ['completed', 'voided'].includes((item as SmisSpecialOperationPermit).status)
         ),
       onClick: async ({ selectedRows, api }) => {
-        await Promise.all(
-          (selectedRows as SmisSpecialOperationPermit[]).map((row) =>
+        try {
+          await mapWithConcurrency(selectedRows as SmisSpecialOperationPermit[], 3, (row) =>
             transitionSpecialOperationPermit(row.id, 'void', {
               description: '批量作废',
               tenantId: row.tenantId
             })
           )
-        )
-        await api.refreshUpdate()
+        } finally {
+          await api.refreshUpdate()
+        }
       }
     },
     {
@@ -566,7 +569,7 @@
       )
     }
   ]
-  const fetchTableData = async (params: TableParams) => {
+  const fetchTableData = async (params: TableParams, options?: TableRequestOptions) => {
     const response = await fetchSpecialOperationPermitList({
       keyword: params.keyword,
       operationTypeId: params.operationTypeId,
@@ -578,7 +581,7 @@
       tenantId: effectiveTenantId.value,
       ...pageInfoHandler({ current: params.current ?? 1, size: params.size ?? 20 })
     })
-    Object.assign(overview, response.overview)
+    if (!options?.signal?.aborted) Object.assign(overview, response.overview)
     return response
   }
   const switchStatus = (status: string | number | boolean) => {
@@ -789,12 +792,6 @@
 
   :deep(.special-operation-permit-page__type svg) {
     color: var(--theme-color);
-  }
-
-  :deep(.special-operation-permit-page__actions) {
-    display: flex;
-    gap: 2px;
-    align-items: center;
   }
 
   @media (width <= 900px) {

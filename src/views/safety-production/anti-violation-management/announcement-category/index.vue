@@ -37,6 +37,7 @@
 </template>
 
 <script setup lang="tsx">
+  import type { TableRequestOptions } from '@/hooks/core/useTable'
   import type { SearchFormItem } from '@/components/core/forms/art-search-bar/index.vue'
   import type {
     ArtTableQueryExcelColumn,
@@ -221,9 +222,9 @@
       )
     }
   ]
-  const fetchTableData = async (params: TableParams) => {
+  const fetchTableData = async (params: TableParams, options?: TableRequestOptions) => {
     const result = await fetchAnnouncementCategoryList({ ...params, ...pageInfoHandler(params) })
-    Object.assign(overview, result.overview)
+    if (!options?.signal?.aborted) Object.assign(overview, result.overview)
     return { records: result.data, total: result.total }
   }
   const handleDelete = async (row: SmisAnnouncementCategory): Promise<void> => {
@@ -248,13 +249,6 @@
       flex: 1 1 auto;
       min-width: 0;
       min-height: 0;
-    }
-
-    :deep(.announcement-category-page__actions) {
-      display: flex;
-      gap: 4px;
-      align-items: center;
-      justify-content: center;
     }
   }
 </style>

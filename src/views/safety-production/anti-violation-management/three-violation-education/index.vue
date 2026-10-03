@@ -58,6 +58,7 @@
 </template>
 
 <script setup lang="tsx">
+  import type { TableRequestOptions } from '@/hooks/core/useTable'
   import dayjs from 'dayjs'
   import { storeToRefs } from 'pinia'
   import { computed, onMounted, reactive, ref, shallowRef, watch } from 'vue'
@@ -496,14 +497,14 @@
     }
   ]
 
-  const fetchTableData = async (params: TableParams) => {
+  const fetchTableData = async (params: TableParams, options?: TableRequestOptions) => {
     const result = await fetchThreeViolationEducationList({
       ...params,
       ...pageInfoHandler(params)
     })
     organizations.value = result.organizations
     standards.value = result.standards
-    Object.assign(overview, result.overview)
+    if (!options?.signal?.aborted) Object.assign(overview, result.overview)
     return { records: result.data, total: result.total }
   }
 

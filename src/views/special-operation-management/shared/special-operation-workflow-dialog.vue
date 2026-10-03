@@ -58,7 +58,7 @@
 </template>
 
 <script setup lang="ts">
-  import { computed, nextTick, reactive, ref, shallowRef } from 'vue'
+  import { computed, nextTick, ref, shallowRef } from 'vue'
   import type { FormRules } from 'element-plus'
   import ArtDialog from '@/components/core/dialogs/art-dialog/index.vue'
   import ArtForm from '@/components/core/forms/art-form/index.vue'
@@ -78,7 +78,7 @@
   const formRef = ref<InstanceType<typeof ArtForm>>()
   const current = shallowRef<OpenData>()
   const action = computed(() => current.value?.action || 'start')
-  const form = reactive({ result: 'approved', description: '' })
+  const form = ref({ result: 'approved', description: '' })
   const rules = computed<FormRules>(() => ({
     ...(action.value === 'start' || action.value === 'accept'
       ? { result: [{ required: true, message: '请选择审批结果', trigger: 'change' }] }
@@ -128,8 +128,8 @@
     submitting.value = true
     try {
       await transitionSpecialOperationPermit(current.value.row.id, action.value, {
-        result: ['start', 'accept'].includes(action.value) ? form.result : null,
-        description: form.description,
+        result: ['start', 'accept'].includes(action.value) ? form.value.result : null,
+        description: form.value.description,
         tenantId: current.value.row.tenantId
       })
       await dialogRef.value?.handleClose()
@@ -140,8 +140,8 @@
   }
   const handleOpen = async (data: OpenData): Promise<void> => {
     current.value = data
-    form.result = data.action === 'accept' ? 'passed' : 'approved'
-    form.description = ''
+    form.value.result = data.action === 'accept' ? 'passed' : 'approved'
+    form.value.description = ''
     void nextTick(() => formRef.value?.clearValidate())
     await dialogRef.value?.handleOpen(data, {
       title: titleMap[data.action],

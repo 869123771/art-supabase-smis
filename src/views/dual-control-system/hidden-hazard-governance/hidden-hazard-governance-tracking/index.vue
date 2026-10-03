@@ -128,6 +128,7 @@
 </template>
 
 <script setup lang="tsx">
+  import type { TableRequestOptions } from '@/hooks/core/useTable'
   import { getFriendlySupabaseErrorMessage } from '@/utils/supabase'
   import BusinessTableIdentityCell from '@/components/business/business-table-identity-cell/index.vue'
   import { createDateTimeFormatter } from '@/utils/ui/format'
@@ -501,7 +502,7 @@
     }
   ]
 
-  const fetchTableData = async (params: TableParams) => {
+  const fetchTableData = async (params: TableParams, options?: TableRequestOptions) => {
     const { from, to } = pageInfoHandler({ current: params.current, size: params.size })
     const result = await fetchHiddenHazardGovernanceList({
       ...params,
@@ -510,7 +511,7 @@
       from,
       to
     })
-    Object.assign(overview, result.overview)
+    if (!options?.signal?.aborted) Object.assign(overview, result.overview)
     return result
   }
   const selectType = async (id?: string): Promise<void> => {

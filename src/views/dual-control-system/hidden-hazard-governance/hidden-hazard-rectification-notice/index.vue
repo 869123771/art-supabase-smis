@@ -163,8 +163,9 @@
   const formatDate = (value?: string | null) =>
     value ? dayjs(value).format('YYYY-MM-DD HH:mm') : '—'
   const printNotice = (row: SmisRectificationNoticeRecord): void => {
-    const popup = window.open('', '_blank', 'noopener,noreferrer,width=980,height=820')
+    const popup = window.open('', '_blank', 'width=980,height=820')
     if (!popup) return void ElMessage.warning('浏览器阻止了打印窗口，请允许本站打开弹出式窗口')
+    popup.opener = null
     popup.document.write(buildHiddenHazardRectificationNoticeHtml(row))
     popup.document.close()
   }

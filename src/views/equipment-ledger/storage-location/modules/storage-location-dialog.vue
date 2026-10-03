@@ -38,7 +38,7 @@
   import { validateArtFormForSubmit } from '@/utils/form/validate-art-form'
   import type { FormRules } from 'element-plus'
   import type { EmployeeIntegrationItem } from '@/api/integration/employees'
-  import { fetchGetEnableOrganizationTree } from '@/api/system-manage'
+  import { fetchEnabledOrganizationTree } from '@/api/system-manage'
   import ArtDialog from '@/components/core/dialogs/art-dialog/index.vue'
   import type { ArtDialogExpose } from '@/components/core/dialogs/art-dialog/types'
   import ArtForm, {
@@ -189,7 +189,7 @@
         label: '归属部门',
         key: 'organizationId',
         type: 'treeSelect',
-        api: fetchGetEnableOrganizationTree,
+        api: fetchEnabledOrganizationTree,
         immediate: false,
         beforeFetch: () => ({ tenantId: targetTenantId.value }),
         resultField: 'data',

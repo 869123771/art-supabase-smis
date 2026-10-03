@@ -39,6 +39,7 @@
 </template>
 
 <script setup lang="tsx">
+  import type { TableRequestOptions } from '@/hooks/core/useTable'
   import dayjs from 'dayjs'
   import { ElProgress } from 'element-plus'
   import type { SearchFormItem } from '@/components/core/forms/art-search-bar/index.vue'
@@ -384,10 +385,10 @@
       })
     }
   ])
-  const fetchTableData = async (params: TableParams) => {
+  const fetchTableData = async (params: TableParams, options?: TableRequestOptions) => {
     const { from, to } = pageInfoHandler({ current: params.current, size: params.size })
     const result = await fetchSafetyTrainingRecordList({ ...params, from, to })
-    Object.assign(overview, result.overview)
+    if (!options?.signal?.aborted) Object.assign(overview, result.overview)
     planOptions.value = result.planOptions
     organizations.value = result.organizations
     if (pendingPlanId.value && planOptions.value.some((item) => item.id === pendingPlanId.value)) {

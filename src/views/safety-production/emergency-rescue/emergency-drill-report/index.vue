@@ -9,8 +9,18 @@
         :tags="[
           { label: '多维检索', type: 'primary', effect: 'plain' },
           {
-            label: `延迟完成 ${overview.lateCount}`,
-            type: overview.lateCount ? 'danger' : 'success',
+            label: loadError
+              ? '演练统计暂不可用'
+              : loading
+                ? '正在加载演练统计'
+                : `延迟完成 ${overview.lateCount}`,
+            type: loadError
+              ? 'warning'
+              : loading
+                ? 'info'
+                : overview.lateCount
+                  ? 'danger'
+                  : 'success',
             effect: 'light'
           },
           { label: '未兑现计划可追溯', type: 'warning', effect: 'plain' }
@@ -23,7 +33,7 @@
             type="primary"
             plain
             :loading="exportLoading"
-            :disabled="loading"
+            :disabled="loading || !!loadError"
             @click="handleExport"
           >
             <ArtSvgIcon icon="ri:file-excel-2-line" />
@@ -232,7 +242,7 @@
 <script setup lang="ts">
   import { getFriendlySupabaseErrorMessage } from '@/utils/supabase'
   import { ElMessage } from 'element-plus'
-  import { fetchGetEnableOrganizationTree } from '@/api/system-manage'
+  import { fetchEnabledOrganizationTree } from '@/api/system-manage'
   import { useUserStore } from '@/store/modules/user'
   import { exportExcel, type ExcelColumn } from '@/utils/file'
   import ArtSearchBar, {
@@ -276,6 +286,11 @@
   const userStore = useUserStore()
   const { getDictMap, getUserInfo } = storeToRefs(userStore)
   const query = reactive<ReportQuery>({})
+  const appliedQuery = shallowRef<ReportQuery>({})
+  let reportRequestId = 0
+  onBeforeUnmount(() => {
+    reportRequestId += 1
+  })
   const loading = ref(false)
   const exportLoading = ref(false)
   const loadError = shallowRef<Error | null>(null)
@@ -292,27 +307,31 @@
   const metrics = computed<BusinessWorkspaceMetric[]>(() => [
     {
       label: '计划总数',
-      value: overview.planCount,
+      value: loadError.value ? '—' : overview.planCount,
+      loading: loading.value,
       description: '筛选范围内计划',
       icon: 'ri:calendar-todo-line'
     },
     {
       label: '已兑现',
-      value: overview.completedCount,
+      value: loadError.value ? '—' : overview.completedCount,
+      loading: loading.value,
       description: '已有正式演练记录',
       icon: 'ri:checkbox-circle-line',
       tone: 'success'
     },
     {
       label: '未兑现',
-      value: overview.outstandingCount,
+      value: loadError.value ? '—' : overview.outstandingCount,
+      loading: loading.value,
       description: '计划中且无正式记录',
       icon: 'ri:time-line',
       tone: 'warning'
     },
     {
       label: '预警中',
-      value: overview.warningCount,
+      value: loadError.value ? '—' : overview.warningCount,
+      loading: loading.value,
       description: '三日内到期或已逾期',
       icon: 'ri:alarm-warning-line',
       tone: 'danger'
@@ -380,7 +399,10 @@
       }
     }
   ])
-  const applyReport = (result: Awaited<ReturnType<typeof fetchEmergencyDrillReport>>): void => {
+  const applyReport = (
+    result: Awaited<ReturnType<typeof fetchEmergencyDrillReport>>,
+    filters: ReportQuery = {}
+  ): void => {
     if (result.error) {
       loadError.value = new Error('演练报表加载失败，请重试')
       return
@@ -388,22 +410,25 @@
     Object.assign(overview, result.overview)
     rows.value = result.rows
     outstanding.value = result.outstanding
+    appliedQuery.value = filters
   }
   const loadReport = async (): Promise<void> => {
-    if (loading.value) return
     if (query.startDate && query.endDate && query.startDate > query.endDate) {
       ElMessage.warning('开始日期不能晚于结束日期')
       return
     }
+    const currentRequestId = ++reportRequestId
+    const filters = { ...query }
     loading.value = true
     loadError.value = null
     try {
-      const result = await fetchEmergencyDrillReport(query)
-      applyReport(result)
+      const result = await fetchEmergencyDrillReport(filters)
+      if (currentRequestId === reportRequestId) applyReport(result, filters)
     } catch {
-      loadError.value = new Error('演练报表加载失败，请重试')
+      if (currentRequestId === reportRequestId)
+        loadError.value = new Error('演练报表加载失败，请重试')
     } finally {
-      loading.value = false
+      if (currentRequestId === reportRequestId) loading.value = false
     }
   }
   const resetQuery = () => {
@@ -419,7 +444,7 @@
     try {
       const summary: ReportExportRow = {
         recordType: '汇总',
-        organizationName: query.organizationId ? '当前所选组织' : '全部组织',
+        organizationName: appliedQuery.value.organizationId ? '当前所选组织' : '全部组织',
         planCategory: '',
         planLevel: '',
         planCount: overview.planCount,
@@ -480,11 +505,12 @@
     }
   }
   onMounted(async () => {
+    const currentRequestId = ++reportRequestId
     loading.value = true
     loadError.value = null
     try {
       const [tree, result] = await Promise.all([
-        fetchGetEnableOrganizationTree({ tenantId: getUserInfo.value.tenantId }),
+        fetchEnabledOrganizationTree({ tenantId: getUserInfo.value.tenantId }),
         fetchEmergencyDrillReport(),
         Promise.all(
           ['smisEmergencyPlanCategory', 'smisEmergencyPlanLevel', 'commonWarningStatus'].map(
@@ -493,11 +519,12 @@
         )
       ])
       organizations.value = (tree.data ?? []) as SmisTreeOrganization[]
-      applyReport(result)
+      if (currentRequestId === reportRequestId) applyReport(result)
     } catch {
-      loadError.value = new Error('演练报表加载失败，请重试')
+      if (currentRequestId === reportRequestId)
+        loadError.value = new Error('演练报表加载失败，请重试')
     } finally {
-      loading.value = false
+      if (currentRequestId === reportRequestId) loading.value = false
     }
   })
 </script>

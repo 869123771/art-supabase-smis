@@ -260,6 +260,7 @@
 </template>
 
 <script setup lang="tsx">
+  import type { TableRequestOptions } from '@/hooks/core/useTable'
   import dayjs from 'dayjs'
   import { ElMessage } from 'element-plus'
   import QrcodeVue from 'qrcode.vue'
@@ -802,7 +803,7 @@
     }
   ]
 
-  const fetchTableData = async (params: TableParams) => {
+  const fetchTableData = async (params: TableParams, options?: TableRequestOptions) => {
     tree.loading = !tree.categoryTree.length && !tree.locationTree.length
     tree.error = null
     try {
@@ -821,13 +822,15 @@
             ? tree.selectedKey
             : undefined
       })
-      tree.categoryTree = result.categoryTree
-      tree.locationTree = result.locationTree
-      Object.assign(overview, result.overview)
-      tree.error = result.error ? '台账结构加载失败，请重试。' : null
+      if (!options?.signal?.aborted) {
+        tree.categoryTree = result.categoryTree
+        tree.locationTree = result.locationTree
+        Object.assign(overview, result.overview)
+        tree.error = result.error ? '台账结构加载失败，请重试。' : null
+      }
       return { records: result.data, total: result.total }
     } finally {
-      tree.loading = false
+      if (!options?.signal?.aborted) tree.loading = false
     }
   }
   const handleDimensionChange = (dimension: EquipmentTreeDimension): void => {

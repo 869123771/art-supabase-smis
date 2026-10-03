@@ -67,6 +67,7 @@
 </template>
 
 <script setup lang="tsx">
+  import type { TableRequestOptions } from '@/hooks/core/useTable'
   import dayjs from 'dayjs'
   import type { SearchFormItem } from '@/components/core/forms/art-search-bar/index.vue'
   import type {
@@ -315,7 +316,7 @@
     }
   ]
 
-  const fetchTableData = async (params: TableParams) => {
+  const fetchTableData = async (params: TableParams, options?: TableRequestOptions) => {
     tree.loading = !tree.data.length
     tree.error = null
     try {
@@ -324,12 +325,14 @@
         ...pageInfoHandler(params),
         ancestorId: tree.selectedKey === ALL_KEY ? undefined : tree.selectedKey
       })
-      tree.data = result.tree
-      Object.assign(overview, result.overview)
-      tree.error = result.error ? '违章分类结构加载失败，请重试。' : null
+      if (!options?.signal?.aborted) {
+        tree.data = result.tree
+        Object.assign(overview, result.overview)
+        tree.error = result.error ? '违章分类结构加载失败，请重试。' : null
+      }
       return { records: result.data, total: result.total }
     } finally {
-      tree.loading = false
+      if (!options?.signal?.aborted) tree.loading = false
     }
   }
 
@@ -370,12 +373,6 @@
     &__table {
       min-width: 0;
       min-height: 0;
-    }
-
-    :deep(.violation-category-page__actions) {
-      display: flex;
-      gap: 4px;
-      align-items: center;
     }
   }
 </style>

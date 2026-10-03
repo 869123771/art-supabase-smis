@@ -57,6 +57,7 @@
 </template>
 
 <script setup lang="tsx">
+  import type { TableRequestOptions } from '@/hooks/core/useTable'
   import dayjs from 'dayjs'
   import type { SearchFormItem } from '@/components/core/forms/art-search-bar/index.vue'
   import type {
@@ -357,11 +358,11 @@
       }
     }
   ])
-  const fetchTableData = async (params: TableParams) => {
+  const fetchTableData = async (params: TableParams, options?: TableRequestOptions) => {
     const { current, size, ...filters } = params
     const { from, to } = pageInfoHandler({ current, size })
     const result = await fetchWorkInjuryDeclarationList({ ...toApiParams(filters), from, to })
-    Object.assign(overview, result.overview)
+    if (!options?.signal?.aborted) Object.assign(overview, result.overview)
     currentEmployee.value = result.currentEmployee
     return result
   }

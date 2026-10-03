@@ -285,16 +285,5 @@
       flex: 1;
       min-height: 0;
     }
-
-    :deep(.legal-compliance-records__actions) {
-      display: flex;
-      gap: 4px;
-      align-items: center;
-      justify-content: center;
-
-      .art-button-table {
-        margin-right: 0;
-      }
-    }
   }
 </style>
