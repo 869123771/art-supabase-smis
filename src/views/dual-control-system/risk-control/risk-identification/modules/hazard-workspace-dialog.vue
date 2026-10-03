@@ -314,7 +314,8 @@
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import ArtDictDisplay from '@/components/core/base/art-dict-display/index.vue'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
-  import { useArtFeedback } from '@/hooks/core/useArtFeedback'
+  import { notifyFriendlyError, useArtFeedback } from '@/hooks/core/useArtFeedback'
+  import { validateArtFormForSubmit } from '@/utils/form/validate-art-form'
   import { useAuth } from '@/hooks/core/useAuth'
   import { useUserStore } from '@/store/modules/user'
   import {
@@ -415,18 +416,27 @@
     }
   }
   const submitActivity = async (): Promise<boolean> => {
-    if (!riskPoint.value) return false
-    try {
-      await activityFormRef.value?.validate()
-    } catch {
+    if (!riskPoint.value) {
+      ElMessage.warning('风险点已失效，请重新打开后重试')
       return false
     }
-    await saveRiskActivity({
-      ...toRaw(activityForm),
-      riskPointId: riskPoint.value.id,
-      activityName: activityForm.activityName.trim(),
-      workStep: activityForm.workStep.trim()
-    })
+    try {
+      if (!(await validateArtFormForSubmit(activityFormRef.value))) return false
+    } catch (error) {
+      notifyFriendlyError(error, '作业活动校验失败，请重试')
+      return false
+    }
+    try {
+      await saveRiskActivity({
+        ...toRaw(activityForm),
+        riskPointId: riskPoint.value.id,
+        activityName: activityForm.activityName.trim(),
+        workStep: activityForm.workStep.trim()
+      })
+    } catch (error) {
+      notifyFriendlyError(error, '作业活动保存失败，请检查内容后重试')
+      return false
+    }
     await loadWorkspace()
     emit('changed')
     return true
@@ -457,22 +467,31 @@
     }
   }
   const submitHazard = async (): Promise<boolean> => {
-    if (!riskPoint.value) return false
-    try {
-      await hazardFormRef.value?.validate()
-    } catch {
+    if (!riskPoint.value) {
+      ElMessage.warning('风险点已失效，请重新打开后重试')
       return false
     }
-    await saveRiskHazard({
-      id: hazardForm.id,
-      riskPointId: riskPoint.value.id,
-      hazardFactor: hazardForm.hazardFactor.trim(),
-      factorCategoryId: hazardForm.factorCategoryId,
-      accidentTypes: [...hazardForm.accidentTypes],
-      consequence: normalizeNullableText(hazardForm.consequence),
-      activityIds: [...hazardForm.activityIds],
-      sort: hazardForm.sort
-    })
+    try {
+      if (!(await validateArtFormForSubmit(hazardFormRef.value))) return false
+    } catch (error) {
+      notifyFriendlyError(error, '危害因素校验失败，请重试')
+      return false
+    }
+    try {
+      await saveRiskHazard({
+        id: hazardForm.id,
+        riskPointId: riskPoint.value.id,
+        hazardFactor: hazardForm.hazardFactor.trim(),
+        factorCategoryId: hazardForm.factorCategoryId,
+        accidentTypes: [...hazardForm.accidentTypes],
+        consequence: normalizeNullableText(hazardForm.consequence),
+        activityIds: [...hazardForm.activityIds],
+        sort: hazardForm.sort
+      })
+    } catch (error) {
+      notifyFriendlyError(error, '危害因素保存失败，请检查内容后重试')
+      return false
+    }
     await loadWorkspace()
     emit('changed')
     return true

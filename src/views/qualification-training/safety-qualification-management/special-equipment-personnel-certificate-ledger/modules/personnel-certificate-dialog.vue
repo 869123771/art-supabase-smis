@@ -79,6 +79,8 @@
 </template>
 
 <script setup lang="tsx">
+  import { notifyFriendlyError } from '@/hooks/core/useArtFeedback'
+  import { validateArtFormForSubmit } from '@/utils/form/validate-art-form'
   import { normalizeNullableText } from '@/utils/form/normalize'
   import { uniqBy } from 'lodash-es'
   import { ElButton, ElDatePicker, ElOption, ElSelect, type FormRules } from 'element-plus'
@@ -652,7 +654,7 @@
   }
   const handleSubmit = async (): Promise<boolean> => {
     try {
-      await formRef.value?.validate()
+      if (!(await validateArtFormForSubmit(formRef.value))) return false
       if (!(await validateItems())) return false
       const extraFields = (categoryMeta.value.extraFields ?? []).reduce<Record<string, string>>(
         (result, field) => {
@@ -702,7 +704,8 @@
       }
       emit('success')
       return true
-    } catch {
+    } catch (error) {
+      notifyFriendlyError(error, '人员证书保存失败，请检查内容后重试')
       return false
     }
   }

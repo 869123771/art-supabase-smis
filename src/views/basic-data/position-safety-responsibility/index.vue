@@ -190,7 +190,7 @@
   import { useUserStore } from '@/store/modules/user'
   import { fetchGetOrganizationOptionsTree } from '@/api/system-manage'
   import { exportExcel } from '@/utils/file'
-  import { pageInfoHandler } from '@/utils/table/tableUtils'
+  import { pageInfoHandler } from '@/utils/table/table-utils'
   import { formatWithDayjs } from '@/utils/time'
   import { getFriendlySupabaseErrorMessage } from '@/utils/supabase/error'
   import TreeUtils from '@/utils/tree'

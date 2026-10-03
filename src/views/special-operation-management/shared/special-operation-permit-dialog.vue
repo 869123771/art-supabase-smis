@@ -342,6 +342,7 @@
           <ArtEmptyState
             v-else
             title="当前作业类型未配置安全检查项"
+            description="请先维护该作业类型的安全检查项。"
             size="compact"
             :visual-size="72"
           />

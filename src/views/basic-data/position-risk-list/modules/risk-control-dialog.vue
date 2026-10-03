@@ -32,6 +32,8 @@
 </template>
 
 <script setup lang="ts">
+  import { notifyFriendlyError } from '@/hooks/core/useArtFeedback'
+  import { validateArtFormForSubmit } from '@/utils/form/validate-art-form'
   import { useDictionaryOptions } from '@/hooks/core/useDictionaryOptions'
   import { computed, nextTick, reactive, ref, toRaw } from 'vue'
   import { storeToRefs } from 'pinia'
@@ -261,13 +263,14 @@
   })
   const handleSubmit = async (): Promise<boolean> => {
     try {
-      await formRef.value?.validate()
+      if (!(await validateArtFormForSubmit(formRef.value))) return false
       const type = form.id ? 'edit' : 'add'
       if (type === 'edit') await editPositionRiskControl(form.id!, buildPayload())
       else await addPositionRiskControl(buildPayload())
       emit('success', type)
       return true
-    } catch {
+    } catch (error) {
+      notifyFriendlyError(error, '岗位风险管控保存失败，请检查内容后重试')
       return false
     }
   }

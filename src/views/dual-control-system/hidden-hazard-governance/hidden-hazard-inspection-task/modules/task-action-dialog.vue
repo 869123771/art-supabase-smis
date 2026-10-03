@@ -33,6 +33,8 @@
 </template>
 
 <script setup lang="ts">
+  import { notifyFriendlyError } from '@/hooks/core/useArtFeedback'
+  import { validateArtFormForSubmit } from '@/utils/form/validate-art-form'
   import type { FormRules } from 'element-plus'
   import type { EmployeeIntegrationItem } from '@/api/integration/employees'
   import ArtDialog from '@/components/core/dialogs/art-dialog/index.vue'
@@ -105,7 +107,7 @@
   const handleSubmit = async (): Promise<boolean> => {
     if (!row.value) return false
     try {
-      await formRef.value?.validate()
+      if (!(await validateArtFormForSubmit(formRef.value))) return false
       if (mode.value === 'transfer')
         await transferHiddenHazardInspectionTask(
           row.value.id,
@@ -115,7 +117,8 @@
       else await cancelHiddenHazardInspectionTask(row.value.id, form.model.reason.trim())
       emit('success')
       return true
-    } catch {
+    } catch (error) {
+      notifyFriendlyError(error, '隐患排查任务操作失败，请稍后重试')
       return false
     }
   }

@@ -22,6 +22,8 @@
 </template>
 
 <script setup lang="ts">
+  import { notifyFriendlyError } from '@/hooks/core/useArtFeedback'
+  import { validateArtFormForSubmit } from '@/utils/form/validate-art-form'
   import { ElColorPicker, type FormRules } from 'element-plus'
   import ArtDialog from '@/components/core/dialogs/art-dialog/index.vue'
   import type { ArtDialogExpose } from '@/components/core/dialogs/art-dialog/types'
@@ -148,7 +150,7 @@
 
   const handleSubmit = async (): Promise<boolean> => {
     try {
-      await formRef.value?.validate()
+      if (!(await validateArtFormForSubmit(formRef.value))) return false
       await saveInspectionType({
         ...form.model,
         typeCode: form.model.typeCode.trim().toUpperCase(),
@@ -157,7 +159,8 @@
       } as SmisInspectionTypePayload)
       emit('success', form.model.id ? 'edit' : 'add')
       return true
-    } catch {
+    } catch (error) {
+      notifyFriendlyError(error, '检查类型保存失败，请检查内容后重试')
       return false
     }
   }

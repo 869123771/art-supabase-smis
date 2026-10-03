@@ -15,6 +15,8 @@
 </template>
 
 <script setup lang="ts">
+  import { notifyFriendlyError } from '@/hooks/core/useArtFeedback'
+  import { validateArtFormForSubmit } from '@/utils/form/validate-art-form'
   import { normalizeNullableText } from '@/utils/form/normalize'
   import dayjs from 'dayjs'
   import type { FormRules } from 'element-plus'
@@ -150,7 +152,7 @@
 
   const handleSubmit = async (): Promise<boolean> => {
     try {
-      await formRef.value?.validate()
+      if (!(await validateArtFormForSubmit(formRef.value))) return false
       const payload: SmisLegalComplianceEvaluationSavePayload = {
         id: form.id,
         documentId: form.documentId,
@@ -165,7 +167,8 @@
       await saveLegalComplianceEvaluation(payload)
       emit('success')
       return true
-    } catch {
+    } catch (error) {
+      notifyFriendlyError(error, '法规符合性评价保存失败，请检查内容后重试')
       return false
     }
   }

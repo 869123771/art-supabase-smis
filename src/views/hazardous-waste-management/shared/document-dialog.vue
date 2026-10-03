@@ -76,6 +76,8 @@
   </ArtDialog>
 </template>
 <script setup lang="tsx">
+  import { notifyFriendlyError } from '@/hooks/core/useArtFeedback'
+  import { validateArtFormForSubmit } from '@/utils/form/validate-art-form'
   import { normalizeNullableText } from '@/utils/form/normalize'
   import dayjs from 'dayjs'
   import { ElButton, ElDatePicker, ElInput, ElInputNumber, type FormRules } from 'element-plus'
@@ -405,7 +407,7 @@
   }
   const submit = async (): Promise<boolean> => {
     try {
-      await formRef.value?.validate()
+      if (!(await validateArtFormForSubmit(formRef.value))) return false
       if (!model.items.length) {
         ElMessage.warning('请至少添加一条危废明细')
         return false
@@ -431,7 +433,8 @@
       })
       emit('success')
       return true
-    } catch {
+    } catch (error) {
+      notifyFriendlyError(error, '危废单据保存失败，请检查内容后重试')
       return false
     }
   }

@@ -29,6 +29,7 @@
 </template>
 
 <script setup lang="tsx">
+  import { notifyFriendlyError } from '@/hooks/core/useArtFeedback'
   import dayjs from 'dayjs'
   import { ElDatePicker, ElInputNumber, ElOption, ElSelect } from 'element-plus'
   import type { ColumnOption } from '@/types'
@@ -154,7 +155,8 @@
       )
       emit('success')
       return true
-    } catch {
+    } catch (error) {
+      notifyFriendlyError(error, '个人领用计划保存失败，请检查内容后重试')
       return false
     }
   }

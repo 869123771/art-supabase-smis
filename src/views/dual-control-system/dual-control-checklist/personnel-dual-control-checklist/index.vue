@@ -60,7 +60,7 @@
     ArtTableQueryHeaderAction
   } from '@/components/core/tables/art-table-query/index.vue'
   import type { ColumnOption } from '@/types'
-  import { pageInfoHandler } from '@/utils/table/tableUtils'
+  import { pageInfoHandler } from '@/utils/table/table-utils'
   import { useDictionaryOptions } from '@/hooks/core/useDictionaryOptions'
   import {
     fetchPersonnelDualControlChecklist,

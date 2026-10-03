@@ -55,7 +55,7 @@
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import ArtDictDisplay from '@/components/core/base/art-dict-display/index.vue'
   import ArtPermissionGuard from '@/components/core/feedback/art-permission-guard/index.vue'
-  import { useArtFeedback } from '@/hooks/core/useArtFeedback'
+  import { notifyFriendlyError, useArtFeedback } from '@/hooks/core/useArtFeedback'
   import { useUserStore } from '@/store/modules/user'
   import type { SearchFormItem } from '@/components/core/forms/art-search-bar/index.vue'
   import type {
@@ -360,7 +360,7 @@
       importColumns: excelColumns,
       importApi: importRows,
       onImportError: (error) => {
-        ElMessage.error(error.message || '导入失败，请检查模板内容')
+        notifyFriendlyError(error, '导入失败，请检查模板内容')
       }
     },
     {

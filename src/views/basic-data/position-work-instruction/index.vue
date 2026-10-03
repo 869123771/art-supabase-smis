@@ -91,7 +91,7 @@
   import type { ColumnOption } from '@/types'
   import { useArtFeedback } from '@/hooks/core/useArtFeedback'
   import { useUserStore } from '@/store/modules/user'
-  import { pageInfoHandler } from '@/utils/table/tableUtils'
+  import { pageInfoHandler } from '@/utils/table/table-utils'
   import { getFriendlySupabaseErrorMessage } from '@/utils/supabase/error'
   import {
     deletePositionWorkInstructions,

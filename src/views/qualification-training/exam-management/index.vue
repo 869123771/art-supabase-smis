@@ -241,6 +241,7 @@
                     <ArtEmptyState
                       v-else
                       title="没有匹配的可用题目"
+                      description="调整筛选条件，或先维护题库中的可用题目。"
                       size="compact"
                       :visual-size="64"
                     />
@@ -441,7 +442,7 @@
     ArtTableQueryHeaderActionContext
   } from '@/components/core/tables/art-table-query/index.vue'
   import type { ColumnOption } from '@/types'
-  import { pageInfoHandler } from '@/utils/table/tableUtils'
+  import { pageInfoHandler } from '@/utils/table/table-utils'
   import { useArtFeedback } from '@/hooks/core/useArtFeedback'
   import { useAuth } from '@/hooks/core/useAuth'
   import { useUserStore } from '@/store/modules/user'

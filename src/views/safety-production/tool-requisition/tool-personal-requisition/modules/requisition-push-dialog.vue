@@ -71,6 +71,8 @@
 </template>
 
 <script setup lang="tsx">
+  import { notifyFriendlyError } from '@/hooks/core/useArtFeedback'
+  import { validateArtFormForSubmit } from '@/utils/form/validate-art-form'
   import dayjs from 'dayjs'
   import { ElInputNumber, type FormRules } from 'element-plus'
   import type { EmployeeIntegrationItem } from '@/api/integration/employees'
@@ -216,7 +218,7 @@
 
   const handleSubmit = async (): Promise<boolean> => {
     try {
-      await formRef.value?.validate()
+      if (!(await validateArtFormForSubmit(formRef.value))) return false
       const tableValidation = await detailTableRef.value?.validate()
       if (tableValidation && !tableValidation.valid) {
         return false
@@ -229,7 +231,8 @@
       )
       emit('success')
       return true
-    } catch {
+    } catch (error) {
+      notifyFriendlyError(error, '领用单推送失败，请稍后重试')
       return false
     }
   }

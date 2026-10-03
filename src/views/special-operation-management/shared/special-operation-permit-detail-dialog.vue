@@ -120,7 +120,13 @@
                 /><span>{{ item.itemName }}</span></div
               >
             </div>
-            <ArtEmptyState v-else title="暂无安全措施记录" size="compact" :visual-size="64" />
+            <ArtEmptyState
+              v-else
+              title="暂无安全措施记录"
+              description="填写安全措施后，可在此查看落实情况。"
+              size="compact"
+              :visual-size="64"
+            />
           </ArtSectionCard>
         </div>
 
@@ -130,6 +136,7 @@
             :subtitle="`共 ${record.relatedPermits.length} 项`"
             :empty="!record.relatedPermits.length"
             empty-title="暂无关联作业"
+            empty-description="关联其他作业许可后可在此核对。"
           >
             <ArtTable
               :data="record.relatedPermits"
@@ -143,6 +150,7 @@
             :subtitle="`共 ${record.sitePhotoUrls.length} 张`"
             :empty="!record.sitePhotoUrls.length"
             empty-title="暂无现场照片"
+            empty-description="上传作业现场照片后可在此查看。"
           >
             <ArtUploadImage :model-value="record.sitePhotoUrls" multiple readonly :size="96" />
           </ArtSectionCard>
@@ -165,7 +173,13 @@
               >
             </ElTimelineItem>
           </ElTimeline>
-          <ArtEmptyState v-else title="暂无流程记录" size="compact" :visual-size="64" />
+          <ArtEmptyState
+            v-else
+            title="暂无流程记录"
+            description="提交审批后，可在此查看流转过程。"
+            size="compact"
+            :visual-size="64"
+          />
         </ArtSectionCard>
       </template>
 

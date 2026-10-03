@@ -66,6 +66,8 @@
 </template>
 
 <script setup lang="ts">
+  import { notifyFriendlyError } from '@/hooks/core/useArtFeedback'
+  import { validateArtFormForSubmit } from '@/utils/form/validate-art-form'
   import dayjs from 'dayjs'
   import { computed, nextTick, reactive, ref, shallowRef } from 'vue'
   import { storeToRefs } from 'pinia'
@@ -387,12 +389,13 @@
   })
   const handleSubmit = async (): Promise<boolean> => {
     try {
-      await formRef.value?.validate()
+      if (!(await validateArtFormForSubmit(formRef.value))) return false
       const type = form.model.id ? 'edit' : 'add'
       await saveLeaveInformation(buildPayload())
       emit('success', type, form.model.organizationId)
       return true
-    } catch {
+    } catch (error) {
+      notifyFriendlyError(error, '请假信息保存失败，请检查内容后重试')
       return false
     }
   }

@@ -34,6 +34,8 @@
 </template>
 
 <script setup lang="ts">
+  import { notifyFriendlyError } from '@/hooks/core/useArtFeedback'
+  import { validateArtFormForSubmit } from '@/utils/form/validate-art-form'
   import type { FormRules } from 'element-plus'
   import ArtDialog from '@/components/core/dialogs/art-dialog/index.vue'
   import type { ArtDialogExpose } from '@/components/core/dialogs/art-dialog/types'
@@ -321,7 +323,7 @@
   }
   const handleSubmit = async (): Promise<boolean> => {
     try {
-      await formRef.value?.validate()
+      if (!(await validateArtFormForSubmit(formRef.value))) return false
       const materialType = materialTypes.value.find((item) => item.id === form.model.materialTypeId)
       const baseUnit = units.value.find((item) => item.id === form.model.baseUnitId)
       if (!materialType || !baseUnit) return false
@@ -350,7 +352,8 @@
       await saveMaterial(payload)
       emit('success', form.model.id ? 'edit' : 'add')
       return true
-    } catch {
+    } catch (error) {
+      notifyFriendlyError(error, '防护用品档案保存失败，请检查内容后重试')
       return false
     }
   }

@@ -316,9 +316,9 @@ export async function deleteToolReturns(ids: string[]) {
   )
 }
 
-export async function submitToolReturn(id: string) {
+export async function submitToolReturn(id: string, options: { showMessage?: boolean } = {}) {
   return await responseHandle<string>(
     () => supabase.rpc('smis_submit_tool_return_secure', { p_return_id: id }),
-    { showMessage: true, breakReturn: true, message: '归还单已提交审批' }
+    { showMessage: options.showMessage ?? true, breakReturn: true, message: '归还单已提交审批' }
   )
 }

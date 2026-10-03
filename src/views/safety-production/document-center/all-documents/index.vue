@@ -400,7 +400,7 @@
   import { useLazyComponent } from '@/hooks/core/useLazyComponent'
   import { useUserStore } from '@/store/modules/user'
   import type { ColumnOption } from '@/types'
-  import { pageInfoHandler } from '@/utils/table/tableUtils'
+  import { pageInfoHandler } from '@/utils/table/table-utils'
   import { exportExcel, type ExcelColumn } from '@/utils/file'
   import TreeUtils from '@/utils/tree'
   import BusinessWorkspaceHeader, {

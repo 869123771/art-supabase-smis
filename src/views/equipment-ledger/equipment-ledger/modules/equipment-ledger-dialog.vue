@@ -150,6 +150,8 @@
 </template>
 
 <script setup lang="ts">
+  import { notifyFriendlyError } from '@/hooks/core/useArtFeedback'
+  import { validateArtFormForSubmit } from '@/utils/form/validate-art-form'
   import { ElButton, type FormRules } from 'element-plus'
   import { uniqBy } from 'lodash-es'
   import type {
@@ -892,11 +894,12 @@
   }
   const handleSubmit = async (): Promise<boolean> => {
     try {
-      await formRef.value?.validate()
+      if (!(await validateArtFormForSubmit(formRef.value))) return false
       await saveEquipmentLedger(buildPayload())
       emit('success', form.model.id ? 'edit' : 'add')
       return true
-    } catch {
+    } catch (error) {
+      notifyFriendlyError(error, '设备台账保存失败，请检查内容后重试')
       return false
     }
   }

@@ -77,7 +77,7 @@
   import type { ColumnOption } from '@/types'
   import { useArtFeedback } from '@/hooks/core/useArtFeedback'
   import { useUserStore } from '@/store/modules/user'
-  import { useTenantScopeStore } from '@/store/modules/tenantScope'
+  import { useTenantScopeStore } from '@/store/modules/tenant-scope'
   import { fetchGetOrganizationOptionsTree } from '@/api/system-manage'
   import { getFriendlySupabaseErrorMessage } from '@/utils/supabase/error'
   import TreeUtils from '@/utils/tree'
@@ -113,7 +113,7 @@
     parentSiteName?: string
     siteName: string
     categoryCode: string
-    sort?: number
+    sort?: string | number
     responsibleEmployeeNo?: string
     addressDetail?: string
     longitude?: string | number
@@ -430,56 +430,139 @@
   ]
 
   const importRows = async (rows: unknown[]): Promise<void> => {
-    for (const raw of rows as SiteImportRow[]) {
-      const organization = flatOrganizations.value.find(
-        (item) => item.organizationCode === String(raw.organizationCode).trim()
-      )
-      if (!organization?.id) throw new Error(`未找到部门编码：${raw.organizationCode}`)
-      const category = categoryOptions.value.find(
-        (item) => item.value === raw.categoryCode || item.label === raw.categoryCode
-      )
-      if (!category) throw new Error(`无法识别属性类别：${raw.categoryCode}`)
-      let employeeId: string | null = null
-      if (raw.responsibleEmployeeNo) {
-        const employees = await fetchSiteEmployeeOptions({
-          keyword: String(raw.responsibleEmployeeNo),
-          from: 0,
-          to: 99
-        })
-        employeeId =
-          employees.data.find(
-            (item) => item.employeeNo === String(raw.responsibleEmployeeNo).trim()
-          )?.id || null
-        if (!employeeId) throw new Error(`未找到责任人员工号：${raw.responsibleEmployeeNo}`)
-      }
-      const currentSites = (await fetchSiteList()).data ?? []
-      const parent = raw.parentSiteName
-        ? currentSites.find(
-            (item) =>
-              item.siteName === String(raw.parentSiteName).trim() &&
-              item.organizationId === organization.id
-          )
-        : undefined
-      if (raw.parentSiteName && !parent?.id)
-        throw new Error(`未找到上级场所：${raw.parentSiteName}`)
-      await saveSite({
-        organizationId: organization.id,
-        parentId: parent?.id || null,
-        siteName: String(raw.siteName).trim(),
-        categoryCode: category.value,
-        sort: Number(raw.sort || 0),
-        responsibleEmployeeId: employeeId,
-        addressDetail: raw.addressDetail || '',
-        longitude: raw.longitude ?? null,
-        latitude: raw.latitude ?? null,
-        coordinateSystem: 'gcj02',
-        imageUrls: String(raw.imageUrls || '')
-          .split(/[,，]/)
-          .map((item) => item.trim())
-          .filter(Boolean),
-        remark: raw.remark || ''
-      })
+    const scopedTenantId = effectiveTenantId.value ?? selectedOrganization.value?.tenantId
+    const organizationsByCode = new Map<string, Organization[]>()
+    for (const organization of flatOrganizations.value) {
+      if (scopedTenantId && organization.tenantId !== scopedTenantId) continue
+      const matches = organizationsByCode.get(organization.organizationCode) ?? []
+      matches.push(organization)
+      organizationsByCode.set(organization.organizationCode, matches)
     }
+    const siteResponse = await fetchSiteList({ showErrorMessage: false })
+    if (siteResponse.error) {
+      throw new Error('场所层级加载失败，请重试导入', { cause: siteResponse.error })
+    }
+    const siteIdsByOrganization = new Map<string, Map<string, string[]>>()
+    const addSite = (organizationId: string, siteName: string, siteId: string): void => {
+      const names = siteIdsByOrganization.get(organizationId) ?? new Map<string, string[]>()
+      names.set(siteName, [...(names.get(siteName) ?? []), siteId])
+      siteIdsByOrganization.set(organizationId, names)
+    }
+    for (const site of siteResponse.data ?? []) {
+      if (site.id) addSite(site.organizationId, site.siteName, site.id)
+    }
+    const employeeIds = new Map<string, string>()
+
+    let savedCount = 0
+    try {
+      for (const [index, value] of rows.entries()) {
+        if (!value || typeof value !== 'object' || Array.isArray(value)) {
+          throw new Error(`第 ${index + 1} 行格式无效，请检查导入模板`)
+        }
+        const raw = value as Partial<SiteImportRow>
+        const organizationCode = String(raw.organizationCode ?? '').trim()
+        const organizations = organizationsByCode.get(organizationCode) ?? []
+        if (organizations.length !== 1 || !organizations[0].id) {
+          throw new Error(
+            organizations.length > 1
+              ? `第 ${index + 1} 行部门编码“${organizationCode}”对应多个租户，请先指定租户后重试`
+              : `第 ${index + 1} 行未找到部门编码“${organizationCode}”，请核对当前租户`
+          )
+        }
+        const organization = organizations[0]
+        const organizationId = organization.id
+        const organizationTenantId = organization.tenantId
+        if (!organizationId || !organizationTenantId) {
+          throw new Error(`第 ${index + 1} 行部门缺少租户归属，请刷新部门结构后重试`)
+        }
+        const category = categoryOptions.value.find(
+          (item) => item.value === raw.categoryCode || item.label === raw.categoryCode
+        )
+        if (!category)
+          throw new Error(`第 ${index + 1} 行无法识别属性类别“${raw.categoryCode ?? ''}”`)
+        let employeeId: string | null = null
+        if (raw.responsibleEmployeeNo) {
+          const employeeNo = String(raw.responsibleEmployeeNo).trim()
+          const employeeKey = `${organizationTenantId}:${employeeNo}`
+          employeeId = employeeIds.get(employeeKey) ?? null
+          if (!employeeId) {
+            let from = 0
+            while (!employeeId) {
+              const employees = await fetchSiteEmployeeOptions(
+                { keyword: employeeNo, from, to: from + 99 },
+                { showErrorMessage: false }
+              )
+              if (employees.error) {
+                throw new Error(`第 ${index + 1} 行责任人员工查询失败，请重试`, {
+                  cause: employees.error
+                })
+              }
+              employeeId =
+                employees.data.find(
+                  (item) => item.employeeNo === employeeNo && item.tenantId === organizationTenantId
+                )?.id ?? null
+              from += 100
+              if (employeeId || from >= employees.total || !employees.data.length) break
+            }
+            if (!employeeId) {
+              throw new Error(`第 ${index + 1} 行未找到当前部门租户的责任人员工号“${employeeNo}”`)
+            }
+            employeeIds.set(employeeKey, employeeId)
+          }
+        }
+        const parentName = String(raw.parentSiteName ?? '').trim()
+        const parentIds = parentName
+          ? (siteIdsByOrganization.get(organizationId)?.get(parentName) ?? [])
+          : []
+        if (parentName && parentIds.length !== 1) {
+          throw new Error(
+            parentIds.length > 1
+              ? `第 ${index + 1} 行上级场所“${parentName}”存在重名，请先整理层级后重试`
+              : `第 ${index + 1} 行未找到上级场所“${parentName}”，请先导入父级场所`
+          )
+        }
+        const siteName = String(raw.siteName ?? '').trim()
+        if (!siteName) throw new Error(`第 ${index + 1} 行缺少场所名称`)
+        const sort = raw.sort == null || raw.sort === '' ? 0 : Number(raw.sort)
+        if (!Number.isInteger(sort) || sort < 0 || sort > 999999) {
+          throw new Error(`第 ${index + 1} 行顺序号应为 0 到 999999 的整数`)
+        }
+        const saved = await saveSite(
+          {
+            organizationId,
+            parentId: parentIds[0] ?? null,
+            siteName,
+            categoryCode: category.value,
+            sort,
+            responsibleEmployeeId: employeeId,
+            addressDetail: raw.addressDetail || '',
+            longitude: raw.longitude ?? null,
+            latitude: raw.latitude ?? null,
+            coordinateSystem: 'gcj02',
+            imageUrls: String(raw.imageUrls || '')
+              .split(/[,，]/)
+              .map((item) => item.trim())
+              .filter(Boolean),
+            remark: raw.remark || ''
+          },
+          { showMessage: false }
+        )
+        if (!saved.data) {
+          throw new Error(`第 ${index + 1} 行场所已提交，但服务未返回编号；请刷新列表核对结果`)
+        }
+        addSite(organizationId, siteName, saved.data)
+        savedCount += 1
+      }
+    } catch (error) {
+      const message = getFriendlySupabaseErrorMessage(error, '场所导入中断，请检查数据后重试')
+      throw new Error(
+        savedCount
+          ? `${message}；已有 ${savedCount} 行保存成功，请刷新列表核对后仅重试未导入行`
+          : message,
+        { cause: error }
+      )
+    }
+    ElMessage.success(`已导入 ${savedCount} 个场所`)
   }
   const headerActions = computed<ArtTableQueryHeaderAction[]>(() => [
     { permission: 'SmisSite:Add', type: 'add', label: '新增场所', onClick: () => openDialog() },
@@ -532,13 +615,15 @@
     organizationState.loading = true
     organizationState.error = null
     try {
-      organizationState.tree =
-        (
-          await fetchGetOrganizationOptionsTree({
-            status: '1',
-            tenantId: effectiveTenantId.value ?? undefined
-          })
-        ).data ?? []
+      const response = await fetchGetOrganizationOptionsTree(
+        {
+          status: '1',
+          tenantId: effectiveTenantId.value ?? undefined
+        },
+        { showErrorMessage: false }
+      )
+      if (response.error) throw response.error
+      organizationState.tree = response.data ?? []
       if (
         organizationState.selectedKey !== ALL_ORGANIZATIONS_KEY &&
         !organizationTreeUtils.findNode(organizationState.tree, organizationState.selectedKey)

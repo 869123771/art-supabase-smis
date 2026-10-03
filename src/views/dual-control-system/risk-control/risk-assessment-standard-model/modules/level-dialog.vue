@@ -12,7 +12,9 @@
   /></ArtDialog>
 </template>
 <script setup lang="ts">
-  import { ElColorPicker, type FormRules } from 'element-plus'
+  import { notifyFriendlyError } from '@/hooks/core/useArtFeedback'
+  import { validateArtFormForSubmit } from '@/utils/form/validate-art-form'
+  import { ElColorPicker, ElMessage, type FormRules } from 'element-plus'
   import ArtDialog from '@/components/core/dialogs/art-dialog/index.vue'
   import type { ArtDialogExpose } from '@/components/core/dialogs/art-dialog/types'
   import ArtForm, { type FormItem } from '@/components/core/forms/art-form/index.vue'
@@ -99,15 +101,23 @@
   }
   const submit = async () => {
     try {
-      await formRef.value?.validate()
-      if (model.maxScore != null && model.maxScore <= model.minScore)
-        throw new Error('最高分必须大于最低分')
-      await saveRiskAssessmentLevel({ ...model, levelName: model.levelName.trim() })
-      emit('success')
-      return true
-    } catch {
+      if (!(await validateArtFormForSubmit(formRef.value))) return false
+    } catch (error) {
+      notifyFriendlyError(error, '风险等级校验失败，请重试')
       return false
     }
+    if (model.maxScore != null && model.maxScore <= model.minScore) {
+      ElMessage.warning('最高分必须大于最低分')
+      return false
+    }
+    try {
+      await saveRiskAssessmentLevel({ ...model, levelName: model.levelName.trim() })
+    } catch (error) {
+      notifyFriendlyError(error, '风险等级保存失败，请检查内容后重试')
+      return false
+    }
+    emit('success')
+    return true
   }
   const handleOpen = async (data: LevelDialogOpenData) => {
     Object.assign(model, {

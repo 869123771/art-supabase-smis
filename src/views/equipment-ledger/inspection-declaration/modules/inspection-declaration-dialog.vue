@@ -85,6 +85,8 @@
 </template>
 
 <script setup lang="ts">
+  import { notifyFriendlyError } from '@/hooks/core/useArtFeedback'
+  import { validateArtFormForSubmit } from '@/utils/form/validate-art-form'
   import dayjs from 'dayjs'
   import { ElMessage, type FormRules } from 'element-plus'
   import type {
@@ -474,7 +476,7 @@
   }
   const handleSubmit = async (): Promise<boolean> => {
     try {
-      await formRef.value?.validate()
+      if (!(await validateArtFormForSubmit(formRef.value))) return false
       const response = await saveEquipmentInspection(buildPayload())
       const entityId = form.model.id || response.data
       if (ocrArtifactId.value && entityId) {
@@ -492,7 +494,8 @@
       }
       emit('success', form.model.id ? 'edit' : 'add')
       return true
-    } catch {
+    } catch (error) {
+      notifyFriendlyError(error, '设备检验申报保存失败，请检查内容后重试')
       return false
     }
   }

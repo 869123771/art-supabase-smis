@@ -57,6 +57,7 @@
           title="预案附件"
           :empty="!rescuePlan.planAttachmentUrls.length"
           empty-title="暂无预案附件"
+          empty-description="上传预案文件后可在此查看。"
         >
           <ArtUploadFile
             :model-value="rescuePlan.planAttachmentUrls"
@@ -69,6 +70,7 @@
           title="备案表附件"
           :empty="!rescuePlan.filingAttachmentUrls.length"
           empty-title="暂无备案表附件"
+          empty-description="上传备案表后可在此查看。"
         >
           <ArtUploadFile
             :model-value="rescuePlan.filingAttachmentUrls"
@@ -101,6 +103,7 @@
           title="计划附件"
           :empty="!drillPlan.attachmentUrls.length"
           empty-title="暂无计划附件"
+          empty-description="上传演练计划文件后可在此查看。"
         >
           <ArtUploadFile
             :model-value="drillPlan.attachmentUrls"
@@ -125,6 +128,7 @@
           title="演练照片"
           :empty="!drillRecord.imageUrls.length"
           empty-title="暂无演练照片"
+          empty-description="上传现场照片后可在此查看演练影像。"
         >
           <ArtUploadImage :model-value="drillRecord.imageUrls" multiple readonly :size="104" />
         </ArtSectionCard>
@@ -132,6 +136,7 @@
           title="记录附件"
           :empty="!drillRecord.attachmentUrls.length"
           empty-title="暂无记录附件"
+          empty-description="上传演练记录文件后可在此查看。"
         >
           <ArtUploadFile
             :model-value="drillRecord.attachmentUrls"

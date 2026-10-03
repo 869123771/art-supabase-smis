@@ -108,6 +108,8 @@
 </template>
 
 <script setup lang="tsx">
+  import { notifyFriendlyError } from '@/hooks/core/useArtFeedback'
+  import { validateArtFormForSubmit } from '@/utils/form/validate-art-form'
   import {
     ElButton,
     ElInput,
@@ -435,7 +437,7 @@
   }
   const submit = async () => {
     try {
-      await formRef.value?.validate()
+      if (!(await validateArtFormForSubmit(formRef.value))) return false
       if (!form.positionIds.length && !form.organizationIds.length) {
         ElMessage.warning('适用岗位和适用公司/部门至少选择一项')
         return false
@@ -472,7 +474,8 @@
       })
       emit('success', form.id ? 'edit' : 'add')
       return true
-    } catch {
+    } catch (error) {
+      notifyFriendlyError(error, '发放标准保存失败，请检查内容后重试')
       return false
     }
   }

@@ -103,6 +103,8 @@
   </ArtDialog>
 </template>
 <script setup lang="ts">
+  import { notifyFriendlyError } from '@/hooks/core/useArtFeedback'
+  import { validateArtFormForSubmit } from '@/utils/form/validate-art-form'
   import { normalizeNullableText } from '@/utils/form/normalize'
   import { ElMessage, type FormRules } from 'element-plus'
   import ArtDialog from '@/components/core/dialogs/art-dialog/index.vue'
@@ -232,7 +234,7 @@
   )
   const submit = async () => {
     try {
-      await formRef.value?.validate()
+      if (!(await validateArtFormForSubmit(formRef.value))) return false
       if (!model.positions.length) {
         ElMessage.warning('请至少选择一个防控岗位')
         return false
@@ -249,7 +251,8 @@
       })
       emit('success')
       return true
-    } catch {
+    } catch (error) {
+      notifyFriendlyError(error, '风险管控措施保存失败，请检查内容后重试')
       return false
     }
   }

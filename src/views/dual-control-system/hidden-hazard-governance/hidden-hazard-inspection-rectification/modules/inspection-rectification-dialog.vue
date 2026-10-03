@@ -45,6 +45,8 @@
 </template>
 
 <script setup lang="ts">
+  import { notifyFriendlyError } from '@/hooks/core/useArtFeedback'
+  import { validateArtFormForSubmit } from '@/utils/form/validate-art-form'
   import dayjs from 'dayjs'
   import type { FormRules } from 'element-plus'
   import ArtDialog from '@/components/core/dialogs/art-dialog/index.vue'
@@ -142,7 +144,7 @@
   const handleSubmit = async (): Promise<boolean> => {
     if (loadError.value) return false
     try {
-      await formRef.value?.validate()
+      if (!(await validateArtFormForSubmit(formRef.value))) return false
       await createInspectionRectification({
         ...toRaw(form.model),
         description: form.model.description.trim(),
@@ -150,7 +152,8 @@
       })
       emit('success')
       return true
-    } catch {
+    } catch (error) {
+      notifyFriendlyError(error, '隐患整改保存失败，请检查内容后重试')
       return false
     }
   }

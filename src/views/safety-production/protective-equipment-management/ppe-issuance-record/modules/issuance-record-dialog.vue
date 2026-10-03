@@ -100,6 +100,8 @@
 </template>
 
 <script setup lang="tsx">
+  import { notifyFriendlyError } from '@/hooks/core/useArtFeedback'
+  import { validateArtFormForSubmit } from '@/utils/form/validate-art-form'
   import dayjs from 'dayjs'
   import { ElButton, ElInput, ElInputNumber, type FormRules } from 'element-plus'
   import type { EmployeeIntegrationItem } from '@/api/integration/employees'
@@ -440,7 +442,7 @@
 
   const handleSubmit = async (): Promise<boolean> => {
     try {
-      await formRef.value?.validate()
+      if (!(await validateArtFormForSubmit(formRef.value))) return false
       if (!form.model.items.length) {
         ElMessage.warning('请至少添加一条防护用品明细')
         return false
@@ -465,7 +467,8 @@
       })
       emit('success')
       return true
-    } catch {
+    } catch (error) {
+      notifyFriendlyError(error, '领用记录保存失败，请检查内容后重试')
       return false
     }
   }

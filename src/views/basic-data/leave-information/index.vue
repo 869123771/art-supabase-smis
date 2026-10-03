@@ -95,7 +95,7 @@
   import { useUserStore } from '@/store/modules/user'
   import { fetchGetOrganizationOptionsTree } from '@/api/system-manage'
   import { exportExcel } from '@/utils/file'
-  import { pageInfoHandler } from '@/utils/table/tableUtils'
+  import { pageInfoHandler } from '@/utils/table/table-utils'
   import { getFriendlySupabaseErrorMessage } from '@/utils/supabase/error'
   import TreeUtils from '@/utils/tree'
   import {

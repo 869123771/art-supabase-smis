@@ -88,6 +88,8 @@
             :loading="state.loading"
             :error="state.error"
             :empty="!state.data.organizationDistribution.length"
+            empty-title="暂无组织证件统计"
+            empty-description="调整筛选条件，或在证件台账中补充人员证件。"
             :min-height="260"
             @retry="loadData"
           >
@@ -106,6 +108,8 @@
               :loading="state.loading"
               :error="state.error"
               :empty="!state.data.topHolders.length"
+              empty-title="暂无持证人员排行"
+              empty-description="录入人员证件后可按持证数量查看排行。"
               :min-height="430"
               @retry="loadData"
             >
@@ -123,6 +127,8 @@
               :loading="state.loading"
               :error="state.error"
               :empty="!activePeriodRows.length"
+              empty-title="当前期间暂无变化记录"
+              empty-description="调整统计时间窗，或在新增证件及提醒发生后查看变化。"
               :min-height="430"
               @retry="loadData"
             >
@@ -147,6 +153,8 @@
               :loading="state.loading"
               :error="state.error"
               :empty="!state.data.equipmentProjects.length"
+              empty-title="暂无特种设备作业项目数据"
+              empty-description="录入对应作业人员证件后可按项目统计。"
               :min-height="360"
               @retry="loadData"
             >
@@ -164,6 +172,8 @@
               :loading="state.loading"
               :error="state.error"
               :empty="!state.data.specialOperations.length"
+              empty-title="暂无特种作业准操项目数据"
+              empty-description="录入对应特种作业证件后可按准操项目统计。"
               :min-height="360"
               @retry="loadData"
             >
@@ -183,6 +193,8 @@
               :loading="state.loading"
               :error="state.error"
               :empty="!state.data.safetyManagerTypes.length"
+              empty-title="暂无安全管理人员证类别数据"
+              empty-description="录入安全管理人员证后可查看类别分布。"
               :min-height="330"
               @retry="loadData"
             >
@@ -200,6 +212,8 @@
               :loading="state.loading"
               :error="state.error"
               :empty="!state.data.registeredEngineerTypes.length"
+              empty-title="暂无注册安全工程师类别数据"
+              empty-description="录入注册安全工程师证后可查看类别分布。"
               :min-height="330"
               @retry="loadData"
             >
@@ -217,6 +231,8 @@
               :loading="state.loading"
               :error="state.error"
               :empty="!state.data.educationDistribution.length"
+              empty-title="暂无持证人员学历数据"
+              empty-description="在人员档案中补充学历后可查看分布。"
               :min-height="330"
               @retry="loadData"
             >

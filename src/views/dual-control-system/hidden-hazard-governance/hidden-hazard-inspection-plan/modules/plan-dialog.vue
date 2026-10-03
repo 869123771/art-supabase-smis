@@ -116,6 +116,8 @@
 </template>
 
 <script setup lang="ts">
+  import { notifyFriendlyError } from '@/hooks/core/useArtFeedback'
+  import { validateArtFormForSubmit } from '@/utils/form/validate-art-form'
   import { useDictionaryOptions } from '@/hooks/core/useDictionaryOptions'
   import { normalizeNullableText } from '@/utils/form/normalize'
   import dayjs from 'dayjs'
@@ -302,7 +304,7 @@
   }
   const handleSubmit = async (): Promise<boolean> => {
     try {
-      await formRef.value?.validate()
+      if (!(await validateArtFormForSubmit(formRef.value))) return false
       if (dayjs(form.model.plannedEndAt).isBefore(dayjs(form.model.plannedStartAt))) {
         ElMessage.warning('计划结束时间不能早于开始时间')
         return false
@@ -316,7 +318,8 @@
       })
       emit('success', form.model.id ? 'edit' : 'add')
       return true
-    } catch {
+    } catch (error) {
+      notifyFriendlyError(error, '隐患排查计划保存失败，请检查内容后重试')
       return false
     }
   }

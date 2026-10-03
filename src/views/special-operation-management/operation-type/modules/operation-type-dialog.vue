@@ -183,6 +183,8 @@
 </template>
 
 <script setup lang="ts">
+  import { notifyFriendlyError } from '@/hooks/core/useArtFeedback'
+  import { validateArtFormForSubmit } from '@/utils/form/validate-art-form'
   import { normalizeNullableText } from '@/utils/form/normalize'
   import type { FormRules } from 'element-plus'
   import { cloneDeep } from 'lodash-es'
@@ -439,7 +441,7 @@
 
   const handleSubmit = async (): Promise<boolean> => {
     try {
-      await formRef.value?.validate()
+      if (!(await validateArtFormForSubmit(formRef.value))) return false
       const fieldDefinitions: SmisSpecialOperationFieldDefinition[] =
         form.model.fieldDefinitions.map((definition, index) => ({
           id: definition.id,
@@ -469,7 +471,8 @@
       await saveSpecialOperationType(payload)
       emit('success', form.model.id ? 'edit' : 'add')
       return true
-    } catch {
+    } catch (error) {
+      notifyFriendlyError(error, '特殊作业类型保存失败，请检查内容后重试')
       return false
     }
   }

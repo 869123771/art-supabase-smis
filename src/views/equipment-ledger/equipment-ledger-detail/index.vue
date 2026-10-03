@@ -6,6 +6,7 @@
     :error="loadError"
     :empty="!equipment"
     empty-text="暂无设备档案详情"
+    empty-description="请返回设备台账重新选择，或刷新后重试。"
     @retry="loadDetail"
   >
     <ArtPageHeader
@@ -162,6 +163,7 @@
           <ArtEmptyState
             v-if="!inspectionLoading && !inspections.length"
             title="当前设备暂无检验记录"
+            description="完成设备检验后，可在此查看记录与结果。"
             :visual-size="96"
           />
         </div>

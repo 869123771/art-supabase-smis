@@ -23,6 +23,8 @@
   </ArtDialog>
 </template>
 <script setup lang="ts">
+  import { notifyFriendlyError } from '@/hooks/core/useArtFeedback'
+  import { validateArtFormForSubmit } from '@/utils/form/validate-art-form'
   import { useDictionaryOptions } from '@/hooks/core/useDictionaryOptions'
   import { ElColorPicker, type FormRules } from 'element-plus'
   import ArtDialog from '@/components/core/dialogs/art-dialog/index.vue'
@@ -259,11 +261,12 @@
   }
   const submit = async () => {
     try {
-      await formRef.value?.validate()
+      if (!(await validateArtFormForSubmit(formRef.value))) return false
       await saveDuplicateConfiguration(buildSubmitPayload())
       emit('success', model.id ? 'edit' : 'add')
       return true
-    } catch {
+    } catch (error) {
+      notifyFriendlyError(error, '重复配置保存失败，请检查内容后重试')
       return false
     }
   }

@@ -90,7 +90,13 @@
           </div>
         </li>
       </ul>
-      <ArtEmptyState v-else title="暂无巡查项目" size="compact" :visual-size="64" />
+      <ArtEmptyState
+        v-else
+        title="暂无巡查项目"
+        description="为任务配置巡查项目后，可在此查看执行要求。"
+        size="compact"
+        :visual-size="64"
+      />
 
       <ArtSectionTitle title="执行记录" subtitle="任务生成、转交、进度保存与完成事件" />
       <ElTimeline class="task-detail-drawer__timeline">

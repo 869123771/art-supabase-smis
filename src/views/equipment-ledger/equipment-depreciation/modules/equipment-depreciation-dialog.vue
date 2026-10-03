@@ -40,6 +40,8 @@
 </template>
 
 <script setup lang="tsx">
+  import { notifyFriendlyError } from '@/hooks/core/useArtFeedback'
+  import { validateArtFormForSubmit } from '@/utils/form/validate-art-form'
   import { ElInputNumber, type FormRules } from 'element-plus'
   import type { ColumnOption } from '@/types'
   import ArtDialog from '@/components/core/dialogs/art-dialog/index.vue'
@@ -270,7 +272,7 @@
 
   const handleSubmit = async (): Promise<boolean> => {
     try {
-      await formRef.value?.validate()
+      if (!(await validateArtFormForSubmit(formRef.value))) return false
       const tableValidation = await rateTableRef.value?.validate()
       if (tableValidation && !tableValidation.valid) {
         return false
@@ -278,7 +280,8 @@
       await saveEquipmentDepreciation(buildPayload())
       emit('success', form.model.id ? 'edit' : 'add')
       return true
-    } catch {
+    } catch (error) {
+      notifyFriendlyError(error, '设备折旧保存失败，请检查内容后重试')
       return false
     }
   }

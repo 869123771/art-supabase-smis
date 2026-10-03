@@ -14,13 +14,16 @@ interface SiteEmployeeListResult {
 
 const { supabase, keysToSnakeDeep, responseHandle } = useSupabase()
 
-export async function fetchSiteList() {
+export async function fetchSiteList(options: { showErrorMessage?: boolean } = {}) {
   return await responseHandle<SmisSite[]>(() => supabase.rpc('smis_list_sites_secure'), {
-    showErrorMessage: true
+    showErrorMessage: options.showErrorMessage ?? true
   })
 }
 
-export async function fetchSiteEmployeeOptions(params: EmployeeSelectorContractParams = {}) {
+export async function fetchSiteEmployeeOptions(
+  params: EmployeeSelectorContractParams = {},
+  options: { showErrorMessage?: boolean } = {}
+) {
   const from = Math.max(params.from ?? 0, 0)
   const result = await responseHandle<SiteEmployeeListResult>(
     () =>
@@ -29,7 +32,7 @@ export async function fetchSiteEmployeeOptions(params: EmployeeSelectorContractP
         p_to: Math.max(params.to ?? from + 19, from),
         p_keyword: normalizeNullableText(params.keyword)
       }),
-    { showErrorMessage: true }
+    { showErrorMessage: options.showErrorMessage ?? true }
   )
   return {
     data: result.data?.records ?? [],
@@ -39,7 +42,10 @@ export async function fetchSiteEmployeeOptions(params: EmployeeSelectorContractP
   }
 }
 
-export async function saveSite(params: SmisSiteSavePayload) {
+export async function saveSite(
+  params: SmisSiteSavePayload,
+  options: { showMessage?: boolean } = {}
+) {
   return await responseHandle<string>(
     () =>
       supabase.rpc('smis_save_site_secure', {
@@ -47,7 +53,7 @@ export async function saveSite(params: SmisSiteSavePayload) {
         p_payload: keysToSnakeDeep(omit(params, ['id']))
       }),
     {
-      showMessage: true,
+      showMessage: options.showMessage ?? true,
       breakReturn: true,
       message: params.id ? '场所信息已更新' : '场所信息已新增'
     }

@@ -12,7 +12,7 @@
         v-model="form.model"
         :items="form.items"
         :rules="form.rules"
-        :span="12"
+        :span="isNarrow ? 24 : 12"
         :gutter="24"
         label-position="top"
         :show-reset="false"
@@ -23,6 +23,9 @@
 </template>
 
 <script setup lang="ts">
+  import { notifyFriendlyError } from '@/hooks/core/useArtFeedback'
+  import { validateArtFormForSubmit } from '@/utils/form/validate-art-form'
+  import { useMediaQuery } from '@vueuse/core'
   import type { FormRules } from 'element-plus'
   import ArtDialog from '@/components/core/dialogs/art-dialog/index.vue'
   import type { ArtDialogExpose } from '@/components/core/dialogs/art-dialog/types'
@@ -32,7 +35,7 @@
   } from '@/components/core/forms/art-form/index.vue'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
   import { useUserStore } from '@/store/modules/user'
-  import { useTenantScopeStore } from '@/store/modules/tenantScope'
+  import { useTenantScopeStore } from '@/store/modules/tenant-scope'
   import {
     saveInspectionCategory,
     type SmisInspectionCategory,
@@ -67,6 +70,7 @@
   const { tenantOptions } = storeToRefs(tenantScopeStore)
   const dialogRef = ref<ArtDialogExpose<InspectionCategoryDialogOpenData>>()
   const formRef = ref<FormExpose>()
+  const isNarrow = useMediaQuery('(max-width: 520px)')
   const fallbackTenantName = ref('当前租户')
   const isCreating = ref(true)
 
@@ -189,21 +193,27 @@
 
   const handleSubmit = async (): Promise<boolean> => {
     try {
-      await formRef.value?.validate()
-      const payload: SmisInspectionCategorySavePayload = {
-        id: form.model.id,
-        tenantId: form.model.tenantId,
-        categoryCode: form.model.categoryCode.trim().toUpperCase(),
-        categoryName: form.model.categoryName.trim(),
-        remark: form.model.remark.trim(),
-        status: form.model.status
-      }
-      await saveInspectionCategory(payload)
-      emit('success', form.model.id ? 'edit' : 'add')
-      return true
-    } catch {
+      if (!(await validateArtFormForSubmit(formRef.value))) return false
+    } catch (error) {
+      notifyFriendlyError(error, '检验类别校验失败，请重试')
       return false
     }
+    const payload: SmisInspectionCategorySavePayload = {
+      id: form.model.id,
+      tenantId: form.model.tenantId,
+      categoryCode: form.model.categoryCode.trim().toUpperCase(),
+      categoryName: form.model.categoryName.trim(),
+      remark: form.model.remark.trim(),
+      status: form.model.status
+    }
+    try {
+      await saveInspectionCategory(payload)
+    } catch (error) {
+      notifyFriendlyError(error, '检验类别保存失败，请检查内容后重试')
+      return false
+    }
+    emit('success', form.model.id ? 'edit' : 'add')
+    return true
   }
 
   const handleOpen = async (data: InspectionCategoryDialogOpenData): Promise<void> => {
@@ -243,3 +253,14 @@
 
   defineExpose({ handleOpen })
 </script>
+
+<style scoped lang="scss">
+  @media (max-width: 520px) {
+    .inspection-category-dialog :deep(.art-entity-summary__content strong) {
+      overflow: visible;
+      text-overflow: clip;
+      white-space: normal;
+      overflow-wrap: anywhere;
+    }
+  }
+</style>

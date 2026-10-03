@@ -62,6 +62,8 @@
 </template>
 
 <script setup lang="ts">
+  import { notifyFriendlyError } from '@/hooks/core/useArtFeedback'
+  import { validateArtFormForSubmit } from '@/utils/form/validate-art-form'
   import { normalizeNullableText } from '@/utils/form/normalize'
   import dayjs from 'dayjs'
   import type { FormRules } from 'element-plus'
@@ -212,7 +214,7 @@
     const row = currentRow.value
     if (!row) return false
     try {
-      await formRef.value?.validate()
+      if (!(await validateArtFormForSubmit(formRef.value))) return false
       if (dayjs(form.model.educationCompletedAt).isBefore(dayjs(form.model.educationStartTime))) {
         ElMessage.warning('教育完成时间不能早于教育开始时间')
         return false
@@ -234,7 +236,8 @@
       await recordThreeViolationEducation(row.id, payload)
       emit('success')
       return true
-    } catch {
+    } catch (error) {
+      notifyFriendlyError(error, '违章教育记录保存失败，请检查内容后重试')
       return false
     }
   }

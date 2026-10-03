@@ -32,6 +32,8 @@
 </template>
 
 <script setup lang="ts">
+  import { notifyFriendlyError } from '@/hooks/core/useArtFeedback'
+  import { validateArtFormForSubmit } from '@/utils/form/validate-art-form'
   import { normalizeNullableText } from '@/utils/form/normalize'
   import type { FormRules } from 'element-plus'
   import { fetchGetEnableOrganizationUserList } from '@/api/system-manage'
@@ -120,7 +122,7 @@
   const handleSubmit = async (): Promise<boolean> => {
     if (!document.value) return false
     try {
-      await formRef.value?.validate()
+      if (!(await validateArtFormForSubmit(formRef.value))) return false
       await shareDocument({
         documentId: document.value.id,
         userIds: [...form.userIds],
@@ -128,7 +130,8 @@
       })
       emit('success')
       return true
-    } catch {
+    } catch (error) {
+      notifyFriendlyError(error, '文档分享失败，请稍后重试')
       return false
     }
   }

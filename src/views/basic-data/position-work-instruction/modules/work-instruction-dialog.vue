@@ -119,6 +119,8 @@
 </template>
 
 <script setup lang="ts">
+  import { notifyFriendlyError } from '@/hooks/core/useArtFeedback'
+  import { validateArtFormForSubmit } from '@/utils/form/validate-art-form'
   import dayjs from 'dayjs'
   import { computed, nextTick, reactive, ref, toRaw } from 'vue'
   import { storeToRefs } from 'pinia'
@@ -336,12 +338,13 @@
   })
   const handleSubmit = async (): Promise<boolean> => {
     try {
-      await formRef.value?.validate()
+      if (!(await validateArtFormForSubmit(formRef.value))) return false
       const type = form.id ? 'edit' : 'add'
       await savePositionWorkInstruction(buildPayload())
       emit('success', type)
       return true
-    } catch {
+    } catch (error) {
+      notifyFriendlyError(error, '岗位作业指导书保存失败，请检查内容后重试')
       return false
     }
   }

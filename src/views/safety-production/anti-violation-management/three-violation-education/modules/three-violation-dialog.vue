@@ -66,6 +66,8 @@
 </template>
 
 <script setup lang="ts">
+  import { notifyFriendlyError } from '@/hooks/core/useArtFeedback'
+  import { validateArtFormForSubmit } from '@/utils/form/validate-art-form'
   import { normalizeNullableText } from '@/utils/form/normalize'
   import dayjs from 'dayjs'
   import type { FormRules } from 'element-plus'
@@ -271,7 +273,7 @@
 
   const handleSubmit = async (): Promise<boolean> => {
     try {
-      await formRef.value?.validate()
+      if (!(await validateArtFormForSubmit(formRef.value))) return false
       const payload: SmisThreeViolationEducationSavePayload = {
         id: form.model.id,
         operation: form.model.id ? 'edit' : currentMode.value,
@@ -288,7 +290,8 @@
       await saveThreeViolationEducation(payload)
       emit('success', form.model.id ? 'edit' : 'add')
       return true
-    } catch {
+    } catch (error) {
+      notifyFriendlyError(error, '三违教育保存失败，请检查内容后重试')
       return false
     }
   }

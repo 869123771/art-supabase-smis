@@ -70,6 +70,8 @@
 </template>
 
 <script setup lang="ts">
+  import { notifyFriendlyError } from '@/hooks/core/useArtFeedback'
+  import { validateArtFormForSubmit } from '@/utils/form/validate-art-form'
   import { normalizeNullableText } from '@/utils/form/normalize'
   import dayjs from 'dayjs'
   import type { FormRules } from 'element-plus'
@@ -325,7 +327,7 @@
   const handleSubmit = async (): Promise<boolean> => {
     if (optionsError.value) return false
     try {
-      await formRef.value?.validate()
+      if (!(await validateArtFormForSubmit(formRef.value))) return false
       const payload: SmisViolationRecordSavePayload = {
         id: form.model.id,
         operation: mode.value,
@@ -342,7 +344,8 @@
       await saveViolationRecord(payload)
       emit('success', mode.value)
       return true
-    } catch {
+    } catch (error) {
+      notifyFriendlyError(error, '违章记录保存失败，请检查内容后重试')
       return false
     }
   }

@@ -66,8 +66,11 @@
 </template>
 
 <script setup lang="tsx">
+  import { notifyFriendlyError } from '@/hooks/core/useArtFeedback'
+  import { validateArtFormForSubmit } from '@/utils/form/validate-art-form'
+  import { getFriendlySupabaseErrorMessage } from '@/utils/supabase'
   import dayjs from 'dayjs'
-  import { ElButton, ElInput, ElInputNumber, type FormRules } from 'element-plus'
+  import { ElButton, ElInput, ElInputNumber, ElMessage, type FormRules } from 'element-plus'
   import ArtDialog from '@/components/core/dialogs/art-dialog/index.vue'
   import type { ArtDialogExpose } from '@/components/core/dialogs/art-dialog/types'
   import ArtForm, { type FormItem } from '@/components/core/forms/art-form/index.vue'
@@ -322,7 +325,7 @@
     openMode.value === 'copy' ? 'copy' : openMode.value === 'return' ? 'return' : 'add'
   const handleSubmit = async (): Promise<boolean> => {
     try {
-      await formRef.value?.validate()
+      if (!(await validateArtFormForSubmit(formRef.value))) return false
       if (!form.model.items.length) {
         ElMessage.warning('请至少选择一条待归还工器具')
         return false
@@ -331,6 +334,11 @@
       if (tableValidation?.valid === false) {
         return false
       }
+    } catch (error) {
+      notifyFriendlyError(error, '工器具归还单校验失败，请重试')
+      return false
+    }
+    try {
       const result = await saveToolReturn(
         {
           id: form.model.id,
@@ -345,14 +353,28 @@
         saveAction()
       )
       form.model.id = result.data || form.model.id
-      if (openMode.value === 'return' && form.model.id) {
-        await submitToolReturn(form.model.id)
-      }
-      emit('success')
-      return true
-    } catch {
+    } catch (error) {
+      notifyFriendlyError(error, '工器具归还单保存失败，请检查内容后重试')
       return false
     }
+    if (openMode.value === 'return' && !form.model.id) {
+      ElMessage.warning('归还单已保存，但未返回记录编号；请在列表核实状态后继续')
+      emit('success')
+      return true
+    }
+    if (openMode.value === 'return' && form.model.id) {
+      try {
+        await submitToolReturn(form.model.id, { showMessage: false })
+        ElMessage.success('归还单已提交审批')
+      } catch (error) {
+        const reason = getFriendlySupabaseErrorMessage(error, '提交审批未完成')
+        ElMessage.warning(`归还单已保存，${reason}；请在列表核实状态后继续`)
+        emit('success')
+        return true
+      }
+    }
+    emit('success')
+    return true
   }
   const handleOpen = async (data: ToolReturnDialogOpenData): Promise<void> => {
     openMode.value = data.mode
