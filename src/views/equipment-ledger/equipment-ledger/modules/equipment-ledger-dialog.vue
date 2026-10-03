@@ -3,6 +3,7 @@
     <div class="equipment-ledger-dialog">
       <ElAlert v-if="loadError" type="error" :closable="false" show-icon>
         <template #title>设备资料加载失败</template>
+        <p>{{ loadError }}</p>
         <ElButton link type="primary" @click="loadInitialData">重新加载</ElButton>
       </ElAlert>
       <div class="equipment-ledger-dialog__context">
@@ -153,7 +154,9 @@
   import { notifyFriendlyError } from '@/hooks/core/useArtFeedback'
   import { validateArtFormForSubmit } from '@/utils/form/validate-art-form'
   import { ElButton, type FormRules } from 'element-plus'
-  import { uniqBy } from 'lodash-es'
+  import { uniq, uniqBy } from 'lodash-es'
+  import { mapWithConcurrency } from '@/utils/async'
+  import { getFriendlySupabaseErrorMessage } from '@/utils/supabase/error'
   import type {
     ArtDataSelectExpose,
     DataSelectColumn,
@@ -180,6 +183,7 @@
   import { resolveSupplierDictionaryLabel } from '@smis/domain/supplier-dictionary'
   import { getEquipmentProfileDefinition } from '@smis/domain/equipment-profile'
   import {
+    fetchEquipmentLedgerDetail,
     fetchEquipmentLedgerList,
     fetchSupplierList,
     saveEquipmentLedger,
@@ -272,7 +276,7 @@
   const userStore = useUserStore()
   const { getDictMap, getUserInfo } = storeToRefs(userStore)
   const dialogRef = ref<ArtDialogExpose<EquipmentLedgerDialogOpenData>>()
-  const loadError = ref(false)
+  const loadError = ref<string | null>(null)
   const currentOpenData = shallowRef<EquipmentLedgerDialogOpenData>()
   const formRef = ref<FormExpose>()
   const pressureGaugeSelectRef = ref<ArtDataSelectExpose>()
@@ -821,9 +825,20 @@
     ids: string[],
     kind: EquipmentAccessoryKind
   ): Promise<DataSelectRecord[]> => {
-    if (!ids.length) return []
-    const rows = await fetchAccessoryRows(kind)
-    return rows.filter((row) => ids.includes(String(row.id)))
+    return mapWithConcurrency(uniq(ids), 3, async (id) => {
+      const result = await fetchEquipmentLedgerDetail(id)
+      if (result.error) {
+        throw new Error('关联设备加载失败，请重新加载设备资料', { cause: result.error })
+      }
+      const row = result.data
+      if (!row || row.id !== id) {
+        throw new Error('关联设备已不存在或当前账号无权查看，请核对设备关联后重试')
+      }
+      if (row.profileType !== kind) {
+        throw new Error('关联设备的档案模板已变更，请核对压力表或安全阀分类后重试')
+      }
+      return { ...row, locationName: row.location?.locationName || '未设置位置' }
+    })
   }
   const handleCreateAccessory = (kind: EquipmentAccessoryKind): void => {
     if (kind === 'pressure_gauge') pressureGaugeSelectRef.value?.close()
@@ -972,7 +987,7 @@
   const loadInitialData = async (): Promise<void> => {
     const data = currentOpenData.value
     if (!data) return
-    loadError.value = false
+    loadError.value = null
     dialogRef.value?.setLoading(true)
     try {
       await prepareForm(data)
@@ -991,15 +1006,15 @@
         formRef.value?.reloadOptions('usingOrganizationId'),
         formRef.value?.reloadOptions('managingOrganizationId')
       ])
-    } catch {
-      loadError.value = true
+    } catch (error) {
+      loadError.value = getFriendlySupabaseErrorMessage(error, '设备资料加载失败，请重新加载后重试')
     } finally {
       dialogRef.value?.setLoading(false)
     }
   }
   const handleOpen = async (data: EquipmentLedgerDialogOpenData): Promise<void> => {
     currentOpenData.value = data
-    loadError.value = false
+    loadError.value = null
     await dialogRef.value?.handleOpen(data, {
       title: data.row
         ? '编辑设备台账'
