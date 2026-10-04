@@ -1,0 +1,1 @@
+import{r as e}from"./isPlainObject-BNRABodT.js";import{t}from"./_basePropertyOf-Dh1W29dP.js";var n=t({"&":`&amp;`,"<":`&lt;`,">":`&gt;`,'"':`&quot;`,"'":`&#39;`}),r=/[&<>"']/g,i=RegExp(r.source);function a(t){return t=e(t),t&&i.test(t)?t.replace(r,n):t}export{a as t};

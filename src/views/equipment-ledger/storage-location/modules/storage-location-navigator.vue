@@ -70,7 +70,7 @@
                 :class="{ 'is-disabled': node.status === 'disabled' }"
                 aria-hidden="true"
               >
-                <ArtSvgIcon :icon="node.childCount ? 'ri:folder-map-line' : 'ri:map-pin-line'" />
+                <ArtSvgIcon :icon="node.childCount ? 'ri:folder-line' : 'ri:map-pin-line'" />
               </span>
               <span>
                 <strong :title="node.locationName">{{ node.locationName }}</strong>

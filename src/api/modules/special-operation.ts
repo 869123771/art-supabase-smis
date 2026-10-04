@@ -1,3 +1,4 @@
+import { buildSupabaseRpcRange } from '@/utils/supabase'
 import { normalizeNullableText } from '@/utils/form/normalize'
 import { omit } from 'lodash-es'
 import { useSupabase } from '@/hooks'
@@ -341,8 +342,7 @@ export async function fetchSpecialOperationTypeList(
   const result = await responseHandle<OperationTypeListResult>(
     () =>
       supabase.rpc('smis_list_special_operation_types_secure', {
-        p_from: from,
-        p_to: Math.max(params.to ?? from + 19, from),
+        ...buildSupabaseRpcRange(from, params.to ?? from + 19),
         p_keyword: normalizeNullableText(params.keyword),
         p_status: params.status || null,
         p_tag_style: params.tagStyle || null,
@@ -405,8 +405,7 @@ export async function fetchSpecialOperationCatalogList(
     () =>
       supabase.rpc('smis_list_special_operation_catalog_secure', {
         p_catalog_kind: params.catalogKind,
-        p_from: from,
-        p_to: Math.max(params.to ?? from + 19, from),
+        ...buildSupabaseRpcRange(from, params.to ?? from + 19),
         p_keyword: normalizeNullableText(params.keyword),
         p_operation_type_id: params.operationTypeId || null,
         p_record_type: params.recordType || null,
@@ -482,8 +481,7 @@ export async function fetchSpecialOperationPermitList(
   const result = await responseHandle<PermitListResult>(
     () =>
       supabase.rpc('smis_list_special_operation_permits_secure', {
-        p_from: from,
-        p_to: Math.max(params.to ?? from + 19, from),
+        ...buildSupabaseRpcRange(from, params.to ?? from + 19),
         p_keyword: normalizeNullableText(params.keyword),
         p_operation_type_id: params.operationTypeId || null,
         p_operation_type_code: params.operationTypeCode || null,

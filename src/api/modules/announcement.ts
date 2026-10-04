@@ -1,3 +1,4 @@
+import { buildSupabaseRpcRange } from '@/utils/supabase'
 import { normalizeNullableText } from '@/utils/form/normalize'
 import { omit } from 'lodash-es'
 import TreeUtils from '@/utils/tree'
@@ -59,8 +60,7 @@ export async function fetchAnnouncementCategoryList(
   const result = await responseHandle<AnnouncementCategoryListPayload>(
     () =>
       supabase.rpc('smis_list_announcement_categories_secure', {
-        p_from: from,
-        p_to: Math.max(params.to ?? from + 99, from),
+        ...buildSupabaseRpcRange(from, params.to ?? from + 99),
         p_keyword: normalizeNullableText(params.keyword),
         p_status: params.status || null,
         p_purpose: params.purpose ?? 'list'
@@ -103,8 +103,7 @@ export async function fetchAnnouncementList(params: SmisAnnouncementSearchParams
   const result = await responseHandle<AnnouncementListPayload>(
     () =>
       supabase.rpc('smis_list_announcements_secure', {
-        p_from: from,
-        p_to: Math.max(params.to ?? from + 19, from),
+        ...buildSupabaseRpcRange(from, params.to ?? from + 19),
         p_keyword: normalizeNullableText(params.keyword),
         p_category_id: params.categoryId || null,
         p_status: params.status || null,

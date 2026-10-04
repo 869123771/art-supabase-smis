@@ -1,3 +1,4 @@
+import { buildSupabaseRpcRange } from '@/utils/supabase'
 import { normalizeNullableText } from '@/utils/form/normalize'
 import { omit } from 'lodash-es'
 import { useSupabase } from '@/hooks'
@@ -33,8 +34,7 @@ export async function fetchRiskPointList(params: SmisRiskPointSearchParams = {})
   const result = await responseHandle<SmisRiskPointListResult>(
     () =>
       supabase.rpc('smis_list_risk_points_secure', {
-        p_from: from,
-        p_to: Math.max(params.to ?? from + 19, from),
+        ...buildSupabaseRpcRange(from, params.to ?? from + 19),
         p_keyword: normalizeNullableText(params.keyword),
         p_organization_id: params.organizationId || null,
         p_site_id: params.siteId || null,

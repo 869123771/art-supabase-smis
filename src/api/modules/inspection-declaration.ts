@@ -1,3 +1,4 @@
+import { buildSupabaseRpcRange } from '@/utils/supabase'
 import { normalizeNullableText } from '@/utils/form/normalize'
 import { omit } from 'lodash-es'
 import { useSupabase } from '@/hooks'
@@ -30,8 +31,7 @@ export async function fetchEquipmentInspectionList(
   const result = await responseHandle<InspectionListResult>(
     () =>
       supabase.rpc('smis_list_equipment_inspections_secure', {
-        p_from: from,
-        p_to: Math.max(params.to ?? from + 19, from),
+        ...buildSupabaseRpcRange(from, params.to ?? from + 19),
         p_keyword: normalizeNullableText(params.keyword),
         p_equipment_id: params.equipmentId || null,
         p_organization_id: params.organizationId || null,

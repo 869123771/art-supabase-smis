@@ -1,3 +1,4 @@
+import { buildSupabaseRpcRange } from '@/utils/supabase'
 import { normalizeNullableText } from '@/utils/form/normalize'
 import { omit } from 'lodash-es'
 import { useSupabase } from '@/hooks'
@@ -41,8 +42,7 @@ export async function fetchSafetyRiskList(params: SmisSafetyRiskSearchParams = {
   const result = await responseHandle<SmisSafetyRiskListResult>(
     () =>
       supabase.rpc('smis_list_safety_risks_secure', {
-        p_from: from,
-        p_to: Math.max(params.to ?? from + 19, from),
+        ...buildSupabaseRpcRange(from, params.to ?? from + 19),
         p_keyword: normalizeNullableText(params.keyword),
         p_risk_name: normalizeNullableText(params.riskName),
         p_accident_type: params.accidentType || null,
@@ -99,8 +99,7 @@ export async function fetchRiskControlPointList(params: SmisRiskControlSearchPar
   const result = await responseHandle<SmisRiskControlListResult>(
     () =>
       supabase.rpc('smis_list_risk_control_points_secure', {
-        p_from: from,
-        p_to: Math.max(params.to ?? from + 19, from),
+        ...buildSupabaseRpcRange(from, params.to ?? from + 19),
         p_keyword: normalizeNullableText(params.keyword),
         p_risk_type: params.riskType || null,
         p_control_level: params.controlLevel || null,
@@ -156,8 +155,7 @@ export async function fetchRiskInspectionTaskList(params: SmisRiskInspectionTask
   const result = await responseHandle<SmisRiskInspectionTaskListResult>(
     () =>
       supabase.rpc('smis_list_risk_inspection_tasks_secure', {
-        p_from: from,
-        p_to: Math.max(params.to ?? from + 19, from),
+        ...buildSupabaseRpcRange(from, params.to ?? from + 19),
         p_keyword: normalizeNullableText(params.keyword),
         p_risk_name: normalizeNullableText(params.riskName),
         p_risk_type: params.riskType || null,

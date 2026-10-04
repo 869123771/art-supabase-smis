@@ -1,3 +1,4 @@
+import { buildSupabaseRpcRange } from '@/utils/supabase'
 import { normalizeNullableText } from '@/utils/form/normalize'
 import { useSupabase } from '@/hooks'
 import type {
@@ -147,8 +148,7 @@ export async function fetchRiskControlInformationList(
   >(
     () =>
       supabase.rpc('smis_list_risk_control_information_secure', {
-        p_from: from,
-        p_to: Math.max(params.to ?? from + 19, from),
+        ...buildSupabaseRpcRange(from, params.to ?? from + 19),
         p_keyword: normalizeNullableText(params.keyword),
         p_organization_id: params.organizationId || null,
         p_site_id: params.siteId || null,
@@ -177,8 +177,7 @@ export async function fetchHiddenHazardLedgerList(params: SmisHiddenHazardLedger
   >(
     () =>
       supabase.rpc('smis_list_hidden_hazard_ledger_secure', {
-        p_from: from,
-        p_to: Math.max(params.to ?? from + 19, from),
+        ...buildSupabaseRpcRange(from, params.to ?? from + 19),
         p_keyword: normalizeNullableText(params.keyword),
         p_organization_id: params.organizationId || null,
         p_reported_from: params.reportedFrom || null,
@@ -204,8 +203,7 @@ export async function fetchDualControlManagementReport(
   >(
     () =>
       supabase.rpc('smis_get_dual_control_management_report_secure', {
-        p_from: from,
-        p_to: Math.max(params.to ?? from + 19, from),
+        ...buildSupabaseRpcRange(from, params.to ?? from + 19),
         p_month: params.month ? `${params.month}-01` : null,
         p_organization_id: params.organizationId || null,
         p_keyword: normalizeNullableText(params.keyword)
@@ -233,8 +231,7 @@ export async function fetchHiddenHazardInspectionReport(
   >(
     () =>
       supabase.rpc('smis_get_hidden_hazard_inspection_report_secure', {
-        p_from: from,
-        p_to: Math.max(params.to ?? from + 19, from),
+        ...buildSupabaseRpcRange(from, params.to ?? from + 19),
         p_planned_from: params.plannedFrom || null,
         p_planned_to: params.plannedTo || null,
         p_organization_id: params.organizationId || null,

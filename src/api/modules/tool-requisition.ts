@@ -1,3 +1,4 @@
+import { buildSupabaseRpcRange } from '@/utils/supabase'
 import { normalizeNullableText } from '@/utils/form/normalize'
 import { omit } from 'lodash-es'
 import { useSupabase } from '@/hooks'
@@ -77,8 +78,7 @@ export async function fetchToolPersonalRequisitionList(
   const result = await responseHandle<RequisitionListResult>(
     () =>
       supabase.rpc('smis_list_tool_personal_requisitions_secure', {
-        p_from: from,
-        p_to: Math.max(params.to ?? from + 19, from),
+        ...buildSupabaseRpcRange(from, params.to ?? from + 19),
         p_date_from: params.dateRange?.[0] ?? null,
         p_date_to: params.dateRange?.[1] ?? null,
         p_organization_id: params.organizationId || null,
@@ -102,8 +102,7 @@ export async function fetchToolIssuanceRecordList(params: SmisToolIssuanceRecord
   const result = await responseHandle<IssuanceListResult>(
     () =>
       supabase.rpc('smis_list_tool_issuance_records_secure', {
-        p_from: from,
-        p_to: Math.max(params.to ?? from + 19, from),
+        ...buildSupabaseRpcRange(from, params.to ?? from + 19),
         p_date_from: params.dateRange?.[0] ?? null,
         p_date_to: params.dateRange?.[1] ?? null,
         p_organization_id: params.organizationId || null,
@@ -245,8 +244,7 @@ export async function fetchToolReturnableItems(params: SmisToolReturnableSearchP
   const result = await responseHandle<ToolReturnableListResult>(
     () =>
       supabase.rpc('smis_list_tool_returnable_items_secure', {
-        p_from: from,
-        p_to: Math.max(params.to ?? from + 19, from),
+        ...buildSupabaseRpcRange(from, params.to ?? from + 19),
         p_employee_id: params.employeeId || null,
         p_keyword: normalizeNullableText(params.keyword),
         p_purpose: params.purpose ?? 'list'
@@ -265,8 +263,7 @@ export async function fetchToolReturnList(params: SmisToolReturnSearchParams = {
   const result = await responseHandle<ToolReturnListResult>(
     () =>
       supabase.rpc('smis_list_tool_returns_secure', {
-        p_from: from,
-        p_to: Math.max(params.to ?? from + 19, from),
+        ...buildSupabaseRpcRange(from, params.to ?? from + 19),
         p_date_from: params.dateRange?.[0] ?? null,
         p_date_to: params.dateRange?.[1] ?? null,
         p_employee_id: params.employeeId || null,

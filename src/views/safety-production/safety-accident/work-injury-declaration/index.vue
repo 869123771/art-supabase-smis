@@ -147,7 +147,7 @@
       label: '轻微伤',
       value: 'slight' as const,
       count: overview.slight,
-      icon: 'ri:bandage-line',
+      icon: 'ri:first-aid-kit-line',
       tone: 'is-success'
     },
     {

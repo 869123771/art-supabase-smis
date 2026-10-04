@@ -1,3 +1,4 @@
+import { buildSupabaseRpcRange } from '@/utils/supabase'
 import { normalizeNullableText } from '@/utils/form/normalize'
 import dayjs from 'dayjs'
 import { omit } from 'lodash-es'
@@ -79,8 +80,7 @@ export async function fetchQualificationCatalogList(params: SmisQualificationCat
     () =>
       supabase.rpc('smis_list_qualification_catalog_secure', {
         p_catalog_type: params.catalogType,
-        p_from: from,
-        p_to: Math.max(params.to ?? from + 99, from),
+        ...buildSupabaseRpcRange(from, params.to ?? from + 99),
         p_keyword: normalizeNullableText(params.keyword),
         p_status: params.status || null,
         p_ancestor_id: params.ancestorId || null,
@@ -158,8 +158,7 @@ export async function fetchPersonnelCertificateList(
   const result = await responseHandle<PersonnelCertificatePayload>(
     () =>
       supabase.rpc('smis_list_personnel_certificates_extended_secure', {
-        p_from: from,
-        p_to: Math.max(params.to ?? from + 19, from),
+        ...buildSupabaseRpcRange(from, params.to ?? from + 19),
         p_employee_name: normalizeNullableText(params.employeeName),
         p_certificate_number: normalizeNullableText(params.certificateNumber),
         p_certificate_category: params.certificateCategory || null,
@@ -193,8 +192,7 @@ export async function fetchPersonnelCertificateEmployeeOptions(
     () =>
       supabase.rpc('smis_list_certificate_employees_secure', {
         p_certificate_category: category,
-        p_from: from,
-        p_to: Math.max(params.to ?? from + 19, from),
+        ...buildSupabaseRpcRange(from, params.to ?? from + 19),
         p_keyword: normalizeNullableText(params.keyword)
       }),
     { showErrorMessage: true }

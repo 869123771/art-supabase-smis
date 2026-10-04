@@ -1,3 +1,4 @@
+import { buildSupabaseRpcRange } from '@/utils/supabase'
 import { normalizeNullableText } from '@/utils/form/normalize'
 import dayjs from 'dayjs'
 import { omit } from 'lodash-es'
@@ -95,8 +96,7 @@ export async function fetchViolationCategoryList(params: SmisViolationCategorySe
   const result = await responseHandle<ViolationCategoryListPayload>(
     () =>
       supabase.rpc('smis_list_violation_categories_secure', {
-        p_from: from,
-        p_to: Math.max(params.to ?? from + 19, from),
+        ...buildSupabaseRpcRange(from, params.to ?? from + 19),
         p_keyword: normalizeNullableText(params.keyword),
         p_status: params.status || null,
         p_ancestor_id: params.ancestorId || null,
@@ -143,8 +143,7 @@ export async function fetchAntiViolationStandardList(
   const result = await responseHandle<AntiViolationStandardListPayload>(
     () =>
       supabase.rpc('smis_list_anti_violation_standards_secure', {
-        p_from: from,
-        p_to: Math.max(params.to ?? from + 19, from),
+        ...buildSupabaseRpcRange(from, params.to ?? from + 19),
         p_keyword: normalizeNullableText(params.keyword),
         p_status: params.status || null,
         p_category_id: params.categoryId || null,
@@ -191,8 +190,7 @@ export async function fetchThreeViolationEducationList(
   const result = await responseHandle<ThreeViolationEducationListPayload>(
     () =>
       supabase.rpc('smis_list_three_violation_education_secure', {
-        p_from: from,
-        p_to: Math.max(params.to ?? from + 19, from),
+        ...buildSupabaseRpcRange(from, params.to ?? from + 19),
         p_keyword: normalizeNullableText(params.keyword),
         p_organization_id: params.organizationId || null,
         p_checker_employee_id: params.checkerEmployeeId || null,

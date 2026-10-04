@@ -1,3 +1,4 @@
+import { buildSupabaseRpcRange } from '@/utils/supabase'
 import { normalizeNullableText } from '@/utils/form/normalize'
 import { omit } from 'lodash-es'
 import { useSupabase } from '@/hooks'
@@ -59,8 +60,7 @@ export async function fetchToolIssuanceStandardList(
   const result = await responseHandle<IssuanceListResult>(
     () =>
       supabase.rpc('smis_list_tool_issuance_standards_secure', {
-        p_from: from,
-        p_to: Math.max(params.to ?? from + 19, from),
+        ...buildSupabaseRpcRange(from, params.to ?? from + 19),
         p_keyword: normalizeNullableText(params.keyword),
         p_status: params.status || null,
         p_purpose: params.purpose ?? 'list'
@@ -104,8 +104,7 @@ export async function fetchToolPersonalStandardList(
   const result = await responseHandle<PersonalListResult>(
     () =>
       supabase.rpc('smis_list_tool_personal_standards_secure', {
-        p_from: from,
-        p_to: Math.max(params.to ?? from + 19, from),
+        ...buildSupabaseRpcRange(from, params.to ?? from + 19),
         p_keyword: normalizeNullableText(params.keyword),
         p_organization_ids: params.organizationIds?.length ? params.organizationIds : null,
         p_position_id: params.positionId || null,

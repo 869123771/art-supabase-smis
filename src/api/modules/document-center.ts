@@ -1,3 +1,4 @@
+import { buildSupabaseRpcRange } from '@/utils/supabase'
 import { normalizeNullableText } from '@/utils/form/normalize'
 import { omit } from 'lodash-es'
 import { useSupabase } from '@/hooks'
@@ -107,8 +108,7 @@ export async function fetchDocumentList(params: SmisDocumentSearchParams = {}) {
   const result = await responseHandle<DocumentListResult>(
     () =>
       supabase.rpc('smis_list_documents_secure', {
-        p_from: from,
-        p_to: Math.max(params.to ?? from + 19, from),
+        ...buildSupabaseRpcRange(from, params.to ?? from + 19),
         p_keyword: normalizeNullableText(params.keyword),
         p_status: params.status ?? null,
         p_category_id: params.categoryId ?? null,
@@ -196,8 +196,7 @@ export async function fetchDocumentRegisterList(params: SmisDocumentRegisterSear
   const result = await responseHandle<DocumentRegisterListResult>(
     () =>
       supabase.rpc('smis_list_document_registers_secure', {
-        p_from: from,
-        p_to: Math.max(params.to ?? from + 19, from),
+        ...buildSupabaseRpcRange(from, params.to ?? from + 19),
         p_file_name: normalizeNullableText(params.fileName),
         p_document_code: normalizeNullableText(params.documentCode),
         p_category_id: params.categoryId || null,
@@ -264,8 +263,7 @@ export async function fetchLegalComplianceEvaluationList(
     () =>
       supabase.rpc('smis_list_legal_compliance_evaluations_secure', {
         p_document_id: params.documentId,
-        p_from: from,
-        p_to: Math.max(params.to ?? from + 19, from),
+        ...buildSupabaseRpcRange(from, params.to ?? from + 19),
         p_keyword: normalizeNullableText(params.keyword)
       }),
     { showErrorMessage: true }

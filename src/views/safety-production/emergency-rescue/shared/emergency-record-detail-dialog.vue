@@ -201,7 +201,7 @@
   const recordVersion = computed(() => rescuePlan.value?.planVersion || '')
   const heroIcon = computed(() => {
     if (isRescuePlan.value) return 'ri:file-shield-2-line'
-    return drillRecord.value ? 'ri:clipboard-check-line' : 'ri:calendar-check-line'
+    return drillRecord.value ? 'ri:file-check-line' : 'ri:calendar-check-line'
   })
   const warningStatus = computed(() => {
     if (rescuePlan.value) return rescuePlan.value.warningStatus

@@ -241,7 +241,7 @@
         <BusinessTableIdentityCell
           primary={row.subject}
           secondary={`${row.recordNo} · ${row.planNo}`}
-          icon="ri:clipboard-check-line"
+          icon="ri:file-check-line"
           iconTone="success"
         />
       )

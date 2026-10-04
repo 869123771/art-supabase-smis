@@ -1,3 +1,4 @@
+import { buildSupabaseRpcRange } from '@/utils/supabase'
 import { normalizeNullableText } from '@/utils/form/normalize'
 import { useSupabase } from '@/hooks'
 import { withRequestOptions } from '@/api/providers/supabase/query'
@@ -38,8 +39,7 @@ export async function fetchPositionWorkInstructionList(
     () =>
       withRequestOptions(
         supabase.rpc('smis_list_position_work_instructions_secure', {
-          p_from: from,
-          p_to: Math.max(params.to ?? from + 19, from),
+          ...buildSupabaseRpcRange(from, params.to ?? from + 19),
           p_keyword: normalizeNullableText(params.keyword),
           p_file_type: normalizeNullableText(params.fileType),
           p_organization_id: params.organizationId || null,

@@ -1,3 +1,4 @@
+import { buildSupabaseRpcRange } from '@/utils/supabase'
 import { normalizeNullableText } from '@/utils/form/normalize'
 import { omit } from 'lodash-es'
 import { useSupabase } from '@/hooks'
@@ -49,8 +50,7 @@ export async function fetchHazardousWasteWarehouseList(
   const result = await responseHandle<WarehouseListResult>(
     () =>
       supabase.rpc('smis_list_hazardous_waste_warehouses_secure', {
-        p_from: from,
-        p_to: Math.max(params.to ?? from + 19, from),
+        ...buildSupabaseRpcRange(from, params.to ?? from + 19),
         p_keyword: normalizeNullableText(params.keyword),
         p_status: params.status || null,
         p_ids: params.ids?.length ? params.ids : null,
@@ -95,8 +95,7 @@ export async function fetchHazardousWasteCatalogList(
   const result = await responseHandle<CatalogListResult>(
     () =>
       supabase.rpc('smis_list_hazardous_waste_catalog_secure', {
-        p_from: from,
-        p_to: Math.max(params.to ?? from + 19, from),
+        ...buildSupabaseRpcRange(from, params.to ?? from + 19),
         p_keyword: normalizeNullableText(params.keyword),
         p_status: params.status || null,
         p_category_id: params.categoryId || null,
@@ -177,8 +176,7 @@ export async function fetchHazardousWasteDocumentList(
     () =>
       supabase.rpc('smis_list_hazardous_waste_documents_secure', {
         p_direction: direction,
-        p_from: from,
-        p_to: Math.max(params.to ?? from + 19, from),
+        ...buildSupabaseRpcRange(from, params.to ?? from + 19),
         p_document_no: normalizeNullableText(params.documentNo),
         p_date_from: params.dateRange?.[0] ?? null,
         p_date_to: params.dateRange?.[1] ?? null,

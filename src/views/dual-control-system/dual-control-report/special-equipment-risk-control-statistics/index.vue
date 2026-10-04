@@ -262,7 +262,7 @@
       label: '关联风险点',
       value: state.data.overview.riskPointCount,
       description: `${state.data.overview.highRiskPointCount} 个高风险点`,
-      icon: 'ri:map-pin-warning-line',
+      icon: 'ri:map-pin-line',
       tone: state.data.overview.highRiskPointCount ? 'danger' : 'info'
     },
     {

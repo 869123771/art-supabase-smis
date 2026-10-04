@@ -1,3 +1,4 @@
+import { buildSupabaseRpcRange } from '@/utils/supabase'
 import { normalizeNullableText } from '@/utils/form/normalize'
 import { omit } from 'lodash-es'
 import { useSupabase } from '@/hooks'
@@ -24,8 +25,7 @@ export async function fetchHazardSourceList(params: SmisHazardSourceSearchParams
   const result = await responseHandle<Partial<SmisHazardSourceListResult>>(
     () =>
       supabase.rpc('smis_list_hazard_sources_secure', {
-        p_from: from,
-        p_to: Math.max(params.to ?? from + 19, from),
+        ...buildSupabaseRpcRange(from, params.to ?? from + 19),
         p_keyword: normalizeNullableText(params.keyword),
         p_site_id: params.siteId || null,
         p_hazard_level: params.hazardLevel || null,
@@ -49,8 +49,7 @@ export async function fetchHazardSourceEmployees(params: EmployeeSelectorContrac
   const result = await responseHandle<EmployeeResult>(
     () =>
       supabase.rpc('smis_list_hazard_source_employees_secure', {
-        p_from: from,
-        p_to: Math.max(params.to ?? from + 19, from),
+        ...buildSupabaseRpcRange(from, params.to ?? from + 19),
         p_keyword: normalizeNullableText(params.keyword)
       }),
     { showErrorMessage: true }

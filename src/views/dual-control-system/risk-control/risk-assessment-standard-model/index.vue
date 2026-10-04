@@ -287,7 +287,7 @@
       label: '判定维度',
       value: models.value.reduce((n, m) => n + m.dimensions.length, 0),
       description: '量化因子',
-      icon: 'ri:axis-line'
+      icon: 'ri:compasses-2-line'
     },
     {
       label: '判定标准',

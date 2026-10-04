@@ -1,3 +1,4 @@
+import { buildSupabaseRpcRange } from '@/utils/supabase'
 import { normalizeNullableText } from '@/utils/form/normalize'
 import dayjs from 'dayjs'
 import { omit } from 'lodash-es'
@@ -30,8 +31,7 @@ export async function fetchViolationRecordList(params: SmisViolationRecordSearch
   const result = await responseHandle<ViolationRecordListPayload>(
     () =>
       supabase.rpc('smis_list_violation_records_secure', {
-        p_from: from,
-        p_to: Math.max(params.to ?? from + 19, from),
+        ...buildSupabaseRpcRange(from, params.to ?? from + 19),
         p_record_no: normalizeNullableText(params.recordNo),
         p_violation_keyword: normalizeNullableText(params.violationKeyword),
         p_violator_employee_id: params.violatorEmployeeId || null,

@@ -1,3 +1,4 @@
+import { buildSupabaseRpcRange } from '@/utils/supabase'
 import { normalizeNullableText } from '@/utils/form/normalize'
 import { omit } from 'lodash-es'
 import { useSupabase } from '@/hooks'
@@ -243,8 +244,7 @@ export async function fetchHiddenHazardInspectionPlanList(
   const result = await responseHandle<PlanListResult>(
     () =>
       supabase.rpc('smis_list_hidden_hazard_inspection_plans_secure', {
-        p_from: from,
-        p_to: Math.max(params.to ?? from + 19, from),
+        ...buildSupabaseRpcRange(from, params.to ?? from + 19),
         p_plan_no: normalizeNullableText(params.planNo),
         p_plan_name: normalizeNullableText(params.planName),
         p_planned_from: params.plannedFrom || null,
@@ -313,8 +313,7 @@ export async function fetchHiddenHazardInspectionTaskList(
   const result = await responseHandle<TaskListResult>(
     () =>
       supabase.rpc('smis_list_hidden_hazard_inspection_tasks_secure', {
-        p_from: from,
-        p_to: Math.max(params.to ?? from + 19, from),
+        ...buildSupabaseRpcRange(from, params.to ?? from + 19),
         p_task_no: normalizeNullableText(params.taskNo),
         p_inspection_object: normalizeNullableText(params.inspectionObject),
         p_planned_from: params.plannedFrom || null,

@@ -5,7 +5,7 @@
         eyebrow="DRILL EVIDENCE"
         title="应急演练记录"
         description="承接演练计划，沉淀实际日期、参演人员、过程评价与现场证据。"
-        icon="ri:clipboard-check-line"
+        icon="ri:file-check-line"
         :tags="[
           { label: '计划自动带入', type: 'primary', effect: 'plain' },
           { label: '员工批量选择', type: 'success', effect: 'light' },
@@ -202,7 +202,7 @@
       formatter: (row) => (
         <div class="drill-record-page__identity">
           <span>
-            <ArtSvgIcon icon="ri:clipboard-check-line" />
+            <ArtSvgIcon icon="ri:file-check-line" />
           </span>
           <span>
             <button

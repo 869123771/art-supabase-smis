@@ -1,3 +1,4 @@
+import { buildSupabaseRpcRange } from '@/utils/supabase'
 import { normalizeNullableText } from '@/utils/form/normalize'
 import { omit } from 'lodash-es'
 import { useSupabase } from '@/hooks'
@@ -20,8 +21,7 @@ export async function fetchSafetyTrainingPlanList(params: SmisSafetyTrainingPlan
   const result = await responseHandle<Partial<SmisSafetyTrainingPlanListResult>>(
     () =>
       supabase.rpc('smis_list_safety_training_plans_secure', {
-        p_from: from,
-        p_to: Math.max(params.to ?? from + 19, from),
+        ...buildSupabaseRpcRange(from, params.to ?? from + 19),
         p_keyword: normalizeNullableText(params.keyword),
         p_status: params.status || null,
         p_execution_status: params.executionStatus || null,
@@ -83,8 +83,7 @@ export async function fetchSafetyTrainingRecordList(
   const result = await responseHandle<Partial<SmisSafetyTrainingRecordListResult>>(
     () =>
       supabase.rpc('smis_list_safety_training_records_secure', {
-        p_from: from,
-        p_to: Math.max(params.to ?? from + 19, from),
+        ...buildSupabaseRpcRange(from, params.to ?? from + 19),
         p_keyword: normalizeNullableText(params.keyword),
         p_status: params.status || null,
         p_start_at: params.dateRange?.[0] || null,

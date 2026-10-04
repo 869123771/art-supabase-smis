@@ -1,3 +1,4 @@
+import { buildSupabaseRpcRange } from '@/utils/supabase'
 import { normalizeNullableText } from '@/utils/form/normalize'
 import { omit } from 'lodash-es'
 import { useSupabase } from '@/hooks'
@@ -26,8 +27,7 @@ const { supabase, keysToSnakeDeep, responseHandle } = useSupabase()
 const buildListParams = (params: SmisSupplierSearchParams) => {
   const from = Math.max(params.from ?? 0, 0)
   return {
-    p_from: from,
-    p_to: Math.max(params.to ?? from + 19, from),
+    ...buildSupabaseRpcRange(from, params.to ?? from + 19),
     p_keyword: normalizeNullableText(params.keyword),
     p_supplier_category: params.supplierCategory || null,
     p_supplier_type: params.supplierType || null,

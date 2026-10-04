@@ -8,7 +8,7 @@
         eyebrow="THREE-VIOLATION EDUCATION"
         title="三违人员教育信息"
         description="从检查发现到教育完成，统一管理三违人员、责任人、教育过程与台账证据。"
-        icon="ri:user-warning-line"
+        icon="ri:user-forbid-line"
         :tags="[
           { label: '员工花名册联动', type: 'primary', effect: 'plain' },
           { label: '待教育闭环', type: 'warning', effect: 'light' },

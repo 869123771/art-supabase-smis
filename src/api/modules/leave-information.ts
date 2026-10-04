@@ -1,3 +1,4 @@
+import { buildSupabaseRpcRange } from '@/utils/supabase'
 import { normalizeNullableText } from '@/utils/form/normalize'
 import { omit } from 'lodash-es'
 import { useSupabase } from '@/hooks'
@@ -29,8 +30,7 @@ export async function fetchLeaveInformationList(params: LeaveInformationSearchPa
   const result = await responseHandle<LeaveInformationListResult>(
     () =>
       supabase.rpc('smis_list_leave_information_secure', {
-        p_from: from,
-        p_to: Math.max(params.to ?? from + 19, from),
+        ...buildSupabaseRpcRange(from, params.to ?? from + 19),
         p_organization_id: params.organizationId || null,
         p_company_keyword: normalizeNullableText(params.companyKeyword),
         p_applicant_keyword: normalizeNullableText(params.applicantKeyword),
@@ -73,8 +73,7 @@ export async function fetchLeaveEmployeeOptions(params: EmployeeSelectorContract
   const result = await responseHandle<LeaveEmployeeListResult>(
     () =>
       supabase.rpc('smis_list_leave_employees_secure', {
-        p_from: from,
-        p_to: Math.max(params.to ?? from + 19, from),
+        ...buildSupabaseRpcRange(from, params.to ?? from + 19),
         p_keyword: normalizeNullableText(params.keyword)
       }),
     { showErrorMessage: true }

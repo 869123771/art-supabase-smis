@@ -263,7 +263,7 @@
         <BusinessTableIdentityCell
           primary={row.locationName}
           secondary={row.locationShortName || '未设置简称'}
-          icon={row.childCount ? 'ri:folder-map-line' : 'ri:map-pin-line'}
+          icon={row.childCount ? 'ri:folder-line' : 'ri:map-pin-line'}
         />
       )
     },

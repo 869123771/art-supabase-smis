@@ -1,5 +1,5 @@
 import { normalizeNullableText } from '@/utils/form/normalize'
-import { normalizeSupabaseFunctionError } from '@/utils/supabase'
+import { buildSupabaseRpcRange, normalizeSupabaseFunctionError } from '@/utils/supabase'
 import { omit } from 'lodash-es'
 import { useSupabase } from '@/hooks'
 
@@ -339,8 +339,7 @@ export async function fetchHiddenHazardGovernanceList(
   const result = await responseHandle<GovernanceListResult>(
     () =>
       supabase.rpc('smis_list_hidden_hazard_governance_secure', {
-        p_from: from,
-        p_to: Math.max(params.to ?? from + 19, from),
+        ...buildSupabaseRpcRange(from, params.to ?? from + 19),
         p_hazard_no: normalizeNullableText(params.hazardNo),
         p_reported_from: params.reportedFrom || null,
         p_reported_to: params.reportedTo || null,
@@ -483,8 +482,7 @@ export async function fetchPublicHazardReportList(params: SmisPublicHazardReport
   const result = await responseHandle<PublicHazardReportListResult>(
     () =>
       supabase.rpc('smis_list_public_hazard_reports_secure', {
-        p_from: from,
-        p_to: Math.max(params.to ?? from + 19, from),
+        ...buildSupabaseRpcRange(from, params.to ?? from + 19),
         p_keyword: normalizeNullableText(params.keyword),
         p_status: params.status || null,
         p_reported_from: params.reportedFrom || null,
@@ -512,8 +510,7 @@ export async function fetchRectificationNoticeList(
   const result = await responseHandle<RectificationNoticeListResult>(
     () =>
       supabase.rpc('smis_list_rectification_notices_secure', {
-        p_from: from,
-        p_to: Math.max(params.to ?? from + 19, from),
+        ...buildSupabaseRpcRange(from, params.to ?? from + 19),
         p_inspection_from: params.inspectionFrom || null,
         p_inspection_to: params.inspectionTo || null,
         p_inspection_organization_id: params.inspectionOrganizationId || null,

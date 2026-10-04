@@ -1,5 +1,6 @@
+import { buildSupabaseRpcRange } from '@/utils/supabase'
 import { normalizeNullableText } from '@/utils/form/normalize'
-import { omit } from 'lodash-es'
+import { omit, uniq } from 'lodash-es'
 import { useSupabase } from '@/hooks'
 import type {
   EmployeeIntegrationItem,
@@ -28,8 +29,7 @@ export async function fetchSiteEmployeeOptions(
   const result = await responseHandle<SiteEmployeeListResult>(
     () =>
       supabase.rpc('smis_list_site_employees_secure', {
-        p_from: from,
-        p_to: Math.max(params.to ?? from + 19, from),
+        ...buildSupabaseRpcRange(from, params.to ?? from + 19),
         p_keyword: normalizeNullableText(params.keyword)
       }),
     { showErrorMessage: options.showErrorMessage ?? true }
@@ -61,7 +61,7 @@ export async function saveSite(
 }
 
 export async function saveSites(params: SmisSiteBatchCreatePayload) {
-  const organizationIds = [...new Set(params.organizationIds)]
+  const organizationIds = uniq(params.organizationIds)
   return await responseHandle<string[]>(
     () =>
       supabase.rpc('smis_save_sites_secure', {

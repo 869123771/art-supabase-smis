@@ -1,3 +1,4 @@
+import { buildSupabaseRpcRange } from '@/utils/supabase'
 import { normalizeNullableText } from '@/utils/form/normalize'
 import { omit } from 'lodash-es'
 import { useSupabase } from '@/hooks'
@@ -63,8 +64,7 @@ export async function fetchMaterialCategoryList(params: SmisMaterialCategorySear
   const result = await responseHandle<MaterialCategoryListResult>(
     () =>
       supabase.rpc('smis_list_material_categories_secure', {
-        p_from: from,
-        p_to: Math.max(params.to ?? from + 19, from),
+        ...buildSupabaseRpcRange(from, params.to ?? from + 19),
         p_keyword: normalizeNullableText(params.keyword),
         p_status: params.status || null,
         p_ancestor_id: params.ancestorId || null
@@ -108,8 +108,7 @@ export async function fetchMaterialList(params: SmisMaterialSearchParams = {}) {
   const result = await responseHandle<MaterialListResult>(
     () =>
       supabase.rpc('smis_list_materials_secure', {
-        p_from: from,
-        p_to: Math.max(params.to ?? from + 19, from),
+        ...buildSupabaseRpcRange(from, params.to ?? from + 19),
         p_material_name: normalizeNullableText(params.materialName),
         p_material_code: normalizeNullableText(params.materialCode),
         p_specification_model: normalizeNullableText(params.specificationModel),

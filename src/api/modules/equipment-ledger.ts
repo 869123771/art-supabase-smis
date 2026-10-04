@@ -1,3 +1,4 @@
+import { buildSupabaseRpcRange } from '@/utils/supabase'
 import { normalizeNullableText } from '@/utils/form/normalize'
 import { omit } from 'lodash-es'
 import { useSupabase } from '@/hooks'
@@ -49,8 +50,7 @@ export async function fetchEquipmentLedgerList(params: SmisEquipmentSearchParams
     responseHandle<EquipmentLedgerListResult>(
       () =>
         supabase.rpc('smis_list_equipment_ledger_secure', {
-          p_from: from,
-          p_to: Math.max(params.to ?? from + 19, from),
+          ...buildSupabaseRpcRange(from, params.to ?? from + 19),
           p_keyword: normalizeNullableText(params.keyword),
           p_category_id: params.categoryId || null,
           p_location_id: params.locationId || null,

@@ -2,7 +2,7 @@
   <ArtDialog ref="dialogRef" size="xl">
     <div class="drill-record-dialog">
       <ArtEntitySummary
-        icon="ri:clipboard-check-line"
+        icon="ri:file-check-line"
         title="以演练记录兑现计划"
         description="选择计划后自动带入预案、类别、级别、组织、负责人、地点和科目；提交后计划转为已完成。"
         spaced
