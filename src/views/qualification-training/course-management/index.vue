@@ -1,6 +1,6 @@
 <template>
   <ArtPermissionGuard permission="SmisCourseManagement:View">
-    <div class="course-page business-workspace-page art-full-height">
+    <div class="course-page business-workspace-page art-full-height min-w-0 gap-3">
       <BusinessWorkspaceHeader
         density="compact"
         eyebrow="LEARNING OPERATIONS"
@@ -20,7 +20,7 @@
         /></template>
       </BusinessWorkspaceHeader>
 
-      <div class="course-page__body art-card-xs">
+      <div class="course-page__body art-card-xs flex min-h-0 flex-1 flex-col px-[14px] pb-[14px]">
         <ElTabs v-model="activeTab" class="course-page__tabs">
           <ElTabPane label="课程库" name="course" />
           <ElTabPane
@@ -33,7 +33,7 @@
           v-show="activeTab === 'course'"
           ref="courseTableRef"
           v-model="courseQuery"
-          class="course-page__table"
+          class="course-page__table min-h-0 min-w-0 flex-1"
           :api-fn="fetchCourses"
           :search-items="courseSearchItems"
           :columns-factory="courseColumns"
@@ -54,7 +54,7 @@
           v-show="activeTab === 'record'"
           ref="recordTableRef"
           v-model="recordQuery"
-          class="course-page__table"
+          class="course-page__table min-h-0 min-w-0 flex-1"
           :api-fn="fetchRecords"
           :search-items="recordSearchItems"
           :columns-factory="recordColumns"
@@ -75,7 +75,8 @@
       <ArtDialog ref="courseDialogRef" size="xl">
         <ArtForm
           ref="courseFormRef"
-          v-model="courseForm"
+          :model-value="courseForm"
+          @update:model-value="Object.assign(courseForm, $event)"
           :items="courseItems"
           :rules="courseRules"
           :span="12"
@@ -105,7 +106,7 @@
               type="info"
               :closable="false"
               show-icon
-            /><small class="course-page__helper"
+            /><small class="mt-[7px] block text-[var(--el-text-color-secondary)]"
               >已选择 {{ courseForm.employeeIds.length }} 人，保存后生成个人学习任务。</small
             ></template
           >
@@ -119,7 +120,7 @@
       </ArtDialog>
 
       <ArtDialog ref="learningDialogRef" size="lg">
-        <div v-if="learningCourse" class="course-page__learning">
+        <div v-if="learningCourse" class="grid gap-4">
           <div class="course-page__learning-cover"
             ><ElImage
               v-if="learningCourse.coverUrl"
@@ -176,6 +177,7 @@
   } from '@/components/core/tables/art-table-query/index.vue'
   import type { ColumnOption } from '@/types'
   import { pageInfoHandler } from '@/utils/table/table-utils'
+  import { loadAllDocumentPages } from '@/utils/business/document-detail-list'
   import { useArtFeedback } from '@/hooks/core/useArtFeedback'
   import { useAuth } from '@/hooks/core/useAuth'
   import { useUserStore } from '@/store/modules/user'
@@ -210,6 +212,7 @@
     type SmisCoursePayload,
     type SmisCourseSearchParams,
     type SmisExamPaper,
+    type SmisExamPaperSearchParams,
     type SmisLearningCourse
   } from '@smis/api'
 
@@ -426,7 +429,7 @@
     {
       label: '关联考试',
       key: 'examPaperId',
-      type: 'select',
+      type: 'selectV2',
       props: {
         options: paperOptions.value,
         clearable: true,
@@ -472,8 +475,11 @@
       loadingText: '正在加载可关联试卷…',
       onOpen: async (_data, api) => {
         try {
-          const papers = await fetchExamPaperList({ from: 0, to: 999 })
-          paperOptions.value = papers.data.map((paper: SmisExamPaper) => ({
+          const papers = await loadAllDocumentPages<SmisExamPaper, SmisExamPaperSearchParams>(
+            fetchExamPaperList,
+            {}
+          )
+          paperOptions.value = papers.map((paper: SmisExamPaper) => ({
             label: `${paper.paperNo} · ${paper.paperTitle}`,
             value: paper.id
           }))
@@ -771,7 +777,10 @@
         }
       ],
       exportApi: async () => ({
-        data: (await fetchCourseList({ ...courseQuery.value, from: 0, to: 4999 })).data
+        data: await loadAllDocumentPages<SmisLearningCourse, SmisCourseSearchParams>(
+          fetchCourseList,
+          { ...courseQuery.value }
+        )
       })
     }
   ])
@@ -796,8 +805,10 @@
         { key: 'completedAt', title: '完成时间' }
       ],
       exportApi: async () => ({
-        data: (await fetchCourseLearningRecordList({ ...recordQuery.value, from: 0, to: 4999 }))
-          .data
+        data: await loadAllDocumentPages<SmisCourseLearningRecord, SmisCourseLearningSearchParams>(
+          fetchCourseLearningRecordList,
+          { ...recordQuery.value }
+        )
       })
     }
   ])
@@ -826,42 +837,12 @@
 </script>
 
 <style scoped lang="scss">
-  .course-page {
-    gap: 12px;
-    min-width: 0;
-  }
-
-  .course-page__body {
-    display: flex;
-    flex: 1;
-    flex-direction: column;
-    min-height: 0;
-    padding: 0 14px 14px;
-  }
-
   .course-page__tabs {
     flex: none;
 
     :deep(.el-tabs__header) {
       margin-bottom: 10px;
     }
-  }
-
-  .course-page__table {
-    flex: 1;
-    min-width: 0;
-    min-height: 0;
-  }
-
-  .course-page__helper {
-    display: block;
-    margin-top: 7px;
-    color: var(--el-text-color-secondary);
-  }
-
-  .course-page__learning {
-    display: grid;
-    gap: 16px;
   }
 
   .course-page__learning-cover {

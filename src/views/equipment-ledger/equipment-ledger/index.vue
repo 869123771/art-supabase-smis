@@ -182,67 +182,85 @@
           </div>
         </ElTabPane>
         <ElTabPane name="inspections" label="检验记录">
-          <div class="equipment-ledger-page__inspections" :aria-busy="inspectionsLoading">
-            <ArtOverlayLoading
-              v-if="inspectionsLoading"
-              loading
-              overlay
-              text="正在加载检验记录…"
-              description="正在获取最新记录，请稍候"
-            />
-            <article v-for="item in inspections" :key="item.id">
-              <span class="equipment-ledger-page__inspection-marker">
-                <ArtSvgIcon icon="ri:shield-check-line" />
-              </span>
-              <div class="equipment-ledger-page__inspection-content">
-                <header>
-                  <div>
-                    <strong>{{ item.inspectionCategory.categoryName }}</strong>
-                    <small>{{ item.inspectionNo }}</small>
+          <ArtAsyncState
+            :loading="inspectionsLoading"
+            :error="inspectionsError ? '检验记录加载失败，请重新加载' : null"
+            :empty="!inspections.length"
+            empty-text="当前设备暂无检验记录"
+            empty-description="可前往“检验申报”创建第一条生命周期记录。"
+            @retry="retryInspections"
+          >
+            <div class="equipment-ledger-page__inspections">
+              <article v-for="item in inspections" :key="item.id">
+                <span class="equipment-ledger-page__inspection-marker">
+                  <ArtSvgIcon icon="ri:shield-check-line" />
+                </span>
+                <div class="equipment-ledger-page__inspection-content">
+                  <header>
+                    <div>
+                      <strong>{{ item.inspectionCategory.categoryName }}</strong>
+                      <small>{{ item.inspectionNo }}</small>
+                    </div>
+                    <ArtDictDisplay
+                      dict-code="smisEquipmentInspectionStatus"
+                      :value="item.status"
+                    />
+                  </header>
+                  <dl>
+                    <div
+                      ><dt>检验日期</dt><dd>{{ item.inspectionDate }}</dd></div
+                    >
+                    <div
+                      ><dt>检验结论</dt
+                      ><dd
+                        ><ArtDictDisplay
+                          dict-code="smisEquipmentInspectionConclusion"
+                          :value="item.conclusion" /></dd
+                    ></div>
+                    <div
+                      ><dt>检验机构</dt
+                      ><dd>{{ item.inspectionInstitution?.supplierName || '未设置' }}</dd></div
+                    >
+                    <div
+                      ><dt>下次检验</dt><dd>{{ item.nextDueDate || '未计划' }}</dd></div
+                    >
+                    <div v-if="item.needsExtension"
+                      ><dt>延期至</dt><dd>{{ item.extensionDate }}</dd></div
+                    >
+                  </dl>
+                  <div v-if="item.images.length" class="equipment-ledger-page__inspection-images">
+                    <button
+                      v-for="(image, index) in item.images"
+                      :key="image.attachmentId"
+                      type="button"
+                      :aria-label="`预览检验图片 ${image.originName}`"
+                      @click="previewInspectionImages(item.images, index)"
+                    >
+                      <img :src="image.url" :alt="image.originName" width="76" height="54" />
+                    </button>
                   </div>
-                  <ArtDictDisplay dict-code="smisEquipmentInspectionStatus" :value="item.status" />
-                </header>
-                <dl>
-                  <div
-                    ><dt>检验日期</dt><dd>{{ item.inspectionDate }}</dd></div
-                  >
-                  <div
-                    ><dt>检验结论</dt
-                    ><dd
-                      ><ArtDictDisplay
-                        dict-code="smisEquipmentInspectionConclusion"
-                        :value="item.conclusion" /></dd
-                  ></div>
-                  <div
-                    ><dt>检验机构</dt
-                    ><dd>{{ item.inspectionInstitution?.supplierName || '未设置' }}</dd></div
-                  >
-                  <div
-                    ><dt>下次检验</dt><dd>{{ item.nextDueDate || '未计划' }}</dd></div
-                  >
-                  <div v-if="item.needsExtension"
-                    ><dt>延期至</dt><dd>{{ item.extensionDate }}</dd></div
-                  >
-                </dl>
-                <div v-if="item.images.length" class="equipment-ledger-page__inspection-images">
-                  <button
-                    v-for="(image, index) in item.images"
-                    :key="image.attachmentId"
-                    type="button"
-                    :aria-label="`预览检验图片 ${image.originName}`"
-                    @click="previewInspectionImages(item.images, index)"
-                  >
-                    <img :src="image.url" :alt="image.originName" width="76" height="54" />
-                  </button>
+                  <p v-if="item.remark">{{ item.remark }}</p>
                 </div>
-                <p v-if="item.remark">{{ item.remark }}</p>
-              </div>
-            </article>
-            <ArtEmptyState
-              v-if="!inspectionsLoading && !inspections.length"
-              title="当前设备暂无检验记录"
-              description="可前往“检验申报”创建第一条生命周期记录。"
-              :visual-size="96"
+              </article>
+            </div>
+          </ArtAsyncState>
+          <div
+            v-if="inspectionsPagination.total"
+            class="mt-4 flex flex-col items-center justify-center gap-2 sm:flex-row"
+          >
+            <span class="text-sm text-[var(--art-text-gray-600)]"
+              >共 {{ inspectionsPagination.total }} 条</span
+            >
+            <ElPagination
+              :current-page="inspectionsPagination.current"
+              :page-size="inspectionsPagination.size"
+              :total="inspectionsPagination.total"
+              :pager-count="5"
+              :disabled="inspectionsLoading"
+              layout="prev, pager, next"
+              size="small"
+              aria-label="设备检验记录分页"
+              @current-change="handleInspectionPageChange"
             />
           </div>
         </ElTabPane>
@@ -260,9 +278,10 @@
 </template>
 
 <script setup lang="tsx">
-  import type { TableRequestOptions } from '@/hooks/core/useTable'
+  import { useTable, type TableRequestOptions } from '@/hooks/core/useTable'
   import dayjs from 'dayjs'
-  import { ElMessage } from 'element-plus'
+  import { ElMessage, ElPagination } from 'element-plus'
+  import ArtAsyncState from '@/components/core/feedback/art-async-state/index.vue'
   import QrcodeVue from 'qrcode.vue'
   import type { Resource } from '@/components/core/forms/art-resource-picker/type'
   import type { SearchFormItem } from '@/components/core/forms/art-search-bar/index.vue'
@@ -368,8 +387,31 @@
   })
   const attachments = ref<SmisEquipmentAttachment[]>([])
   const attachmentsLoading = ref(false)
-  const inspections = ref<SmisEquipmentInspection[]>([])
-  const inspectionsLoading = ref(false)
+  const fetchInspectionPage = async (params: {
+    equipmentId: string
+    current: number
+    size: number
+  }) => {
+    const result = await fetchEquipmentInspectionList(
+      { equipmentId: params.equipmentId, ...pageInfoHandler(params) },
+      { showErrorMessage: false }
+    )
+    if (result.error) throw result.error
+    return result
+  }
+  const {
+    data: inspections,
+    loading: inspectionsLoading,
+    error: inspectionsError,
+    pagination: inspectionsPagination,
+    replaceSearchParams: setInspectionSearch,
+    getData: loadInspectionPage,
+    refreshUpdate: retryInspections,
+    handleCurrentChange: handleInspectionPageChange
+  } = useTable<SmisEquipmentInspection, typeof fetchInspectionPage>({
+    core: { apiFn: fetchInspectionPage, apiParams: { current: 1, size: 20 }, immediate: false },
+    performance: { enableCache: false }
+  })
   const resourcePickerVisible = ref(false)
   const attachmentType = ref('other')
   const qrValue = computed(() =>
@@ -485,17 +527,8 @@
   }
   const loadInspections = async (): Promise<void> => {
     if (!lifecycle.row) return
-    inspectionsLoading.value = true
-    try {
-      const result = await fetchEquipmentInspectionList({
-        equipmentId: lifecycle.row.id,
-        from: 0,
-        to: 999
-      })
-      inspections.value = result.data
-    } finally {
-      inspectionsLoading.value = false
-    }
+    setInspectionSearch({ equipmentId: lifecycle.row.id })
+    await loadInspectionPage()
   }
   const previewInspectionImages = (
     images: SmisEquipmentInspectionImage[],

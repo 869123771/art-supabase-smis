@@ -57,6 +57,7 @@
   import type { ColumnOption } from '@/types'
   import type { ButtonMoreItem } from '@/components/core/forms/art-button-more/index.vue'
   import { pageInfoHandler } from '@/utils/table/table-utils'
+  import { loadAllDocumentPages } from '@/utils/business/document-detail-list'
   import { useArtFeedback } from '@/hooks/core/useArtFeedback'
   import { useUserStore } from '@/store/modules/user'
   import ArtPermissionGuard from '@/components/core/feedback/art-permission-guard/index.vue'
@@ -420,7 +421,7 @@
     {
       prop: 'operation',
       label: '操作',
-      width: 154,
+      width: 160,
       fixed: 'right',
       formatter: (row) => (
         <div class="risk-identification-page__actions">
@@ -539,7 +540,7 @@
       exportSheetName: '风险点',
       exportColumns: excelColumns,
       exportApi: async () => ({
-        data: (await fetchRiskPointList({ ...searchQuery.value, from: 0, to: 9999 })).data.map(
+        data: (await loadAllDocumentPages(fetchRiskPointList, { ...searchQuery.value })).map(
           (row) => ({
             pointNo: row.pointNo,
             pointName: row.pointName,

@@ -52,13 +52,16 @@
   } from '@/components/core/tables/art-table-query/index.vue'
   import type { ColumnOption } from '@/types'
   import { pageInfoHandler } from '@/utils/table/table-utils'
+  import { loadAllDocumentPages } from '@/utils/business/document-detail-list'
   import { useArtFeedback } from '@/hooks/core/useArtFeedback'
+  import { useAuth } from '@/hooks/core/useAuth'
   import { useUserStore } from '@/store/modules/user'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import ArtButtonMore from '@/components/core/forms/art-button-more/index.vue'
   import type { ButtonMoreItem } from '@/components/core/forms/art-button-more/index.vue'
   import ArtDictDisplay from '@/components/core/base/art-dict-display/index.vue'
   import ArtPermissionGuard from '@/components/core/feedback/art-permission-guard/index.vue'
+  import BusinessTableRowActions from '@/components/business/business-table-row-actions/index.vue'
   import BusinessTableWorkspaceActions from '@/components/business/business-table-workspace-actions/index.vue'
   import BusinessWorkspaceHeader, {
     type BusinessWorkspaceMetric
@@ -98,6 +101,7 @@
     handleOpen: (data: DocumentDialogOpenData) => Promise<void>
   }
   const { confirmAction, confirmDelete, promptReason } = useArtFeedback()
+  const { hasAnyAuth } = useAuth()
   const userStore = useUserStore()
   const { getDictMap } = storeToRefs(userStore)
   const tableQueryRef = ref<ArtTableQueryExpose>()
@@ -238,21 +242,34 @@
       exportFilename: businessName.value,
       exportSheetName: businessName.value,
       exportColumns,
-      exportApi: async ({ searchParams, maxRows }) => {
-        const result = await fetchHazardousWasteDocumentList(direction.value, {
-          ...(searchParams as SmisHazardousWasteDocumentSearchParams),
-          purpose: 'export',
-          to: Math.max((maxRows ?? 10000) - 1, 0)
-        })
+      exportApi: async ({ selectedIds, searchParams }) => {
+        const exportDirection = direction.value
+        const query = searchParams as SmisHazardousWasteDocumentSearchParams
+        const selected = new Set(selectedIds.map(String))
+        const exportQuery: SmisHazardousWasteDocumentSearchParams = {
+          ...query,
+          dateRange: query.dateRange ? [...query.dateRange] : undefined,
+          purpose: 'export'
+        }
+        const rows = await loadAllDocumentPages(
+          (params) => fetchHazardousWasteDocumentList(exportDirection, params),
+          exportQuery
+        )
+        await Promise.all([
+          userStore.ensureDictLoaded('smisHazardousWasteDocumentStatus'),
+          userStore.ensureDictLoaded('smisMaterialUnit')
+        ])
         return {
-          data: result.data.map((row) => ({
-            ...row,
-            itemSummary: row.items
-              .map((item) => `${item.wasteName} × ${item.quantity}${unitLabel(item.unit)}`)
-              .join('；'),
-            statusLabel:
-              statusOptions.value.find((item) => item.value === row.status)?.label || row.status
-          }))
+          data: rows
+            .filter((row) => !selected.size || selected.has(row.id))
+            .map((row) => ({
+              ...row,
+              itemSummary: row.items
+                .map((item) => `${item.wasteName} × ${item.quantity}${unitLabel(item.unit)}`)
+                .join('；'),
+              statusLabel:
+                statusOptions.value.find((item) => item.value === row.status)?.label || row.status
+            }))
         }
       }
     }
@@ -301,135 +318,149 @@
       /* 用户取消 */
     }
   }
-  const columnsFactory = (): ColumnOption<SmisHazardousWasteDocument>[] => [
-    { type: 'selection', width: 48 },
-    {
-      prop: 'documentNo',
-      label: '单据编码',
-      width: 160,
-      fixed: 'left',
-      formatter: (row) => <strong class="hazardous-document-page__number">{row.documentNo}</strong>
-    },
-    {
-      prop: 'operationDate',
-      label: direction.value === 'inbound' ? '入库日期' : '出库日期',
-      width: 116,
-      align: 'center'
-    },
-    { prop: 'warehouseName', label: '仓库', minWidth: 150, showOverflowTooltip: true },
-    {
-      prop: 'handlerEmployeeName',
-      label: '经办人',
-      minWidth: 130,
-      formatter: (row) => (
-        <BusinessTableIdentityCell
-          primary={row.handlerEmployeeName}
-          secondary={row.handlerEmployeeNo}
-        />
-      )
-    },
-    {
-      prop: 'items',
-      label: '危废明细',
-      minWidth: 280,
-      showOverflowTooltip: true,
-      formatter: (row) =>
-        row.items
-          .map((item) => `${item.wasteName} × ${item.quantity}${unitLabel(item.unit)}`)
-          .join('；')
-    },
-    {
-      prop: 'status',
-      label: '单据状态',
-      width: 106,
-      align: 'center',
-      formatter: (row) => (
-        <ArtDictDisplay
-          dictCode="smisHazardousWasteDocumentStatus"
-          value={row.status}
-          display="tag"
-        />
-      )
-    },
-    {
-      prop: 'description',
-      label: '说明',
-      minWidth: 160,
-      showOverflowTooltip: true,
-      formatter: (row) => row.description || '—'
-    },
-    {
-      prop: 'createTime',
-      label: '创建时间',
-      width: 164,
-      formatter: (row) => dayjs(row.createTime).format('YYYY-MM-DD HH:mm')
-    },
-    {
-      prop: 'operation',
-      label: '操作',
-      width: 210,
-      fixed: 'right',
-      formatter: (row) => (
-        <div class="hazardous-document-page__actions">
-          {editable(row) && (
-            <ArtButtonTable
-              permission={permissions.value.submit}
-              type="sign"
-              icon="ri:send-plane-line"
-              label="提交"
-              onClick={() => void handleSubmit(row)}
-            />
-          )}{' '}
-          {row.status === 'pending' && (
-            <ArtButtonTable
-              permission={permissions.value.review}
-              type="sign"
-              icon="ri:checkbox-circle-line"
-              label="通过"
-              onClick={() => void handleReview(row, true)}
-            />
-          )}
-          <ArtButtonMore
-            list={[
-              ...(editable(row)
-                ? [
-                    {
-                      key: 'edit',
-                      label: '编辑',
-                      icon: 'ri:edit-line',
-                      auth: permissions.value.edit
-                    },
-                    {
-                      key: 'delete',
-                      label: '删除',
-                      icon: 'ri:delete-bin-line',
-                      auth: permissions.value.delete,
-                      color: 'var(--el-color-danger)'
-                    }
-                  ]
-                : []),
-              ...(row.status === 'pending'
-                ? [
-                    {
-                      key: 'reject',
-                      label: '审核退回',
-                      icon: 'ri:close-circle-line',
-                      auth: permissions.value.review,
-                      color: 'var(--el-color-danger)'
-                    }
-                  ]
-                : [])
-            ]}
-            onClick={(item: ButtonMoreItem) => {
-              if (item.key === 'edit') open(row)
-              if (item.key === 'delete') void handleDelete(row)
-              if (item.key === 'reject') void handleReview(row, false)
-            }}
+  const columnsFactory = (): ColumnOption<SmisHazardousWasteDocument>[] => {
+    const columns: ColumnOption<SmisHazardousWasteDocument>[] = [
+      { type: 'selection', width: 48 },
+      {
+        prop: 'documentNo',
+        label: '单据编码',
+        width: 160,
+        fixed: 'left',
+        formatter: (row) => (
+          <strong class="hazardous-document-page__number">{row.documentNo}</strong>
+        )
+      },
+      {
+        prop: 'operationDate',
+        label: direction.value === 'inbound' ? '入库日期' : '出库日期',
+        width: 116,
+        align: 'center'
+      },
+      { prop: 'warehouseName', label: '仓库', minWidth: 150, showOverflowTooltip: true },
+      {
+        prop: 'handlerEmployeeName',
+        label: '经办人',
+        minWidth: 130,
+        formatter: (row) => (
+          <BusinessTableIdentityCell
+            primary={row.handlerEmployeeName}
+            secondary={row.handlerEmployeeNo}
           />
-        </div>
-      )
-    }
-  ]
+        )
+      },
+      {
+        prop: 'items',
+        label: '危废明细',
+        minWidth: 280,
+        showOverflowTooltip: true,
+        formatter: (row) =>
+          row.items
+            .map((item) => `${item.wasteName} × ${item.quantity}${unitLabel(item.unit)}`)
+            .join('；')
+      },
+      {
+        prop: 'status',
+        label: '单据状态',
+        width: 106,
+        align: 'center',
+        formatter: (row) => (
+          <ArtDictDisplay
+            dictCode="smisHazardousWasteDocumentStatus"
+            value={row.status}
+            display="tag"
+          />
+        )
+      },
+      {
+        prop: 'description',
+        label: '说明',
+        minWidth: 160,
+        showOverflowTooltip: true,
+        formatter: (row) => row.description || '—'
+      },
+      {
+        prop: 'createTime',
+        label: '创建时间',
+        width: 164,
+        formatter: (row) => dayjs(row.createTime).format('YYYY-MM-DD HH:mm')
+      },
+      {
+        prop: 'operation',
+        label: '操作',
+        width: 160,
+        fixed: 'right',
+        formatter: (row) => (
+          <BusinessTableRowActions>
+            {editable(row) && (
+              <ArtButtonTable
+                permission={permissions.value.submit}
+                type="sign"
+                icon="ri:send-plane-line"
+                label="提交"
+                onClick={() => void handleSubmit(row)}
+              />
+            )}
+            {row.status === 'pending' && (
+              <ArtButtonTable
+                permission={permissions.value.review}
+                type="sign"
+                icon="ri:checkbox-circle-line"
+                label="通过"
+                onClick={() => void handleReview(row, true)}
+              />
+            )}
+            <ArtButtonMore
+              list={[
+                ...(editable(row)
+                  ? [
+                      {
+                        key: 'edit',
+                        label: '编辑',
+                        icon: 'ri:edit-line',
+                        auth: permissions.value.edit
+                      },
+                      {
+                        key: 'delete',
+                        label: '删除',
+                        icon: 'ri:delete-bin-line',
+                        auth: permissions.value.delete,
+                        color: 'var(--el-color-danger)'
+                      }
+                    ]
+                  : []),
+                ...(row.status === 'pending'
+                  ? [
+                      {
+                        key: 'reject',
+                        label: '审核退回',
+                        icon: 'ri:close-circle-line',
+                        auth: permissions.value.review,
+                        color: 'var(--el-color-danger)'
+                      }
+                    ]
+                  : [])
+              ]}
+              onClick={(item: ButtonMoreItem) => {
+                if (item.key === 'edit') open(row)
+                if (item.key === 'delete') void handleDelete(row)
+                if (item.key === 'reject') void handleReview(row, false)
+              }}
+            />
+          </BusinessTableRowActions>
+        )
+      }
+    ]
+    return columns.filter(
+      (column) =>
+        column.prop !== 'operation' ||
+        hasAnyAuth([
+          permissions.value.edit,
+          permissions.value.delete,
+          permissions.value.submit,
+          permissions.value.review
+        ])
+    )
+  }
   const fetchData = async (params: TableParams, options?: TableRequestOptions) => {
     const result = await fetchHazardousWasteDocumentList(direction.value, {
       ...params,

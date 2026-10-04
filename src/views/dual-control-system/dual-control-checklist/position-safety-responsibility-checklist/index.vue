@@ -56,8 +56,10 @@
   } from '@/components/core/tables/art-table-query/index.vue'
   import type { ColumnOption } from '@/types'
   import { pageInfoHandler } from '@/utils/table/table-utils'
+  import { loadAllDocumentPages } from '@/utils/business/document-detail-list'
   import {
     fetchPositionResponsibilityChecklist,
+    type SmisChecklistSearchParams,
     type SmisPositionResponsibilityChecklistOverview,
     type SmisPositionResponsibilityChecklistRecord
   } from '@smis/api'
@@ -191,9 +193,10 @@
       exportSheetName: '岗位安全责任制清单',
       exportColumns: excelColumns,
       exportApi: async () => ({
-        data: (
-          await fetchPositionResponsibilityChecklist({ ...searchQuery.value, from: 0, to: 9999 })
-        ).data
+        data: await loadAllDocumentPages<
+          SmisPositionResponsibilityChecklistRecord,
+          SmisChecklistSearchParams
+        >(fetchPositionResponsibilityChecklist, { ...searchQuery.value })
       })
     }
   ])

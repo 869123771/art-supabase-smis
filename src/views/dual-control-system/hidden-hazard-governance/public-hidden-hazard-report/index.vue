@@ -51,6 +51,7 @@
   } from '@/components/core/tables/art-table-query/index.vue'
   import type { ColumnOption } from '@/types'
   import { pageInfoHandler } from '@/utils/table/table-utils'
+  import { loadAllDocumentPages } from '@/utils/business/document-detail-list'
   import { useUserStore } from '@/store/modules/user'
   import ArtDictDisplay from '@/components/core/base/art-dict-display/index.vue'
   import ArtPermissionGuard from '@/components/core/feedback/art-permission-guard/index.vue'
@@ -240,24 +241,30 @@
       exportFilename: '公众举报隐患',
       exportSheetName: '公众举报隐患',
       exportColumns,
-      exportApi: async ({ selectedIds, searchParams, maxRows }) => {
+      exportApi: async ({ selectedIds, searchParams }) => {
         const query = searchParams as SearchModel
-        const result = await fetchPublicHazardReportList({
+        const selected = new Set(selectedIds.map(String))
+        const exportQuery: SmisPublicHazardReportSearchParams = {
           ...query,
-          ids: selectedIds.map(String),
+          ids: undefined,
           reportedFrom: query.reportedRange?.[0],
-          reportedTo: query.reportedRange?.[1] ? `${query.reportedRange[1]}T23:59:59` : undefined,
-          from: 0,
-          to: Math.max((maxRows ?? 10000) - 1, 0)
-        })
+          reportedTo: query.reportedRange?.[1] ? `${query.reportedRange[1]}T23:59:59` : undefined
+        }
+        const rows = await loadAllDocumentPages(fetchPublicHazardReportList, exportQuery)
+        await Promise.all([
+          userStore.ensureDictLoaded('smisHiddenHazardGovernanceStatus'),
+          userStore.ensureDictLoaded('smisHazardLevel')
+        ])
         return {
-          data: result.data.map((row) => ({
-            ...row,
-            status:
-              statusOptions.value.find((item) => item.value === row.status)?.label || row.status,
-            hazardLevel: levelLabels.value[row.hazardLevel] || row.hazardLevel,
-            reportedAt: formatDate(row.reportedAt)
-          }))
+          data: rows
+            .filter((row) => !selected.size || selected.has(row.id))
+            .map((row) => ({
+              ...row,
+              status:
+                statusOptions.value.find((item) => item.value === row.status)?.label || row.status,
+              hazardLevel: levelLabels.value[row.hazardLevel] || row.hazardLevel,
+              reportedAt: formatDate(row.reportedAt)
+            }))
         }
       }
     }

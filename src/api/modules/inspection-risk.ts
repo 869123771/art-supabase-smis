@@ -1,5 +1,6 @@
 import { normalizeNullableText } from '@/utils/form/normalize'
 import { buildOrIlikeFilter } from '@/utils/supabase/search'
+import { fetchAllRangePages } from '@/utils/supabase/pagination'
 import { omit } from 'lodash-es'
 import { useSupabase } from '@/hooks'
 import type {
@@ -73,13 +74,21 @@ function applyRange<TQuery extends { range: (from: number, to: number) => TQuery
 }
 
 export async function fetchInspectionStandards(tenantId?: string | null) {
-  let query = supabase
-    .from('smis_inspection_standard')
-    .select('*')
-    .order('sort')
-    .order('standard_name')
-  if (tenantId) query = query.eq('tenant_id', tenantId)
-  return await responseHandle<SmisInspectionStandard[]>(() => query, { showErrorMessage: true })
+  return await responseHandle<SmisInspectionStandard[]>(
+    () =>
+      fetchAllRangePages<SmisInspectionStandard>(async ({ from, to }) => {
+        let query = supabase
+          .from('smis_inspection_standard')
+          .select('*')
+          .order('sort')
+          .order('standard_name')
+          .order('id')
+          .range(from, to)
+        if (tenantId) query = query.eq('tenant_id', tenantId)
+        return await query
+      }),
+    { showErrorMessage: false }
+  )
 }
 
 export async function saveInspectionStandard(payload: SmisInspectionStandardPayload) {

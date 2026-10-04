@@ -83,6 +83,7 @@
   } from '@/components/core/tables/art-table-query/index.vue'
   import type { ColumnOption } from '@/types'
   import { pageInfoHandler } from '@/utils/table/table-utils'
+  import { loadAllDocumentPages } from '@/utils/business/document-detail-list'
   import { useArtFeedback } from '@/hooks/core/useArtFeedback'
   import { useUserStore } from '@/store/modules/user'
   import { useTenantScopeStore } from '@/store/modules/tenant-scope'
@@ -104,7 +105,8 @@
     type SmisSpecialOperationCatalogOverview,
     type SmisSpecialOperationCatalogSearchParams,
     type SmisSpecialOperationRecordType,
-    type SmisSpecialOperationType
+    type SmisSpecialOperationType,
+    type SmisSpecialOperationTypeSearchParams
   } from '@smis/api'
   import OperationTypeNavigator from './operation-type-navigator.vue'
   import SpecialOperationCatalogDialog, {
@@ -296,18 +298,21 @@
       exportFilename: `${props.title}配置`,
       exportSheetName: props.title,
       exportColumns: exportColumns.value,
-      exportApi: async ({ selectedIds, searchParams, maxRows }) => {
-        const response = await fetchSpecialOperationCatalogList({
-          ...(searchParams as Omit<SmisSpecialOperationCatalogSearchParams, 'catalogKind'>),
+      exportApi: async ({ selectedIds, searchParams }) => {
+        const query: SmisSpecialOperationCatalogSearchParams = {
+          ...searchParams,
           catalogKind: props.catalogKind,
           operationTypeId: navigation.selectedId,
-          tenantId: effectiveTenantId.value,
-          from: 0,
-          to: Math.max((maxRows ?? 10000) - 1, 0)
-        })
+          tenantId: effectiveTenantId.value
+        }
         const selected = new Set(selectedIds.map(String))
+        const rows = await loadAllDocumentPages(fetchSpecialOperationCatalogList, query)
+        await Promise.all([
+          userStore.ensureDictLoaded('commonEnabledDisabledVoidedStatus'),
+          userStore.ensureDictLoaded('smisSpecialOperationRecordType')
+        ])
         return {
-          data: response.data
+          data: rows
             .filter((row) => !selected.size || selected.has(row.id))
             .map((row) => ({
               ...row,
@@ -513,7 +518,7 @@
     {
       prop: 'operation',
       label: '操作',
-      width: 154,
+      width: 160,
       fixed: 'right',
       formatter: (row) => (
         <div class="special-operation-catalog-page__actions">
@@ -563,12 +568,10 @@
     navigation.loading = true
     navigation.error = null
     try {
-      const response = await fetchSpecialOperationTypeList({
-        tenantId: effectiveTenantId.value,
-        from: 0,
-        to: 9999
-      })
-      navigation.data = response.data
+      navigation.data = await loadAllDocumentPages<
+        SmisSpecialOperationType,
+        SmisSpecialOperationTypeSearchParams
+      >(fetchSpecialOperationTypeList, { tenantId: effectiveTenantId.value })
       if (
         navigation.selectedId &&
         !navigation.data.some(
@@ -577,7 +580,6 @@
       ) {
         navigation.selectedId = null
       }
-      if (response.error) navigation.error = '作业类型加载失败，请重试。'
     } catch {
       navigation.error = '作业类型加载失败，请重试。'
     } finally {
@@ -750,7 +752,7 @@
 
     @media (width <= 820px) {
       &__workspace {
-        grid-template-rows: minmax(260px, 36vh) minmax(520px, 1fr);
+        grid-template-rows: auto minmax(520px, 1fr);
         grid-template-columns: minmax(0, 1fr);
       }
     }

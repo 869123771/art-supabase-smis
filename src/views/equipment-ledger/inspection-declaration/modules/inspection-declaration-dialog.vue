@@ -105,6 +105,7 @@
   import { useDocumentNumberRule } from '@/hooks/core/useDocumentNumberRule'
   import { useUserStore } from '@/store/modules/user'
   import { normalizeNullableText } from '@/utils/form/normalize'
+  import { loadAllDocumentPages } from '@/utils/business/document-detail-list'
   import {
     fetchEquipmentLedgerList,
     fetchInspectionCategoryList,
@@ -116,7 +117,9 @@
     type SmisEquipmentInspectionImage,
     type SmisInspectionReportOcrResponse,
     type SmisEquipmentInspectionSavePayload,
-    type SmisEquipmentInspectionStatus
+    type SmisEquipmentInspectionStatus,
+    type SmisInspectionCategory,
+    type SmisInspectionCategorySearchParams
   } from '@smis/api'
 
   export interface InspectionDeclarationDialogOpenData {
@@ -226,13 +229,18 @@
       {
         label: '检验类别',
         key: 'inspectionCategoryId',
-        type: 'select',
+        type: 'selectV2',
         span: 12,
-        api: () => fetchInspectionCategoryList({ status: 'enabled', from: 0, to: 9999 }),
+        api: async () => ({
+          data: await loadAllDocumentPages<
+            SmisInspectionCategory,
+            SmisInspectionCategorySearchParams
+          >(fetchInspectionCategoryList, { status: 'enabled' })
+        }),
         resultField: 'data',
         labelField: 'categoryName',
         valueField: 'id',
-        props: { placeholder: '请选择租户检验类别' }
+        props: { filterable: true, placeholder: '请选择租户检验类别' }
       },
       { label: '检验结果', key: 'resultSection', type: 'divider', span: 24 },
       {

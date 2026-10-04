@@ -1,4 +1,5 @@
 import { buildSupabaseRpcRange } from '@/utils/supabase'
+import { loadAllDocumentPages } from '@/utils/business/document-detail-list'
 import { normalizeNullableText } from '@/utils/form/normalize'
 import { omit } from 'lodash-es'
 import { useSupabase } from '@/hooks'
@@ -128,7 +129,16 @@ export async function fetchDocumentList(params: SmisDocumentSearchParams = {}) {
 }
 
 export async function exportDocumentList(params: SmisDocumentSearchParams = {}) {
-  return await fetchDocumentList({ ...params, from: 0, to: 9999, purpose: 'export' })
+  let overview = emptyOverview()
+  const data = await loadAllDocumentPages(
+    async (page) => {
+      const result = await fetchDocumentList(page)
+      if (page.from === 0) overview = result.overview
+      return result
+    },
+    { ...params, purpose: 'export' as const }
+  )
+  return { data, total: data.length, overview, error: null }
 }
 
 export async function saveDocument(params: SmisDocumentSavePayload) {
@@ -221,7 +231,16 @@ export async function fetchDocumentRegisterList(params: SmisDocumentRegisterSear
 }
 
 export async function exportDocumentRegisterList(params: SmisDocumentRegisterSearchParams) {
-  return await fetchDocumentRegisterList({ ...params, from: 0, to: 9999, purpose: 'export' })
+  let overview = emptyRegisterOverview()
+  const data = await loadAllDocumentPages(
+    async (page) => {
+      const result = await fetchDocumentRegisterList(page)
+      if (page.from === 0) overview = result.overview
+      return result
+    },
+    { ...params, purpose: 'export' as const }
+  )
+  return { data, total: data.length, overview, error: null }
 }
 
 export async function saveDocumentRegister(params: SmisDocumentRegisterSavePayload) {

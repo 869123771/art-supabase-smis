@@ -141,6 +141,7 @@
   } from '@/components/core/tables/art-table-query/index.vue'
   import type { ColumnOption } from '@/types'
   import { pageInfoHandler } from '@/utils/table/table-utils'
+  import { loadAllDocumentPages } from '@/utils/business/document-detail-list'
   import { useUserStore } from '@/store/modules/user'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import ArtDictDisplay from '@/components/core/base/art-dict-display/index.vue'
@@ -361,27 +362,35 @@
       exportFilename: '隐患治理跟踪',
       exportSheetName: '隐患治理跟踪',
       exportColumns: excelColumns,
-      exportApi: async ({ selectedIds, searchParams, maxRows }) => {
+      exportApi: async ({ selectedIds, searchParams }) => {
         const query = searchParams as GovernanceQuery
-        const result = await fetchHiddenHazardGovernanceList({
+        const selected = new Set(selectedIds.map(String))
+        const exportQuery: SmisHiddenHazardGovernanceSearchParams = {
           ...query,
-          ids: selectedIds.map(String),
+          ids: undefined,
           reportedFrom: query.reportedRange?.[0],
-          reportedTo: query.reportedRange?.[1] ? `${query.reportedRange[1]}T23:59:59` : undefined,
-          to: Math.max((maxRows ?? 10000) - 1, 0)
-        })
+          reportedTo: query.reportedRange?.[1] ? `${query.reportedRange[1]}T23:59:59` : undefined
+        }
+        const rows = await loadAllDocumentPages(fetchHiddenHazardGovernanceList, exportQuery)
+        await Promise.all([
+          userStore.ensureDictLoaded('smisHiddenHazardGovernanceStatus'),
+          userStore.ensureDictLoaded('smisHiddenHazardSourceType'),
+          userStore.ensureDictLoaded('smisHazardLevel')
+        ])
         return {
-          data: result.data.map((row) => ({
-            ...row,
-            status:
-              statusOptions.value.find((item) => item.value === row.status)?.label || row.status,
-            hazardLevel: hazardLevelLabels.value[row.hazardLevel] || row.hazardLevel,
-            sourceType: sourceLabels.value[row.sourceType] || row.sourceType,
-            reportedAt: formatDateTime(row.reportedAt),
-            rectificationDeadline: formatDateTime(row.rectificationDeadline),
-            rectificationCompletedAt: formatDateTime(row.rectificationCompletedAt),
-            acceptedAt: formatDateTime(row.acceptedAt)
-          }))
+          data: rows
+            .filter((row) => !selected.size || selected.has(row.id))
+            .map((row) => ({
+              ...row,
+              status:
+                statusOptions.value.find((item) => item.value === row.status)?.label || row.status,
+              hazardLevel: hazardLevelLabels.value[row.hazardLevel] || row.hazardLevel,
+              sourceType: sourceLabels.value[row.sourceType] || row.sourceType,
+              reportedAt: formatDateTime(row.reportedAt),
+              rectificationDeadline: formatDateTime(row.rectificationDeadline),
+              rectificationCompletedAt: formatDateTime(row.rectificationCompletedAt),
+              acceptedAt: formatDateTime(row.acceptedAt)
+            }))
         }
       }
     }

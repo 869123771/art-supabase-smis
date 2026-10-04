@@ -118,53 +118,68 @@
       </ElTabPane>
 
       <ElTabPane label="检验记录" name="inspections" lazy>
-        <div class="equipment-archive-detail__inspection-list" :aria-busy="inspectionLoading">
-          <ArtOverlayLoading
-            v-if="inspectionLoading"
-            loading
-            overlay
-            text="正在加载检验记录…"
-            description="正在获取最新记录，请稍候"
-          />
-          <article v-for="item in inspections" :key="item.id">
-            <span class="equipment-archive-detail__inspection-icon" aria-hidden="true">
-              <ArtSvgIcon icon="ri:shield-check-line" />
-            </span>
-            <div>
-              <header>
-                <div>
-                  <strong>{{ item.inspectionCategory.categoryName }}</strong>
-                  <small>{{ item.inspectionNo }}</small>
-                </div>
-                <ArtDictDisplay dict-code="smisEquipmentInspectionStatus" :value="item.status" />
-              </header>
-              <dl>
-                <div
-                  ><dt>检验日期</dt><dd>{{ item.inspectionDate }}</dd></div
-                >
-                <div
-                  ><dt>检验结论</dt
-                  ><dd
-                    ><ArtDictDisplay
-                      dict-code="smisEquipmentInspectionConclusion"
-                      :value="item.conclusion" /></dd
-                ></div>
-                <div
-                  ><dt>检验机构</dt
-                  ><dd>{{ item.inspectionInstitution?.supplierName || '未设置' }}</dd></div
-                >
-                <div
-                  ><dt>下次检验</dt><dd>{{ item.nextDueDate || '未计划' }}</dd></div
-                >
-              </dl>
-              <p v-if="item.remark">{{ item.remark }}</p>
-            </div>
-          </article>
-          <ArtEmptyState
-            v-if="!inspectionLoading && !inspections.length"
-            title="当前设备暂无检验记录"
-            description="完成设备检验后，可在此查看记录与结果。"
-            :visual-size="96"
+        <ArtAsyncState
+          :loading="inspectionLoading"
+          :error="inspectionError ? '检验记录加载失败，请重新加载' : null"
+          :empty="!inspections.length"
+          empty-text="当前设备暂无检验记录"
+          empty-description="完成设备检验后，可在此查看记录与结果。"
+          @retry="retryInspections"
+        >
+          <div class="equipment-archive-detail__inspection-list">
+            <article v-for="item in inspections" :key="item.id">
+              <span class="equipment-archive-detail__inspection-icon" aria-hidden="true">
+                <ArtSvgIcon icon="ri:shield-check-line" />
+              </span>
+              <div>
+                <header>
+                  <div>
+                    <strong>{{ item.inspectionCategory.categoryName }}</strong>
+                    <small>{{ item.inspectionNo }}</small>
+                  </div>
+                  <ArtDictDisplay dict-code="smisEquipmentInspectionStatus" :value="item.status" />
+                </header>
+                <dl>
+                  <div
+                    ><dt>检验日期</dt><dd>{{ item.inspectionDate }}</dd></div
+                  >
+                  <div
+                    ><dt>检验结论</dt
+                    ><dd
+                      ><ArtDictDisplay
+                        dict-code="smisEquipmentInspectionConclusion"
+                        :value="item.conclusion" /></dd
+                  ></div>
+                  <div
+                    ><dt>检验机构</dt
+                    ><dd>{{ item.inspectionInstitution?.supplierName || '未设置' }}</dd></div
+                  >
+                  <div
+                    ><dt>下次检验</dt><dd>{{ item.nextDueDate || '未计划' }}</dd></div
+                  >
+                </dl>
+                <p v-if="item.remark">{{ item.remark }}</p>
+              </div>
+            </article>
+          </div>
+        </ArtAsyncState>
+        <div
+          v-if="inspectionPagination.total"
+          class="mt-4 flex flex-col items-center justify-center gap-2 sm:flex-row"
+        >
+          <span class="text-sm text-[var(--art-text-gray-600)]">
+            共 {{ inspectionPagination.total }} 条
+          </span>
+          <ElPagination
+            :current-page="inspectionPagination.current"
+            :page-size="inspectionPagination.size"
+            :total="inspectionPagination.total"
+            :pager-count="5"
+            :disabled="inspectionLoading"
+            layout="prev, pager, next"
+            size="small"
+            aria-label="设备检验记录分页"
+            @current-change="handleInspectionPageChange"
           />
         </div>
       </ElTabPane>
@@ -173,8 +188,10 @@
 </template>
 
 <script setup lang="tsx">
-  import { ElTabPane, ElTabs } from 'element-plus'
-  import ArtEmptyState from '@/components/core/feedback/art-empty-state/index.vue'
+  import { ElPagination, ElTabPane, ElTabs } from 'element-plus'
+  import ArtAsyncState from '@/components/core/feedback/art-async-state/index.vue'
+  import { useTable } from '@/hooks/core/useTable'
+  import { pageInfoHandler } from '@/utils/table/table-utils'
   import type { ColumnOption } from '@/types'
   import ArtDescriptions from '@/components/core/base/art-descriptions/index.vue'
   import type { ArtDescriptionItem } from '@/components/core/base/art-descriptions/types'
@@ -199,11 +216,37 @@
   const route = useRoute()
   const router = useRouter()
   const loading = ref(false)
-  const inspectionLoading = ref(false)
   const loadError = shallowRef<Error | null>(null)
   const equipment = shallowRef<SmisEquipment | null>(null)
   const attachments = ref<SmisEquipmentAttachment[]>([])
-  const inspections = ref<SmisEquipmentInspection[]>([])
+  const fetchInspectionPage = async (params: {
+    equipmentId: string
+    current: number
+    size: number
+  }) => {
+    const result = await fetchEquipmentInspectionList(
+      {
+        equipmentId: params.equipmentId,
+        ...pageInfoHandler(params)
+      },
+      { showErrorMessage: false }
+    )
+    if (result.error) throw result.error
+    return result
+  }
+  const {
+    data: inspections,
+    loading: inspectionLoading,
+    error: inspectionError,
+    pagination: inspectionPagination,
+    replaceSearchParams: setInspectionSearch,
+    getData: loadInspectionPage,
+    refreshUpdate: retryInspections,
+    handleCurrentChange: handleInspectionPageChange
+  } = useTable<SmisEquipmentInspection, typeof fetchInspectionPage>({
+    core: { apiFn: fetchInspectionPage, apiParams: { current: 1, size: 20 }, immediate: false },
+    performance: { enableCache: false }
+  })
   const activeTab = ref(String(route.query.tab || 'archive'))
 
   const profileDefinition = computed(() =>
@@ -395,21 +438,12 @@
       if (!detailResult.data) throw new Error('设备档案不存在或无权访问')
       equipment.value = detailResult.data
       attachments.value = attachmentResult.data ?? []
-      await loadInspections(id)
+      setInspectionSearch({ equipmentId: id })
+      await loadInspectionPage()
     } catch (error) {
       loadError.value = error instanceof Error ? error : new Error('设备档案加载失败')
     } finally {
       loading.value = false
-    }
-  }
-
-  const loadInspections = async (equipmentId: string): Promise<void> => {
-    inspectionLoading.value = true
-    try {
-      const result = await fetchEquipmentInspectionList({ equipmentId, from: 0, to: 999 })
-      inspections.value = result.data
-    } finally {
-      inspectionLoading.value = false
     }
   }
 

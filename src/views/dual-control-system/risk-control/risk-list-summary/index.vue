@@ -101,6 +101,7 @@
   } from '@/components/core/tables/art-table-query/index.vue'
   import type { ColumnOption } from '@/types'
   import { pageInfoHandler } from '@/utils/table/table-utils'
+  import { loadAllDocumentPages } from '@/utils/business/document-detail-list'
   import { useUserStore } from '@/store/modules/user'
   import ArtPermissionGuard from '@/components/core/feedback/art-permission-guard/index.vue'
   import ArtDictDisplay from '@/components/core/base/art-dict-display/index.vue'
@@ -357,7 +358,7 @@
       exportSheetName: '风险汇总',
       exportColumns: excelColumns,
       exportApi: async () => ({
-        data: (await fetchSafetyRiskList({ ...searchQuery.value, from: 0, to: 9999 })).data.map(
+        data: (await loadAllDocumentPages(fetchSafetyRiskList, { ...searchQuery.value })).map(
           (row) => ({
             ...row,
             accidentTypes: row.accidentTypes.join('、'),

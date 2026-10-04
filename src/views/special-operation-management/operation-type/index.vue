@@ -53,6 +53,7 @@
   } from '@/components/core/tables/art-table-query/index.vue'
   import type { ColumnOption } from '@/types'
   import { pageInfoHandler } from '@/utils/table/table-utils'
+  import { loadAllDocumentPages } from '@/utils/business/document-detail-list'
   import { useArtFeedback } from '@/hooks/core/useArtFeedback'
   import { useUserStore } from '@/store/modules/user'
   import { useTenantScopeStore } from '@/store/modules/tenant-scope'
@@ -213,16 +214,16 @@
       exportFilename: '作业类型配置',
       exportSheetName: '作业类型',
       exportColumns,
-      exportApi: async ({ selectedIds, searchParams, maxRows }) => {
-        const response = await fetchSpecialOperationTypeList({
-          ...(searchParams as SmisSpecialOperationTypeSearchParams),
-          tenantId: effectiveTenantId.value,
-          from: 0,
-          to: Math.max((maxRows ?? 10000) - 1, 0)
-        })
+      exportApi: async ({ selectedIds, searchParams }) => {
+        const query: SmisSpecialOperationTypeSearchParams = {
+          ...searchParams,
+          tenantId: effectiveTenantId.value
+        }
         const selected = new Set(selectedIds.map(String))
+        const rows = await loadAllDocumentPages(fetchSpecialOperationTypeList, query)
+        await userStore.ensureDictLoaded('commonEnabledDisabledVoidedStatus')
         return {
-          data: response.data
+          data: rows
             .filter((row) => !selected.size || selected.has(row.id))
             .map((row) => ({
               ...row,
@@ -397,7 +398,7 @@
     {
       prop: 'operation',
       label: '操作',
-      width: 154,
+      width: 160,
       fixed: 'right',
       formatter: (row) => (
         <div class="operation-type-page__actions">

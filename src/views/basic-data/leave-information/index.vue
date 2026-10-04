@@ -95,6 +95,7 @@
   import { useUserStore } from '@/store/modules/user'
   import { fetchOrganizationOptionsTree } from '@/api/system-manage'
   import { exportExcel } from '@/utils/file'
+  import { loadAllDocumentPages } from '@/utils/business/document-detail-list'
   import { pageInfoHandler } from '@/utils/table/table-utils'
   import { getFriendlySupabaseErrorMessage } from '@/utils/supabase/error'
   import TreeUtils from '@/utils/tree'
@@ -370,7 +371,10 @@
   ]
 
   const exportCurrentResults = async (): Promise<void> => {
-    const response = await fetchLeaveInformationList(buildSearchParams({ from: 0, to: 4999 }))
+    const rows = await loadAllDocumentPages<LeaveInformation, LeaveInformationSearchParams>(
+      fetchLeaveInformationList,
+      buildSearchParams({})
+    )
     await exportExcel({
       filename: `请假信息_${dayjs().format('YYYYMMDD_HHmm')}`,
       sheetName: '请假信息',
@@ -388,7 +392,7 @@
         { key: 'reason', title: '请假事由', width: 34 },
         { key: 'status', title: '状态', width: 12 }
       ],
-      data: response.data.map((row) => ({
+      data: rows.map((row) => ({
         requestNo: row.requestNo || '',
         applicantName: row.applicant.employeeName,
         employeeNo: row.applicant.employeeNo,

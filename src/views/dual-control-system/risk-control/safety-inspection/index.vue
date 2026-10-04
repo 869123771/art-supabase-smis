@@ -71,6 +71,7 @@
 </template>
 
 <script setup lang="tsx">
+  import { useAuth } from '@/hooks/core/useAuth'
   import dayjs from 'dayjs'
   import { ElMessage, ElTag } from 'element-plus'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
@@ -90,6 +91,7 @@
   } from '@/components/core/tables/art-table-query/index.vue'
   import type { ColumnOption } from '@/types'
   import { pageInfoHandler } from '@/utils/table/table-utils'
+  import { loadAllDocumentPages } from '@/utils/business/document-detail-list'
   import {
     copySafetyInspection,
     deleteSafetyInspections,
@@ -109,6 +111,7 @@
   import { buildRectificationNoticeHtml } from './modules/safety-inspection-document'
 
   defineOptions({ name: 'SmisDualControlSafetyInspection' })
+  const { hasAnyAuth } = useAuth()
 
   type TableSearchModel = SmisSafetyInspectionSearchParams & { inspectionRange?: string[] }
   type TableParams = TableSearchModel & Pick<Api.Common.PaginationParams, 'current' | 'size'>
@@ -224,85 +227,91 @@
       return rawName
     }
   }
-  const columnsFactory = (): ColumnOption<SmisSafetyInspectionRecord>[] => [
-    { type: 'selection', width: 48, reserveSelection: true },
-    { type: 'globalIndex', label: '序号', width: 68 },
-    {
-      prop: 'inspectionTypeName',
-      label: '检查类别',
-      width: 132,
-      formatter: (row) => <ElTag effect="plain">{row.inspectionTypeName}</ElTag>
-    },
-    {
-      prop: 'inspectionName',
-      label: '检查名称',
-      minWidth: 210,
-      showOverflowTooltip: true
-    },
-    {
-      prop: 'inspectionOrganizationName',
-      label: '检查单位',
-      minWidth: 170,
-      showOverflowTooltip: true
-    },
-    {
-      prop: 'inspectionTime',
-      label: '检查时间',
-      width: 166,
-      formatter: (row) => dayjs(row.inspectionTime).format('YYYY-MM-DD HH:mm')
-    },
-    {
-      prop: 'planAttachmentUrls',
-      label: '检查计划附件',
-      minWidth: 180,
-      formatter: (row) => {
-        const url = row.planAttachmentUrls[0]
-        return url ? (
-          <div class="safety-inspection-page__attachment">
-            <ArtAttachmentLink file={{ url, name: filenameFromUrl(url) }} />
-            {row.planAttachmentUrls.length > 1 ? (
-              <span>+{row.planAttachmentUrls.length - 1}</span>
-            ) : null}
-          </div>
-        ) : (
-          <span class="safety-inspection-page__muted">未上传</span>
+  const columnsFactory = (): ColumnOption<SmisSafetyInspectionRecord>[] => {
+    const columns: ColumnOption<SmisSafetyInspectionRecord>[] = [
+      { type: 'selection', width: 48, reserveSelection: true },
+      { type: 'globalIndex', label: '序号', width: 68 },
+      {
+        prop: 'inspectionTypeName',
+        label: '检查类别',
+        width: 132,
+        formatter: (row) => <ElTag effect="plain">{row.inspectionTypeName}</ElTag>
+      },
+      {
+        prop: 'inspectionName',
+        label: '检查名称',
+        minWidth: 210,
+        showOverflowTooltip: true
+      },
+      {
+        prop: 'inspectionOrganizationName',
+        label: '检查单位',
+        minWidth: 170,
+        showOverflowTooltip: true
+      },
+      {
+        prop: 'inspectionTime',
+        label: '检查时间',
+        width: 166,
+        formatter: (row) => dayjs(row.inspectionTime).format('YYYY-MM-DD HH:mm')
+      },
+      {
+        prop: 'planAttachmentUrls',
+        label: '检查计划附件',
+        minWidth: 180,
+        formatter: (row) => {
+          const url = row.planAttachmentUrls[0]
+          return url ? (
+            <div class="safety-inspection-page__attachment">
+              <ArtAttachmentLink file={{ url, name: filenameFromUrl(url) }} />
+              {row.planAttachmentUrls.length > 1 ? (
+                <span>+{row.planAttachmentUrls.length - 1}</span>
+              ) : null}
+            </div>
+          ) : (
+            <span class="safety-inspection-page__muted">未上传</span>
+          )
+        }
+      },
+      {
+        prop: 'inspectorNames',
+        label: '检查人',
+        minWidth: 160,
+        showOverflowTooltip: true
+      },
+      {
+        prop: 'inspectedOrganizationName',
+        label: '被检查单位',
+        minWidth: 180,
+        showOverflowTooltip: true
+      },
+      { prop: 'createBy', label: '创建人', minWidth: 126, showOverflowTooltip: true },
+      {
+        prop: 'createTime',
+        label: '创建时间',
+        width: 166,
+        formatter: (row) => dayjs(row.createTime).format('YYYY-MM-DD HH:mm')
+      },
+      {
+        prop: 'operation',
+        label: '操作',
+        width: 82,
+        fixed: 'right',
+        formatter: (row) => (
+          <ArtButtonTable
+            type="edit"
+            permission="SmisDualControlSafetyInspection:Edit"
+            label="编辑安全检查"
+            onClick={() => openDialog(row)}
+          />
         )
       }
-    },
-    {
-      prop: 'inspectorNames',
-      label: '检查人',
-      minWidth: 160,
-      showOverflowTooltip: true
-    },
-    {
-      prop: 'inspectedOrganizationName',
-      label: '被检查单位',
-      minWidth: 180,
-      showOverflowTooltip: true
-    },
-    { prop: 'createBy', label: '创建人', minWidth: 126, showOverflowTooltip: true },
-    {
-      prop: 'createTime',
-      label: '创建时间',
-      width: 166,
-      formatter: (row) => dayjs(row.createTime).format('YYYY-MM-DD HH:mm')
-    },
-    {
-      prop: 'operation',
-      label: '操作',
-      width: 82,
-      fixed: 'right',
-      formatter: (row) => (
-        <ArtButtonTable
-          type="edit"
-          permission="SmisDualControlSafetyInspection:Edit"
-          label="编辑安全检查"
-          onClick={() => openDialog(row)}
-        />
-      )
-    }
-  ]
+    ]
+    return columns.filter(
+      (column) =>
+        column.prop !== 'operation' || hasAnyAuth(['SmisDualControlSafetyInspection:Edit'])
+    )
+  }
 
   const exportColumns = [
     { key: 'inspectionTypeName', title: '检查类别', required: true },
@@ -362,15 +371,16 @@
       exportFilename: '安全检查记录',
       exportSheetName: '安全检查',
       exportColumns,
-      exportApi: async ({ selectedIds, searchParams, maxRows }) => {
+      exportApi: async ({ selectedIds, searchParams }) => {
         const params = normalizeSearchParams(searchParams as TableSearchModel)
-        const result = await fetchSafetyInspectionList({
+        const selected = new Set(selectedIds.map(String))
+        const rows = await loadAllDocumentPages(fetchSafetyInspectionList, {
           ...params,
-          ids: selectedIds.map(String),
-          from: 0,
-          to: Math.max((maxRows ?? 10000) - 1, 0)
+          ids: undefined
         })
-        return { data: result.data }
+        return {
+          data: rows.filter((row) => !selected.size || selected.has(row.id))
+        }
       }
     },
     {

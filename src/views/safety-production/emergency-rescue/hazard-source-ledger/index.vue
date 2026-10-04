@@ -77,6 +77,7 @@
   import type { ColumnOption } from '@/types'
   import { pageInfoHandler } from '@/utils/table/table-utils'
   import { exportExcel } from '@/utils/file'
+  import { loadAllDocumentPages } from '@/utils/business/document-detail-list'
   import TreeUtils from '@/utils/tree'
   import { useArtFeedback } from '@/hooks/core/useArtFeedback'
   import { useUserStore } from '@/store/modules/user'
@@ -361,7 +362,7 @@
     {
       prop: 'operation',
       label: '操作',
-      width: 152,
+      width: 160,
       fixed: 'right',
       formatter: (row) => (
         <div>
@@ -505,28 +506,31 @@
       exportSheetName: '危险源台账',
       exportColumns: excelColumns,
       exportApi: async () => ({
-        data: (await fetchHazardSourceList({ ...searchQuery.value, from: 0, to: 99999 })).data.map(
-          (row) => ({
-            hazardName: row.hazardName,
-            siteName: row.siteName,
-            hazardLevel: getDictMap.value.smisHazardSourceLevel?.find(
-              (item) => item.value === row.hazardLevel
-            )?.label,
-            riskLevel: getDictMap.value.smisHazardSourceRiskLevel?.find(
-              (item) => item.value === row.riskLevel
-            )?.label,
-            controlOrganizationName: row.controlOrganizationName,
-            responsibleEmployeeNo: row.responsibleEmployeeNo || '',
-            quantity: row.quantity ?? '',
-            location: row.location || '',
-            evaluationDate: row.evaluationDate || '',
-            evaluationOrganization: row.evaluationOrganization || '',
-            filingDate: row.filingDate || '',
-            filingOrganization: row.filingOrganization || '',
-            filingNo: row.filingNo || '',
-            remark: row.remark || ''
-          })
-        )
+        data: (
+          await loadAllDocumentPages<SmisHazardSource, SmisHazardSourceSearchParams>(
+            fetchHazardSourceList,
+            { ...searchQuery.value }
+          )
+        ).map((row) => ({
+          hazardName: row.hazardName,
+          siteName: row.siteName,
+          hazardLevel: getDictMap.value.smisHazardSourceLevel?.find(
+            (item) => item.value === row.hazardLevel
+          )?.label,
+          riskLevel: getDictMap.value.smisHazardSourceRiskLevel?.find(
+            (item) => item.value === row.riskLevel
+          )?.label,
+          controlOrganizationName: row.controlOrganizationName,
+          responsibleEmployeeNo: row.responsibleEmployeeNo || '',
+          quantity: row.quantity ?? '',
+          location: row.location || '',
+          evaluationDate: row.evaluationDate || '',
+          evaluationOrganization: row.evaluationOrganization || '',
+          filingDate: row.filingDate || '',
+          filingOrganization: row.filingOrganization || '',
+          filingNo: row.filingNo || '',
+          remark: row.remark || ''
+        }))
       })
     },
     {

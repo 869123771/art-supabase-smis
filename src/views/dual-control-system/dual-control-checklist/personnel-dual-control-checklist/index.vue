@@ -61,9 +61,11 @@
   } from '@/components/core/tables/art-table-query/index.vue'
   import type { ColumnOption } from '@/types'
   import { pageInfoHandler } from '@/utils/table/table-utils'
+  import { loadAllDocumentPages } from '@/utils/business/document-detail-list'
   import { useDictionaryOptions } from '@/hooks/core/useDictionaryOptions'
   import {
     fetchPersonnelDualControlChecklist,
+    type SmisChecklistSearchParams,
     type SmisPersonnelChecklistOverview,
     type SmisPersonnelChecklistRecord
   } from '@smis/api'
@@ -309,8 +311,11 @@
       exportColumns: excelColumns,
       exportApi: async () => ({
         data: (
-          await fetchPersonnelDualControlChecklist({ ...searchQuery.value, from: 0, to: 9999 })
-        ).data.map((row) => ({ ...row, gender: genderLabel(row.gender) }))
+          await loadAllDocumentPages<SmisPersonnelChecklistRecord, SmisChecklistSearchParams>(
+            fetchPersonnelDualControlChecklist,
+            { ...searchQuery.value }
+          )
+        ).map((row) => ({ ...row, gender: genderLabel(row.gender) }))
       })
     }
   ])

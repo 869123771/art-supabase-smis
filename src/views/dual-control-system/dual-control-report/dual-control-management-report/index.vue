@@ -68,6 +68,7 @@
   } from '@/components/core/tables/art-table-query/index.vue'
   import type { ColumnOption } from '@/types'
   import { pageInfoHandler } from '@/utils/table/table-utils'
+  import { loadAllDocumentPages } from '@/utils/business/document-detail-list'
   import {
     fetchDualControlManagementReport,
     type SmisDualControlReportOverview,
@@ -300,8 +301,7 @@
       exportSheetName: '双控管控报表',
       exportColumns: excelColumns,
       exportApi: async () => ({
-        data: (await fetchDualControlManagementReport({ ...searchQuery.value, from: 0, to: 9999 }))
-          .data
+        data: await loadAllDocumentPages(fetchDualControlManagementReport, { ...searchQuery.value })
       })
     }
   ])

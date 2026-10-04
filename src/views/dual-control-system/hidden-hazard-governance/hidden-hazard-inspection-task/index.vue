@@ -65,6 +65,7 @@
   } from '@/components/core/tables/art-table-query/index.vue'
   import type { ColumnOption } from '@/types'
   import { pageInfoHandler } from '@/utils/table/table-utils'
+  import { loadAllDocumentPages } from '@/utils/business/document-detail-list'
   import { useUserStore } from '@/store/modules/user'
   import ArtPermissionGuard from '@/components/core/feedback/art-permission-guard/index.vue'
   import ArtStatusSegmented from '@/components/core/forms/art-status-segmented/index.vue'
@@ -386,17 +387,18 @@
       exportSheetName: '排查任务',
       exportColumns: excelColumns,
       exportApi: async () => {
-        const result = await fetchHiddenHazardInspectionTaskList({
+        const rows = await loadAllDocumentPages<
+          SmisHiddenHazardInspectionTask,
+          SmisHiddenHazardTaskSearchParams
+        >(fetchHiddenHazardInspectionTaskList, {
           ...searchQuery.value,
           plannedFrom: searchQuery.value.plannedRange?.[0],
           plannedTo: searchQuery.value.plannedRange?.[1]
             ? `${searchQuery.value.plannedRange[1]}T23:59:59`
-            : undefined,
-          from: 0,
-          to: 9999
+            : undefined
         })
         return {
-          data: result.data.map((row) => ({
+          data: rows.map((row) => ({
             ...row,
             status:
               statusOptions.value.find((item) => item.value === row.status)?.label || row.status,

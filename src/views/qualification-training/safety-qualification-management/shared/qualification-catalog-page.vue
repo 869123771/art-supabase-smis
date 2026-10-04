@@ -1,6 +1,8 @@
 <template>
   <ArtPermissionGuard :permission="config.permissions.view" :resource-name="config.title">
-    <div class="qualification-catalog-page business-workspace-page art-full-height">
+    <div
+      class="qualification-catalog-page business-workspace-page art-full-height flex min-h-0 flex-col gap-[14px]"
+    >
       <BusinessWorkspaceHeader
         :eyebrow="config.eyebrow"
         :title="config.title"
@@ -15,7 +17,7 @@
       >
         <template #actions><BusinessTableWorkspaceActions :table="tableRef" /></template>
       </BusinessWorkspaceHeader>
-      <div class="qualification-catalog-page__workspace">
+      <div class="qualification-catalog-page__workspace min-h-0 w-full flex-1">
         <ArtWorkspaceSplitter
           primary-size="300px"
           primary-min="260px"
@@ -37,7 +39,7 @@
           <ArtTableQuery
             ref="tableRef"
             v-model="searchQuery"
-            class="qualification-catalog-page__table"
+            class="qualification-catalog-page__table min-h-0 min-w-0"
             :api-fn="fetchTableData"
             :search-items="searchItems"
             :columns-factory="columnsFactory"
@@ -71,6 +73,7 @@
   } from '@/components/core/tables/art-table-query/index.vue'
   import type { ColumnOption } from '@/types'
   import { pageInfoHandler } from '@/utils/table/table-utils'
+  import { loadAllDocumentPages } from '@/utils/business/document-detail-list'
   import { useArtFeedback } from '@/hooks/core/useArtFeedback'
   import { useUserStore } from '@/store/modules/user'
   import TreeUtils from '@/utils/tree'
@@ -256,17 +259,16 @@
         { key: 'status', title: '启用状态' },
         { key: 'remark', title: '备注' }
       ],
-      exportApi: async ({ maxRows }) => ({
-        data: (
-          await fetchQualificationCatalogList({
-            ...searchQuery,
-            ...selectedCatalogFilters.value,
-            catalogType: props.catalogType,
-            purpose: 'export',
-            from: 0,
-            to: maxRows - 1
-          })
-        ).data
+      exportApi: async () => ({
+        data: await loadAllDocumentPages<
+          SmisQualificationCatalog,
+          SmisQualificationCatalogSearchParams
+        >(fetchQualificationCatalogList, {
+          ...searchQuery,
+          ...selectedCatalogFilters.value,
+          catalogType: props.catalogType,
+          purpose: 'export'
+        })
       })
     }
   ])
@@ -382,23 +384,3 @@
   }
   onMounted(() => void userStore.ensureDictLoaded('commonEnabledStatus'))
 </script>
-
-<style scoped lang="scss">
-  .qualification-catalog-page {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-    min-height: 0;
-
-    &__workspace {
-      flex: 1;
-      width: 100%;
-      min-height: 0;
-    }
-
-    &__table {
-      min-width: 0;
-      min-height: 0;
-    }
-  }
-</style>

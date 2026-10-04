@@ -630,6 +630,7 @@ export interface SmisRiskInspectionTaskDetail extends Omit<
   SmisRiskInspectionTask,
   'itemCount' | 'completedItemCount' | 'abnormalCount' | 'createTime' | 'updateTime'
 > {
+  tenantId: string
   cancelledAt?: string | null
   transferReason?: string | null
   cancellationReason?: string | null

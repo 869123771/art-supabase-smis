@@ -66,6 +66,7 @@
   } from '@/components/core/tables/art-table-query/index.vue'
   import type { ColumnOption } from '@/types'
   import { pageInfoHandler } from '@/utils/table/table-utils'
+  import { loadAllDocumentPages } from '@/utils/business/document-detail-list'
   import { useUserStore } from '@/store/modules/user'
   import ArtPermissionGuard from '@/components/core/feedback/art-permission-guard/index.vue'
   import ArtStatusSegmented from '@/components/core/forms/art-status-segmented/index.vue'
@@ -448,16 +449,17 @@
       exportColumns: excelColumns,
       exportApi: async () => ({
         data: (
-          await fetchRiskInspectionTaskList({
-            ...searchQuery.value,
-            plannedFrom: searchQuery.value.plannedRange?.[0],
-            plannedTo: searchQuery.value.plannedRange?.[1]
-              ? `${searchQuery.value.plannedRange[1]}T23:59:59`
-              : undefined,
-            from: 0,
-            to: 9999
-          })
-        ).data.map((row) => ({
+          await loadAllDocumentPages<SmisRiskInspectionTask, SmisRiskInspectionTaskSearchParams>(
+            fetchRiskInspectionTaskList,
+            {
+              ...searchQuery.value,
+              plannedFrom: searchQuery.value.plannedRange?.[0],
+              plannedTo: searchQuery.value.plannedRange?.[1]
+                ? `${searchQuery.value.plannedRange[1]}T23:59:59`
+                : undefined
+            }
+          )
+        ).map((row) => ({
           ...row,
           riskPointType:
             (getDictMap.value.smisRiskPointType ?? []).find(

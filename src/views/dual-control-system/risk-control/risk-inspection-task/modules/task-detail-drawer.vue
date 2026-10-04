@@ -1,5 +1,11 @@
 <template>
   <ArtDrawer ref="drawerRef" :loading="loading" loading-text="正在加载任务详情…">
+    <ArtAsyncState
+      v-if="loadError"
+      :error="loadError"
+      error-title="巡查任务加载失败"
+      @retry="retryLoad"
+    />
     <div v-if="detail" class="task-detail-drawer">
       <div class="task-detail-drawer__status" :data-status="detail.status">
         <span><ArtSvgIcon icon="ri:clipboard-line" /></span>
@@ -136,6 +142,8 @@
   import ArtDictDisplay from '@/components/core/base/art-dict-display/index.vue'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
   import ArtEmptyState from '@/components/core/feedback/art-empty-state/index.vue'
+  import ArtAsyncState from '@/components/core/feedback/art-async-state/index.vue'
+  import { useDetailRecord } from '@/hooks/core/useDetailRecord'
   import {
     fetchRiskInspectionTaskDetail,
     type SmisRiskInspectionTask,
@@ -147,8 +155,11 @@
     row: SmisRiskInspectionTask
   }
   const drawerRef = ref<ArtDrawerExpose<TaskDetailDrawerOpenData>>()
-  const detail = shallowRef<SmisRiskInspectionTaskDetail | null>(null)
-  const loading = ref(false)
+  const { detail, loading, loadError, openDetail, loadDetail, retryLoad } =
+    useDetailRecord<SmisRiskInspectionTaskDetail>(
+      async (id) => ({ data: await fetchRiskInspectionTaskDetail(id) }),
+      '无法加载巡查任务，请重新加载'
+    )
   const abnormalCount = computed(
     () => detail.value?.items.filter((item) => item.result === 'abnormal').length ?? 0
   )
@@ -163,22 +174,14 @@
   }
   const eventLabel = (value: SmisRiskInspectionTaskEvent['eventType']): string => eventLabels[value]
   const handleOpen = async (data: TaskDetailDrawerOpenData): Promise<void> => {
-    detail.value = null
+    openDetail(data.row.id)
     await drawerRef.value?.handleOpen(data, {
       title: '风险巡查任务详情',
       subtitle: `${data.row.taskNo} · ${data.row.riskPointName}`,
       size: 'xl',
       showFooter: false,
       contentHeight: 'calc(100vh - 120px)',
-      onOpen: async () => {
-        loading.value = true
-        try {
-          const fetchedDetail = await fetchRiskInspectionTaskDetail(data.row.id)
-          detail.value = fetchedDetail ? { ...data.row, ...fetchedDetail } : null
-        } finally {
-          loading.value = false
-        }
-      }
+      onOpen: () => loadDetail(data.row.id)
     })
   }
   defineExpose({ handleOpen })

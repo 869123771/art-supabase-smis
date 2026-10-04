@@ -70,7 +70,9 @@
   } from '@/components/core/tables/art-table-query/index.vue'
   import type { ColumnOption } from '@/types'
   import { pageInfoHandler } from '@/utils/table/table-utils'
+  import { loadAllDocumentPages } from '@/utils/business/document-detail-list'
   import { useArtFeedback } from '@/hooks/core/useArtFeedback'
+  import { useAuth } from '@/hooks/core/useAuth'
   import { useUserStore } from '@/store/modules/user'
   import TreeUtils from '@/utils/tree'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
@@ -78,6 +80,7 @@
   import ArtPermissionGuard from '@/components/core/feedback/art-permission-guard/index.vue'
   import BusinessTableIdentityCell from '@/components/business/business-table-identity-cell/index.vue'
   import ArtWorkspaceSplitter from '@/components/core/layouts/art-workspace-splitter/index.vue'
+  import BusinessTableRowActions from '@/components/business/business-table-row-actions/index.vue'
   import BusinessTableWorkspaceActions from '@/components/business/business-table-workspace-actions/index.vue'
   import BusinessWorkspaceHeader, {
     type BusinessWorkspaceMetric
@@ -105,7 +108,14 @@
     handleOpen: (data: CatalogDialogOpenData) => Promise<void>
   }
   const { confirmDelete } = useArtFeedback()
+  const { hasAnyAuth } = useAuth()
   const userStore = useUserStore()
+  const displayDictionaryCodes = [
+    'commonEnabledDisabledStatus',
+    'smisHazardousWasteCharacteristic',
+    'smisHazardousWasteSafetyMeasure',
+    'smisMaterialUnit'
+  ]
   const { getDictMap } = storeToRefs(userStore)
   const utils = new TreeUtils({ idKey: 'id', parentKey: 'parentId', childrenKey: 'children' })
   const tableQueryRef = ref<ArtTableQueryExpose>()
@@ -211,19 +221,29 @@
       exportFilename: '危废名录',
       exportSheetName: '危废名录',
       exportColumns,
-      exportApi: async ({ selectedIds, searchParams, maxRows }) => {
-        const response = await fetchHazardousWasteCatalogList({
+      exportApi: async ({ selectedIds, searchParams }) => {
+        const exportQuery: SmisHazardousWasteCatalogSearchParams = {
           ...(searchParams as SmisHazardousWasteCatalogSearchParams),
           categoryId: tree.selectedKey === ALL_KEY ? undefined : tree.selectedKey,
           ids: selectedIds.map(String),
-          purpose: 'export',
-          to: Math.max((maxRows ?? 10000) - 1, 0)
-        })
+          purpose: 'export'
+        }
+        const rows = await loadAllDocumentPages(fetchHazardousWasteCatalogList, exportQuery)
+        await Promise.all(displayDictionaryCodes.map((code) => userStore.ensureDictLoaded(code)))
         return {
-          data: response.data.map((row) => ({
+          data: rows.map((row) => ({
             ...row,
             categoryName: row.category.categoryName,
-            statusLabel: row.status === 'enabled' ? '启用' : '禁用'
+            safetyMeasure: userStore.getDictLabelByValue(
+              'smisHazardousWasteSafetyMeasure',
+              row.safetyMeasure || ''
+            ),
+            hazardCharacteristic: userStore.getDictLabelByValue(
+              'smisHazardousWasteCharacteristic',
+              row.hazardCharacteristic || ''
+            ),
+            unit: userStore.getDictLabelByValue('smisMaterialUnit', row.unit),
+            statusLabel: userStore.getDictLabelByValue('commonEnabledDisabledStatus', row.status)
           }))
         }
       }
@@ -239,103 +259,110 @@
       }
     }
   ])
-  const columnsFactory = (): ColumnOption<SmisHazardousWasteCatalogItem>[] => [
-    { type: 'selection', width: 48 },
-    { prop: 'sort', label: '排序', width: 76, align: 'center' },
-    {
-      prop: 'wasteName',
-      label: '危废名录',
-      minWidth: 220,
-      fixed: 'left',
-      formatter: (row) => (
-        <BusinessTableIdentityCell
-          primary={row.wasteName}
-          secondary={row.wasteCode}
-          icon="ri:flask-line"
-        />
-      )
-    },
-    {
-      prop: 'category',
-      label: '危废分类',
-      minWidth: 150,
-      formatter: (row) => (
-        <ElTag type={row.tagStyle || 'info'}>
-          <span style={{ color: row.textColor || undefined }}>{row.category.categoryName}</span>
-        </ElTag>
-      )
-    },
-    {
-      prop: 'wasteType',
-      label: '废物类型',
-      minWidth: 130,
-      showOverflowTooltip: true,
-      formatter: (row) => row.wasteType || '—'
-    },
-    {
-      prop: 'hazardCharacteristic',
-      label: '危险特性',
-      minWidth: 130,
-      formatter: (row) => (
-        <ArtDictDisplay
-          dictCode="smisHazardousWasteCharacteristic"
-          value={row.hazardCharacteristic}
-          display="tag"
-        />
-      )
-    },
-    {
-      prop: 'safetyMeasure',
-      label: '安全措施',
-      minWidth: 140,
-      showOverflowTooltip: true,
-      formatter: (row) => (
-        <ArtDictDisplay dictCode="smisHazardousWasteSafetyMeasure" value={row.safetyMeasure} />
-      )
-    },
-    {
-      prop: 'unit',
-      label: '单位',
-      width: 90,
-      align: 'center',
-      formatter: (row) => <ArtDictDisplay dictCode="smisMaterialUnit" value={row.unit} />
-    },
-    {
-      prop: 'status',
-      label: '状态',
-      width: 100,
-      align: 'center',
-      formatter: (row) => (
-        <ArtDictDisplay dictCode="commonEnabledDisabledStatus" value={row.status} display="tag" />
-      )
-    },
-    {
-      prop: 'updateTime',
-      label: '更新时间',
-      width: 164,
-      formatter: (row) => dayjs(row.updateTime).format('YYYY-MM-DD HH:mm')
-    },
-    {
-      prop: 'operation',
-      label: '操作',
-      width: 112,
-      fixed: 'right',
-      formatter: (row) => (
-        <div class="hazardous-catalog-page__actions">
-          <ArtButtonTable
-            type="edit"
-            permission="SmisHazardousWasteCatalog:Edit"
-            onClick={() => openCatalog(row)}
+  const columnsFactory = (): ColumnOption<SmisHazardousWasteCatalogItem>[] => {
+    const columns: ColumnOption<SmisHazardousWasteCatalogItem>[] = [
+      { type: 'selection', width: 48 },
+      { prop: 'sort', label: '排序', width: 76, align: 'center' },
+      {
+        prop: 'wasteName',
+        label: '危废名录',
+        minWidth: 220,
+        fixed: 'left',
+        formatter: (row) => (
+          <BusinessTableIdentityCell
+            primary={row.wasteName}
+            secondary={row.wasteCode}
+            icon="ri:flask-line"
           />
-          <ArtButtonTable
-            type="delete"
-            permission="SmisHazardousWasteCatalog:Delete"
-            onClick={() => void deleteRow(row)}
+        )
+      },
+      {
+        prop: 'category',
+        label: '危废分类',
+        minWidth: 150,
+        formatter: (row) => (
+          <ElTag type={row.tagStyle || 'info'}>
+            <span style={{ color: row.textColor || undefined }}>{row.category.categoryName}</span>
+          </ElTag>
+        )
+      },
+      {
+        prop: 'wasteType',
+        label: '废物类型',
+        minWidth: 130,
+        showOverflowTooltip: true,
+        formatter: (row) => row.wasteType || '—'
+      },
+      {
+        prop: 'hazardCharacteristic',
+        label: '危险特性',
+        minWidth: 130,
+        formatter: (row) => (
+          <ArtDictDisplay
+            dictCode="smisHazardousWasteCharacteristic"
+            value={row.hazardCharacteristic}
+            display="tag"
           />
-        </div>
-      )
-    }
-  ]
+        )
+      },
+      {
+        prop: 'safetyMeasure',
+        label: '安全措施',
+        minWidth: 140,
+        showOverflowTooltip: true,
+        formatter: (row) => (
+          <ArtDictDisplay dictCode="smisHazardousWasteSafetyMeasure" value={row.safetyMeasure} />
+        )
+      },
+      {
+        prop: 'unit',
+        label: '单位',
+        width: 90,
+        align: 'center',
+        formatter: (row) => <ArtDictDisplay dictCode="smisMaterialUnit" value={row.unit} />
+      },
+      {
+        prop: 'status',
+        label: '状态',
+        width: 100,
+        align: 'center',
+        formatter: (row) => (
+          <ArtDictDisplay dictCode="commonEnabledDisabledStatus" value={row.status} display="tag" />
+        )
+      },
+      {
+        prop: 'updateTime',
+        label: '更新时间',
+        width: 164,
+        formatter: (row) => dayjs(row.updateTime).format('YYYY-MM-DD HH:mm')
+      },
+      {
+        prop: 'operation',
+        label: '操作',
+        width: 112,
+        fixed: 'right',
+        formatter: (row) => (
+          <BusinessTableRowActions>
+            <ArtButtonTable
+              type="edit"
+              permission="SmisHazardousWasteCatalog:Edit"
+              onClick={() => openCatalog(row)}
+            />
+            <ArtButtonTable
+              type="delete"
+              permission="SmisHazardousWasteCatalog:Delete"
+              onClick={() => void deleteRow(row)}
+            />
+          </BusinessTableRowActions>
+        )
+      }
+    ]
+    return columns.filter(
+      (column) =>
+        column.prop !== 'operation' ||
+        hasAnyAuth(['SmisHazardousWasteCatalog:Edit', 'SmisHazardousWasteCatalog:Delete'])
+    )
+  }
   const fetchData = async (params: TableParams, options?: TableRequestOptions) => {
     tree.loading = !tree.data.length
     tree.error = null
@@ -384,15 +411,7 @@
     }
   }
   onMounted(
-    () =>
-      void Promise.all(
-        [
-          'commonEnabledDisabledStatus',
-          'smisHazardousWasteCharacteristic',
-          'smisHazardousWasteSafetyMeasure',
-          'smisMaterialUnit'
-        ].map((code) => userStore.ensureDictLoaded(code))
-      )
+    () => void Promise.all(displayDictionaryCodes.map((code) => userStore.ensureDictLoaded(code)))
   )
 </script>
 <style scoped lang="scss">
@@ -411,10 +430,6 @@
     &__table {
       min-width: 0;
       min-height: 0;
-    }
-
-    :deep(.hazardous-catalog-page__actions) {
-      display: flex;
     }
   }
 </style>

@@ -70,6 +70,9 @@
   } from '@/components/core/tables/art-table-query/index.vue'
   import type { ColumnOption } from '@/types'
   import { pageInfoHandler } from '@/utils/table/table-utils'
+  import { loadAllDocumentPages } from '@/utils/business/document-detail-list'
+  import { useDictionaryOptions } from '@/hooks/core/useDictionaryOptions'
+  import { useUserStore } from '@/store/modules/user'
   import {
     fetchHiddenHazardInspectionReport,
     type SmisHiddenHazardInspectionReportOverview,
@@ -99,6 +102,8 @@
     generatedHazards: 0
   })
   const { organizationTree, organizationTreeProps, loadOptions } = useChecklistOptions()
+  useDictionaryOptions('organizationType')
+  const userStore = useUserStore()
 
   const workspaceTags: BusinessWorkspaceTag[] = [
     { label: '组织排查率', type: 'primary', effect: 'plain' },
@@ -192,7 +197,9 @@
           <div>
             <strong>{row.organizationName}</strong>
             <small>
-              {row.organizationCode} · {row.organizationType}
+              {row.organizationCode} ·{' '}
+              {userStore.getDictLabelByValue('organizationType', row.organizationType) ||
+                row.organizationType}
             </small>
           </div>
         </div>
@@ -287,14 +294,12 @@
   ]
   const normalizeQuery = (
     params: TableParams,
-    from: number,
-    to: number
+    range: Pick<SmisHiddenHazardInspectionReportSearchParams, 'from' | 'to'> = {}
   ): SmisHiddenHazardInspectionReportSearchParams => ({
     ...params,
     plannedFrom: params.plannedRange?.[0],
     plannedTo: params.plannedRange?.[1] ? `${params.plannedRange[1]}T23:59:59` : undefined,
-    from,
-    to
+    ...range
   })
   const headerActions = computed<ArtTableQueryHeaderAction[]>(() => [
     {
@@ -304,15 +309,26 @@
       exportFilename: '隐患排查报表',
       exportSheetName: '隐患排查报表',
       exportColumns: excelColumns,
-      exportApi: async () => ({
-        data: (await fetchHiddenHazardInspectionReport(normalizeQuery(searchQuery.value, 0, 9999)))
-          .data
-      })
+      exportApi: async () => {
+        await userStore.ensureDictLoaded('organizationType')
+        const rows = await loadAllDocumentPages(
+          fetchHiddenHazardInspectionReport,
+          normalizeQuery(searchQuery.value)
+        )
+        return {
+          data: rows.map((row) => ({
+            ...row,
+            organizationType:
+              userStore.getDictLabelByValue('organizationType', row.organizationType) ||
+              row.organizationType
+          }))
+        }
+      }
     }
   ])
   const fetchTableData = async (params: TableParams, options?: TableRequestOptions) => {
     const { from, to } = pageInfoHandler({ current: params.current, size: params.size })
-    const response = await fetchHiddenHazardInspectionReport(normalizeQuery(params, from, to))
+    const response = await fetchHiddenHazardInspectionReport(normalizeQuery(params, { from, to }))
     if (!options?.signal?.aborted) Object.assign(overview, response.overview)
     return response
   }

@@ -66,6 +66,7 @@
   } from '@/components/core/tables/art-table-query/index.vue'
   import type { ColumnOption } from '@/types'
   import { pageInfoHandler } from '@/utils/table/table-utils'
+  import { loadAllDocumentPages } from '@/utils/business/document-detail-list'
   import { useArtFeedback } from '@/hooks/core/useArtFeedback'
   import { useUserStore } from '@/store/modules/user'
   import ArtPermissionGuard from '@/components/core/feedback/art-permission-guard/index.vue'
@@ -488,26 +489,26 @@
       exportSheetName: '分级管控',
       exportColumns: excelColumns,
       exportApi: async () => ({
-        data: (
-          await fetchRiskControlPointList({ ...searchQuery.value, from: 0, to: 9999 })
-        ).data.map((row) => ({
-          ...row,
-          accidentTypes: row.accidentTypes.join('、'),
-          controlLevels: row.assignments
-            .map((item) => controlLevelLabel.get(item.controlLevel))
-            .join('|'),
-          responsibleEmployees: row.assignments
-            .map((item) => item.responsibleEmployeeNo || item.responsibleEmployeeName)
-            .join('|'),
-          frequencies: row.assignments.map((item) => item.frequencyLabel).join('|'),
-          levelRequirements: row.assignments.map((item) => item.controlMeasure || '').join('|'),
-          controlStartAt: row.controlStartAt
-            ? dayjs(row.controlStartAt).format('YYYY-MM-DD HH:mm')
-            : '',
-          status:
-            statusOptions.find((item) => item.value === row.controlStatus)?.label ||
-            row.controlStatus
-        }))
+        data: (await loadAllDocumentPages(fetchRiskControlPointList, { ...searchQuery.value })).map(
+          (row) => ({
+            ...row,
+            accidentTypes: row.accidentTypes.join('、'),
+            controlLevels: row.assignments
+              .map((item) => controlLevelLabel.get(item.controlLevel))
+              .join('|'),
+            responsibleEmployees: row.assignments
+              .map((item) => item.responsibleEmployeeNo || item.responsibleEmployeeName)
+              .join('|'),
+            frequencies: row.assignments.map((item) => item.frequencyLabel).join('|'),
+            levelRequirements: row.assignments.map((item) => item.controlMeasure || '').join('|'),
+            controlStartAt: row.controlStartAt
+              ? dayjs(row.controlStartAt).format('YYYY-MM-DD HH:mm')
+              : '',
+            status:
+              statusOptions.find((item) => item.value === row.controlStatus)?.label ||
+              row.controlStatus
+          })
+        )
       })
     },
     {

@@ -24,7 +24,9 @@
           primary-min="250px"
           primary-max="400px"
           :breakpoint="860"
-          stacked-primary-size="310px"
+          :stacked-primary-size="
+            treeState.loading || treeState.error || !treeState.rows.length ? 'auto' : '310px'
+          "
         >
           <template #primary>
             <ArtSectionCard
@@ -141,7 +143,7 @@
               }}</ElTag>
               <p>{{
                 selectedStandard
-                  ? '列表仅显示当前标准直接关联的排查内容'
+                  ? '列表显示当前标准及下级标准关联的排查内容'
                   : '正在查看全部排查标准的内容事项'
               }}</p>
             </div>
@@ -175,6 +177,7 @@
 </template>
 
 <script setup lang="tsx">
+  import { useAuth } from '@/hooks/core/useAuth'
   import ArtEmptyState from '@/components/core/feedback/art-empty-state/index.vue'
   import { getFriendlySupabaseErrorMessage } from '@/utils/supabase'
   import dayjs from 'dayjs'
@@ -185,6 +188,7 @@
   import ArtSectionCard from '@/components/core/surfaces/art-section-card/index.vue'
   import ArtWorkspaceSplitter from '@/components/core/layouts/art-workspace-splitter/index.vue'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
+  import BusinessTableRowActions from '@/components/business/business-table-row-actions/index.vue'
   import BusinessTableWorkspaceActions from '@/components/business/business-table-workspace-actions/index.vue'
   import BusinessWorkspaceHeader, {
     type BusinessWorkspaceMetric
@@ -197,6 +201,7 @@
   } from '@/components/core/tables/art-table-query/index.vue'
   import type { ColumnOption } from '@/types'
   import { pageInfoHandler } from '@/utils/table/table-utils'
+  import { loadAllDocumentPages } from '@/utils/business/document-detail-list'
   import TreeUtils from '@/utils/tree'
   import { useArtFeedback } from '@/hooks/core/useArtFeedback'
   import { useUserStore } from '@/store/modules/user'
@@ -215,6 +220,7 @@
   import ItemDialog, { type ItemDialogOpenData } from './modules/item-dialog.vue'
 
   defineOptions({ name: 'SmisDualControlInspectionStandard' })
+  const { hasAnyAuth } = useAuth()
   type TableParams = SmisInspectionItemSearchParams &
     Pick<Api.Common.PaginationParams, 'current' | 'size'>
   interface StandardDialogExpose {
@@ -347,15 +353,25 @@
       exportFilename: '排查标准内容',
       exportSheetName: '排查项',
       exportColumns: excelColumns,
-      exportApi: async ({ selectedIds, searchParams, maxRows }) => {
-        const result = await fetchInspectionItems({
+      exportApi: async ({ selectedIds, searchParams }) => {
+        const exportQuery: SmisInspectionItemSearchParams = {
           ...(searchParams as SmisInspectionItemSearchParams),
           tenantId: effectiveTenantId.value,
-          ancestorStandardIds: selectedStandardIds.value,
-          ids: selectedIds.map(String),
-          to: Math.max((maxRows ?? 10000) - 1, 0)
-        })
-        return { data: result.data }
+          ancestorStandardIds: selectedStandardIds.value?.slice(),
+          ids: selectedIds.map(String)
+        }
+        const rows = await loadAllDocumentPages(fetchInspectionItems, exportQuery)
+        await Promise.all([
+          userStore.ensureDictLoaded('commonEnabledDisabledVoidedStatus'),
+          userStore.ensureDictLoaded('smisTagStyle')
+        ])
+        return {
+          data: rows.map((row) => ({
+            ...row,
+            status: userStore.getDictLabelByValue('commonEnabledDisabledVoidedStatus', row.status),
+            tagStyle: userStore.getDictLabelByValue('smisTagStyle', row.tagStyle)
+          }))
+        }
       }
     },
     {
@@ -381,84 +397,94 @@
       }
     }
   ])
-  const columnsFactory = (): ColumnOption<SmisInspectionItem>[] => [
-    { type: 'selection', width: 48 },
-    { type: 'globalIndex', label: '序号', width: 70 },
-    {
-      prop: 'itemCode',
-      label: '排查内容编号',
-      minWidth: 150,
-      fixed: 'left',
-      showOverflowTooltip: true,
-      formatter: (row) => <span class="inspection-standard-page__code">{row.itemCode}</span>
-    },
-    {
-      prop: 'inspectionContent',
-      label: '排查内容',
-      minWidth: 320,
-      showOverflowTooltip: true,
-      formatter: (row) => (
-        <span style={{ color: row.textColor || undefined }}>{row.inspectionContent}</span>
-      )
-    },
-    {
-      prop: 'standard',
-      label: '关联排查标准',
-      minWidth: 170,
-      formatter: (row) => (
-        <ElTag type={row.tagStyle || 'info'} effect="light">
-          {row.standard?.standardName || '—'}
-        </ElTag>
-      )
-    },
-    { prop: 'sort', label: '排序', width: 72, align: 'right' },
-    {
-      prop: 'status',
-      label: '状态',
-      width: 96,
-      align: 'center',
-      formatter: (row) => (
-        <ElTag
-          type={
-            row.status === 'enabled' ? 'success' : row.status === 'disabled' ? 'warning' : 'info'
-          }
-          effect="plain"
-        >
-          {statusOptions.value.find((i) => i.value === row.status)?.label || row.status}
-        </ElTag>
-      )
-    },
-    { prop: 'createBy', label: '创建人', minWidth: 110, showOverflowTooltip: true },
-    {
-      prop: 'createTime',
-      label: '创建时间',
-      width: 164,
-      formatter: (row) => dayjs(row.createTime).format('YYYY-MM-DD HH:mm')
-    },
-    {
-      prop: 'operation',
-      label: '操作',
-      width: 140,
-      fixed: 'right',
-      formatter: (row) => (
-        <div class="inspection-standard-page__table-actions">
-          <ArtButtonTable
-            type="edit"
-            permission="SmisDualControlInspectionStandard:Edit"
-            label="编辑排查项"
-            disabled={row.status === 'voided'}
-            onClick={() => openItemDialog(row)}
-          />
-          <ArtButtonTable
-            type="delete"
-            permission="SmisDualControlInspectionStandard:Delete"
-            label="删除排查项"
-            onClick={() => void handleDeleteItem(row)}
-          />
-        </div>
-      )
-    }
-  ]
+  const columnsFactory = (): ColumnOption<SmisInspectionItem>[] => {
+    const columns: ColumnOption<SmisInspectionItem>[] = [
+      { type: 'selection', width: 48 },
+      { type: 'globalIndex', label: '序号', width: 70 },
+      {
+        prop: 'itemCode',
+        label: '排查内容编号',
+        minWidth: 150,
+        fixed: 'left',
+        showOverflowTooltip: true,
+        formatter: (row) => <span class="inspection-standard-page__code">{row.itemCode}</span>
+      },
+      {
+        prop: 'inspectionContent',
+        label: '排查内容',
+        minWidth: 320,
+        showOverflowTooltip: true,
+        formatter: (row) => (
+          <span style={{ color: row.textColor || undefined }}>{row.inspectionContent}</span>
+        )
+      },
+      {
+        prop: 'standard',
+        label: '关联排查标准',
+        minWidth: 170,
+        formatter: (row) => (
+          <ElTag type={row.tagStyle || 'info'} effect="light">
+            {row.standard?.standardName || '—'}
+          </ElTag>
+        )
+      },
+      { prop: 'sort', label: '排序', width: 72, align: 'right' },
+      {
+        prop: 'status',
+        label: '状态',
+        width: 96,
+        align: 'center',
+        formatter: (row) => (
+          <ElTag
+            type={
+              row.status === 'enabled' ? 'success' : row.status === 'disabled' ? 'warning' : 'info'
+            }
+            effect="plain"
+          >
+            {statusOptions.value.find((i) => i.value === row.status)?.label || row.status}
+          </ElTag>
+        )
+      },
+      { prop: 'createBy', label: '创建人', minWidth: 110, showOverflowTooltip: true },
+      {
+        prop: 'createTime',
+        label: '创建时间',
+        width: 164,
+        formatter: (row) => dayjs(row.createTime).format('YYYY-MM-DD HH:mm')
+      },
+      {
+        prop: 'operation',
+        label: '操作',
+        width: 140,
+        fixed: 'right',
+        formatter: (row) => (
+          <BusinessTableRowActions>
+            <ArtButtonTable
+              type="edit"
+              permission="SmisDualControlInspectionStandard:Edit"
+              label="编辑排查项"
+              disabled={row.status === 'voided'}
+              onClick={() => openItemDialog(row)}
+            />
+            <ArtButtonTable
+              type="delete"
+              permission="SmisDualControlInspectionStandard:Delete"
+              label="删除排查项"
+              onClick={() => void handleDeleteItem(row)}
+            />
+          </BusinessTableRowActions>
+        )
+      }
+    ]
+    return columns.filter(
+      (column) =>
+        column.prop !== 'operation' ||
+        hasAnyAuth([
+          'SmisDualControlInspectionStandard:Edit',
+          'SmisDualControlInspectionStandard:Delete'
+        ])
+    )
+  }
   const fetchTableData = async (params: TableParams) => {
     const { from, to } = pageInfoHandler({ current: params.current, size: params.size })
     const result = await fetchInspectionItems({
@@ -476,6 +502,7 @@
     treeState.error = ''
     try {
       const result = await fetchInspectionStandards(effectiveTenantId.value)
+      if (result.error) throw result.error
       treeState.rows = result.data ?? []
       if (selectedId.value && !treeState.rows.some((row) => row.id === selectedId.value))
         selectedId.value = null
@@ -731,11 +758,6 @@
       color: var(--theme-color);
       background: var(--default-box-color);
       border-radius: var(--el-border-radius-base);
-    }
-
-    :deep(.inspection-standard-page__table-actions) {
-      display: flex;
-      align-items: center;
     }
 
     @media (width <= 700px) {

@@ -138,6 +138,7 @@
   } from '@/components/core/tables/art-table-query/index.vue'
   import type { ColumnOption } from '@/types'
   import { pageInfoHandler } from '@/utils/table/table-utils'
+  import { loadAllDocumentPages } from '@/utils/business/document-detail-list'
   import { useArtFeedback } from '@/hooks/core/useArtFeedback'
   import { useUserStore } from '@/store/modules/user'
   import ArtPermissionGuard from '@/components/core/feedback/art-permission-guard/index.vue'
@@ -327,29 +328,37 @@
       exportFilename: '隐患排查计划',
       exportSheetName: '排查计划',
       exportColumns: excelColumns,
-      exportApi: async ({ selectedIds, searchParams, maxRows }) => {
+      exportApi: async ({ selectedIds, searchParams }) => {
         const query = searchParams as PlanQuery
-        const result = await fetchHiddenHazardInspectionPlanList({
+        const selected = new Set(selectedIds.map(String))
+        const exportQuery: SmisHiddenHazardPlanSearchParams = {
           ...query,
-          ids: selectedIds.map(String),
+          ids: undefined,
           plannedFrom: query.plannedRange?.[0],
-          plannedTo: query.plannedRange?.[1] ? `${query.plannedRange[1]}T23:59:59` : undefined,
-          to: Math.max((maxRows ?? 10000) - 1, 0)
-        })
+          plannedTo: query.plannedRange?.[1] ? `${query.plannedRange[1]}T23:59:59` : undefined
+        }
+        const rows = await loadAllDocumentPages(fetchHiddenHazardInspectionPlanList, exportQuery)
+        await Promise.all([
+          userStore.ensureDictLoaded('commonEnabledDisabledVoidedStatus'),
+          userStore.ensureDictLoaded('commonDeadlineUnit'),
+          userStore.ensureDictLoaded('commonPlanCycle')
+        ])
         return {
-          data: result.data.map((row) => ({
-            ...row,
-            plannedStartAt: dayjs(row.plannedStartAt).format('YYYY-MM-DD HH:mm'),
-            plannedEndAt: dayjs(row.plannedEndAt).format('YYYY-MM-DD HH:mm'),
-            taskDeadline: `${row.taskDeadlineValue}${deadlineLabels.value[row.taskDeadlineUnit] || row.taskDeadlineUnit}`,
-            cycle:
-              row.cycleType === 'once'
-                ? '不循环'
-                : `每${row.cycleInterval}${cycleLabels.value[row.cycleType] || row.cycleType}`,
-            attachmentCount: row.attachmentUrls.length,
-            status:
-              statusOptions.value.find((item) => item.value === row.status)?.label || row.status
-          }))
+          data: rows
+            .filter((row) => !selected.size || selected.has(row.id))
+            .map((row) => ({
+              ...row,
+              plannedStartAt: dayjs(row.plannedStartAt).format('YYYY-MM-DD HH:mm'),
+              plannedEndAt: dayjs(row.plannedEndAt).format('YYYY-MM-DD HH:mm'),
+              taskDeadline: `${row.taskDeadlineValue}${deadlineLabels.value[row.taskDeadlineUnit] || row.taskDeadlineUnit}`,
+              cycle:
+                row.cycleType === 'once'
+                  ? '不循环'
+                  : `每${row.cycleInterval}${cycleLabels.value[row.cycleType] || row.cycleType}`,
+              attachmentCount: row.attachmentUrls.length,
+              status:
+                statusOptions.value.find((item) => item.value === row.status)?.label || row.status
+            }))
         }
       }
     },

@@ -1,5 +1,11 @@
 <template>
   <ArtDialog ref="dialogRef" size="xl" :loading="loading" loading-text="正在加载巡查项目…">
+    <ArtAsyncState
+      v-if="loadError"
+      :error="loadError"
+      error-title="巡查任务加载失败"
+      @retry="retryLoad"
+    />
     <div v-if="detail" ref="contentRef" class="task-execution-dialog">
       <div class="task-execution-dialog__context">
         <span aria-hidden="true"><ArtSvgIcon icon="ri:task-line" /></span>
@@ -14,7 +20,8 @@
 
       <ArtForm
         ref="formRef"
-        v-model="form"
+        :model-value="form"
+        @update:model-value="Object.assign(form, $event)"
         :items="[]"
         :rules="rules"
         custom-layout
@@ -36,6 +43,7 @@
           <ElFormItem label="任务附件">
             <ArtUploadImage
               v-model="form.attachmentUrls"
+              :resource-tenant-id="detail.tenantId"
               multiple
               :limit="8"
               :size="112"
@@ -109,6 +117,7 @@
               </ElFormItem>
               <ArtUploadImage
                 v-model="item.attachmentUrls"
+                :resource-tenant-id="detail.tenantId"
                 multiple
                 :limit="4"
                 :size="104"
@@ -125,8 +134,16 @@
         <span>保存进度允许保留未检查项目；提交完成后任务不可再次编辑。</span>
         <div
           ><ElButton @click="api.handleClose()">关闭</ElButton
-          ><ElButton :loading="submitting" @click="handleSubmit(false)">保存进度</ElButton
-          ><ElButton type="primary" :loading="submitting" @click="handleSubmit(true)"
+          ><ElButton
+            :disabled="!detail || loading"
+            :loading="submitting"
+            @click="handleSubmit(false)"
+            >保存进度</ElButton
+          ><ElButton
+            type="primary"
+            :disabled="!detail || loading"
+            :loading="submitting"
+            @click="handleSubmit(true)"
             >提交并完成</ElButton
           ></div
         >
@@ -149,6 +166,8 @@
   import ArtEmployeeSelect from '@/components/business/art-employee-select/index.vue'
   import ArtUploadImage from '@/components/core/forms/art-upload-image/index.vue'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
+  import ArtAsyncState from '@/components/core/feedback/art-async-state/index.vue'
+  import { useDetailRecord } from '@/hooks/core/useDetailRecord'
   import {
     fetchRiskInspectionTaskDetail,
     saveRiskInspectionExecution,
@@ -176,9 +195,12 @@
   const dialogRef = ref<ArtDialogExpose<TaskExecutionDialogOpenData>>()
   const formRef = ref<InstanceType<typeof ArtForm>>()
   const contentRef = ref<HTMLElement>()
-  const detail = shallowRef<SmisRiskInspectionTaskDetail | null>(null)
+  const { detail, loading, loadError, openDetail, loadDetail, retryLoad } =
+    useDetailRecord<SmisRiskInspectionTaskDetail>(
+      async (id) => ({ data: await fetchRiskInspectionTaskDetail(id) }),
+      '无法加载巡查任务，请重新加载'
+    )
   const executorSelection = shallowRef<EmployeeIntegrationItem[]>([])
-  const loading = ref(false)
   const submitting = ref(false)
   const completeMode = ref(false)
   const form = reactive<ExecutionForm>({
@@ -264,26 +286,20 @@
       submitting.value = false
     }
   }
+  watch(detail, (value) => {
+    if (!value) return
+    initialize(value)
+    void nextTick(() => formRef.value?.clearValidate())
+  })
   const handleOpen = async (data: TaskExecutionDialogOpenData): Promise<void> => {
     completeMode.value = false
-    detail.value = null
+    openDetail(data.row.id)
     executorSelection.value = []
-    loading.value = true
     await dialogRef.value?.handleOpen(data, {
       title: '执行风险巡查任务',
       subtitle: `${data.row.taskNo} · ${data.row.riskPointName}`,
       contentMaxHeight: 'calc(100vh - 150px)',
-      onOpen: async () => {
-        try {
-          const value = await fetchRiskInspectionTaskDetail(data.row.id)
-          detail.value = value
-          if (value) initialize(value)
-        } finally {
-          loading.value = false
-        }
-        await nextTick()
-        formRef.value?.clearValidate()
-      }
+      onOpen: () => loadDetail(data.row.id)
     })
   }
   defineExpose({ handleOpen })

@@ -52,6 +52,7 @@
   } from '@/components/core/tables/art-table-query/index.vue'
   import type { ColumnOption } from '@/types'
   import { pageInfoHandler } from '@/utils/table/table-utils'
+  import { loadAllDocumentPages } from '@/utils/business/document-detail-list'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import ArtDictDisplay from '@/components/core/base/art-dict-display/index.vue'
   import ArtPermissionGuard from '@/components/core/feedback/art-permission-guard/index.vue'
@@ -272,24 +273,26 @@
       exportFilename: '隐患整改通知书',
       exportSheetName: '整改通知书',
       exportColumns,
-      exportApi: async ({ selectedIds, searchParams, maxRows }) => {
+      exportApi: async ({ selectedIds, searchParams }) => {
         const query = searchParams as SearchModel
-        const result = await fetchRectificationNoticeList({
+        const selected = new Set(selectedIds.map(String))
+        const exportQuery: SmisRectificationNoticeSearchParams = {
           ...query,
-          ids: selectedIds.map(String),
+          ids: undefined,
           inspectionFrom: query.inspectionRange?.[0],
           inspectionTo: query.inspectionRange?.[1]
             ? `${query.inspectionRange[1]}T23:59:59`
-            : undefined,
-          from: 0,
-          to: Math.max((maxRows ?? 10000) - 1, 0)
-        })
+            : undefined
+        }
+        const rows = await loadAllDocumentPages(fetchRectificationNoticeList, exportQuery)
         return {
-          data: result.data.map((row) => ({
-            ...row,
-            inspectionTime: formatDate(row.inspectionTime),
-            rectificationDeadline: formatDate(row.rectificationDeadline)
-          }))
+          data: rows
+            .filter((row) => !selected.size || selected.has(row.id))
+            .map((row) => ({
+              ...row,
+              inspectionTime: formatDate(row.inspectionTime),
+              rectificationDeadline: formatDate(row.rectificationDeadline)
+            }))
         }
       }
     }

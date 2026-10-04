@@ -53,13 +53,16 @@
   } from '@/components/core/tables/art-table-query/index.vue'
   import type { ColumnOption } from '@/types'
   import { pageInfoHandler } from '@/utils/table/table-utils'
+  import { loadAllDocumentPages } from '@/utils/business/document-detail-list'
   import { useArtFeedback } from '@/hooks/core/useArtFeedback'
+  import { useAuth } from '@/hooks/core/useAuth'
   import { useUserStore } from '@/store/modules/user'
   import { useTenantScopeStore } from '@/store/modules/tenant-scope'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import ArtDictDisplay from '@/components/core/base/art-dict-display/index.vue'
   import ArtPermissionGuard from '@/components/core/feedback/art-permission-guard/index.vue'
   import BusinessTableIdentityCell from '@/components/business/business-table-identity-cell/index.vue'
+  import BusinessTableRowActions from '@/components/business/business-table-row-actions/index.vue'
   import BusinessTableWorkspaceActions from '@/components/business/business-table-workspace-actions/index.vue'
   import BusinessWorkspaceHeader, {
     type BusinessWorkspaceMetric
@@ -81,6 +84,7 @@
   }
 
   const { confirmDelete } = useArtFeedback()
+  const { hasAnyAuth } = useAuth()
   const userStore = useUserStore()
   const { getDictMap } = storeToRefs(userStore)
   const { isAllTenants, scopeLabel } = storeToRefs(useTenantScopeStore())
@@ -166,18 +170,19 @@
       exportFilename: '危废仓库定义',
       exportSheetName: '危废仓库',
       exportColumns,
-      exportApi: async ({ selectedIds, searchParams, maxRows }) => {
-        const response = await fetchHazardousWasteWarehouseList({
+      exportApi: async ({ selectedIds, searchParams }) => {
+        const exportQuery: SmisHazardousWasteWarehouseSearchParams = {
           ...(searchParams as SmisHazardousWasteWarehouseSearchParams),
           ids: selectedIds.map(String),
-          purpose: 'export',
-          to: Math.max((maxRows ?? 10000) - 1, 0)
-        })
+          purpose: 'export'
+        }
+        const rows = await loadAllDocumentPages(fetchHazardousWasteWarehouseList, exportQuery)
+        await userStore.ensureDictLoaded('commonEnabledDisabledStatus')
         return {
-          data: response.data.map((row) => ({
+          data: rows.map((row) => ({
             ...row,
             address: [...(row.regionPath || []), row.addressDetail].filter(Boolean).join(' / '),
-            statusLabel: row.status === 'enabled' ? '启用' : '禁用'
+            statusLabel: userStore.getDictLabelByValue('commonEnabledDisabledStatus', row.status)
           }))
         }
       }
@@ -193,118 +198,128 @@
       }
     }
   ])
-  const columnsFactory = (): ColumnOption<SmisHazardousWasteWarehouse>[] => [
-    { type: 'selection', width: 48 },
-    { prop: 'sort', label: '排序', width: 78, align: 'center', sortable: true },
-    ...(isAllTenants.value
-      ? [
-          {
-            prop: 'tenantName',
-            label: '所属租户',
-            minWidth: 160,
-            showOverflowTooltip: true,
-            formatter: (row: SmisHazardousWasteWarehouse) => row.tenantName || '—'
-          } as ColumnOption<SmisHazardousWasteWarehouse>
-        ]
-      : []),
-    {
-      prop: 'warehouseName',
-      label: '仓库',
-      minWidth: 220,
-      fixed: 'left',
-      formatter: (row) => (
-        <BusinessTableIdentityCell
-          primary={row.warehouseName}
-          secondary={row.warehouseCode}
-          icon="ri:archive-drawer-line"
-        />
-      )
-    },
-    {
-      prop: 'keeperEmployeeName',
-      label: '库管员',
-      minWidth: 145,
-      showOverflowTooltip: true,
-      formatter: (row) =>
-        row.keeperEmployeeName ? (
+  const columnsFactory = (): ColumnOption<SmisHazardousWasteWarehouse>[] => {
+    const columns: ColumnOption<SmisHazardousWasteWarehouse>[] = [
+      { type: 'selection', width: 48 },
+      { prop: 'sort', label: '排序', width: 78, align: 'center', sortable: true },
+      ...(isAllTenants.value
+        ? [
+            {
+              prop: 'tenantName',
+              label: '所属租户',
+              minWidth: 160,
+              showOverflowTooltip: true,
+              formatter: (row: SmisHazardousWasteWarehouse) => row.tenantName || '—'
+            } as ColumnOption<SmisHazardousWasteWarehouse>
+          ]
+        : []),
+      {
+        prop: 'warehouseName',
+        label: '仓库',
+        minWidth: 220,
+        fixed: 'left',
+        formatter: (row) => (
           <BusinessTableIdentityCell
-            primary={row.keeperEmployeeName}
-            secondary={row.keeperEmployeeNo}
+            primary={row.warehouseName}
+            secondary={row.warehouseCode}
+            icon="ri:archive-drawer-line"
           />
-        ) : (
-          '未配置'
         )
-    },
-    {
-      prop: 'responsibleEmployeeName',
-      label: '负责人',
-      minWidth: 145,
-      showOverflowTooltip: true,
-      formatter: (row) =>
-        row.responsibleEmployeeName ? (
-          <BusinessTableIdentityCell
-            primary={row.responsibleEmployeeName}
-            secondary={row.responsibleEmployeeNo}
-          />
-        ) : (
-          '未配置'
+      },
+      {
+        prop: 'keeperEmployeeName',
+        label: '库管员',
+        minWidth: 145,
+        showOverflowTooltip: true,
+        formatter: (row) =>
+          row.keeperEmployeeName ? (
+            <BusinessTableIdentityCell
+              primary={row.keeperEmployeeName}
+              secondary={row.keeperEmployeeNo}
+            />
+          ) : (
+            '未配置'
+          )
+      },
+      {
+        prop: 'responsibleEmployeeName',
+        label: '负责人',
+        minWidth: 145,
+        showOverflowTooltip: true,
+        formatter: (row) =>
+          row.responsibleEmployeeName ? (
+            <BusinessTableIdentityCell
+              primary={row.responsibleEmployeeName}
+              secondary={row.responsibleEmployeeNo}
+            />
+          ) : (
+            '未配置'
+          )
+      },
+      {
+        prop: 'addressDetail',
+        label: '库房地址',
+        minWidth: 230,
+        showOverflowTooltip: true,
+        formatter: (row) =>
+          [...(row.regionPath || []), row.addressDetail].filter(Boolean).join(' / ') || '—'
+      },
+      {
+        prop: 'tagStyle',
+        label: '标签样式',
+        width: 130,
+        align: 'center',
+        formatter: (row) => (
+          <ElTag type={row.tagStyle || 'info'} effect="light">
+            <span style={{ color: row.textColor || undefined }}>{row.warehouseName}</span>
+          </ElTag>
         )
-    },
-    {
-      prop: 'addressDetail',
-      label: '库房地址',
-      minWidth: 230,
-      showOverflowTooltip: true,
-      formatter: (row) =>
-        [...(row.regionPath || []), row.addressDetail].filter(Boolean).join(' / ') || '—'
-    },
-    {
-      prop: 'tagStyle',
-      label: '标签样式',
-      width: 130,
-      align: 'center',
-      formatter: (row) => (
-        <ElTag type={row.tagStyle || 'info'} effect="light">
-          <span style={{ color: row.textColor || undefined }}>{row.warehouseName}</span>
-        </ElTag>
-      )
-    },
-    {
-      prop: 'status',
-      label: '状态',
-      width: 100,
-      align: 'center',
-      formatter: (row) => (
-        <ArtDictDisplay dictCode="commonEnabledDisabledStatus" value={row.status} display="tag" />
-      )
-    },
-    {
-      prop: 'updateTime',
-      label: '更新时间',
-      width: 164,
-      formatter: (row) => dayjs(row.updateTime).format('YYYY-MM-DD HH:mm')
-    },
-    {
-      prop: 'operation',
-      label: '操作',
-      width: 112,
-      fixed: 'right',
-      formatter: (row) => (
-        <div class="hazardous-warehouse-page__actions">
-          <ArtButtonTable
-            type="edit"
-            permission="SmisHazardousWasteWarehouseDefinition:Edit"
-            onClick={() => openDialog(row)}
-          />
-          <ArtButtonTable
-            type="delete"
-            permission="SmisHazardousWasteWarehouseDefinition:Delete"
-            onClick={() => void handleDelete(row)}
-          />
-        </div>
-      )
-    }
-  ]
+      },
+      {
+        prop: 'status',
+        label: '状态',
+        width: 100,
+        align: 'center',
+        formatter: (row) => (
+          <ArtDictDisplay dictCode="commonEnabledDisabledStatus" value={row.status} display="tag" />
+        )
+      },
+      {
+        prop: 'updateTime',
+        label: '更新时间',
+        width: 164,
+        formatter: (row) => dayjs(row.updateTime).format('YYYY-MM-DD HH:mm')
+      },
+      {
+        prop: 'operation',
+        label: '操作',
+        width: 112,
+        fixed: 'right',
+        formatter: (row) => (
+          <BusinessTableRowActions>
+            <ArtButtonTable
+              type="edit"
+              permission="SmisHazardousWasteWarehouseDefinition:Edit"
+              onClick={() => openDialog(row)}
+            />
+            <ArtButtonTable
+              type="delete"
+              permission="SmisHazardousWasteWarehouseDefinition:Delete"
+              onClick={() => void handleDelete(row)}
+            />
+          </BusinessTableRowActions>
+        )
+      }
+    ]
+    return columns.filter(
+      (column) =>
+        column.prop !== 'operation' ||
+        hasAnyAuth([
+          'SmisHazardousWasteWarehouseDefinition:Edit',
+          'SmisHazardousWasteWarehouseDefinition:Delete'
+        ])
+    )
+  }
   const fetchTableData = async (params: TableParams, options?: TableRequestOptions) => {
     const response = await fetchHazardousWasteWarehouseList({
       ...params,
@@ -342,11 +357,6 @@
       flex: 1;
       min-width: 0;
       min-height: 0;
-    }
-
-    :deep(.hazardous-warehouse-page__actions) {
-      display: flex;
-      align-items: center;
     }
   }
 </style>

@@ -41,10 +41,12 @@
   </ArtPermissionGuard>
 </template>
 <script setup lang="tsx">
+  import { useAuth } from '@/hooks/core/useAuth'
   import { useDictionaryOptions } from '@/hooks/core/useDictionaryOptions'
   import dayjs from 'dayjs'
   import { ElTag } from 'element-plus'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
+  import BusinessTableRowActions from '@/components/business/business-table-row-actions/index.vue'
   import BusinessTableWorkspaceActions from '@/components/business/business-table-workspace-actions/index.vue'
   import BusinessWorkspaceHeader, {
     type BusinessWorkspaceMetric
@@ -58,6 +60,7 @@
   } from '@/components/core/tables/art-table-query/index.vue'
   import type { ColumnOption } from '@/types'
   import { pageInfoHandler } from '@/utils/table/table-utils'
+  import { loadAllDocumentPages } from '@/utils/business/document-detail-list'
   import { useArtFeedback } from '@/hooks/core/useArtFeedback'
   import { useUserStore } from '@/store/modules/user'
   import { useTenantScopeStore } from '@/store/modules/tenant-scope'
@@ -77,6 +80,7 @@
     (value) => value === 'true'
   )
   defineOptions({ name: 'SmisDualControlDuplicateConfiguration' })
+  const { hasAnyAuth } = useAuth()
   type TableParams = SmisDuplicateConfigurationSearchParams &
     Pick<Api.Common.PaginationParams, 'current' | 'size'>
   interface DialogExpose {
@@ -204,16 +208,23 @@
       exportFilename: '重复配置',
       exportSheetName: '重复规则',
       exportColumns: excelColumns,
-      exportApi: async ({ selectedIds, searchParams, maxRows }) => {
-        const result = await fetchDuplicateConfigurations({
+      exportApi: async ({ selectedIds, searchParams }) => {
+        const exportQuery: SmisDuplicateConfigurationSearchParams = {
           ...(searchParams as SmisDuplicateConfigurationSearchParams),
           tenantId: effectiveTenantId.value,
-          ids: selectedIds.map(String),
-          to: Math.max((maxRows ?? 10000) - 1, 0)
-        })
+          ids: selectedIds.map(String)
+        }
+        const rows = await loadAllDocumentPages(fetchDuplicateConfigurations, exportQuery)
+        await Promise.all([
+          userStore.ensureDictLoaded('commonEnabledDisabledVoidedStatus'),
+          userStore.ensureDictLoaded('smisTagStyle'),
+          userStore.ensureDictLoaded('smisFrequencyUnit')
+        ])
         return {
-          data: result.data.map((row) => ({
+          data: rows.map((row) => ({
             ...row,
+            status: userStore.getDictLabelByValue('commonEnabledDisabledVoidedStatus', row.status),
+            tagStyle: userStore.getDictLabelByValue('smisTagStyle', row.tagStyle),
             menuTitle: menuTitle(row),
             repeatEnabled: row.repeatEnabled ? '重复' : '不重复',
             repeatRule: repeatRule(row),
@@ -248,102 +259,112 @@
       }
     }
   ])
-  const columnsFactory = (): ColumnOption<SmisDuplicateConfiguration>[] => [
-    { type: 'selection', width: 48 },
-    { type: 'globalIndex', label: '序号', width: 70 },
-    {
-      prop: 'contentItem',
-      label: '内容事项',
-      minWidth: 210,
-      fixed: 'left',
-      showOverflowTooltip: true,
-      formatter: (row) => (
-        <span class="duplicate-page__content">
-          <i style={{ background: row.textColor || 'var(--theme-color)' }} />
-          <strong style={{ color: row.textColor || undefined }}>{row.contentItem}</strong>
-        </span>
-      )
-    },
-    {
-      prop: 'menuId',
-      label: '关联菜单功能',
-      minWidth: 180,
-      showOverflowTooltip: true,
-      formatter: menuTitle
-    },
-    {
-      prop: 'repeatEnabled',
-      label: '重复',
-      width: 90,
-      align: 'center',
-      formatter: (row) => (
-        <ElTag type={row.repeatEnabled ? 'success' : 'info'} effect="plain">
-          {row.repeatEnabled ? '重复' : '不重复'}
-        </ElTag>
-      )
-    },
-    { prop: 'repeatFrequency', label: '重复规则', minWidth: 130, formatter: repeatRule },
-    {
-      prop: 'calendarDays',
-      label: '日历',
-      minWidth: 180,
-      showOverflowTooltip: true,
-      formatter: calendarRule
-    },
-    {
-      prop: 'deadlineTime',
-      label: '截止时间',
-      width: 100,
-      formatter: (row) => row.deadlineTime?.slice(0, 5) || '—'
-    },
-    { prop: 'sort', label: '排序', width: 72, align: 'right' },
-    {
-      prop: 'status',
-      label: '状态',
-      width: 96,
-      align: 'center',
-      formatter: (row) => (
-        <ElTag
-          type={
-            row.status === 'enabled' ? 'success' : row.status === 'disabled' ? 'warning' : 'info'
-          }
-          effect="plain"
-        >
-          {statusOptions.value.find((i) => i.value === row.status)?.label || row.status}
-        </ElTag>
-      )
-    },
-    { prop: 'createBy', label: '创建人', minWidth: 110, showOverflowTooltip: true },
-    {
-      prop: 'createTime',
-      label: '创建时间',
-      width: 164,
-      formatter: (row) => dayjs(row.createTime).format('YYYY-MM-DD HH:mm')
-    },
-    {
-      prop: 'operation',
-      label: '操作',
-      width: 140,
-      fixed: 'right',
-      formatter: (row) => (
-        <div class="duplicate-page__actions">
-          <ArtButtonTable
-            type="edit"
-            permission="SmisDualControlDuplicateConfiguration:Edit"
-            label="编辑重复配置"
-            disabled={row.status === 'voided'}
-            onClick={() => openDialog(row)}
-          />
-          <ArtButtonTable
-            type="delete"
-            permission="SmisDualControlDuplicateConfiguration:Delete"
-            label="删除重复配置"
-            onClick={() => void handleDelete(row)}
-          />
-        </div>
-      )
-    }
-  ]
+  const columnsFactory = (): ColumnOption<SmisDuplicateConfiguration>[] => {
+    const columns: ColumnOption<SmisDuplicateConfiguration>[] = [
+      { type: 'selection', width: 48 },
+      { type: 'globalIndex', label: '序号', width: 70 },
+      {
+        prop: 'contentItem',
+        label: '内容事项',
+        minWidth: 210,
+        fixed: 'left',
+        showOverflowTooltip: true,
+        formatter: (row) => (
+          <span class="duplicate-page__content">
+            <i style={{ background: row.textColor || 'var(--theme-color)' }} />
+            <strong style={{ color: row.textColor || undefined }}>{row.contentItem}</strong>
+          </span>
+        )
+      },
+      {
+        prop: 'menuId',
+        label: '关联菜单功能',
+        minWidth: 180,
+        showOverflowTooltip: true,
+        formatter: menuTitle
+      },
+      {
+        prop: 'repeatEnabled',
+        label: '重复',
+        width: 90,
+        align: 'center',
+        formatter: (row) => (
+          <ElTag type={row.repeatEnabled ? 'success' : 'info'} effect="plain">
+            {row.repeatEnabled ? '重复' : '不重复'}
+          </ElTag>
+        )
+      },
+      { prop: 'repeatFrequency', label: '重复规则', minWidth: 130, formatter: repeatRule },
+      {
+        prop: 'calendarDays',
+        label: '日历',
+        minWidth: 180,
+        showOverflowTooltip: true,
+        formatter: calendarRule
+      },
+      {
+        prop: 'deadlineTime',
+        label: '截止时间',
+        width: 100,
+        formatter: (row) => row.deadlineTime?.slice(0, 5) || '—'
+      },
+      { prop: 'sort', label: '排序', width: 72, align: 'right' },
+      {
+        prop: 'status',
+        label: '状态',
+        width: 96,
+        align: 'center',
+        formatter: (row) => (
+          <ElTag
+            type={
+              row.status === 'enabled' ? 'success' : row.status === 'disabled' ? 'warning' : 'info'
+            }
+            effect="plain"
+          >
+            {statusOptions.value.find((i) => i.value === row.status)?.label || row.status}
+          </ElTag>
+        )
+      },
+      { prop: 'createBy', label: '创建人', minWidth: 110, showOverflowTooltip: true },
+      {
+        prop: 'createTime',
+        label: '创建时间',
+        width: 164,
+        formatter: (row) => dayjs(row.createTime).format('YYYY-MM-DD HH:mm')
+      },
+      {
+        prop: 'operation',
+        label: '操作',
+        width: 140,
+        fixed: 'right',
+        formatter: (row) => (
+          <BusinessTableRowActions>
+            <ArtButtonTable
+              type="edit"
+              permission="SmisDualControlDuplicateConfiguration:Edit"
+              label="编辑重复配置"
+              disabled={row.status === 'voided'}
+              onClick={() => openDialog(row)}
+            />
+            <ArtButtonTable
+              type="delete"
+              permission="SmisDualControlDuplicateConfiguration:Delete"
+              label="删除重复配置"
+              onClick={() => void handleDelete(row)}
+            />
+          </BusinessTableRowActions>
+        )
+      }
+    ]
+    return columns.filter(
+      (column) =>
+        column.prop !== 'operation' ||
+        hasAnyAuth([
+          'SmisDualControlDuplicateConfiguration:Edit',
+          'SmisDualControlDuplicateConfiguration:Delete'
+        ])
+    )
+  }
   const fetchTableData = async (params: TableParams) => {
     const { from, to } = pageInfoHandler({ current: params.current, size: params.size })
     return await fetchDuplicateConfigurations({
@@ -423,11 +444,6 @@
         text-overflow: ellipsis;
         white-space: nowrap;
       }
-    }
-
-    :deep(.duplicate-page__actions) {
-      display: flex;
-      align-items: center;
     }
   }
 </style>

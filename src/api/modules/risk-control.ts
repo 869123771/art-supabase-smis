@@ -1,5 +1,6 @@
 import { buildSupabaseRpcRange } from '@/utils/supabase'
 import { normalizeNullableText } from '@/utils/form/normalize'
+import { createTenantScopeReadGuard } from '@/utils/tenant-scope-context'
 import { omit } from 'lodash-es'
 import { useSupabase } from '@/hooks'
 import type {
@@ -176,11 +177,27 @@ export async function fetchRiskInspectionTaskList(params: SmisRiskInspectionTask
 }
 
 export async function fetchRiskInspectionTaskDetail(id: string) {
-  const result = await responseHandle<SmisRiskInspectionTaskDetail>(
+  const assertTenantScope = createTenantScopeReadGuard()
+  const result = await responseHandle<Omit<SmisRiskInspectionTaskDetail, 'tenantId'>>(
     () => supabase.rpc('smis_get_risk_inspection_task_secure', { p_id: id }),
-    { showErrorMessage: true }
+    { breakReturn: true, errorMessage: '无法加载巡查任务，请重新加载' }
   )
-  return result.data ?? null
+  assertTenantScope()
+  const detail = result.data
+  if (!detail) throw new Error('无法加载巡查任务，请重新加载')
+  // The detail RPC omits the tenant; resolve it from the authorized parent record.
+  const parent = await responseHandle<{ tenantId: string }>(
+    () =>
+      supabase.from('smis_risk_inspection_task').select('tenant_id').eq('id', detail.id).single(),
+    {
+      showErrorMessage: false,
+      breakReturn: true,
+      errorMessage: '无法确认巡查任务所属租户，请刷新后重试'
+    }
+  )
+  assertTenantScope()
+  if (!parent.data?.tenantId) throw new Error('无法确认巡查任务所属租户，请刷新后重试')
+  return { ...detail, tenantId: parent.data.tenantId }
 }
 
 export async function cancelRiskInspectionTask(id: string, reason: string) {

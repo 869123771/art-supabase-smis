@@ -12,7 +12,8 @@
       </div>
       <ArtForm
         ref="formRef"
-        v-model="form"
+        :model-value="form"
+        @update:model-value="Object.assign(form, $event)"
         :rules="rules"
         label-position="top"
         custom-layout

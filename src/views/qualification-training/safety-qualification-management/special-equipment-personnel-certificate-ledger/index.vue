@@ -52,6 +52,7 @@
   } from '@/components/core/tables/art-table-query/index.vue'
   import type { ColumnOption } from '@/types'
   import { pageInfoHandler } from '@/utils/table/table-utils'
+  import { loadAllDocumentPages } from '@/utils/business/document-detail-list'
   import { useArtFeedback } from '@/hooks/core/useArtFeedback'
   import { useUserStore } from '@/store/modules/user'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
@@ -366,17 +367,16 @@
       exportFilename: pageTitle.value,
       exportSheetName: pageTitle.value,
       exportColumns,
-      exportApi: async ({ maxRows }) => ({
+      exportApi: async () => ({
         data: formatExportRows(
-          (
-            await fetchPersonnelCertificateList({
-              ...searchQuery,
-              certificateCategory: category.value ?? searchQuery.certificateCategory,
-              purpose: 'export',
-              from: 0,
-              to: maxRows - 1
-            })
-          ).data
+          await loadAllDocumentPages<
+            SmisPersonnelCertificate,
+            SmisPersonnelCertificateSearchParams
+          >(fetchPersonnelCertificateList, {
+            ...searchQuery,
+            certificateCategory: category.value ?? searchQuery.certificateCategory,
+            purpose: 'export'
+          })
         )
       })
     }

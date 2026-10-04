@@ -1,6 +1,6 @@
 <template>
   <ArtPermissionGuard permission="SmisExamManagement:View">
-    <div class="exam-page business-workspace-page art-full-height">
+    <div class="exam-page business-workspace-page art-full-height min-w-0 gap-3">
       <BusinessWorkspaceHeader
         density="compact"
         eyebrow="ASSESSMENT OPERATIONS"
@@ -20,7 +20,7 @@
         /></template>
       </BusinessWorkspaceHeader>
 
-      <div class="exam-page__body art-card-xs">
+      <div class="exam-page__body art-card-xs flex min-h-0 flex-1 flex-col px-[14px] pb-[14px]">
         <ElTabs v-model="activeTab" class="exam-page__tabs"
           ><ElTabPane label="试卷管理" name="paper" /><ElTabPane
             v-if="hasAuth('SmisExamManagement:ViewRecord')"
@@ -31,7 +31,7 @@
           v-show="activeTab === 'paper'"
           ref="paperTableRef"
           v-model="paperQuery"
-          class="exam-page__table"
+          class="exam-page__table min-h-0 min-w-0 flex-1"
           :api-fn="fetchPapers"
           :search-items="paperSearchItems"
           :columns-factory="paperColumns"
@@ -52,7 +52,7 @@
           v-show="activeTab === 'record'"
           ref="recordTableRef"
           v-model="recordQuery"
-          class="exam-page__table"
+          class="exam-page__table min-h-0 min-w-0 flex-1"
           :api-fn="fetchRecords"
           :search-items="recordSearchItems"
           :columns-factory="recordColumns"
@@ -85,7 +85,8 @@
         </div>
         <ArtForm
           ref="paperFormRef"
-          v-model="paperForm"
+          :model-value="paperForm"
+          @update:model-value="Object.assign(paperForm, $event)"
           :items="paperItems"
           :rules="paperRules"
           :span="12"
@@ -219,7 +220,7 @@
                   <ElScrollbar height="300px" class="exam-page__question-list">
                     <ElCheckboxGroup v-if="filteredQuestions.length" v-model="selectedQuestionIds">
                       <ElCheckbox
-                        v-for="question in filteredQuestions"
+                        v-for="question in visibleQuestions"
                         :key="question.id"
                         :value="question.id"
                         class="exam-page__question-option"
@@ -246,6 +247,17 @@
                       :visual-size="64"
                     />
                   </ElScrollbar>
+                  <ElPagination
+                    v-if="filteredQuestions.length > questionPageSize"
+                    v-model:current-page="questionPage"
+                    :page-size="questionPageSize"
+                    :total="filteredQuestions.length"
+                    :pager-count="5"
+                    layout="prev, pager, next"
+                    size="small"
+                    class="flex flex-wrap justify-center"
+                    aria-label="可选题目分页"
+                  />
                 </section>
                 <section class="exam-page__selected">
                   <header>
@@ -443,6 +455,7 @@
   } from '@/components/core/tables/art-table-query/index.vue'
   import type { ColumnOption } from '@/types'
   import { pageInfoHandler } from '@/utils/table/table-utils'
+  import { loadAllDocumentPages } from '@/utils/business/document-detail-list'
   import { useArtFeedback } from '@/hooks/core/useArtFeedback'
   import { useAuth } from '@/hooks/core/useAuth'
   import { useUserStore } from '@/store/modules/user'
@@ -494,6 +507,7 @@
     type SmisExamRecordOverview,
     type SmisExamRecordSearchParams,
     type SmisQuestion,
+    type SmisQuestionBankSearchParams,
     type SmisQuestionCategory
   } from '@smis/api'
 
@@ -613,6 +627,17 @@
       (item) => !questionKeyword.value || item.stem.includes(questionKeyword.value.trim())
     )
   )
+  const questionPageSize = 50
+  const questionPage = ref(1)
+  const visibleQuestions = computed(() =>
+    filteredQuestions.value.slice(
+      (questionPage.value - 1) * questionPageSize,
+      questionPage.value * questionPageSize
+    )
+  )
+  watch(filteredQuestions, () => {
+    questionPage.value = 1
+  })
   const totalScore = computed(() => calculateExamTotalScore(selectedQuestions.value))
   const passingScoreInvalid = computed(
     () => totalScore.value > 0 && Number(paperForm.passingScore) > totalScore.value
@@ -870,12 +895,20 @@
       loadingText: '正在加载题库与试卷…',
       onOpen: async (_data, api) => {
         try {
+          let bankCategories: SmisQuestionCategory[] = []
           const [bank, value] = await Promise.all([
-            fetchQuestionBankList({ status: 'enabled', from: 0, to: 4999 }),
+            loadAllDocumentPages<SmisQuestion, SmisQuestionBankSearchParams>(
+              async (params) => {
+                const page = await fetchQuestionBankList(params)
+                if (params.from === 0) bankCategories = page.categories
+                return page
+              },
+              { status: 'enabled' }
+            ),
             row ? fetchExamDetail(row.id, null, true) : Promise.resolve(undefined)
           ])
-          questions.value = bank.data
-          categories.value = bank.categories
+          questions.value = bank
+          categories.value = bankCategories
           selectedQuestions.value = (value?.questions ?? []).map((item) => ({
             ...item,
             questionId: item.id
@@ -1265,7 +1298,10 @@
         }
       ],
       exportApi: async () => ({
-        data: (await fetchExamPaperList({ ...paperQuery.value, from: 0, to: 4999 })).data
+        data: await loadAllDocumentPages<SmisExamPaper, SmisExamPaperSearchParams>(
+          fetchExamPaperList,
+          { ...paperQuery.value }
+        )
       })
     }
   ])
@@ -1296,7 +1332,10 @@
         { key: 'submittedAt', title: '交卷时间' }
       ],
       exportApi: async () => ({
-        data: (await fetchExamRecordList({ ...recordQuery.value, from: 0, to: 4999 })).data
+        data: await loadAllDocumentPages<SmisExamRecord, SmisExamRecordSearchParams>(
+          fetchExamRecordList,
+          { ...recordQuery.value }
+        )
       })
     }
   ])
@@ -1325,31 +1364,12 @@
 </script>
 
 <style scoped lang="scss">
-  .exam-page {
-    gap: 12px;
-    min-width: 0;
-  }
-
-  .exam-page__body {
-    display: flex;
-    flex: 1;
-    flex-direction: column;
-    min-height: 0;
-    padding: 0 14px 14px;
-  }
-
   .exam-page__tabs {
     flex: none;
 
     :deep(.el-tabs__header) {
       margin-bottom: 10px;
     }
-  }
-
-  .exam-page__table {
-    flex: 1;
-    min-width: 0;
-    min-height: 0;
   }
 
   .exam-page__paper-hero {

@@ -1,6 +1,6 @@
 <template>
   <ArtPermissionGuard permission="SmisQuestionBankManagement:View">
-    <div class="question-bank business-workspace-page art-full-height">
+    <div class="question-bank business-workspace-page art-full-height min-w-0 gap-3">
       <BusinessWorkspaceHeader
         density="compact"
         eyebrow="ASSESSMENT CONTENT"
@@ -16,7 +16,7 @@
         ><template #actions><BusinessTableWorkspaceActions :table="tableRef" /></template
       ></BusinessWorkspaceHeader>
 
-      <div class="question-bank__workspace">
+      <div class="question-bank__workspace min-h-0 flex-1">
         <ArtWorkspaceSplitter
           primary-size="320px"
           primary-min="280px"
@@ -42,7 +42,7 @@
           <ArtTableQuery
             ref="tableRef"
             v-model="searchQuery"
-            class="question-bank__table"
+            class="question-bank__table min-h-0 min-w-0"
             :api-fn="fetchTableData"
             :search-items="searchItems"
             :columns-factory="columnsFactory"
@@ -65,7 +65,7 @@
 
       <ArtDialog ref="categoryDialogRef" size="sm">
         <ElAlert
-          class="question-bank__category-tip"
+          class="mb-[18px]"
           :title="
             categoryForm.id
               ? '调整上级分类会同步改变左侧树位置；停用分类后不再用于新增题目。'
@@ -77,7 +77,8 @@
         />
         <ArtForm
           ref="categoryFormRef"
-          v-model="categoryForm"
+          :model-value="categoryForm"
+          @update:model-value="Object.assign(categoryForm, $event)"
           :items="categoryItems"
           :rules="categoryRules"
           :span="24"
@@ -96,7 +97,8 @@
       <ArtDialog ref="questionDialogRef" size="xl">
         <ArtForm
           ref="questionFormRef"
-          v-model="questionForm"
+          :model-value="questionForm"
+          @update:model-value="Object.assign(questionForm, $event)"
           :items="questionItems"
           :rules="questionRules"
           :span="12"
@@ -106,7 +108,7 @@
           :show-submit="false"
         >
           <template #options>
-            <div class="question-bank__options">
+            <div class="grid gap-[10px]">
               <div
                 v-for="(option, index) in questionForm.options"
                 :key="option.key"
@@ -167,6 +169,7 @@
   } from '@/components/core/tables/art-table-query/index.vue'
   import type { ColumnOption } from '@/types'
   import { pageInfoHandler } from '@/utils/table/table-utils'
+  import { loadAllDocumentPages } from '@/utils/business/document-detail-list'
   import TreeUtils from '@/utils/tree'
   import { useArtFeedback } from '@/hooks/core/useArtFeedback'
   import { useUserStore } from '@/store/modules/user'
@@ -708,7 +711,10 @@
         }
       ],
       exportApi: async () => ({
-        data: (await fetchQuestionBankList({ ...searchQuery.value, from: 0, to: 4999 })).data
+        data: await loadAllDocumentPages<SmisQuestion, SmisQuestionBankSearchParams>(
+          fetchQuestionBankList,
+          { ...searchQuery.value }
+        )
       })
     }
   ])
@@ -735,25 +741,6 @@
 </script>
 
 <style scoped lang="scss">
-  .question-bank {
-    gap: 12px;
-    min-width: 0;
-  }
-
-  .question-bank__workspace {
-    flex: 1;
-    min-height: 0;
-  }
-
-  .question-bank__table {
-    min-width: 0;
-    min-height: 0;
-  }
-
-  .question-bank__category-tip {
-    margin-bottom: 18px;
-  }
-
   :deep(.question-bank__stem) {
     display: grid;
     grid-template-columns: 30px minmax(0, 1fr);
@@ -781,11 +768,6 @@
       margin-top: 3px;
       color: var(--el-text-color-secondary);
     }
-  }
-
-  .question-bank__options {
-    display: grid;
-    gap: 10px;
   }
 
   .question-bank__option {

@@ -2,6 +2,7 @@
   <ArtSectionCard
     :show-scrollbar="false"
     class="operation-type-navigator"
+    :class="{ 'has-state': loading || error || !data.length }"
     title="作业类型"
     subtitle="选择类型后同步筛选右侧配置"
     :loading="loading"
@@ -222,6 +223,14 @@
         margin-top: 3px;
         font-size: 11px;
         color: var(--el-text-color-secondary);
+      }
+    }
+
+    @media (width <= 820px) {
+      height: max(260px, 36vh);
+
+      &.has-state {
+        height: auto;
       }
     }
   }

@@ -43,9 +43,11 @@
 </template>
 
 <script setup lang="tsx">
+  import { useAuth } from '@/hooks/core/useAuth'
   import dayjs from 'dayjs'
   import { ElTag } from 'element-plus'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
+  import BusinessTableRowActions from '@/components/business/business-table-row-actions/index.vue'
   import BusinessTableWorkspaceActions from '@/components/business/business-table-workspace-actions/index.vue'
   import BusinessWorkspaceHeader, {
     type BusinessWorkspaceMetric
@@ -59,6 +61,7 @@
   } from '@/components/core/tables/art-table-query/index.vue'
   import type { ColumnOption } from '@/types'
   import { pageInfoHandler } from '@/utils/table/table-utils'
+  import { loadAllDocumentPages } from '@/utils/business/document-detail-list'
   import { useArtFeedback } from '@/hooks/core/useArtFeedback'
   import { useUserStore } from '@/store/modules/user'
   import { useTenantScopeStore } from '@/store/modules/tenant-scope'
@@ -74,6 +77,7 @@
   } from './modules/inspection-type-dialog.vue'
 
   defineOptions({ name: 'SmisDualControlInspectionType' })
+  const { hasAnyAuth } = useAuth()
   type TableParams = SmisInspectionTypeSearchParams &
     Pick<Api.Common.PaginationParams, 'current' | 'size'>
   interface DialogExpose {
@@ -170,14 +174,24 @@
       exportFilename: '排查类型',
       exportSheetName: '排查类型',
       exportColumns: excelColumns,
-      exportApi: async ({ selectedIds, searchParams, maxRows }) => {
-        const result = await fetchInspectionTypes({
+      exportApi: async ({ selectedIds, searchParams }) => {
+        const exportQuery: SmisInspectionTypeSearchParams = {
           ...(searchParams as SmisInspectionTypeSearchParams),
           tenantId: effectiveTenantId.value,
-          ids: selectedIds.map(String),
-          to: Math.max((maxRows ?? 10000) - 1, 0)
-        })
-        return { data: result.data }
+          ids: selectedIds.map(String)
+        }
+        const rows = await loadAllDocumentPages(fetchInspectionTypes, exportQuery)
+        await Promise.all([
+          userStore.ensureDictLoaded('commonEnabledDisabledVoidedStatus'),
+          userStore.ensureDictLoaded('smisTagStyle')
+        ])
+        return {
+          data: rows.map((row) => ({
+            ...row,
+            status: userStore.getDictLabelByValue('commonEnabledDisabledVoidedStatus', row.status),
+            tagStyle: userStore.getDictLabelByValue('smisTagStyle', row.tagStyle)
+          }))
+        }
       }
     },
     {
@@ -204,86 +218,93 @@
     }
   ])
 
-  const columnsFactory = (): ColumnOption<SmisInspectionType>[] => [
-    { type: 'selection', width: 48 },
-    { type: 'globalIndex', label: '序号', width: 70 },
-    {
-      prop: 'typeCode',
-      label: '排查类型编号',
-      minWidth: 170,
-      fixed: 'left',
-      showOverflowTooltip: true,
-      formatter: (row) => <span class="inspection-type-page__code">{row.typeCode}</span>
-    },
-    {
-      prop: 'typeName',
-      label: '排查类型',
-      minWidth: 180,
-      formatter: (row) => (
-        <strong style={{ color: row.textColor || undefined }}>{row.typeName}</strong>
-      )
-    },
-    {
-      prop: 'tagStyle',
-      label: '标签样式',
-      width: 120,
-      align: 'center',
-      formatter: (row) => (
-        <ElTag type={row.tagStyle || 'info'} effect="light">
-          {tagOptions.value.find((item) => item.value === row.tagStyle)?.label ||
-            row.tagStyle ||
-            '默认'}
-        </ElTag>
-      )
-    },
-    { prop: 'sort', label: '排序', width: 80, align: 'right' },
-    {
-      prop: 'status',
-      label: '状态',
-      width: 100,
-      align: 'center',
-      formatter: (row) => (
-        <ElTag
-          type={
-            row.status === 'enabled' ? 'success' : row.status === 'disabled' ? 'warning' : 'info'
-          }
-          effect="plain"
-        >
-          {statusOptions.value.find((item) => item.value === row.status)?.label || row.status}
-        </ElTag>
-      )
-    },
-    { prop: 'createBy', label: '创建人', minWidth: 120, showOverflowTooltip: true },
-    {
-      prop: 'createTime',
-      label: '创建时间',
-      width: 164,
-      formatter: (row) => dayjs(row.createTime).format('YYYY-MM-DD HH:mm')
-    },
-    {
-      prop: 'operation',
-      label: '操作',
-      width: 140,
-      fixed: 'right',
-      formatter: (row) => (
-        <div class="inspection-type-page__actions">
-          <ArtButtonTable
-            type="edit"
-            permission="SmisDualControlInspectionType:Edit"
-            label="编辑排查类型"
-            disabled={row.status === 'voided'}
-            onClick={() => openDialog(row)}
-          />
-          <ArtButtonTable
-            type="delete"
-            permission="SmisDualControlInspectionType:Delete"
-            label="删除排查类型"
-            onClick={() => void handleDelete(row)}
-          />
-        </div>
-      )
-    }
-  ]
+  const columnsFactory = (): ColumnOption<SmisInspectionType>[] => {
+    const columns: ColumnOption<SmisInspectionType>[] = [
+      { type: 'selection', width: 48 },
+      { type: 'globalIndex', label: '序号', width: 70 },
+      {
+        prop: 'typeCode',
+        label: '排查类型编号',
+        minWidth: 170,
+        fixed: 'left',
+        showOverflowTooltip: true,
+        formatter: (row) => <span class="inspection-type-page__code">{row.typeCode}</span>
+      },
+      {
+        prop: 'typeName',
+        label: '排查类型',
+        minWidth: 180,
+        formatter: (row) => (
+          <strong style={{ color: row.textColor || undefined }}>{row.typeName}</strong>
+        )
+      },
+      {
+        prop: 'tagStyle',
+        label: '标签样式',
+        width: 120,
+        align: 'center',
+        formatter: (row) => (
+          <ElTag type={row.tagStyle || 'info'} effect="light">
+            {tagOptions.value.find((item) => item.value === row.tagStyle)?.label ||
+              row.tagStyle ||
+              '默认'}
+          </ElTag>
+        )
+      },
+      { prop: 'sort', label: '排序', width: 80, align: 'right' },
+      {
+        prop: 'status',
+        label: '状态',
+        width: 100,
+        align: 'center',
+        formatter: (row) => (
+          <ElTag
+            type={
+              row.status === 'enabled' ? 'success' : row.status === 'disabled' ? 'warning' : 'info'
+            }
+            effect="plain"
+          >
+            {statusOptions.value.find((item) => item.value === row.status)?.label || row.status}
+          </ElTag>
+        )
+      },
+      { prop: 'createBy', label: '创建人', minWidth: 120, showOverflowTooltip: true },
+      {
+        prop: 'createTime',
+        label: '创建时间',
+        width: 164,
+        formatter: (row) => dayjs(row.createTime).format('YYYY-MM-DD HH:mm')
+      },
+      {
+        prop: 'operation',
+        label: '操作',
+        width: 140,
+        fixed: 'right',
+        formatter: (row) => (
+          <BusinessTableRowActions>
+            <ArtButtonTable
+              type="edit"
+              permission="SmisDualControlInspectionType:Edit"
+              label="编辑排查类型"
+              disabled={row.status === 'voided'}
+              onClick={() => openDialog(row)}
+            />
+            <ArtButtonTable
+              type="delete"
+              permission="SmisDualControlInspectionType:Delete"
+              label="删除排查类型"
+              onClick={() => void handleDelete(row)}
+            />
+          </BusinessTableRowActions>
+        )
+      }
+    ]
+    return columns.filter(
+      (column) =>
+        column.prop !== 'operation' ||
+        hasAnyAuth(['SmisDualControlInspectionType:Edit', 'SmisDualControlInspectionType:Delete'])
+    )
+  }
   const fetchTableData = async (params: TableParams) => {
     const { from, to } = pageInfoHandler({ current: params.current, size: params.size })
     return await fetchInspectionTypes({ ...params, tenantId: effectiveTenantId.value, from, to })
@@ -347,11 +368,6 @@
       white-space: nowrap;
       background: color-mix(in srgb, var(--theme-color) 8%, var(--el-bg-color));
       border-radius: var(--el-border-radius-small);
-    }
-
-    :deep(.inspection-type-page__actions) {
-      display: flex;
-      align-items: center;
     }
   }
 </style>

@@ -56,8 +56,10 @@
   } from '@/components/core/tables/art-table-query/index.vue'
   import type { ColumnOption } from '@/types'
   import { pageInfoHandler } from '@/utils/table/table-utils'
+  import { loadAllDocumentPages } from '@/utils/business/document-detail-list'
   import {
     fetchAccidentInspectionChecklist,
+    type SmisChecklistSearchParams,
     type SmisAccidentInspectionChecklistOverview,
     type SmisAccidentInspectionChecklistRecord
   } from '@smis/api'
@@ -247,7 +249,10 @@
       exportColumns: excelColumns,
       exportApi: async () => ({
         data: exportRows(
-          (await fetchAccidentInspectionChecklist({ ...searchQuery.value, from: 0, to: 9999 })).data
+          await loadAllDocumentPages<
+            SmisAccidentInspectionChecklistRecord,
+            SmisChecklistSearchParams
+          >(fetchAccidentInspectionChecklist, { ...searchQuery.value })
         )
       })
     }

@@ -62,6 +62,7 @@
   } from '@/components/core/tables/art-table-query/index.vue'
   import type { ColumnOption } from '@/types'
   import { pageInfoHandler } from '@/utils/table/table-utils'
+  import { loadAllDocumentPages } from '@/utils/business/document-detail-list'
   import {
     fetchHiddenHazardLedgerList,
     type SmisHiddenHazardLedgerOverview,
@@ -354,25 +355,23 @@
       exportColumns: excelColumns,
       exportApi: async () => ({
         data: (
-          await fetchHiddenHazardLedgerList(normalizeQuery(searchQuery.value, 0, 9999))
-        ).data.map(mapExportRow)
+          await loadAllDocumentPages(fetchHiddenHazardLedgerList, normalizeQuery(searchQuery.value))
+        ).map(mapExportRow)
       })
     }
   ])
   const normalizeQuery = (
     params: TableParams,
-    from: number,
-    to: number
+    range: Pick<SmisHiddenHazardLedgerSearchParams, 'from' | 'to'> = {}
   ): SmisHiddenHazardLedgerSearchParams => ({
     ...params,
     reportedFrom: params.reportedRange?.[0],
     reportedTo: params.reportedRange?.[1] ? `${params.reportedRange[1]}T23:59:59` : undefined,
-    from,
-    to
+    ...range
   })
   const fetchTableData = async (params: TableParams, options?: TableRequestOptions) => {
     const { from, to } = pageInfoHandler({ current: params.current, size: params.size })
-    const response = await fetchHiddenHazardLedgerList(normalizeQuery(params, from, to))
+    const response = await fetchHiddenHazardLedgerList(normalizeQuery(params, { from, to }))
     if (!options?.signal?.aborted) Object.assign(overview, response.overview)
     return response
   }

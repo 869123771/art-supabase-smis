@@ -51,6 +51,7 @@
   } from '@/components/core/tables/art-table-query/index.vue'
   import type { ColumnOption } from '@/types'
   import { pageInfoHandler } from '@/utils/table/table-utils'
+  import { loadAllDocumentPages } from '@/utils/business/document-detail-list'
   import { useArtFeedback } from '@/hooks/core/useArtFeedback'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import ArtDictDisplay from '@/components/core/base/art-dict-display/index.vue'
@@ -312,7 +313,7 @@
     {
       prop: 'operation',
       label: '操作',
-      width: 154,
+      width: 160,
       fixed: 'right',
       formatter: (row) => (
         <div class="flex">
@@ -380,8 +381,10 @@
       exportSheetName: '培训记录',
       exportColumns,
       exportApi: async () => ({
-        data: (await fetchSafetyTrainingRecordList({ ...searchQuery.value, from: 0, to: 4999 }))
-          .data
+        data: await loadAllDocumentPages<
+          SmisSafetyTrainingRecord,
+          SmisSafetyTrainingRecordSearchParams
+        >(fetchSafetyTrainingRecordList, { ...searchQuery.value })
       })
     }
   ])

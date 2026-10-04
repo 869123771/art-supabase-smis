@@ -25,7 +25,8 @@ const emptyOverview = (): SmisEquipmentInspectionOverview => ({
 })
 
 export async function fetchEquipmentInspectionList(
-  params: SmisEquipmentInspectionSearchParams = {}
+  params: SmisEquipmentInspectionSearchParams = {},
+  options: { showErrorMessage?: boolean } = {}
 ) {
   const from = Math.max(params.from ?? 0, 0)
   const result = await responseHandle<InspectionListResult>(
@@ -38,7 +39,7 @@ export async function fetchEquipmentInspectionList(
         p_inspection_category_id: params.inspectionCategoryId || null,
         p_status: params.status || null
       }),
-    { showErrorMessage: true }
+    { showErrorMessage: options.showErrorMessage ?? true }
   )
   return {
     data: result.data?.records ?? [],

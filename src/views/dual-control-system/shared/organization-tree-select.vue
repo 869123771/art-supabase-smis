@@ -27,6 +27,7 @@
     DataSelectRecord
   } from '@/components/core/forms/art-data-select/types'
   import SmisDataSourceEmptyActions from '@smis/views/components/smis-data-source-empty-actions.vue'
+  import { useDictionaryOptions } from '@/hooks/core/useDictionaryOptions'
   import {
     findDualControlOrganization,
     toDualControlOrganizationTree,
@@ -60,8 +61,15 @@
     const selected = findDualControlOrganization(selectData.value, props.modelValue)
     return selected ? [selected] : []
   })
+  const organizationTypes = useDictionaryOptions('organizationType')
   const organizationDescription = (row: DataSelectRecord): string =>
-    [row.organizationCode, row.organizationType].filter(Boolean).join(' · ')
+    [
+      row.organizationCode,
+      organizationTypes.find((item) => item.value === row.organizationType)?.label ||
+        row.organizationType
+    ]
+      .filter(Boolean)
+      .join(' · ')
   const normalizeValue = (
     value: DataSelectKey | DataSelectKey[] | undefined
   ): string | undefined =>

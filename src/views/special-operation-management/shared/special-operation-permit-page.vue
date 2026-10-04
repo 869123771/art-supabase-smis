@@ -90,6 +90,7 @@
   } from '@/components/core/tables/art-table-query/index.vue'
   import type { ColumnOption } from '@/types'
   import { pageInfoHandler } from '@/utils/table/table-utils'
+  import { loadAllDocumentPages } from '@/utils/business/document-detail-list'
   import { mapWithConcurrency } from '@/utils/async'
   import { useArtFeedback } from '@/hooks/core/useArtFeedback'
   import { useUserStore } from '@/store/modules/user'
@@ -298,21 +299,20 @@
       exportFilename: props.title,
       exportSheetName: '特殊作业台账',
       exportColumns,
-      exportApi: async ({ selectedIds, searchParams, maxRows }) => {
+      exportApi: async ({ selectedIds, searchParams }) => {
         const params = searchParams as TableParams
-        const response = await fetchSpecialOperationPermitList({
+        const query: SmisSpecialOperationPermitSearchParams = {
           ...params,
           status: activeStatus.value,
           operationTypeCode: props.operationTypeCode,
           tenantId: effectiveTenantId.value,
           workStart: params.workRange?.[0],
-          workEnd: params.workRange?.[1] ? `${params.workRange[1]}T23:59:59+08:00` : null,
-          from: 0,
-          to: Math.max((maxRows || 10000) - 1, 0)
-        })
+          workEnd: params.workRange?.[1] ? `${params.workRange[1]}T23:59:59+08:00` : null
+        }
         const selected = new Set(selectedIds.map(String))
+        const rows = await loadAllDocumentPages(fetchSpecialOperationPermitList, query)
         return {
-          data: response.data
+          data: rows
             .filter((row) => !selected.size || selected.has(row.id))
             .map((row) => ({
               ...row,
@@ -549,7 +549,7 @@
     {
       prop: 'operation',
       label: '操作',
-      width: 146,
+      width: 160,
       fixed: 'right',
       formatter: (row) => (
         <div class="special-operation-permit-page__actions">

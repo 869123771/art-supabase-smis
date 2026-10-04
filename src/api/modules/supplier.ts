@@ -1,4 +1,5 @@
 import { buildSupabaseRpcRange } from '@/utils/supabase'
+import { loadAllDocumentPages } from '@/utils/business/document-detail-list'
 import { normalizeNullableText } from '@/utils/form/normalize'
 import { omit } from 'lodash-es'
 import { useSupabase } from '@/hooks'
@@ -53,7 +54,16 @@ export async function fetchSupplierList(params: SmisSupplierSearchParams = {}) {
 }
 
 export async function exportSupplierList(params: SmisSupplierSearchParams = {}) {
-  return await fetchSupplierList({ ...params, from: 0, to: 9999, purpose: 'export' })
+  let overview = emptyOverview()
+  const data = await loadAllDocumentPages(
+    async (page) => {
+      const result = await fetchSupplierList(page)
+      if (page.from === 0) overview = result.overview
+      return result
+    },
+    { ...params, purpose: 'export' as const }
+  )
+  return { data, total: data.length, overview, error: null }
 }
 
 export async function saveSupplier(params: SmisSupplierSavePayload) {

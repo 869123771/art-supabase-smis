@@ -170,12 +170,13 @@
       exportFilename: '供应商主数据',
       exportSheetName: '供应商',
       exportColumns,
-      exportApi: async ({ selectedIds, searchParams, maxRows }) => {
-        const response = await exportSupplierList({
-          ...(searchParams as SmisSupplierSearchParams),
-          ids: selectedIds.map(String),
-          to: Math.max((maxRows ?? 10000) - 1, 0)
-        })
+      exportApi: async ({ selectedIds, searchParams }) => {
+        const query: SmisSupplierSearchParams = {
+          ...searchParams,
+          ids: selectedIds.map(String)
+        }
+        await Promise.all(SUPPLIER_DICTIONARY_CODES.map((code) => userStore.ensureDictLoaded(code)))
+        const response = await exportSupplierList(query)
         return {
           data: response.data.map((row) => ({
             ...row,

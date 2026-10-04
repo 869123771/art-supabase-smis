@@ -53,6 +53,7 @@
   import { useArtFeedback } from '@/hooks/core/useArtFeedback'
   import { useImageViewer } from '@/hooks/core/useImageViewer'
   import { useUserStore } from '@/store/modules/user'
+  import { loadAllDocumentPages } from '@/utils/business/document-detail-list'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import ArtDictDisplay from '@/components/core/base/art-dict-display/index.vue'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
@@ -66,7 +67,9 @@
     fetchInspectionCategoryList,
     type SmisEquipmentInspection,
     type SmisEquipmentInspectionOverview,
-    type SmisEquipmentInspectionSearchParams
+    type SmisEquipmentInspectionSearchParams,
+    type SmisInspectionCategory,
+    type SmisInspectionCategorySearchParams
   } from '@smis/api'
   import InspectionDeclarationDialog, {
     type InspectionDeclarationDialogOpenData
@@ -180,9 +183,10 @@
       {
         label: '检验类别',
         key: 'inspectionCategoryId',
-        type: 'select',
+        type: 'selectV2',
         props: {
           options: inspectionCategoryOptions.value,
+          filterable: true,
           clearable: true,
           placeholder: '全部类别'
         }
@@ -345,7 +349,10 @@
   onMounted(async () => {
     const [organizations, categories] = await Promise.all([
       fetchOrganizationOptionsTree({ status: '1' }),
-      fetchInspectionCategoryList({ status: 'enabled', from: 0, to: 9999 }),
+      loadAllDocumentPages<SmisInspectionCategory, SmisInspectionCategorySearchParams>(
+        fetchInspectionCategoryList,
+        { status: 'enabled' }
+      ),
       ...[
         'smisEquipmentInspectionConclusion',
         'smisEquipmentInspectionReminderMonths',
@@ -353,7 +360,7 @@
       ].map((code) => userStore.ensureDictLoaded(code))
     ])
     organizationTree.value = organizations.data ?? []
-    inspectionCategoryOptions.value = categories.data
+    inspectionCategoryOptions.value = categories
       .filter((item) => item.id)
       .map((item) => ({ label: item.categoryName, value: item.id || '' }))
   })

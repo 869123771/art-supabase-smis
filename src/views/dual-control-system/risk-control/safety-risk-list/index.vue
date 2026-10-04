@@ -54,6 +54,7 @@
   } from '@/components/core/tables/art-table-query/index.vue'
   import type { ColumnOption } from '@/types'
   import { pageInfoHandler } from '@/utils/table/table-utils'
+  import { loadAllDocumentPages } from '@/utils/business/document-detail-list'
   import { useArtFeedback } from '@/hooks/core/useArtFeedback'
   import { useUserStore } from '@/store/modules/user'
   import ArtPermissionGuard from '@/components/core/feedback/art-permission-guard/index.vue'
@@ -444,16 +445,14 @@
       exportColumns: excelColumns,
       exportApi: async () => ({
         data: (
-          await fetchSafetyRiskList({
+          await loadAllDocumentPages(fetchSafetyRiskList, {
             ...searchQuery.value,
             identifiedFrom: searchQuery.value.identifiedRange?.[0],
             identifiedTo: searchQuery.value.identifiedRange?.[1]
               ? `${searchQuery.value.identifiedRange[1]}T23:59:59`
-              : undefined,
-            from: 0,
-            to: 9999
+              : undefined
           })
-        ).data.map((row) => ({
+        ).map((row) => ({
           ...row,
           accidentTypes: row.accidentTypes.join('、'),
           controlLevels: row.controlLevels

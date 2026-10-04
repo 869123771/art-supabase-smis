@@ -333,7 +333,7 @@
                   :visual-size="112"
                 />
               </ElScrollbar>
-              <ElScrollbar class="document-center-page__folder-pagination-scroll">
+              <div class="min-w-0">
                 <ElPagination
                   class="document-center-page__folder-pagination"
                   background
@@ -342,11 +342,12 @@
                   :current-page="pagination.current"
                   :page-size="pagination.size"
                   :page-sizes="[10, 20, 30, 50]"
+                  :pager-count="5"
                   :disabled="loading"
                   @size-change="handleSizeChange"
                   @current-change="handleCurrentChange"
                 />
-              </ElScrollbar>
+              </div>
             </template>
             <ArtTable
               v-else
@@ -396,7 +397,7 @@
   import { ElMessage, ElTag } from 'element-plus'
   import { useTable, type TableRequestOptions } from '@/hooks/core/useTable'
   import { useWorkspaceFocus } from '@/hooks/core/useWorkspaceFocus'
-  import { useArtFeedback } from '@/hooks/core/useArtFeedback'
+  import { notifyFriendlyError, useArtFeedback } from '@/hooks/core/useArtFeedback'
   import { useLazyComponent } from '@/hooks/core/useLazyComponent'
   import { useUserStore } from '@/store/modules/user'
   import type { ColumnOption } from '@/types'
@@ -969,6 +970,8 @@
         columns: excelColumns,
         data: exportRows
       })
+    } catch (error) {
+      notifyFriendlyError(error, '文档导出失败，请刷新后重试')
     } finally {
       exporting.value = false
     }
@@ -1713,6 +1716,8 @@
       }
 
       &__folder-pagination {
+        flex-wrap: wrap;
+        row-gap: var(--art-space-3);
         justify-content: flex-start;
       }
     }
