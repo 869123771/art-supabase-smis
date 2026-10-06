@@ -1,6 +1,6 @@
 <template>
   <ArtPermissionGuard permission="SmisSafetyTrainingPlan:View">
-    <div class="training-plan-page business-workspace-page art-full-height">
+    <div class="business-workspace-page art-full-height min-w-0 gap-[12px]">
       <BusinessWorkspaceHeader
         eyebrow="TRAINING READINESS"
         title="安全培训计划"
@@ -18,7 +18,7 @@
       <ArtTableQuery
         ref="tableRef"
         v-model="searchQuery"
-        class="training-plan-page__table"
+        class="min-h-0 min-w-0 flex-1"
         :api-fn="fetchTableData"
         :search-items="searchItems"
         :columns-factory="columnsFactory"
@@ -48,7 +48,7 @@
     ArtTableQueryHeaderActionContext
   } from '@/components/core/tables/art-table-query/index.vue'
   import type { ColumnOption } from '@/types'
-  import { pageInfoHandler } from '@/utils/table/table-utils'
+  import { buildSupabasePageRange } from '@/utils/supabase/pagination'
   import { loadAllDocumentPages } from '@/utils/business/document-detail-list'
   import { useUserStore } from '@/store/modules/user'
   import { useArtFeedback } from '@/hooks/core/useArtFeedback'
@@ -436,9 +436,16 @@
     }
   ])
   const fetchTableData = async (params: TableParams, options?: TableRequestOptions) => {
-    const { from, to } = pageInfoHandler({ current: params.current, size: params.size })
-    const result = await fetchSafetyTrainingPlanList({ ...params, from, to })
-    if (!options?.signal?.aborted) Object.assign(overview, result.overview)
+    const { from, to } = buildSupabasePageRange({ current: params.current, size: params.size })
+    const result = await fetchSafetyTrainingPlanList(
+      { ...params, from, to },
+      { showErrorMessage: false }
+    )
+    if (options?.signal?.aborted) return result
+    if (result.error) {
+      throw new Error('培训计划加载失败，请重新加载', { cause: result.error })
+    }
+    Object.assign(overview, result.overview)
     organizations.value = result.organizations
     return result
   }
@@ -456,16 +463,3 @@
     )
   })
 </script>
-
-<style scoped lang="scss">
-  .training-plan-page {
-    gap: 12px;
-    min-width: 0;
-
-    &__table {
-      flex: 1;
-      min-width: 0;
-      min-height: 0;
-    }
-  }
-</style>

@@ -49,7 +49,7 @@ export const compareEquipmentCategoryOrder = (
 export async function fetchEquipmentCategoryProfiles() {
   return await responseHandle<EquipmentCategoryProfile[]>(
     () => supabase.rpc('smis_list_equipment_category_profiles_secure'),
-    { showErrorMessage: true }
+    { showErrorMessage: false, breakReturn: true }
   )
 }
 
@@ -64,7 +64,7 @@ export async function fetchEquipmentCategoryList(params: SmisEquipmentCategorySe
           p_status: params.status || null,
           p_ancestor_id: params.ancestorId || null
         }),
-      { showErrorMessage: true }
+      { showErrorMessage: false, breakReturn: true }
     ),
     fetchEquipmentCategoryProfiles()
   ])

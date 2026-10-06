@@ -27,7 +27,7 @@ export async function fetchEquipmentDepreciationList(
         p_keyword: normalizeNullableText(params.keyword),
         p_status: params.status || null
       }),
-    { showErrorMessage: true }
+    { showErrorMessage: false, breakReturn: true }
   )
   return {
     data: result.data?.records ?? [],

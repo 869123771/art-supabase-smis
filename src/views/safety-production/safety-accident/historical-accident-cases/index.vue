@@ -59,7 +59,7 @@
     ArtTableQueryHeaderActionContext
   } from '@/components/core/tables/art-table-query/index.vue'
   import type { ColumnOption } from '@/types'
-  import { pageInfoHandler } from '@/utils/table/table-utils'
+  import { buildSupabasePageRange } from '@/utils/supabase/pagination'
   import { useUserStore } from '@/store/modules/user'
   import { useArtFeedback } from '@/hooks/core/useArtFeedback'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
@@ -350,7 +350,7 @@
   ])
   const fetchTableData = async (params: TableParams, options?: TableRequestOptions) => {
     const { current, size, ...filters } = params
-    const { from, to } = pageInfoHandler({ current, size })
+    const { from, to } = buildSupabasePageRange({ current, size })
     const result = await fetchHistoricalAccidentCaseList({ ...toApiParams(filters), from, to })
     if (!options?.signal?.aborted) Object.assign(overview, result.overview)
     organizations.value = result.organizations

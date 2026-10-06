@@ -1,12 +1,12 @@
 <template>
   <ArtDialog ref="dialogRef" size="xl">
-    <div class="issuance-record-dialog__intro">
-      <ArtSvgIcon icon="ri:archive-drawer-line" />
-      <div>
-        <strong>建立发放草稿</strong>
-        <p>单据编号由系统按月生成 4 位流水码；完成核对后再执行发放过账。</p>
-      </div>
-    </div>
+    <ArtEntitySummary
+      title="建立发放草稿"
+      description="单据编号由系统按月生成 4 位流水码；完成核对后再执行发放过账。"
+      icon="ri:archive-drawer-line"
+      compact
+      spaced
+    />
     <ArtForm
       ref="formRef"
       v-model="form.model"
@@ -100,6 +100,8 @@
 </template>
 
 <script setup lang="tsx">
+  import ArtEntitySummary from '@/components/core/surfaces/art-entity-summary/index.vue'
+  import BusinessTableIdentityCell from '@/components/business/business-table-identity-cell/index.vue'
   import { notifyFriendlyError } from '@/hooks/core/useArtFeedback'
   import { validateArtFormForSubmit } from '@/utils/form/validate-art-form'
   import dayjs from 'dayjs'
@@ -216,10 +218,10 @@
       label: '物料信息',
       minWidth: 220,
       formatter: (row) => (
-        <div class="issuance-record-dialog__material">
-          <strong>{row.materialName}</strong>
-          <small>{row.materialCategory || '未分类'}</small>
-        </div>
+        <BusinessTableIdentityCell
+          primary={row.materialName}
+          secondary={row.materialCategory || '未分类'}
+        />
       )
     },
     { prop: 'specificationModel', label: '规格型号', minWidth: 140, showOverflowTooltip: true },
@@ -304,25 +306,31 @@
 
   const fetchWarehouseOptions = async (params: DataSelectFetchParams) => {
     const from = (params.page - 1) * params.pageSize
-    const result = await fetchStorageLocationList({
-      keyword: params.keyword,
-      status: 'enabled',
-      from,
-      to: from + params.pageSize - 1
-    })
-    return { data: result.data, total: result.total }
+    const result = await fetchStorageLocationList(
+      {
+        keyword: params.keyword,
+        status: 'enabled',
+        from,
+        to: from + params.pageSize - 1
+      },
+      { showErrorMessage: false }
+    )
+    return result
   }
 
   const fetchMaterialOptions = async (params: DataSelectFetchParams) => {
     const from = (params.page - 1) * params.pageSize
-    const result = await fetchMaterialList({
-      materialName: params.keyword,
-      materialType: 'protective_equipment',
-      status: 'enabled',
-      from,
-      to: from + params.pageSize - 1
-    })
-    return { data: result.data, total: result.total }
+    const result = await fetchMaterialList(
+      {
+        materialName: params.keyword,
+        materialType: 'protective_equipment',
+        status: 'enabled',
+        from,
+        to: from + params.pageSize - 1
+      },
+      { showErrorMessage: false }
+    )
+    return result
   }
 
   const handleMaterialsChange = (rows: DataSelectRecord[]): void => {
@@ -501,54 +509,3 @@
 
   defineExpose({ handleOpen })
 </script>
-
-<style scoped lang="scss">
-  .issuance-record-dialog {
-    &__intro {
-      display: flex;
-      gap: 12px;
-      align-items: flex-start;
-      padding: 12px 16px;
-      margin-bottom: 16px;
-      color: var(--art-gray-800);
-      background: var(--art-gray-100);
-      border-radius: var(--el-border-radius-base);
-
-      svg {
-        flex: 0 0 auto;
-        margin-top: 2px;
-        font-size: 22px;
-        color: var(--theme-color);
-      }
-
-      strong,
-      p {
-        display: block;
-        margin: 0;
-      }
-
-      p {
-        margin-top: 4px;
-        color: var(--art-gray-700);
-      }
-    }
-
-    &__material {
-      display: flex;
-      flex-direction: column;
-      min-width: 0;
-
-      strong,
-      small {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-
-      small {
-        margin-top: 2px;
-        color: var(--art-gray-600);
-      }
-    }
-  }
-</style>

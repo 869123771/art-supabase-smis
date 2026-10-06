@@ -1,6 +1,8 @@
 <template>
   <ArtPermissionGuard :permission="permissions.view" :resource-name="businessName">
-    <div class="hazardous-document-page business-workspace-page art-full-height">
+    <div
+      class="hazardous-document-page business-workspace-page art-full-height flex min-h-0 min-w-0 flex-col gap-[14px]"
+    >
       <BusinessWorkspaceHeader
         :eyebrow="direction === 'inbound' ? 'HAZARDOUS WASTE RECEIPT' : 'HAZARDOUS WASTE DISPATCH'"
         :title="businessName"
@@ -18,42 +20,61 @@
         :metrics="metrics"
         ><template #actions><BusinessTableWorkspaceActions :table="tableQueryRef" /></template
       ></BusinessWorkspaceHeader>
-      <ArtTableQuery
-        ref="tableQueryRef"
-        v-model="searchQuery"
-        class="hazardous-document-page__table"
-        :api-fn="fetchData"
-        :search-items="searchItems"
-        :columns-factory="columnsFactory"
-        :header-actions="headerActions"
-        header-actions-placement="workspace"
-        :search-bar-props="{ span: 6, labelWidth: 78 }"
-        :table-props="{
-          rowKey: 'id',
-          tableLayout: 'fixed',
-          emptyText: `暂无${businessName}单据`,
-          emptyDescription: '可点击新增建立草稿，核对无误后提交审核。'
-        }"
-        focusable
-      />
+      <div class="hazardous-document-workspace flex min-h-0 min-w-0 flex-1 flex-col gap-[14px]">
+        <MasterDeleteProcessingNotice
+          :location-ready="
+            Boolean(
+              deleteProcessing.recordId && deleteProcessing.recordNo && deleteProcessing.resourceId
+            )
+          "
+        />
+        <ArtTableQuery
+          ref="tableQueryRef"
+          :model-value="searchQuery"
+          @update:model-value="replaceReactiveModel(searchQuery, $event)"
+          class="min-h-0 min-w-0 flex-1"
+          :api-fn="fetchData"
+          :search-items="searchItems"
+          :columns-factory="columnsFactory"
+          :header-actions="headerActions"
+          header-actions-placement="workspace"
+          :search-bar-props="{ span: 6, labelWidth: 78 }"
+          :table-props="{
+            rowKey: 'id',
+            tableLayout: 'fixed',
+            emptyText: `暂无${businessName}单据`,
+            emptyDescription: '可点击新增建立草稿，核对无误后提交审核。'
+          }"
+          focusable
+          focus-scope-selector=".hazardous-document-workspace"
+        />
+      </div>
       <DocumentDialog ref="dialogRef" :direction="direction" @success="refresh" />
+      <MasterDataDeleteGuard ref="deleteGuardRef" />
     </div>
   </ArtPermissionGuard>
 </template>
 <script setup lang="tsx">
+  import { replaceReactiveModel } from '@/utils/form/model'
+  import type { DataSelectFetchParams } from '@/components/core/forms/art-data-select/types'
   import type { TableRequestOptions } from '@/hooks/core/useTable'
   import BusinessTableIdentityCell from '@/components/business/business-table-identity-cell/index.vue'
   import dayjs from 'dayjs'
+  import { sumBy } from 'lodash-es'
   import type { SearchFormItem } from '@/components/core/forms/art-search-bar/index.vue'
   import type {
     ArtTableQueryExpose,
-    ArtTableQueryHeaderAction,
-    ArtTableQueryHeaderActionContext
+    ArtTableQueryHeaderAction
   } from '@/components/core/tables/art-table-query/index.vue'
   import type { ColumnOption } from '@/types'
-  import { pageInfoHandler } from '@/utils/table/table-utils'
+  import { buildSupabasePageRange } from '@/utils/supabase/pagination'
   import { loadAllDocumentPages } from '@/utils/business/document-detail-list'
-  import { useArtFeedback } from '@/hooks/core/useArtFeedback'
+  import { notifyFriendlyError, useArtFeedback } from '@/hooks/core/useArtFeedback'
+  import { useMasterDataDeleteProcessingContext } from '@/hooks/core/useMasterDataDeleteProcessing'
+  import MasterDeleteProcessingNotice from '@/components/business/master-delete-processing-notice/index.vue'
+  import MasterDataDeleteGuard from '@/components/business/master-data-delete-guard/index.vue'
+  import { useRecordDeleteGuard } from '@/hooks/core/useRecordDeleteGuard'
+  import { DeleteReferenceBlockedError } from '@/utils/supabase/delete-reference'
   import { useAuth } from '@/hooks/core/useAuth'
   import { useUserStore } from '@/store/modules/user'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
@@ -102,11 +123,39 @@
   }
   const { confirmAction, confirmDelete, promptReason } = useArtFeedback()
   const { hasAnyAuth } = useAuth()
+  const { deleteGuardRef, inspectDeleteReferences } = useRecordDeleteGuard(
+    'smis_hazardous_waste_document',
+    '危废单据'
+  )
+  const deleteBusy = ref(false)
   const userStore = useUserStore()
   const { getDictMap } = storeToRefs(userStore)
   const tableQueryRef = ref<ArtTableQueryExpose>()
   const dialogRef = ref<DialogExpose>()
-  const searchQuery = reactive<SmisHazardousWasteDocumentSearchParams>({})
+  const deleteProcessing = useMasterDataDeleteProcessingContext()
+  const route = useRoute()
+  const isWarehouseReference = computed(
+    () => route.query.resourceType === 'smis_hazardous_waste_warehouse'
+  )
+  const referenceQuery = (): SmisHazardousWasteDocumentSearchParams => ({
+    documentNo: deleteProcessing.value.recordNo || undefined,
+    warehouseId: isWarehouseReference.value
+      ? deleteProcessing.value.resourceId || undefined
+      : undefined
+  })
+  const searchQuery = reactive<SmisHazardousWasteDocumentSearchParams>(referenceQuery())
+  watch(
+    () => [
+      deleteProcessing.value.active,
+      deleteProcessing.value.recordNo,
+      deleteProcessing.value.resourceId,
+      isWarehouseReference.value
+    ],
+    () => {
+      replaceReactiveModel(searchQuery, referenceQuery())
+      void tableQueryRef.value?.getData()
+    }
+  )
   const warehouses = ref<SmisHazardousWasteWarehouse[]>([])
   const overview = reactive<SmisHazardousWasteDocumentOverview>({
     total: 0,
@@ -120,12 +169,6 @@
     (getDictMap.value.smisHazardousWasteDocumentStatus ?? []).map((item) => ({
       label: item.label || item.name,
       value: item.value
-    }))
-  )
-  const warehouseOptions = computed(() =>
-    warehouses.value.map((item) => ({
-      label: `${item.warehouseName} · ${item.warehouseCode}`,
-      value: item.id
     }))
   )
   const metrics = computed<BusinessWorkspaceMetric[]>(() => [
@@ -172,10 +215,30 @@
     {
       label: '仓库',
       key: 'warehouseId',
-      type: 'select',
+      type: 'dataSelect',
       props: {
-        options: warehouseOptions.value,
-        filterable: true,
+        mode: 'table',
+        multiple: false,
+        apiFn: (params: DataSelectFetchParams) =>
+          fetchHazardousWasteWarehouseList(
+            {
+              ...buildSupabasePageRange({ current: params.page, size: params.pageSize }),
+              keyword: params.keyword,
+              status: 'enabled'
+            },
+            { showErrorMessage: false }
+          ),
+        selectedData: warehouses.value,
+        rowKey: 'id',
+        labelKey: 'warehouseName',
+        descriptionKey: 'warehouseCode',
+        columns: [
+          { prop: 'warehouseCode', label: '仓库编号', width: 140 },
+          { prop: 'warehouseName', label: '仓库名称', minWidth: 180 }
+        ],
+        title: '选择危废仓库',
+        searchPlaceholder: '搜索仓库名称或编号',
+        showPagination: true,
         clearable: true,
         placeholder: '全部仓库'
       }
@@ -224,16 +287,14 @@
     {
       permission: permissions.value.delete,
       type: 'delete',
+      confirm: false,
       disabled: ({ selectedRows }) =>
+        deleteBusy.value ||
         selectedRows.some((row) => !editable(row as SmisHazardousWasteDocument)),
-      content: ({ selectedCount }: ArtTableQueryHeaderActionContext) =>
-        `确定删除选中的 ${selectedCount} 张草稿或退回单据吗？`,
       onClick: async ({ selectedRows, api }) => {
-        await deleteHazardousWasteDocuments(
-          direction.value,
-          selectedRows.map((row) => String(row.id))
+        await removeDocuments(selectedRows as SmisHazardousWasteDocument[], () =>
+          api.refreshRemove()
         )
-        await api.refreshRemove()
       }
     },
     {
@@ -282,8 +343,9 @@
       })
       await transitionHazardousWasteDocument(direction.value, row.id, 'submit')
       await refresh()
-    } catch {
-      /* 用户取消 */
+    } catch (error) {
+      if (error !== 'cancel' && error !== 'close')
+        notifyFriendlyError(error, '单据提交失败，请检查网络后重试')
     }
   }
   const handleReview = async (row: SmisHazardousWasteDocument, approved: boolean) => {
@@ -305,19 +367,52 @@
         remark
       )
       await refresh()
-    } catch {
-      /* 用户取消 */
+    } catch (error) {
+      if (error !== 'cancel' && error !== 'close')
+        notifyFriendlyError(error, '单据审核失败，请检查网络后重试')
     }
   }
-  const handleDelete = async (row: SmisHazardousWasteDocument) => {
+  const removeDocuments = async (
+    rows: SmisHazardousWasteDocument[],
+    refreshRows: () => unknown | Promise<unknown>
+  ) => {
+    if (deleteBusy.value || !rows.length) return
+    if (!hasAnyAuth([permissions.value.delete]) || rows.some((row) => !editable(row))) {
+      ElMessage.error('当前账号无权删除所选单据，或单据状态已变化，请刷新后重试')
+      return
+    }
+    deleteBusy.value = true
+    const operationDirection = direction.value
+    const resources = rows.map((row) => ({ id: row.id, label: row.documentNo }))
     try {
-      await confirmDelete(`确定删除单据“${row.documentNo}”吗？`)
-      await deleteHazardousWasteDocuments(direction.value, [row.id])
-      await refresh()
-    } catch {
-      /* 用户取消 */
+      if (await inspectDeleteReferences(resources)) return
+      await confirmDelete(
+        rows.length === 1
+          ? `确定删除单据“${rows[0].documentNo}”吗？`
+          : `确定删除选中的 ${rows.length} 张草稿或退回单据吗？`
+      )
+      try {
+        await deleteHazardousWasteDocuments(
+          operationDirection,
+          rows.map((row) => row.id)
+        )
+      } catch (error) {
+        // 共享响应层已打开引用检查时，由其完成约束级重查，避免重复弹窗。
+        if (error instanceof DeleteReferenceBlockedError) return
+        if (await inspectDeleteReferences(resources)) return
+        throw error
+      }
+      ElMessage.success('危废单据已删除')
+      await refreshRows()
+    } catch (error) {
+      if (error !== 'cancel' && error !== 'close')
+        notifyFriendlyError(error, '危废单据删除失败，请检查网络后重试')
+    } finally {
+      deleteBusy.value = false
     }
   }
+  const handleDelete = (row: SmisHazardousWasteDocument) =>
+    removeDocuments([row], () => tableQueryRef.value?.refreshRemove())
   const columnsFactory = (): ColumnOption<SmisHazardousWasteDocument>[] => {
     const columns: ColumnOption<SmisHazardousWasteDocument>[] = [
       { type: 'selection', width: 48 },
@@ -462,16 +557,55 @@
     )
   }
   const fetchData = async (params: TableParams, options?: TableRequestOptions) => {
-    const result = await fetchHazardousWasteDocumentList(direction.value, {
-      ...params,
-      ...pageInfoHandler(params)
-    })
+    const reference = deleteProcessing.value
+    if (reference.active && reference.recordId && reference.recordNo && reference.resourceId) {
+      const referenceDirection = direction.value
+      const rows = await loadAllDocumentPages<
+        SmisHazardousWasteDocument,
+        SmisHazardousWasteDocumentSearchParams
+      >(
+        (query) =>
+          fetchHazardousWasteDocumentList(referenceDirection, query, { showErrorMessage: false }),
+        referenceQuery()
+      )
+      const records = rows.filter(
+        (row) =>
+          row.id === reference.recordId &&
+          (isWarehouseReference.value
+            ? row.warehouseId === reference.resourceId
+            : row.items.some((item) => item.catalogId === reference.resourceId))
+      )
+      if (!options?.signal?.aborted) {
+        Object.assign(overview, {
+          total: records.length,
+          draft: records.filter((row) => row.status === 'draft').length,
+          pending: records.filter((row) => row.status === 'pending').length,
+          approved: records.filter((row) => row.status === 'approved').length,
+          rejected: records.filter((row) => row.status === 'rejected').length,
+          quantity: sumBy(records, (row) => sumBy(row.items, (item) => item.quantity))
+        })
+      }
+      return { records, total: records.length }
+    }
+    const result = await fetchHazardousWasteDocumentList(
+      direction.value,
+      { ...params, ...buildSupabasePageRange(params) },
+      { showErrorMessage: false }
+    )
+    if (result.error) {
+      throw new Error(`${businessName.value}列表加载失败，请重新加载`, { cause: result.error })
+    }
     if (!options?.signal?.aborted) Object.assign(overview, result.overview)
     return { records: result.data, total: result.total }
   }
   onMounted(async () => {
     const [result] = await Promise.all([
-      fetchHazardousWasteWarehouseList({ status: 'enabled', from: 0, to: 999 }),
+      searchQuery.warehouseId
+        ? fetchHazardousWasteWarehouseList(
+            { ids: [searchQuery.warehouseId] },
+            { showErrorMessage: false }
+          )
+        : Promise.resolve({ data: [] }),
       userStore.ensureDictLoaded('smisHazardousWasteDocumentStatus'),
       userStore.ensureDictLoaded('smisMaterialUnit')
     ])
@@ -480,18 +614,6 @@
 </script>
 <style scoped lang="scss">
   .hazardous-document-page {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-    min-width: 0;
-    min-height: 0;
-
-    &__table {
-      flex: 1;
-      min-width: 0;
-      min-height: 0;
-    }
-
     :deep(.hazardous-document-page__number) {
       font-variant-numeric: tabular-nums;
       color: var(--theme-color);

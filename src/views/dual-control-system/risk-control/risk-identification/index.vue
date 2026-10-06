@@ -56,7 +56,7 @@
   } from '@/components/core/tables/art-table-query/index.vue'
   import type { ColumnOption } from '@/types'
   import type { ButtonMoreItem } from '@/components/core/forms/art-button-more/index.vue'
-  import { pageInfoHandler } from '@/utils/table/table-utils'
+  import { buildSupabasePageRange } from '@/utils/supabase/pagination'
   import { loadAllDocumentPages } from '@/utils/business/document-detail-list'
   import { useArtFeedback } from '@/hooks/core/useArtFeedback'
   import { useUserStore } from '@/store/modules/user'
@@ -447,9 +447,11 @@
     }
   ]
   const fetchTableData = async (params: TableParams, options?: TableRequestOptions) => {
-    const { from, to } = pageInfoHandler({ current: params.current, size: params.size })
-    const response = await fetchRiskPointList({ ...params, from, to })
-    if (!options?.signal?.aborted) Object.assign(overview, response.overview)
+    const { from, to } = buildSupabasePageRange({ current: params.current, size: params.size })
+    const response = await fetchRiskPointList({ ...params, from, to }, { showErrorMessage: false })
+    if (options?.signal?.aborted) return response
+    if (response.error) throw new Error('风险辨识加载失败，请重新加载', { cause: response.error })
+    Object.assign(overview, response.overview)
     return response
   }
   const parseBoolean = (value: string | boolean | undefined): boolean =>

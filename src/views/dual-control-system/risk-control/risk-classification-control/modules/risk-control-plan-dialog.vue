@@ -9,7 +9,8 @@
 
       <ArtForm
         ref="formRef"
-        v-model="form"
+        :model-value="form"
+        @update:model-value="replaceReactiveModel(form, $event)"
         :items="[]"
         :rules="rules"
         custom-layout
@@ -166,6 +167,7 @@
 </template>
 
 <script setup lang="ts">
+  import { replaceReactiveModel } from '@/utils/form/model'
   import { normalizeNullableText } from '@/utils/form/normalize'
   import dayjs from 'dayjs'
   import type { FormRules } from 'element-plus'

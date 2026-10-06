@@ -34,7 +34,8 @@
       <ElScrollbar class="hazard-report-page__scroll">
         <div class="hazard-report-page__body">
           <ArtSearchBar
-            v-model="query"
+            :model-value="query"
+            @update:model-value="replaceReactiveModel(query, $event)"
             :items="searchItems"
             :span="8"
             label-position="top"
@@ -155,6 +156,7 @@
 </template>
 
 <script setup lang="tsx">
+  import { replaceReactiveModel } from '@/utils/form/model'
   import { createDateTimeFormatter } from '@/utils/ui/format'
 
   import dayjs from 'dayjs'

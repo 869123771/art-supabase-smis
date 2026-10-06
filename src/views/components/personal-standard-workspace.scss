@@ -1,0 +1,207 @@
+.smis-personal-standard {
+  gap: 12px;
+  min-width: 0;
+  min-height: 0;
+
+  &__workspace {
+    flex: 1 1 auto;
+    width: 100%;
+    min-width: 0;
+    min-height: 0;
+  }
+
+  &__organization-panel,
+  &__main,
+  &__table {
+    min-width: 0;
+    min-height: 0;
+  }
+
+  &__organization-panel {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  &__main {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  &__table {
+    flex: 1 1 auto;
+  }
+
+  &__scope-bar,
+  &__mobile-scope {
+    display: flex;
+    flex: 0 0 auto;
+    gap: 16px;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  &__scope-bar {
+    min-height: 56px;
+    padding: 8px 14px 8px 12px;
+    background: var(--art-gray-100);
+    border-left: 3px solid var(--theme-color);
+    border-radius: var(--el-border-radius-base);
+  }
+
+  &__scope-identity,
+  &__mobile-scope > div {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    min-width: 0;
+  }
+
+  &__scope-identity > span:first-child,
+  &__mobile-scope > span:first-child {
+    display: inline-flex;
+    flex: 0 0 32px;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    color: var(--theme-color);
+    background: color-mix(in srgb, var(--theme-color) 10%, var(--default-box-color));
+    border-radius: var(--el-border-radius-base);
+  }
+
+  &__scope-identity > span:last-child,
+  &__mobile-scope > div {
+    display: grid;
+    min-width: 0;
+  }
+
+  &__scope-identity small,
+  &__mobile-scope small {
+    font-size: 11px;
+    color: var(--el-text-color-secondary);
+  }
+
+  &__scope-identity strong,
+  &__mobile-scope strong {
+    margin-top: 2px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--el-text-color-primary);
+    white-space: nowrap;
+  }
+
+  &__scope-summary {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    font-size: 12px;
+    color: var(--el-text-color-secondary);
+  }
+
+  &__scope-summary span + span {
+    padding-left: 16px;
+    border-left: 1px solid var(--el-border-color);
+  }
+
+  &__mobile-scope {
+    padding: 10px 12px;
+
+    > div {
+      flex: 1;
+    }
+  }
+
+  .smis-personal-standard__employee {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    width: 100%;
+    min-width: 0;
+    padding: 2px 0;
+    font: inherit;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+    background: transparent;
+    border: 0;
+    border-radius: var(--el-border-radius-small);
+  }
+
+  .smis-personal-standard__employee:focus-visible {
+    outline: 2px solid var(--theme-color);
+    outline-offset: 2px;
+  }
+
+  .smis-personal-standard__employee .el-avatar {
+    flex: 0 0 auto;
+    color: var(--art-gray-700);
+    background: var(--art-gray-200);
+  }
+
+  .smis-personal-standard__employee > span,
+  .smis-personal-standard__assignment,
+  .smis-personal-standard__standard-status,
+  .smis-personal-standard__generated-time {
+    display: grid;
+    min-width: 0;
+  }
+
+  .smis-personal-standard__employee strong,
+  .smis-personal-standard__employee small,
+  .smis-personal-standard__assignment strong,
+  .smis-personal-standard__assignment small {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .smis-personal-standard__employee strong {
+    color: var(--el-text-color-primary);
+  }
+
+  .smis-personal-standard__employee:hover strong {
+    color: var(--theme-color);
+  }
+
+  .smis-personal-standard__employee small,
+  .smis-personal-standard__assignment small,
+  .smis-personal-standard__standard-status small,
+  .smis-personal-standard__generated-time small {
+    margin-top: 3px;
+    font-size: 11px;
+    color: var(--el-text-color-secondary);
+  }
+
+  .smis-personal-standard__standard-status .el-tag {
+    justify-self: start;
+  }
+
+  .smis-personal-standard__row-actions {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+    white-space: nowrap;
+  }
+
+  .smis-personal-standard__row-actions .art-button-table {
+    flex: 0 0 32px;
+    margin-right: 0;
+  }
+
+  .smis-personal-standard__muted {
+    color: var(--el-text-color-secondary);
+  }
+
+  &__drawer-navigator {
+    height: 100%;
+  }
+
+  @media (width <= 1080px) {
+    &__scope-summary {
+      display: none;
+    }
+  }
+}

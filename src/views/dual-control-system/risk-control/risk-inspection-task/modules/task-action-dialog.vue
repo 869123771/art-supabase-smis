@@ -13,7 +13,7 @@
       <ArtForm
         ref="formRef"
         :model-value="form"
-        @update:model-value="Object.assign(form, $event)"
+        @update:model-value="replaceReactiveModel(form, $event)"
         :rules="rules"
         label-position="top"
         custom-layout
@@ -54,6 +54,7 @@
 </template>
 
 <script setup lang="ts">
+  import { replaceReactiveModel } from '@/utils/form/model'
   import { nextTick, reactive, ref, shallowRef } from 'vue'
   import type { FormRules } from 'element-plus'
   import ArtForm from '@/components/core/forms/art-form/index.vue'

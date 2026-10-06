@@ -9,6 +9,11 @@
     empty-description="请返回设备台账重新选择，或刷新后重试。"
     @retry="loadDetail"
   >
+    <MasterDeleteProcessingNotice
+      class="mb-4"
+      :location-ready="deleteLocationReady"
+      action-hint="当前已定位关联设备或检验记录，请核对资料后返回供应商管理重新检查。"
+    />
     <ArtPageHeader
       class="equipment-archive-detail__header"
       :title="equipment?.equipmentName || '设备档案详情'"
@@ -122,8 +127,14 @@
           :loading="inspectionLoading"
           :error="inspectionError ? '检验记录加载失败，请重新加载' : null"
           :empty="!inspections.length"
-          empty-text="当前设备暂无检验记录"
-          empty-description="完成设备检验后，可在此查看记录与结果。"
+          :empty-text="
+            isInspectionReference ? '未找到可查看的目标检验记录' : '当前设备暂无检验记录'
+          "
+          :empty-description="
+            isInspectionReference
+              ? '请核对关联设备与记录权限，重新检查或清除定位后查看全部记录。'
+              : '完成设备检验后，可在此查看记录与结果。'
+          "
           @retry="retryInspections"
         >
           <div class="equipment-archive-detail__inspection-list">
@@ -134,7 +145,9 @@
               <div>
                 <header>
                   <div>
-                    <strong>{{ item.inspectionCategory.categoryName }}</strong>
+                    <strong>{{
+                      item.inspectionCategory?.categoryName || '检验类别不可查看'
+                    }}</strong>
                     <small>{{ item.inspectionNo }}</small>
                   </div>
                   <ArtDictDisplay dict-code="smisEquipmentInspectionStatus" :value="item.status" />
@@ -191,7 +204,10 @@
   import { ElPagination, ElTabPane, ElTabs } from 'element-plus'
   import ArtAsyncState from '@/components/core/feedback/art-async-state/index.vue'
   import { useTable } from '@/hooks/core/useTable'
-  import { pageInfoHandler } from '@/utils/table/table-utils'
+  import { useMasterDataDeleteProcessingContext } from '@/hooks/core/useMasterDataDeleteProcessing'
+  import { useTenantScopeStore } from '@/store/modules/tenant-scope'
+  import MasterDeleteProcessingNotice from '@/components/business/master-delete-processing-notice/index.vue'
+  import { buildSupabasePageRange } from '@/utils/supabase/pagination'
   import type { ColumnOption } from '@/types'
   import ArtDescriptions from '@/components/core/base/art-descriptions/index.vue'
   import type { ArtDescriptionItem } from '@/components/core/base/art-descriptions/types'
@@ -204,10 +220,11 @@
   import {
     fetchEquipmentAttachments,
     fetchEquipmentInspectionList,
+    fetchEquipmentInspectionReference,
     fetchEquipmentLedgerDetail,
     type SmisEquipment,
     type SmisEquipmentAttachment,
-    type SmisEquipmentInspection
+    type SmisEquipmentInspectionReference
   } from '@smis/api'
   import { getEquipmentProfileDefinition } from '@smis/domain/equipment-profile'
 
@@ -215,23 +232,37 @@
 
   const route = useRoute()
   const router = useRouter()
+  const tenantScope = useTenantScopeStore()
   const loading = ref(false)
   const loadError = shallowRef<Error | null>(null)
   const equipment = shallowRef<SmisEquipment | null>(null)
   const attachments = ref<SmisEquipmentAttachment[]>([])
+  const deleteContext = useMasterDataDeleteProcessingContext()
+  const isInspectionReference = computed(
+    () => deleteContext.value.active && route.query.dependencyCode === 'smis_equipment_inspection'
+  )
   const fetchInspectionPage = async (params: {
     equipmentId: string
     current: number
     size: number
   }) => {
+    if (isInspectionReference.value) {
+      const id = deleteContext.value.recordId
+      if (!id || !params.equipmentId) return { data: [], total: 0, error: null }
+      const result = await fetchEquipmentInspectionReference(id, params.equipmentId)
+      return {
+        data: result.data ? [result.data] : [],
+        total: result.data ? 1 : 0,
+        error: result.error
+      }
+    }
     const result = await fetchEquipmentInspectionList(
       {
         equipmentId: params.equipmentId,
-        ...pageInfoHandler(params)
+        ...buildSupabasePageRange(params)
       },
       { showErrorMessage: false }
     )
-    if (result.error) throw result.error
     return result
   }
   const {
@@ -243,11 +274,22 @@
     getData: loadInspectionPage,
     refreshUpdate: retryInspections,
     handleCurrentChange: handleInspectionPageChange
-  } = useTable<SmisEquipmentInspection, typeof fetchInspectionPage>({
+  } = useTable<SmisEquipmentInspectionReference, typeof fetchInspectionPage>({
     core: { apiFn: fetchInspectionPage, apiParams: { current: 1, size: 20 }, immediate: false },
     performance: { enableCache: false }
   })
   const activeTab = ref(String(route.query.tab || 'archive'))
+  const deleteLocationReady = computed(() =>
+    isInspectionReference.value
+      ? inspections.value.some((item) => item.id === deleteContext.value.recordId)
+      : equipment.value?.id === deleteContext.value.recordId
+  )
+  watch(
+    () => route.query.tab,
+    (tab) => {
+      activeTab.value = typeof tab === 'string' ? tab : 'archive'
+    }
+  )
 
   const profileDefinition = computed(() =>
     getEquipmentProfileDefinition(
@@ -422,28 +464,37 @@
     }
   ]
 
+  let detailRequestSequence = 0
   const loadDetail = async (): Promise<void> => {
+    const sequence = ++detailRequestSequence
     const id = String(route.params.id || '')
     if (!id) {
+      equipment.value = null
+      attachments.value = []
+      loading.value = false
       loadError.value = new Error('缺少设备档案标识')
       return
     }
     loading.value = true
     loadError.value = null
+    equipment.value = null
+    attachments.value = []
     try {
       const [detailResult, attachmentResult] = await Promise.all([
         fetchEquipmentLedgerDetail(id),
         fetchEquipmentAttachments(id)
       ])
+      if (sequence !== detailRequestSequence) return
       if (!detailResult.data) throw new Error('设备档案不存在或无权访问')
       equipment.value = detailResult.data
       attachments.value = attachmentResult.data ?? []
       setInspectionSearch({ equipmentId: id })
       await loadInspectionPage()
     } catch (error) {
+      if (sequence !== detailRequestSequence) return
       loadError.value = error instanceof Error ? error : new Error('设备档案加载失败')
     } finally {
-      loading.value = false
+      if (sequence === detailRequestSequence) loading.value = false
     }
   }
 
@@ -451,7 +502,19 @@
     await router.push('/smis/equipment-ledger/equipment-ledger')
   }
 
-  onMounted(loadDetail)
+  watch(
+    [
+      () => route.params.id,
+      () => deleteContext.value.recordId,
+      () => deleteContext.value.active,
+      () => tenantScope.effectiveTenantId
+    ],
+    () => void loadDetail(),
+    { immediate: true }
+  )
+  onBeforeUnmount(() => {
+    detailRequestSequence++
+  })
 </script>
 
 <style scoped lang="scss">

@@ -69,7 +69,7 @@ export async function fetchPpePersonalRequisitionList(
         p_keyword: normalizeNullableText(params.keyword),
         p_purpose: params.purpose ?? 'list'
       }),
-    { showErrorMessage: true }
+    { showErrorMessage: false, breakReturn: true }
   )
   return {
     data: result.data?.records ?? [],
@@ -93,7 +93,7 @@ export async function fetchPpeIssuanceRecordList(params: SmisPpeIssuanceRecordSe
         p_keyword: normalizeNullableText(params.keyword),
         p_purpose: params.purpose ?? 'list'
       }),
-    { showErrorMessage: true }
+    { showErrorMessage: false, breakReturn: true }
   )
   return {
     data: result.data?.records ?? [],

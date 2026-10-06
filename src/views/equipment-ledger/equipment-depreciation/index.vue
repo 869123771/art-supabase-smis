@@ -48,7 +48,7 @@
     ArtTableQueryHeaderActionContext
   } from '@/components/core/tables/art-table-query/index.vue'
   import type { ColumnOption } from '@/types'
-  import { pageInfoHandler } from '@/utils/table/table-utils'
+  import { buildSupabasePageRange } from '@/utils/supabase/pagination'
   import { useArtFeedback } from '@/hooks/core/useArtFeedback'
   import { useUserStore } from '@/store/modules/user'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
@@ -264,7 +264,10 @@
   ]
 
   const fetchTableData = async (params: TableParams, options?: TableRequestOptions) => {
-    const result = await fetchEquipmentDepreciationList({ ...pageInfoHandler(params), ...params })
+    const result = await fetchEquipmentDepreciationList({
+      ...buildSupabasePageRange(params),
+      ...params
+    })
     if (!options?.signal?.aborted) Object.assign(overview, result.overview)
     return { records: result.data, total: result.total }
   }

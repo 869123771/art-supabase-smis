@@ -1,6 +1,8 @@
 <template>
   <ArtPermissionGuard :permission="permissionCode('View')" :resource-name="pageTitle">
-    <div class="certificate-ledger-page business-workspace-page art-full-height">
+    <div
+      class="certificate-ledger-page business-workspace-page art-full-height flex min-h-0 flex-col gap-[14px]"
+    >
       <BusinessWorkspaceHeader
         :eyebrow="eyebrow"
         :title="pageTitle"
@@ -18,8 +20,9 @@
       </div>
       <ArtTableQuery
         ref="tableRef"
-        v-model="searchQuery"
-        class="certificate-ledger-page__table"
+        :model-value="searchQuery"
+        @update:model-value="replaceReactiveModel(searchQuery, $event)"
+        class="min-h-0 flex-1"
         :api-fn="fetchTableData"
         :search-items="searchItems"
         :columns-factory="columnsFactory"
@@ -40,6 +43,7 @@
 </template>
 
 <script setup lang="tsx">
+  import { replaceReactiveModel } from '@/utils/form/model'
   import type { TableRequestOptions } from '@/hooks/core/useTable'
   import dayjs from 'dayjs'
   import { ElAvatar, ElButton, ElPopover, ElScrollbar, ElTag } from 'element-plus'
@@ -51,7 +55,7 @@
     ArtTableQueryHeaderActionContext
   } from '@/components/core/tables/art-table-query/index.vue'
   import type { ColumnOption } from '@/types'
-  import { pageInfoHandler } from '@/utils/table/table-utils'
+  import { buildSupabasePageRange } from '@/utils/supabase/pagination'
   import { loadAllDocumentPages } from '@/utils/business/document-detail-list'
   import { useArtFeedback } from '@/hooks/core/useArtFeedback'
   import { useUserStore } from '@/store/modules/user'
@@ -581,12 +585,19 @@
     }
   ]
   const fetchTableData = async (params: TableParams, options?: TableRequestOptions) => {
-    const result = await fetchPersonnelCertificateList({
-      ...params,
-      ...pageInfoHandler(params),
-      certificateCategory: category.value ?? params.certificateCategory
-    })
-    if (!options?.signal?.aborted) Object.assign(overview, result.overview)
+    const result = await fetchPersonnelCertificateList(
+      {
+        ...params,
+        ...buildSupabasePageRange(params),
+        certificateCategory: category.value ?? params.certificateCategory
+      },
+      { showErrorMessage: false }
+    )
+    if (options?.signal?.aborted) return { records: result.data, total: result.total }
+    if (result.error) {
+      throw new Error('人员证件加载失败，请重新加载', { cause: result.error })
+    }
+    Object.assign(overview, result.overview)
     return { records: result.data, total: result.total }
   }
   const handleDelete = async (row: SmisPersonnelCertificate): Promise<void> => {
@@ -621,16 +632,6 @@
 
 <style scoped lang="scss">
   .certificate-ledger-page {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-    min-height: 0;
-
-    &__table {
-      flex: 1;
-      min-height: 0;
-    }
-
     &__risk-note {
       display: flex;
       gap: 18px;

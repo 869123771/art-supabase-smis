@@ -86,7 +86,7 @@
       from,
       to: from + params.pageSize - 1
     })
-    return { data: result.data, total: result.total }
+    return result
   }
 
   const normalizeRows = (rows: DataSelectRecord[]): EmployeeIntegrationItem[] => rows.map(employee)

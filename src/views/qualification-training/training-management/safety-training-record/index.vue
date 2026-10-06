@@ -1,6 +1,6 @@
 <template>
   <ArtPermissionGuard permission="SmisSafetyTrainingRecord:View">
-    <div class="training-record-page business-workspace-page art-full-height">
+    <div class="training-record-page business-workspace-page art-full-height min-w-0 gap-[12px]">
       <BusinessWorkspaceHeader
         eyebrow="TRAINING EVIDENCE"
         title="安全培训记录"
@@ -18,7 +18,7 @@
       <ArtTableQuery
         ref="tableRef"
         v-model="searchQuery"
-        class="training-record-page__table"
+        class="min-h-0 min-w-0 flex-1"
         :api-fn="fetchTableData"
         :search-items="searchItems"
         :columns-factory="columnsFactory"
@@ -39,6 +39,7 @@
 </template>
 
 <script setup lang="tsx">
+  import { useAuth } from '@/hooks/core/useAuth'
   import type { TableRequestOptions } from '@/hooks/core/useTable'
   import dayjs from 'dayjs'
   import { ElProgress } from 'element-plus'
@@ -50,7 +51,7 @@
     ArtTableQueryHeaderActionContext
   } from '@/components/core/tables/art-table-query/index.vue'
   import type { ColumnOption } from '@/types'
-  import { pageInfoHandler } from '@/utils/table/table-utils'
+  import { buildSupabasePageRange } from '@/utils/supabase/pagination'
   import { loadAllDocumentPages } from '@/utils/business/document-detail-list'
   import { useArtFeedback } from '@/hooks/core/useArtFeedback'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
@@ -85,8 +86,8 @@
   }
 
   const route = useRoute()
-  const router = useRouter()
   const { confirmDelete } = useArtFeedback()
+  const { hasAuth } = useAuth()
   const tableRef = ref<ArtTableQueryExpose>()
   const dialogRef = ref<DialogExpose>()
   const searchQuery = ref<SmisSafetyTrainingRecordSearchParams>({})
@@ -389,17 +390,28 @@
     }
   ])
   const fetchTableData = async (params: TableParams, options?: TableRequestOptions) => {
-    const { from, to } = pageInfoHandler({ current: params.current, size: params.size })
-    const result = await fetchSafetyTrainingRecordList({ ...params, from, to })
-    if (!options?.signal?.aborted) Object.assign(overview, result.overview)
+    const { from, to } = buildSupabasePageRange({ current: params.current, size: params.size })
+    const result = await fetchSafetyTrainingRecordList(
+      { ...params, from, to },
+      { showErrorMessage: false }
+    )
+    if (options?.signal?.aborted) return result
+    if (result.error) {
+      throw new Error('培训记录加载失败，请重新加载', { cause: result.error })
+    }
+    Object.assign(overview, result.overview)
     planOptions.value = result.planOptions
     organizations.value = result.organizations
-    if (pendingPlanId.value && planOptions.value.some((item) => item.id === pendingPlanId.value)) {
+    if (
+      hasAuth('SmisSafetyTrainingRecord:Add') &&
+      pendingPlanId.value &&
+      planOptions.value.some((item) => item.id === pendingPlanId.value)
+    ) {
       const planId = pendingPlanId.value
-      pendingPlanId.value = ''
       await nextTick()
+      if (options?.signal?.aborted || pendingPlanId.value !== planId) return result
+      pendingPlanId.value = ''
       openDialog(undefined, false, planId)
-      await router.replace({ query: { ...route.query, planId: undefined } })
     }
     return result
   }
@@ -409,15 +421,6 @@
 
 <style scoped lang="scss">
   .training-record-page {
-    gap: 12px;
-    min-width: 0;
-
-    &__table {
-      flex: 1;
-      min-width: 0;
-      min-height: 0;
-    }
-
     :deep(.training-record-page__attendance) {
       display: grid;
       grid-template-columns: 74px minmax(0, 1fr);

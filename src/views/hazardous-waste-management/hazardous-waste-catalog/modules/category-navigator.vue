@@ -1,7 +1,7 @@
 <template>
   <ArtSectionCard
-    :show-scrollbar="false"
-    class="hazardous-category-nav"
+    :show-scrollbar="loading || Boolean(error) || !data.length"
+    class="hazardous-category-nav flex h-full min-h-0 flex-col overflow-hidden"
     title="危废分类"
     subtitle="分类上下文与名录同步"
     :loading="loading"
@@ -41,7 +41,7 @@
         @click="emit('refresh')"
       />
     </template>
-    <div class="hazardous-category-nav__content">
+    <div class="flex min-h-0 flex-1 flex-col gap-[12px]">
       <ElInput v-model="keyword" clearable placeholder="搜索名称或编码" aria-label="搜索危废分类"
         ><template #prefix><ArtSvgIcon icon="ri:search-line" /></template
       ></ElInput>
@@ -139,20 +139,10 @@
 </script>
 <style scoped lang="scss">
   .hazardous-category-nav {
-    height: 100%;
-
     :deep(.art-section-card__body),
     :deep(.art-async-state),
     :deep(.art-async-state__content) {
       height: 100%;
-      min-height: 0;
-    }
-
-    &__content {
-      display: flex;
-      flex: 1;
-      flex-direction: column;
-      gap: 12px;
       min-height: 0;
     }
 

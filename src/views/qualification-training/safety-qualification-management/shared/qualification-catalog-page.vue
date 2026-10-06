@@ -38,7 +38,8 @@
           </template>
           <ArtTableQuery
             ref="tableRef"
-            v-model="searchQuery"
+            :model-value="searchQuery"
+            @update:model-value="replaceReactiveModel(searchQuery, $event)"
             class="qualification-catalog-page__table min-h-0 min-w-0"
             :api-fn="fetchTableData"
             :search-items="searchItems"
@@ -63,6 +64,7 @@
 </template>
 
 <script setup lang="tsx">
+  import { replaceReactiveModel } from '@/utils/form/model'
   import type { TableRequestOptions } from '@/hooks/core/useTable'
   import dayjs from 'dayjs'
   import type { SearchFormItem } from '@/components/core/forms/art-search-bar/index.vue'
@@ -72,7 +74,7 @@
     ArtTableQueryHeaderActionContext
   } from '@/components/core/tables/art-table-query/index.vue'
   import type { ColumnOption } from '@/types'
-  import { pageInfoHandler } from '@/utils/table/table-utils'
+  import { buildSupabasePageRange } from '@/utils/supabase/pagination'
   import { loadAllDocumentPages } from '@/utils/business/document-detail-list'
   import { useArtFeedback } from '@/hooks/core/useArtFeedback'
   import { useUserStore } from '@/store/modules/user'
@@ -348,20 +350,27 @@
     tree.loading = !tree.data.length
     tree.error = null
     try {
-      const result = await fetchQualificationCatalogList({
-        ...params,
-        ...pageInfoHandler(params),
-        ...selectedCatalogFilters.value,
-        catalogType: props.catalogType
-      })
-      if (!options?.signal?.aborted) {
-        tree.data = result.tree
-        tree.workCategories = result.workCategories
-        tree.navigationData = result.navigationTree
-        Object.assign(overview, result.overview)
-        tree.error = result.error ? `${config.value.title}结构加载失败，请重试。` : null
+      const result = await fetchQualificationCatalogList(
+        {
+          ...params,
+          ...buildSupabasePageRange(params),
+          ...selectedCatalogFilters.value,
+          catalogType: props.catalogType
+        },
+        { showErrorMessage: false }
+      )
+      if (options?.signal?.aborted) return { records: result.data, total: result.total }
+      if (result.error) {
+        throw new Error(`${config.value.title}加载失败，请重新加载`, { cause: result.error })
       }
+      tree.data = result.tree
+      tree.workCategories = result.workCategories
+      tree.navigationData = result.navigationTree
+      Object.assign(overview, result.overview)
       return { records: result.data, total: result.total }
+    } catch (error) {
+      if (!options?.signal?.aborted) tree.error = `${config.value.title}结构加载失败，请重试。`
+      throw error
     } finally {
       if (!options?.signal?.aborted) tree.loading = false
     }

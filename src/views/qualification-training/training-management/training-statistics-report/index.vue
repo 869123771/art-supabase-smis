@@ -17,6 +17,7 @@
           <ArtExcelExport
             v-auth="'SmisTrainingStatisticsReport:Export'"
             :data="exportRows"
+            :disabled="!state.ready"
             :columns="exportColumns"
             filename="安全培训统计报表"
             sheet-name="组织培训统计"
@@ -32,7 +33,8 @@
       <ElScrollbar class="training-report-page__scroll">
         <div class="training-report-page__body">
           <ArtSearchBar
-            v-model="query"
+            :model-value="query"
+            @update:model-value="replaceReactiveModel(query, $event)"
             :items="searchItems"
             :span="8"
             label-position="top"
@@ -163,7 +165,9 @@
 </template>
 
 <script setup lang="tsx">
+  import { replaceReactiveModel } from '@/utils/form/model'
   import dayjs from 'dayjs'
+  import { useAsyncState } from '@vueuse/core'
   import type { BarDataItem, LineDataItem, PieDataItem } from '@/types/component/chart'
   import type { ColumnOption } from '@/types'
   import ArtSearchBar, {
@@ -193,11 +197,6 @@
   interface ReportQuery extends Record<string, unknown> {
     dateRange?: [string, string]
     organizationId?: string
-  }
-  interface ReportState {
-    loading: boolean
-    error: string | null
-    data: SmisSafetyTrainingReportResult
   }
 
   const userStore = useUserStore()
@@ -229,7 +228,28 @@
     organizationOptions: []
   })
   const query = reactive<ReportQuery>(initialQuery())
-  const state = reactive<ReportState>({ loading: false, error: null, data: emptyData() })
+  const request = useAsyncState(
+    async (params: Parameters<typeof fetchSafetyTrainingReport>[0]) => {
+      const result = await fetchSafetyTrainingReport(params, { showErrorMessage: false })
+      if (result.error) {
+        throw new Error('培训统计报表加载失败，请重试。', { cause: result.error })
+      }
+      return result
+    },
+    emptyData(),
+    {
+      immediate: false,
+      resetOnExecute: false,
+      // The report cards own recoverable errors; preserve the diagnostic cause without a toast.
+      onError: () => undefined
+    }
+  )
+  const state = reactive({
+    loading: request.isLoading,
+    ready: request.isReady,
+    error: computed(() => (request.error.value ? '培训统计报表加载失败，请重试。' : null)),
+    data: request.state
+  })
   const activeDimension = ref<Dimension>('trainingCategory')
   const dimensionOptions = [
     { label: '培训类别', value: 'trainingCategory' },
@@ -401,24 +421,11 @@
     attendanceRate: { title: '签到率' }
   }
   const loadData = async (): Promise<void> => {
-    state.loading = true
-    state.error = null
-    try {
-      const result = await fetchSafetyTrainingReport({
-        startDate: query.dateRange?.[0],
-        endDate: query.dateRange?.[1],
-        organizationId: query.organizationId
-      })
-      const organizationOptions = result.organizationOptions.length
-        ? result.organizationOptions
-        : state.data.organizationOptions
-      state.data = { ...result, organizationOptions }
-      if (result.error) state.error = '培训统计报表加载失败，请重试。'
-    } catch {
-      state.error = '培训统计报表加载失败，请重试。'
-    } finally {
-      state.loading = false
-    }
+    await request.executeImmediate({
+      startDate: query.dateRange?.[0],
+      endDate: query.dateRange?.[1],
+      organizationId: query.organizationId
+    })
   }
   const resetQuery = (): void => {
     Object.assign(query, initialQuery())

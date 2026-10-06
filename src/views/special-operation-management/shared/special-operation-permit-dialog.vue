@@ -9,7 +9,8 @@
   >
     <ArtForm
       ref="formRef"
-      v-model="form"
+      :model-value="form"
+      @update:model-value="replaceReactiveModel(form, $event)"
       :items="[]"
       :rules="rules"
       :show-reset="false"
@@ -397,6 +398,7 @@
 </template>
 
 <script setup lang="ts">
+  import { replaceReactiveModel } from '@/utils/form/model'
   import type { FormRules } from 'element-plus'
   import type { EmployeeIntegrationItem } from '@/api/integration/employees'
   import ArtDialog from '@/components/core/dialogs/art-dialog/index.vue'

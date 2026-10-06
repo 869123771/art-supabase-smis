@@ -34,7 +34,8 @@
       <ElScrollbar class="special-equipment-page__scroll">
         <div class="special-equipment-page__body">
           <ArtSearchBar
-            v-model="query"
+            :model-value="query"
+            @update:model-value="replaceReactiveModel(query, $event)"
             :items="searchItems"
             :span="8"
             label-position="top"
@@ -178,6 +179,7 @@
 </template>
 
 <script setup lang="tsx">
+  import { replaceReactiveModel } from '@/utils/form/model'
   import { ElProgress, ElTag } from 'element-plus'
   import type { ColumnOption } from '@/types'
   import ArtSearchBar, {

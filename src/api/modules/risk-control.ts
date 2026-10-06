@@ -3,6 +3,7 @@ import { normalizeNullableText } from '@/utils/form/normalize'
 import { createTenantScopeReadGuard } from '@/utils/tenant-scope-context'
 import { omit } from 'lodash-es'
 import { useSupabase } from '@/hooks'
+import type { ApiFeedbackOptions } from '@/types/api/request'
 import type {
   SmisRiskControlListResult,
   SmisRiskControlOptions,
@@ -38,7 +39,10 @@ export async function fetchSafetyRiskOptions() {
   return result.data ?? { riskPoints: [], hazardCategories: [] }
 }
 
-export async function fetchSafetyRiskList(params: SmisSafetyRiskSearchParams = {}) {
+export async function fetchSafetyRiskList(
+  params: SmisSafetyRiskSearchParams = {},
+  options: ApiFeedbackOptions = {}
+) {
   const from = Math.max(params.from ?? 0, 0)
   const result = await responseHandle<SmisSafetyRiskListResult>(
     () =>
@@ -53,7 +57,7 @@ export async function fetchSafetyRiskList(params: SmisSafetyRiskSearchParams = {
         p_status: params.status || null,
         p_responsible_keyword: normalizeNullableText(params.responsibleKeyword)
       }),
-    { showErrorMessage: true }
+    { showErrorMessage: options.showErrorMessage ?? true }
   )
   return {
     data: result.data?.records ?? [],
@@ -95,7 +99,10 @@ export async function fetchRiskControlOptions() {
   return result.data ?? { riskPoints: [], duplicateConfigurations: [] }
 }
 
-export async function fetchRiskControlPointList(params: SmisRiskControlSearchParams = {}) {
+export async function fetchRiskControlPointList(
+  params: SmisRiskControlSearchParams = {},
+  options: ApiFeedbackOptions = {}
+) {
   const from = Math.max(params.from ?? 0, 0)
   const result = await responseHandle<SmisRiskControlListResult>(
     () =>
@@ -106,7 +113,7 @@ export async function fetchRiskControlPointList(params: SmisRiskControlSearchPar
         p_control_level: params.controlLevel || null,
         p_control_status: params.controlStatus || null
       }),
-    { showErrorMessage: true }
+    { showErrorMessage: options.showErrorMessage ?? true }
   )
   return {
     data: result.data?.records ?? [],
@@ -151,7 +158,10 @@ export async function generateDueRiskInspectionTasks() {
   )
 }
 
-export async function fetchRiskInspectionTaskList(params: SmisRiskInspectionTaskSearchParams = {}) {
+export async function fetchRiskInspectionTaskList(
+  params: SmisRiskInspectionTaskSearchParams = {},
+  options: ApiFeedbackOptions = {}
+) {
   const from = Math.max(params.from ?? 0, 0)
   const result = await responseHandle<SmisRiskInspectionTaskListResult>(
     () =>
@@ -166,7 +176,7 @@ export async function fetchRiskInspectionTaskList(params: SmisRiskInspectionTask
         p_status: params.status || null,
         p_executor_keyword: normalizeNullableText(params.executorKeyword)
       }),
-    { showErrorMessage: true }
+    { showErrorMessage: options.showErrorMessage ?? true }
   )
   return {
     data: result.data?.records ?? [],

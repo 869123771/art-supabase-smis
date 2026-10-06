@@ -34,7 +34,8 @@
       <ElScrollbar class="inspection-record-page__scroll">
         <div class="inspection-record-page__body">
           <ArtSearchBar
-            v-model="query"
+            :model-value="query"
+            @update:model-value="replaceReactiveModel(query, $event)"
             :items="searchItems"
             :span="5"
             label-position="top"
@@ -78,6 +79,7 @@
 </template>
 
 <script setup lang="tsx">
+  import { replaceReactiveModel } from '@/utils/form/model'
   import { useDictionaryOptions } from '@/hooks/core/useDictionaryOptions'
   import { createDateTimeFormatter } from '@/utils/ui/format'
 

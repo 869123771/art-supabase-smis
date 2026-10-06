@@ -17,7 +17,8 @@
       <ElScrollbar class="qualification-analysis__scroll">
         <div class="qualification-analysis__body">
           <ArtSearchBar
-            v-model="query"
+            :model-value="query"
+            @update:model-value="replaceReactiveModel(query, $event)"
             :items="searchItems"
             :span="8"
             label-position="top"
@@ -252,7 +253,9 @@
 </template>
 
 <script setup lang="ts">
+  import { replaceReactiveModel } from '@/utils/form/model'
   import dayjs from 'dayjs'
+  import { useAsyncState } from '@vueuse/core'
   import type { BarDataItem, PieDataItem } from '@/types/component/chart'
   import type { ColumnOption } from '@/types'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
@@ -318,11 +321,27 @@
   const userStore = useUserStore()
   const { getDictMap } = storeToRefs(userStore)
   const query = reactive<AnalysisQuery>(initialQuery())
-  const state = reactive<{
-    loading: boolean
-    error: string | null
-    data: SmisSafetyQualificationAnalysisResult
-  }>({ loading: false, error: null, data: emptyData() })
+  const request = useAsyncState(
+    async (params: Parameters<typeof fetchSafetyQualificationAnalysis>[0]) => {
+      const result = await fetchSafetyQualificationAnalysis(params, { showErrorMessage: false })
+      if (result.error) {
+        throw new Error('安全资质统计加载失败，请重试。', { cause: result.error })
+      }
+      return result
+    },
+    emptyData(),
+    {
+      immediate: false,
+      resetOnExecute: false,
+      // The report cards own recoverable errors; preserve the diagnostic cause without a toast.
+      onError: () => undefined
+    }
+  )
+  const state = reactive({
+    loading: request.isLoading,
+    error: computed(() => (request.error.value ? '安全资质统计加载失败，请重试。' : null)),
+    data: request.state
+  })
   const activePeriodMetric = ref<PeriodMetric>('reminder')
   const periodMetricOptions = [
     { label: '触发提醒', value: 'reminder' },
@@ -557,24 +576,11 @@
   ]
 
   const loadData = async (): Promise<void> => {
-    state.loading = true
-    state.error = null
-    try {
-      const result = await fetchSafetyQualificationAnalysis({
-        startDate: query.dateRange?.[0],
-        endDate: query.dateRange?.[1],
-        organizationId: query.organizationId
-      })
-      const organizationOptions = result.organizationOptions.length
-        ? result.organizationOptions
-        : state.data.organizationOptions
-      state.data = { ...result, organizationOptions }
-      if (result.error) state.error = '安全资质统计加载失败，请重试。'
-    } catch {
-      state.error = '安全资质统计加载失败，请重试。'
-    } finally {
-      state.loading = false
-    }
+    await request.executeImmediate({
+      startDate: query.dateRange?.[0],
+      endDate: query.dateRange?.[1],
+      organizationId: query.organizationId
+    })
   }
   const resetQuery = (): void => {
     Object.assign(query, initialQuery())

@@ -24,6 +24,7 @@
           v-model="form.model.warehouseId"
           :selected-data="selection.warehouse"
           :api-fn="fetchWarehouseOptions"
+          :show-pagination="true"
           :columns="warehouseColumns"
           row-key="id"
           label-key="warehouseName"
@@ -76,6 +77,7 @@
   </ArtDialog>
 </template>
 <script setup lang="tsx">
+  import { buildSupabasePageRange } from '@/utils/supabase/pagination'
   import { notifyFriendlyError } from '@/hooks/core/useArtFeedback'
   import { validateArtFormForSubmit } from '@/utils/form/validate-art-form'
   import { normalizeNullableText } from '@/utils/form/normalize'
@@ -291,24 +293,25 @@
     }
   ]
   const fetchWarehouseOptions = async (params: DataSelectFetchParams) => {
-    const from = (params.page - 1) * params.pageSize
-    const result = await fetchHazardousWasteWarehouseList({
-      keyword: params.keyword,
-      status: 'enabled',
-      from,
-      to: from + params.pageSize - 1
-    })
-    return { data: result.data, total: result.total }
+    const result = await fetchHazardousWasteWarehouseList(
+      {
+        keyword: params.keyword,
+        status: 'enabled',
+        ...buildSupabasePageRange({ current: params.page, size: params.pageSize })
+      },
+      { showErrorMessage: false }
+    )
+    return result
   }
   const fetchCatalogOptions = async (params: DataSelectFetchParams) => {
-    const from = (params.page - 1) * params.pageSize
-    const result = await fetchHazardousWasteCatalogList({
-      keyword: params.keyword,
-      status: 'enabled',
-      from,
-      to: from + params.pageSize - 1
-    })
-    return { data: result.data, total: result.total }
+    return fetchHazardousWasteCatalogList(
+      {
+        keyword: params.keyword,
+        status: 'enabled',
+        ...buildSupabasePageRange({ current: params.page, size: params.pageSize })
+      },
+      { showErrorMessage: false }
+    )
   }
   const toItem = (item: SmisHazardousWasteCatalogItem): SmisHazardousWasteDocumentItem => ({
     catalogId: item.id,

@@ -37,7 +37,8 @@
 
     <ArtTableQuery
       ref="tableQueryRef"
-      v-model="searchQuery"
+      :model-value="searchQuery"
+      @update:model-value="replaceReactiveModel(searchQuery, $event)"
       class="special-equipment-page__table"
       :api-fn="fetchTableData"
       :search-items="searchItems"
@@ -60,6 +61,7 @@
 </template>
 
 <script setup lang="tsx">
+  import { replaceReactiveModel } from '@/utils/form/model'
   import dayjs from 'dayjs'
   import { ElTag } from 'element-plus'
   import type { SearchFormItem } from '@/components/core/forms/art-search-bar/index.vue'
@@ -83,6 +85,7 @@
     fetchSpecialEquipmentAnalysis,
     type SmisEquipment,
     type SmisEquipmentCategory,
+    type SmisEquipmentSearchParams,
     type SmisSpecialEquipmentCategoryStat,
     type SmisStorageLocation,
     type WorkInstructionOrganization
@@ -95,10 +98,10 @@
   } from './modules/equipment-reminder-dialog.vue'
 
   defineOptions({ name: 'SmisSpecialEquipmentLedger' })
-  interface TableParams extends Pick<Api.Common.PaginationParams, 'current' | 'size'> {
-    keyword?: string
-    equipmentKind?: string
-    operationStatus?: string
+  interface TableParams
+    extends
+      Pick<Api.Common.PaginationParams, 'current' | 'size'>,
+      Pick<SmisEquipmentSearchParams, 'keyword' | 'equipmentKind' | 'operationStatus'> {
     organizationId?: string
   }
   interface EquipmentDialogExpose {
@@ -338,8 +341,8 @@
       const [result, analysis] = await Promise.all([
         fetchEquipmentLedgerList({
           keyword: params.keyword,
-          equipmentKind: params.equipmentKind as never,
-          operationStatus: params.operationStatus as never,
+          equipmentKind: params.equipmentKind,
+          operationStatus: params.operationStatus,
           from: 0,
           to: 9999
         }),
@@ -349,7 +352,6 @@
       tree.locationTree = result.locationTree
       report.organizations = analysis.data.organizations
       report.categories = analysis.data.categories
-      report.error = analysis.error ? '部门分类报表加载失败，请重试。' : null
       const organizationIds = params.organizationId
         ? new Set(
             organizationTreeUtils
@@ -373,6 +375,9 @@
       ).length
       const from = (Math.max(params.current || 1, 1) - 1) * (params.size || 20)
       return { records: all.slice(from, from + (params.size || 20)), total: all.length }
+    } catch (error) {
+      report.error = '特种设备台账加载失败，请重试。'
+      throw error
     } finally {
       report.loading = false
     }

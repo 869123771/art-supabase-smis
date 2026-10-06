@@ -3,7 +3,7 @@
     permission="SmisHazardousWasteWarehouseDefinition:View"
     resource-name="仓库定义"
   >
-    <div class="hazardous-warehouse-page business-workspace-page art-full-height">
+    <div class="business-workspace-page art-full-height flex min-h-0 min-w-0 flex-col gap-[14px]">
       <BusinessWorkspaceHeader
         eyebrow="HAZARDOUS WASTE STORAGE"
         title="仓库定义"
@@ -20,8 +20,9 @@
       </BusinessWorkspaceHeader>
       <ArtTableQuery
         ref="tableQueryRef"
-        v-model="searchQuery"
-        class="hazardous-warehouse-page__table"
+        :model-value="searchQuery"
+        @update:model-value="replaceReactiveModel(searchQuery, $event)"
+        class="min-h-0 min-w-0 flex-1"
         :api-fn="fetchTableData"
         :search-items="searchItems"
         :columns-factory="columnsFactory"
@@ -37,24 +38,28 @@
         focusable
       />
       <WarehouseDialog ref="dialogRef" @success="handleSaveSuccess" />
+      <MasterDataDeleteGuard ref="deleteGuardRef" />
     </div>
   </ArtPermissionGuard>
 </template>
 
 <script setup lang="tsx">
+  import { replaceReactiveModel } from '@/utils/form/model'
   import type { TableRequestOptions } from '@/hooks/core/useTable'
   import dayjs from 'dayjs'
   import { ElTag } from 'element-plus'
   import type { SearchFormItem } from '@/components/core/forms/art-search-bar/index.vue'
   import type {
     ArtTableQueryExpose,
-    ArtTableQueryHeaderAction,
-    ArtTableQueryHeaderActionContext
+    ArtTableQueryHeaderAction
   } from '@/components/core/tables/art-table-query/index.vue'
   import type { ColumnOption } from '@/types'
-  import { pageInfoHandler } from '@/utils/table/table-utils'
+  import { buildSupabasePageRange } from '@/utils/supabase/pagination'
   import { loadAllDocumentPages } from '@/utils/business/document-detail-list'
   import { useArtFeedback } from '@/hooks/core/useArtFeedback'
+  import { useRecordDeleteGuard } from '@/hooks/core/useRecordDeleteGuard'
+  import { getFriendlySupabaseErrorMessage } from '@/utils/supabase/error'
+  import MasterDataDeleteGuard from '@/components/business/master-data-delete-guard/index.vue'
   import { useAuth } from '@/hooks/core/useAuth'
   import { useUserStore } from '@/store/modules/user'
   import { useTenantScopeStore } from '@/store/modules/tenant-scope'
@@ -70,6 +75,9 @@
   import {
     deleteHazardousWasteWarehouses,
     fetchHazardousWasteWarehouseList,
+    fetchHazardousWasteDocumentList,
+    type SmisHazardousWasteDocument,
+    type SmisHazardousWasteDocumentSearchParams,
     type SmisHazardousWasteWarehouse,
     type SmisHazardousWasteWarehouseOverview,
     type SmisHazardousWasteWarehouseSearchParams
@@ -84,6 +92,35 @@
   }
 
   const { confirmDelete } = useArtFeedback()
+  const { deleteGuardRef, inspectDeleteReferences } = useRecordDeleteGuard(
+    'smis_hazardous_waste_warehouse',
+    '危废仓库',
+    {
+      smis_hazardous_waste_document: {
+        canNavigate: () =>
+          hasAnyAuth(['SmisHazardousWasteInbound:View', 'SmisHazardousWasteOutbound:View']),
+        routeNames: ['SmisHazardousWasteInbound', 'SmisHazardousWasteOutbound'],
+        resolveRouteName: async (record) => {
+          for (const direction of ['inbound', 'outbound'] as const) {
+            const name =
+              direction === 'inbound' ? 'SmisHazardousWasteInbound' : 'SmisHazardousWasteOutbound'
+            if (!hasAnyAuth([`${name}:View`])) continue
+            const rows = await loadAllDocumentPages<
+              SmisHazardousWasteDocument,
+              SmisHazardousWasteDocumentSearchParams
+            >(
+              (params) =>
+                fetchHazardousWasteDocumentList(direction, params, { showErrorMessage: false }),
+              { documentNo: record.recordNo, warehouseId: record.resourceId }
+            )
+            if (rows.some((row) => row.id === record.targetId)) return name
+          }
+          return null
+        }
+      }
+    }
+  )
+  const deleteBusy = ref(false)
   const { hasAnyAuth } = useAuth()
   const userStore = useUserStore()
   const { getDictMap } = storeToRefs(userStore)
@@ -190,11 +227,17 @@
     {
       permission: 'SmisHazardousWasteWarehouseDefinition:Delete',
       type: 'delete',
-      content: ({ selectedCount }: ArtTableQueryHeaderActionContext) =>
-        `确定删除选中的 ${selectedCount} 个危废仓库吗？已被单据引用的仓库不能删除。`,
+      confirm: false,
+      disabled: deleteBusy.value,
       onClick: async ({ selectedRows, api }) => {
-        await deleteHazardousWasteWarehouses(selectedRows.map((row) => String(row.id)))
-        await api.refreshRemove()
+        await removeWarehouses(
+          selectedRows.map((row) => ({
+            id: String(row.id),
+            warehouseName: String(row.warehouseName),
+            warehouseCode: String(row.warehouseCode)
+          })),
+          () => api.refreshRemove()
+        )
       }
     }
   ])
@@ -304,6 +347,7 @@
             />
             <ArtButtonTable
               type="delete"
+              disabled={deleteBusy.value}
               permission="SmisHazardousWasteWarehouseDefinition:Delete"
               onClick={() => void handleDelete(row)}
             />
@@ -321,22 +365,51 @@
     )
   }
   const fetchTableData = async (params: TableParams, options?: TableRequestOptions) => {
-    const response = await fetchHazardousWasteWarehouseList({
-      ...params,
-      ...pageInfoHandler(params)
-    })
+    const response = await fetchHazardousWasteWarehouseList(
+      { ...params, ...buildSupabasePageRange(params) },
+      { showErrorMessage: false }
+    )
+    if (response.error) {
+      throw new Error('危废仓库列表加载失败，请重新加载', { cause: response.error })
+    }
     if (!options?.signal?.aborted) Object.assign(overview, response.overview)
     return { records: response.data, total: response.total }
   }
-  const handleDelete = async (row: SmisHazardousWasteWarehouse): Promise<void> => {
+  const removeWarehouses = async (
+    rows: Array<Pick<SmisHazardousWasteWarehouse, 'id' | 'warehouseName' | 'warehouseCode'>>,
+    refresh: () => unknown | Promise<unknown>
+  ): Promise<void> => {
+    if (deleteBusy.value || !rows.length) return
+    deleteBusy.value = true
+    const resources = rows.map((row) => ({
+      id: row.id,
+      label: `${row.warehouseName} · ${row.warehouseCode}`
+    }))
     try {
-      await confirmDelete(`确定删除危废仓库“${row.warehouseName}”吗？`)
-      await deleteHazardousWasteWarehouses([row.id])
-      await tableQueryRef.value?.refreshRemove()
-    } catch {
-      /* 取消删除 */
+      if (await inspectDeleteReferences(resources)) return
+      await confirmDelete(
+        rows.length === 1
+          ? `确定删除危废仓库“${rows[0].warehouseName}”吗？`
+          : `确定删除选中的 ${rows.length} 个危废仓库吗？`
+      )
+      try {
+        await deleteHazardousWasteWarehouses(rows.map((row) => row.id))
+      } catch (cause) {
+        if (await inspectDeleteReferences(resources)) return
+        throw cause
+      }
+      ElMessage.success('危废仓库已删除')
+      await refresh()
+    } catch (cause) {
+      if (cause !== 'cancel' && cause !== 'close') {
+        ElMessage.error(getFriendlySupabaseErrorMessage(cause, '危废仓库删除失败，请重试'))
+      }
+    } finally {
+      deleteBusy.value = false
     }
   }
+  const handleDelete = (row: SmisHazardousWasteWarehouse): Promise<void> =>
+    removeWarehouses([row], () => tableQueryRef.value?.refreshRemove())
   const handleSaveSuccess = (type: 'add' | 'edit'): void => {
     void (type === 'add'
       ? tableQueryRef.value?.refreshCreate()
@@ -344,19 +417,3 @@
   }
   onMounted(() => void userStore.ensureDictLoaded('commonEnabledDisabledStatus'))
 </script>
-
-<style scoped lang="scss">
-  .hazardous-warehouse-page {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-    min-width: 0;
-    min-height: 0;
-
-    &__table {
-      flex: 1;
-      min-width: 0;
-      min-height: 0;
-    }
-  }
-</style>

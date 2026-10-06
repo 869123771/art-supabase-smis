@@ -175,7 +175,8 @@
       </div>
       <ArtForm
         ref="activityFormRef"
-        v-model="activityForm"
+        :model-value="activityForm"
+        @update:model-value="replaceReactiveModel(activityForm, $event)"
         :items="[]"
         :rules="activityRules"
         custom-layout
@@ -214,7 +215,8 @@
       </div>
       <ArtForm
         ref="hazardFormRef"
-        v-model="hazardForm"
+        :model-value="hazardForm"
+        @update:model-value="replaceReactiveModel(hazardForm, $event)"
         :items="[]"
         :rules="hazardRules"
         custom-layout
@@ -303,6 +305,7 @@
 </template>
 
 <script setup lang="ts">
+  import { replaceReactiveModel } from '@/utils/form/model'
   import { normalizeNullableText } from '@/utils/form/normalize'
   import { Plus } from '@element-plus/icons-vue'
   import type { FormRules } from 'element-plus'

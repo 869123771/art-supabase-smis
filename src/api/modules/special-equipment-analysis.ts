@@ -28,7 +28,7 @@ export async function fetchSpecialEquipmentAnalysis(organizationId?: string) {
       supabase.rpc('smis_get_special_equipment_analysis_secure', {
         p_organization_id: organizationId || null
       }),
-    { showErrorMessage: true }
+    { showErrorMessage: false, breakReturn: true }
   )
   const data = result.data ?? emptyAnalysis()
   return {

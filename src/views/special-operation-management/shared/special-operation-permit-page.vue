@@ -1,6 +1,8 @@
 <template>
   <ArtPermissionGuard :permission="permissions.view" :resource-name="title">
-    <div class="special-operation-permit-page business-workspace-page art-full-height">
+    <div
+      class="special-operation-permit-page business-workspace-page art-full-height min-w-0 gap-[12px] overflow-hidden"
+    >
       <BusinessWorkspaceHeader
         density="compact"
         eyebrow="SPECIAL OPERATION WORK PERMIT"
@@ -17,7 +19,9 @@
         <template #actions><BusinessTableWorkspaceActions :table="tableQueryRef" /></template>
       </BusinessWorkspaceHeader>
 
-      <div class="special-operation-permit-page__workspace">
+      <div
+        class="special-operation-permit-page__workspace flex min-h-0 min-w-0 w-full flex-1 flex-col gap-[12px]"
+      >
         <section
           class="special-operation-permit-page__status art-card-xs"
           aria-label="单据状态筛选"
@@ -89,7 +93,7 @@
     ArtTableQueryHeaderActionContext
   } from '@/components/core/tables/art-table-query/index.vue'
   import type { ColumnOption } from '@/types'
-  import { pageInfoHandler } from '@/utils/table/table-utils'
+  import { buildSupabasePageRange } from '@/utils/supabase/pagination'
   import { loadAllDocumentPages } from '@/utils/business/document-detail-list'
   import { mapWithConcurrency } from '@/utils/async'
   import { useArtFeedback } from '@/hooks/core/useArtFeedback'
@@ -579,7 +583,7 @@
       applicantKeyword: params.applicantKeyword,
       status: activeStatus.value,
       tenantId: effectiveTenantId.value,
-      ...pageInfoHandler({ current: params.current ?? 1, size: params.size ?? 20 })
+      ...buildSupabasePageRange({ current: params.current ?? 1, size: params.size ?? 20 })
     })
     if (!options?.signal?.aborted) Object.assign(overview, response.overview)
     return response
@@ -619,22 +623,6 @@
 </script>
 
 <style scoped lang="scss">
-  .special-operation-permit-page {
-    gap: 12px;
-    min-width: 0;
-    overflow: hidden;
-  }
-
-  .special-operation-permit-page__workspace {
-    display: flex;
-    flex: 1;
-    flex-direction: column;
-    gap: 12px;
-    width: 100%;
-    min-width: 0;
-    min-height: 0;
-  }
-
   .special-operation-permit-page__status {
     display: grid;
     grid-template-columns: auto minmax(0, 1fr);

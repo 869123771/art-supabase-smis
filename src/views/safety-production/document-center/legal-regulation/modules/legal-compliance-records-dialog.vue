@@ -16,7 +16,8 @@
 
       <ArtTableQuery
         ref="tableQueryRef"
-        v-model="searchQuery"
+        :model-value="searchQuery"
+        @update:model-value="replaceReactiveModel(searchQuery, $event)"
         class="legal-compliance-records__table"
         :api-fn="fetchTableData"
         :search-items="searchItems"
@@ -37,6 +38,7 @@
 </template>
 
 <script setup lang="tsx">
+  import { replaceReactiveModel } from '@/utils/form/model'
   import { createDateTimeFormatter } from '@/utils/ui/format'
 
   import type { SearchFormItem } from '@/components/core/forms/art-search-bar/index.vue'
@@ -46,7 +48,7 @@
     ArtTableQueryHeaderActionContext
   } from '@/components/core/tables/art-table-query/index.vue'
   import type { ColumnOption } from '@/types'
-  import { pageInfoHandler } from '@/utils/table/table-utils'
+  import { buildSupabasePageRange } from '@/utils/supabase/pagination'
   import { useArtFeedback } from '@/hooks/core/useArtFeedback'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
   import ArtButtonMore, {
@@ -191,7 +193,7 @@
     const result = await fetchLegalComplianceEvaluationList({
       documentId: searchQuery.documentId,
       keyword: params.keyword,
-      ...pageInfoHandler(params)
+      ...buildSupabasePageRange(params)
     })
     return { records: result.data, total: result.total }
   }

@@ -87,7 +87,7 @@ export async function fetchToolPersonalRequisitionList(
         p_keyword: normalizeNullableText(params.keyword),
         p_purpose: params.purpose ?? 'list'
       }),
-    { showErrorMessage: true }
+    { showErrorMessage: false, breakReturn: true }
   )
   return {
     data: result.data?.records ?? [],
@@ -111,7 +111,7 @@ export async function fetchToolIssuanceRecordList(params: SmisToolIssuanceRecord
         p_keyword: normalizeNullableText(params.keyword),
         p_purpose: params.purpose ?? 'list'
       }),
-    { showErrorMessage: true }
+    { showErrorMessage: false, breakReturn: true }
   )
   return {
     data: result.data?.records ?? [],
@@ -271,7 +271,7 @@ export async function fetchToolReturnList(params: SmisToolReturnSearchParams = {
         p_keyword: normalizeNullableText(params.keyword),
         p_purpose: params.purpose ?? 'list'
       }),
-    { showErrorMessage: true }
+    { showErrorMessage: false, breakReturn: true }
   )
   return {
     data: result.data?.records ?? [],

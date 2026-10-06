@@ -86,7 +86,7 @@
         <ArtForm
           ref="paperFormRef"
           :model-value="paperForm"
-          @update:model-value="Object.assign(paperForm, $event)"
+          @update:model-value="replaceReactiveModel(paperForm, $event)"
           :items="paperItems"
           :rules="paperRules"
           :span="12"
@@ -442,6 +442,7 @@
 </template>
 
 <script setup lang="tsx">
+  import { replaceReactiveModel } from '@/utils/form/model'
   import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue'
   import { storeToRefs } from 'pinia'
   import type { FormRules } from 'element-plus'
@@ -454,7 +455,7 @@
     ArtTableQueryHeaderActionContext
   } from '@/components/core/tables/art-table-query/index.vue'
   import type { ColumnOption } from '@/types'
-  import { pageInfoHandler } from '@/utils/table/table-utils'
+  import { buildSupabasePageRange } from '@/utils/supabase/pagination'
   import { loadAllDocumentPages } from '@/utils/business/document-detail-list'
   import { useArtFeedback } from '@/hooks/core/useArtFeedback'
   import { useAuth } from '@/hooks/core/useAuth'
@@ -1340,13 +1341,13 @@
     }
   ])
   const fetchPapers = async (params: PaperParams) => {
-    const { from, to } = pageInfoHandler({ current: params.current, size: params.size })
+    const { from, to } = buildSupabasePageRange({ current: params.current, size: params.size })
     const result = await fetchExamPaperList({ ...params, from, to })
     Object.assign(paperOverview, result.overview)
     return result
   }
   const fetchRecords = async (params: RecordParams) => {
-    const { from, to } = pageInfoHandler({ current: params.current, size: params.size })
+    const { from, to } = buildSupabasePageRange({ current: params.current, size: params.size })
     const result = await fetchExamRecordList({ ...params, from, to })
     Object.assign(recordOverview, result.overview)
     return result

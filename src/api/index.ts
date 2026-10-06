@@ -228,6 +228,7 @@ export {
   deleteHazardousWasteDocuments,
   deleteHazardousWasteWarehouses,
   fetchHazardousWasteCatalogList,
+  fetchHazardousWasteCatalogDeleteDependencies,
   fetchHazardousWasteDocumentList,
   fetchHazardousWasteWarehouseList,
   saveHazardousWasteCatalog,
@@ -237,12 +238,7 @@ export {
   transitionHazardousWasteDocument
 } from '@smis/api/modules/hazardous-waste'
 
-export {
-  deleteSuppliers,
-  exportSupplierList,
-  fetchSupplierList,
-  saveSupplier
-} from '@smis/api/modules/supplier'
+export { exportSupplierList, fetchSupplierList, saveSupplier } from '@smis/api/modules/supplier'
 
 export {
   deleteEquipmentLedger,
@@ -265,6 +261,8 @@ export {
 export {
   deleteEquipmentInspections,
   fetchEquipmentInspectionList,
+  fetchEquipmentInspectionReference,
+  type SmisEquipmentInspectionReference,
   saveEquipmentInspection
 } from '@smis/api/modules/inspection-declaration'
 

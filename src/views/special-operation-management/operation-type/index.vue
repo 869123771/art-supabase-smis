@@ -52,7 +52,7 @@
     ArtTableQueryHeaderActionContext
   } from '@/components/core/tables/art-table-query/index.vue'
   import type { ColumnOption } from '@/types'
-  import { pageInfoHandler } from '@/utils/table/table-utils'
+  import { buildSupabasePageRange } from '@/utils/supabase/pagination'
   import { loadAllDocumentPages } from '@/utils/business/document-detail-list'
   import { useArtFeedback } from '@/hooks/core/useArtFeedback'
   import { useUserStore } from '@/store/modules/user'
@@ -435,7 +435,7 @@
       status: params.status,
       tagStyle: params.tagStyle,
       tenantId: effectiveTenantId.value,
-      ...pageInfoHandler({ current: params.current, size: params.size })
+      ...buildSupabasePageRange({ current: params.current, size: params.size })
     })
     if (!options?.signal?.aborted) Object.assign(overview, response.overview)
     return response

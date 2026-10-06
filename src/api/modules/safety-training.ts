@@ -1,3 +1,4 @@
+import type { ApiFeedbackOptions } from '@/types/api/request'
 import { buildSupabaseRpcRange } from '@/utils/supabase'
 import { normalizeNullableText } from '@/utils/form/normalize'
 import { omit } from 'lodash-es'
@@ -16,7 +17,10 @@ import type {
 } from '@smis/api/types'
 
 const { supabase, keysToSnakeDeep, responseHandle } = useSupabase()
-export async function fetchSafetyTrainingPlanList(params: SmisSafetyTrainingPlanSearchParams = {}) {
+export async function fetchSafetyTrainingPlanList(
+  params: SmisSafetyTrainingPlanSearchParams = {},
+  options: ApiFeedbackOptions = {}
+) {
   const from = Math.max(params.from ?? 0, 0)
   const result = await responseHandle<Partial<SmisSafetyTrainingPlanListResult>>(
     () =>
@@ -31,7 +35,7 @@ export async function fetchSafetyTrainingPlanList(params: SmisSafetyTrainingPlan
         p_end_at: params.dateRange?.[1] || null,
         p_warning_status: params.warningStatus || null
       }),
-    { showErrorMessage: true }
+    { showErrorMessage: options.showErrorMessage ?? true }
   )
   return {
     data: result.data?.records ?? [],
@@ -77,7 +81,8 @@ export async function deleteSafetyTrainingPlans(ids: string[]) {
 }
 
 export async function fetchSafetyTrainingRecordList(
-  params: SmisSafetyTrainingRecordSearchParams = {}
+  params: SmisSafetyTrainingRecordSearchParams = {},
+  options: ApiFeedbackOptions = {}
 ) {
   const from = Math.max(params.from ?? 0, 0)
   const result = await responseHandle<Partial<SmisSafetyTrainingRecordListResult>>(
@@ -90,7 +95,7 @@ export async function fetchSafetyTrainingRecordList(
         p_end_at: params.dateRange?.[1] || null,
         p_organization_id: params.organizationId || null
       }),
-    { showErrorMessage: true }
+    { showErrorMessage: options.showErrorMessage ?? true }
   )
   return {
     data: result.data?.records ?? [],
@@ -134,7 +139,10 @@ export async function deleteSafetyTrainingRecords(ids: string[]) {
   )
 }
 
-export async function fetchSafetyTrainingReport(params: SmisSafetyTrainingReportSearchParams = {}) {
+export async function fetchSafetyTrainingReport(
+  params: SmisSafetyTrainingReportSearchParams = {},
+  options: ApiFeedbackOptions = {}
+) {
   const result = await responseHandle<SmisSafetyTrainingReportResult>(
     () =>
       supabase.rpc('smis_safety_training_report_secure', {
@@ -142,7 +150,7 @@ export async function fetchSafetyTrainingReport(params: SmisSafetyTrainingReport
         p_end_date: params.endDate || null,
         p_organization_id: params.organizationId || null
       }),
-    { showErrorMessage: true }
+    { showErrorMessage: options.showErrorMessage ?? true }
   )
   return {
     ...(result.data ?? {

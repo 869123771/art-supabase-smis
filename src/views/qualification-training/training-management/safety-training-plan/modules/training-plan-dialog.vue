@@ -3,7 +3,8 @@
     <div class="training-plan-dialog">
       <ArtForm
         ref="formRef"
-        v-model="form"
+        :model-value="form"
+        @update:model-value="replaceReactiveModel(form, $event)"
         :items="items"
         :rules="rules"
         :span="12"
@@ -95,6 +96,7 @@
 </template>
 
 <script setup lang="ts">
+  import { replaceReactiveModel } from '@/utils/form/model'
   import { normalizeNullableText } from '@/utils/form/normalize'
   import dayjs from 'dayjs'
   import { ElMessage, type FormRules } from 'element-plus'

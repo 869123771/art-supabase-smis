@@ -21,7 +21,7 @@
       <ArtForm
         ref="formRef"
         :model-value="form"
-        @update:model-value="Object.assign(form, $event)"
+        @update:model-value="replaceReactiveModel(form, $event)"
         :items="[]"
         :rules="rules"
         custom-layout
@@ -153,6 +153,7 @@
 </template>
 
 <script setup lang="ts">
+  import { replaceReactiveModel } from '@/utils/form/model'
   import { createDateTimeFormatter } from '@/utils/ui/format'
 
   import { normalizeNullableText } from '@/utils/form/normalize'

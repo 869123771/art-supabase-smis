@@ -2,6 +2,7 @@ import { buildSupabaseRpcRange } from '@/utils/supabase'
 import { normalizeNullableText } from '@/utils/form/normalize'
 import { omit } from 'lodash-es'
 import { useSupabase } from '@/hooks'
+import type { ApiFeedbackOptions } from '@/types/api/request'
 import type {
   SmisRiskActivitySavePayload,
   SmisRiskHazardSavePayload,
@@ -29,7 +30,10 @@ export async function fetchRiskIdentificationOptions() {
   return result.data ?? emptyOptions()
 }
 
-export async function fetchRiskPointList(params: SmisRiskPointSearchParams = {}) {
+export async function fetchRiskPointList(
+  params: SmisRiskPointSearchParams = {},
+  options: ApiFeedbackOptions = {}
+) {
   const from = Math.max(params.from ?? 0, 0)
   const result = await responseHandle<SmisRiskPointListResult>(
     () =>
@@ -42,7 +46,7 @@ export async function fetchRiskPointList(params: SmisRiskPointSearchParams = {})
         p_risk_level: params.riskLevel || null,
         p_risk_type: params.riskType || null
       }),
-    { showErrorMessage: true }
+    { showErrorMessage: options.showErrorMessage ?? true }
   )
   return {
     data: result.data?.records ?? [],

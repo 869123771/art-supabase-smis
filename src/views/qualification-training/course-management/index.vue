@@ -76,7 +76,7 @@
         <ArtForm
           ref="courseFormRef"
           :model-value="courseForm"
-          @update:model-value="Object.assign(courseForm, $event)"
+          @update:model-value="replaceReactiveModel(courseForm, $event)"
           :items="courseItems"
           :rules="courseRules"
           :span="12"
@@ -166,6 +166,7 @@
 </template>
 
 <script setup lang="tsx">
+  import { replaceReactiveModel } from '@/utils/form/model'
   import type { FormRules } from 'element-plus'
   import { ElProgress } from 'element-plus'
   import type { EmployeeIntegrationItem } from '@/api/integration/employees'
@@ -176,7 +177,7 @@
     ArtTableQueryHeaderActionContext
   } from '@/components/core/tables/art-table-query/index.vue'
   import type { ColumnOption } from '@/types'
-  import { pageInfoHandler } from '@/utils/table/table-utils'
+  import { buildSupabasePageRange } from '@/utils/supabase/pagination'
   import { loadAllDocumentPages } from '@/utils/business/document-detail-list'
   import { useArtFeedback } from '@/hooks/core/useArtFeedback'
   import { useAuth } from '@/hooks/core/useAuth'
@@ -813,13 +814,13 @@
     }
   ])
   const fetchCourses = async (params: CourseParams) => {
-    const { from, to } = pageInfoHandler({ current: params.current, size: params.size })
+    const { from, to } = buildSupabasePageRange({ current: params.current, size: params.size })
     const result = await fetchCourseList({ ...params, from, to })
     Object.assign(courseOverview, result.overview)
     return result
   }
   const fetchRecords = async (params: RecordParams) => {
-    const { from, to } = pageInfoHandler({ current: params.current, size: params.size })
+    const { from, to } = buildSupabasePageRange({ current: params.current, size: params.size })
     const result = await fetchCourseLearningRecordList({ ...params, from, to })
     Object.assign(recordOverview, result.overview)
     return result

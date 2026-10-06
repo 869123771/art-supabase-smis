@@ -17,7 +17,8 @@
 
       <ArtTableQuery
         ref="tableQueryRef"
-        v-model="searchQuery"
+        :model-value="searchQuery"
+        @update:model-value="replaceReactiveModel(searchQuery, $event)"
         class="announcement-page__table"
         :api-fn="fetchTableData"
         :search-items="searchItems"
@@ -42,6 +43,7 @@
 </template>
 
 <script setup lang="tsx">
+  import { replaceReactiveModel } from '@/utils/form/model'
   import type { TableRequestOptions } from '@/hooks/core/useTable'
   import dayjs from 'dayjs'
   import { ElTag } from 'element-plus'
@@ -52,7 +54,7 @@
     ArtTableQueryHeaderActionContext
   } from '@/components/core/tables/art-table-query/index.vue'
   import type { ColumnOption } from '@/types'
-  import { pageInfoHandler } from '@/utils/table/table-utils'
+  import { buildSupabasePageRange } from '@/utils/supabase/pagination'
   import { useArtFeedback } from '@/hooks/core/useArtFeedback'
   import { useUserStore } from '@/store/modules/user'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
@@ -365,7 +367,7 @@
     }
   ]
   const fetchTableData = async (params: TableParams, options?: TableRequestOptions) => {
-    const result = await fetchAnnouncementList({ ...params, ...pageInfoHandler(params) })
+    const result = await fetchAnnouncementList({ ...params, ...buildSupabasePageRange(params) })
     categories.value = result.categories
     organizations.value = result.organizations
     canManage.value = result.canManage

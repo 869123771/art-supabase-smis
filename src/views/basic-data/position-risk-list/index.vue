@@ -185,7 +185,7 @@
   import { useArtFeedback } from '@/hooks/core/useArtFeedback'
   import { useUserStore } from '@/store/modules/user'
   import { fetchOrganizationOptionsTree } from '@/api/system-manage'
-  import { pageInfoHandler } from '@/utils/table/table-utils'
+  import { buildSupabasePageRange } from '@/utils/supabase/pagination'
   import { getFriendlySupabaseErrorMessage } from '@/utils/supabase/error'
   import TreeUtils from '@/utils/tree'
   import {
@@ -470,7 +470,7 @@
     const positionId = positionState.selectedId
     if (!organizationId || !positionId)
       return Promise.resolve({ data: [], count: 0, total: 0, error: null })
-    const { from, to } = pageInfoHandler({ current: params.current, size: params.size })
+    const { from, to } = buildSupabasePageRange({ current: params.current, size: params.size })
     return fetchPositionRiskControlList({
       ...params,
       organizationId,

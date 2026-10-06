@@ -190,7 +190,7 @@
   import { useUserStore } from '@/store/modules/user'
   import { fetchOrganizationOptionsTree } from '@/api/system-manage'
   import { exportExcel } from '@/utils/file'
-  import { pageInfoHandler } from '@/utils/table/table-utils'
+  import { buildSupabasePageRange } from '@/utils/supabase/pagination'
   import { formatWithDayjs } from '@/utils/time'
   import { getFriendlySupabaseErrorMessage } from '@/utils/supabase/error'
   import TreeUtils from '@/utils/tree'
@@ -696,7 +696,7 @@
     if (!positionId) {
       return Promise.resolve({ data: [], count: 0, total: 0, error: null })
     }
-    const { from, to } = pageInfoHandler({ current: params.current, size: params.size })
+    const { from, to } = buildSupabasePageRange({ current: params.current, size: params.size })
     return fetchPositionSafetyResponsibilityList({
       ...params,
       positionId,

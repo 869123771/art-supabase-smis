@@ -17,7 +17,8 @@
       <ElScrollbar class="accident-statistics-page__scroll">
         <div class="accident-statistics-page__body">
           <ArtSearchBar
-            v-model="query"
+            :model-value="query"
+            @update:model-value="replaceReactiveModel(query, $event)"
             :items="searchItems"
             :span="8"
             label-position="top"
@@ -121,6 +122,7 @@
 </template>
 
 <script setup lang="ts">
+  import { replaceReactiveModel } from '@/utils/form/model'
   import dayjs from 'dayjs'
   import type { PieDataItem } from '@/types/component/chart'
   import type { ColumnOption } from '@/types'
@@ -139,6 +141,7 @@
   import {
     fetchSafetyAccidentStatistics,
     type SmisSafetyAccidentOrganizationStat,
+    type SmisSafetyAccidentStatisticsSearchParams,
     type SmisSafetyAccidentStatisticsResult
   } from '@smis/api'
 
@@ -146,11 +149,6 @@
   interface StatisticsQuery extends Record<string, unknown> {
     dateRange?: [string, string]
     organizationId?: string
-  }
-  interface StatisticsState {
-    loading: boolean
-    error: string | null
-    data: SmisSafetyAccidentStatisticsResult
   }
 
   const userStore = useUserStore()
@@ -171,7 +169,26 @@
     organizationOptions: []
   })
   const query = reactive<StatisticsQuery>(initialQuery())
-  const state = reactive<StatisticsState>({ loading: false, error: null, data: emptyData() })
+  const request = useAsyncState(
+    async (
+      params: SmisSafetyAccidentStatisticsSearchParams
+    ): Promise<SmisSafetyAccidentStatisticsResult> => {
+      const result = await fetchSafetyAccidentStatistics(params)
+      return {
+        ...result,
+        organizationOptions: result.organizationOptions.length
+          ? result.organizationOptions
+          : request.state.value.organizationOptions
+      }
+    },
+    emptyData(),
+    { immediate: false, resetOnExecute: false, onError: () => undefined }
+  )
+  const state = reactive({
+    loading: request.isLoading,
+    error: computed(() => (request.error.value ? '事故统计加载失败，请重试。' : null)),
+    data: request.state
+  })
   const dictLabel = (code: string, value: string): string =>
     (getDictMap.value[code] ?? []).find((item) => item.value === value)?.label || value
 
@@ -261,24 +278,11 @@
   ]
 
   const loadData = async (): Promise<void> => {
-    state.loading = true
-    state.error = null
-    try {
-      const result = await fetchSafetyAccidentStatistics({
-        startDate: query.dateRange?.[0],
-        endDate: query.dateRange?.[1],
-        organizationId: query.organizationId
-      })
-      const organizationOptions = result.organizationOptions.length
-        ? result.organizationOptions
-        : state.data.organizationOptions
-      state.data = { ...result, organizationOptions }
-      if (result.error) state.error = '事故统计加载失败，请重试。'
-    } catch {
-      state.error = '事故统计加载失败，请重试。'
-    } finally {
-      state.loading = false
-    }
+    await request.execute(0, {
+      startDate: query.dateRange?.[0],
+      endDate: query.dateRange?.[1],
+      organizationId: query.organizationId
+    })
   }
   const resetQuery = (): void => {
     Object.assign(query, initialQuery())

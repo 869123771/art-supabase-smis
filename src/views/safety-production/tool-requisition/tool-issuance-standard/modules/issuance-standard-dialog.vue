@@ -8,7 +8,8 @@
       </ArtEntitySummary>
       <ArtForm
         ref="formRef"
-        v-model="form"
+        :model-value="form"
+        @update:model-value="replaceReactiveModel(form, $event)"
         :items="formItems"
         :rules="rules"
         :span="8"
@@ -104,6 +105,7 @@
 </template>
 
 <script setup lang="tsx">
+  import { replaceReactiveModel } from '@/utils/form/model'
   import { notifyFriendlyError } from '@/hooks/core/useArtFeedback'
   import { validateArtFormForSubmit } from '@/utils/form/validate-art-form'
   import {
@@ -384,14 +386,17 @@
   }
   const fetchMaterials = async (params: DataSelectFetchParams) => {
     const from = (params.page - 1) * params.pageSize
-    const result = await fetchMaterialList({
-      materialName: params.keyword,
-      materialType: 'tool',
-      status: 'enabled',
-      from,
-      to: from + params.pageSize - 1
-    })
-    return { data: result.data, total: result.total }
+    const result = await fetchMaterialList(
+      {
+        materialName: params.keyword,
+        materialType: 'tool',
+        status: 'enabled',
+        from,
+        to: from + params.pageSize - 1
+      },
+      { showErrorMessage: false }
+    )
+    return result
   }
   const handleMaterialsSelected = (rows: DataSelectRecord[]) => {
     const materials = rows as SmisMaterial[]

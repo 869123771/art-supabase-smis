@@ -12,7 +12,8 @@
         :show-reset="false"
         :show-submit="false"
         ref="formRef"
-        v-model="form"
+        :model-value="form"
+        @update:model-value="replaceReactiveModel(form, $event)"
         :rules="rules"
         label-position="top"
       >
@@ -155,6 +156,7 @@
 </template>
 
 <script setup lang="ts">
+  import { replaceReactiveModel } from '@/utils/form/model'
   import { computed, onDeactivated, reactive, ref, shallowRef } from 'vue'
   import { storeToRefs } from 'pinia'
   import ArtForm from '@/components/core/forms/art-form/index.vue'

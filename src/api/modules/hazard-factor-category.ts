@@ -2,6 +2,7 @@ import { buildSupabaseRpcRange } from '@/utils/supabase'
 import { normalizeNullableText } from '@/utils/form/normalize'
 import { omit } from 'lodash-es'
 import { useSupabase } from '@/hooks'
+import type { ApiFeedbackOptions } from '@/types/api/request'
 import type {
   SmisHazardFactorCategory,
   SmisHazardFactorCategoryOverview,
@@ -25,7 +26,8 @@ const emptyOverview = (): SmisHazardFactorCategoryOverview => ({
 const { supabase, keysToSnakeDeep, responseHandle } = useSupabase()
 
 export async function fetchHazardFactorCategoryList(
-  params: SmisHazardFactorCategorySearchParams = {}
+  params: SmisHazardFactorCategorySearchParams = {},
+  options: ApiFeedbackOptions = {}
 ) {
   const from = Math.max(params.from ?? 0, 0)
   const result = await responseHandle<HazardFactorCategoryListResult>(
@@ -38,7 +40,7 @@ export async function fetchHazardFactorCategoryList(
         p_tag_style: params.tagStyle || null,
         p_tenant_id: params.tenantId || null
       }),
-    { showErrorMessage: true }
+    { showErrorMessage: options.showErrorMessage ?? true }
   )
 
   return {

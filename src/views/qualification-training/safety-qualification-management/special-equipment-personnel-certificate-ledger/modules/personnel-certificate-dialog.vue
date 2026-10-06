@@ -15,7 +15,8 @@
       <ArtSectionCard title="人员与证件" subtitle="证件人员为主表，人员基础资料不重复录入">
         <ArtForm
           ref="formRef"
-          v-model="form"
+          :model-value="form"
+          @update:model-value="replaceReactiveModel(form, $event)"
           :items="formItems"
           :rules="rules"
           :span="8"
@@ -79,6 +80,7 @@
 </template>
 
 <script setup lang="tsx">
+  import { replaceReactiveModel } from '@/utils/form/model'
   import { notifyFriendlyError } from '@/hooks/core/useArtFeedback'
   import { validateArtFormForSubmit } from '@/utils/form/validate-art-form'
   import { normalizeNullableText } from '@/utils/form/normalize'

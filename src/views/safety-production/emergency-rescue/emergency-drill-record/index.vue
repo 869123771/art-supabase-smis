@@ -50,7 +50,7 @@
     ArtTableQueryHeaderActionContext
   } from '@/components/core/tables/art-table-query/index.vue'
   import type { ColumnOption } from '@/types'
-  import { pageInfoHandler } from '@/utils/table/table-utils'
+  import { buildSupabasePageRange } from '@/utils/supabase/pagination'
   import { useUserStore } from '@/store/modules/user'
   import { useArtFeedback } from '@/hooks/core/useArtFeedback'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
@@ -333,7 +333,7 @@
     }
   ])
   const fetchTableData = async (params: TableParams, options?: TableRequestOptions) => {
-    const { from, to } = pageInfoHandler({ current: params.current, size: params.size })
+    const { from, to } = buildSupabasePageRange({ current: params.current, size: params.size })
     const result = await fetchEmergencyDrillRecordList({ ...params, from, to })
     if (!options?.signal?.aborted) Object.assign(overview, result.overview)
     planOptions.value = result.planOptions

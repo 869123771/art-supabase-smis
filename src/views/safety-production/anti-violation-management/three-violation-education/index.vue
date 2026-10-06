@@ -21,7 +21,8 @@
 
       <ArtTableQuery
         ref="tableQueryRef"
-        v-model="searchQuery"
+        :model-value="searchQuery"
+        @update:model-value="replaceReactiveModel(searchQuery, $event)"
         class="three-violation-page__table"
         :api-fn="fetchTableData"
         :search-items="searchItems"
@@ -58,6 +59,7 @@
 </template>
 
 <script setup lang="tsx">
+  import { replaceReactiveModel } from '@/utils/form/model'
   import type { TableRequestOptions } from '@/hooks/core/useTable'
   import dayjs from 'dayjs'
   import { storeToRefs } from 'pinia'
@@ -72,7 +74,7 @@
     ArtTableQueryHeaderActionContext
   } from '@/components/core/tables/art-table-query/index.vue'
   import type { ColumnOption } from '@/types'
-  import { pageInfoHandler } from '@/utils/table/table-utils'
+  import { buildSupabasePageRange } from '@/utils/supabase/pagination'
   import { useArtFeedback } from '@/hooks/core/useArtFeedback'
   import { useUserStore } from '@/store/modules/user'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
@@ -500,7 +502,7 @@
   const fetchTableData = async (params: TableParams, options?: TableRequestOptions) => {
     const result = await fetchThreeViolationEducationList({
       ...params,
-      ...pageInfoHandler(params)
+      ...buildSupabasePageRange(params)
     })
     organizations.value = result.organizations
     standards.value = result.standards

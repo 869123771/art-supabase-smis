@@ -65,7 +65,7 @@ export async function fetchPpeIssuanceStandardList(
         p_status: params.status || null,
         p_purpose: params.purpose ?? 'list'
       }),
-    { showErrorMessage: true }
+    { showErrorMessage: false, breakReturn: true }
   )
   return {
     data: result.data?.records ?? [],
@@ -111,7 +111,7 @@ export async function fetchPpePersonalStandardList(
         p_only_missing: Boolean(params.onlyMissing),
         p_purpose: params.purpose ?? 'list'
       }),
-    { showErrorMessage: true }
+    { showErrorMessage: false, breakReturn: true }
   )
   return {
     data: result.data?.records ?? [],

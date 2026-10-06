@@ -49,20 +49,14 @@
             <small>{{ overview.controlled }} / {{ overview.total }} 项已落实管控责任</small>
           </div>
         </article>
-        <aside :class="{ 'is-complete': !pendingEvaluation && !pendingControl }">
+        <aside :class="{ 'is-complete': isCoverageComplete }">
           <span>
             <ArtSvgIcon
-              :icon="
-                !pendingEvaluation && !pendingControl
-                  ? 'ri:checkbox-circle-line'
-                  : 'ri:focus-3-line'
-              "
+              :icon="isCoverageComplete ? 'ri:checkbox-circle-line' : 'ri:focus-3-line'"
             />
           </span>
           <div>
-            <strong>{{
-              !pendingEvaluation && !pendingControl ? '治理链路完整' : '治理缺口提示'
-            }}</strong>
+            <strong>{{ coverageTitle }}</strong>
             <small>{{ coverageGuidance }}</small>
           </div>
         </aside>
@@ -100,7 +94,7 @@
     ArtTableQueryHeaderAction
   } from '@/components/core/tables/art-table-query/index.vue'
   import type { ColumnOption } from '@/types'
-  import { pageInfoHandler } from '@/utils/table/table-utils'
+  import { buildSupabasePageRange } from '@/utils/supabase/pagination'
   import { loadAllDocumentPages } from '@/utils/business/document-detail-list'
   import { useUserStore } from '@/store/modules/user'
   import ArtPermissionGuard from '@/components/core/feedback/art-permission-guard/index.vue'
@@ -146,9 +140,15 @@
   )
   const pendingEvaluation = computed(() => Math.max(overview.total - overview.evaluated, 0))
   const pendingControl = computed(() => Math.max(overview.total - overview.controlled, 0))
+  const isCoverageComplete = computed(
+    () => overview.total > 0 && !pendingEvaluation.value && !pendingControl.value
+  )
+  const coverageTitle = computed(() =>
+    !overview.total ? '暂无风险数据' : isCoverageComplete.value ? '治理链路完整' : '治理缺口提示'
+  )
   const coverageGuidance = computed(() => {
     if (!overview.total) return '完成风险辨识后，可在此持续跟踪评价和管控覆盖情况。'
-    if (!pendingEvaluation.value && !pendingControl.value) {
+    if (isCoverageComplete.value) {
       return '当前风险均已完成评价并落实管控责任，请持续跟踪执行效果。'
     }
     return `还有 ${pendingEvaluation.value} 项待评价、${pendingControl.value} 项待落实管控。`
@@ -345,9 +345,12 @@
     }
   ]
   const fetchTableData = async (params: TableParams, options?: TableRequestOptions) => {
-    const { from, to } = pageInfoHandler({ current: params.current, size: params.size })
-    const response = await fetchSafetyRiskList({ ...params, from, to })
-    if (!options?.signal?.aborted) Object.assign(overview, response.overview)
+    const { from, to } = buildSupabasePageRange({ current: params.current, size: params.size })
+    const response = await fetchSafetyRiskList({ ...params, from, to }, { showErrorMessage: false })
+    if (options?.signal?.aborted) return response
+    if (response.error)
+      throw new Error('风险清单汇总加载失败，请重新加载', { cause: response.error })
+    Object.assign(overview, response.overview)
     return response
   }
   const headerActions = computed<ArtTableQueryHeaderAction[]>(() => [

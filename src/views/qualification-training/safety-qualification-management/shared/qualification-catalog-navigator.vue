@@ -1,7 +1,7 @@
 <template>
   <ArtSectionCard
-    :show-scrollbar="false"
-    class="qualification-catalog-navigator"
+    :show-scrollbar="loading || Boolean(error) || !data.length"
+    class="qualification-catalog-navigator flex h-full min-h-0 flex-col overflow-hidden"
     :title="`${title}层级`"
     subtitle="选择节点后同步筛选右侧数据"
     :loading="loading"
@@ -135,8 +135,6 @@
 
 <style scoped lang="scss">
   .qualification-catalog-navigator {
-    height: 100%;
-
     :deep(.art-section-card__body),
     :deep(.art-async-state),
     :deep(.art-async-state__content) {

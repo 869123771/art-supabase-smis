@@ -1,5 +1,7 @@
 <template>
-  <div class="inspection-page business-workspace-page art-full-height">
+  <div
+    class="inspection-page business-workspace-page art-full-height flex min-h-0 flex-col gap-[14px]"
+  >
     <BusinessWorkspaceHeader
       eyebrow="INSPECTION DECLARATION & EVIDENCE"
       title="检验申报"
@@ -15,10 +17,17 @@
       <template #actions><BusinessTableWorkspaceActions :table="tableQueryRef" /></template>
     </BusinessWorkspaceHeader>
 
+    <ArtAsyncState
+      v-if="categoryLoadError"
+      size="compact"
+      :error="'检验类别加载失败，请重新加载'"
+      :loading="categoriesLoading"
+      @retry="loadCategories"
+    />
     <ArtTableQuery
       ref="tableQueryRef"
       v-model="table.searchQuery"
-      class="inspection-page__table"
+      class="min-h-0 flex-1"
       :api-fn="fetchTableData"
       :search-items="table.searchItems"
       :columns-factory="columnsFactory"
@@ -49,11 +58,12 @@
     ArtTableQueryHeaderActionContext
   } from '@/components/core/tables/art-table-query/index.vue'
   import type { ColumnOption } from '@/types'
-  import { pageInfoHandler } from '@/utils/table/table-utils'
+  import { buildSupabasePageRange } from '@/utils/supabase/pagination'
   import { useArtFeedback } from '@/hooks/core/useArtFeedback'
   import { useImageViewer } from '@/hooks/core/useImageViewer'
   import { useUserStore } from '@/store/modules/user'
   import { loadAllDocumentPages } from '@/utils/business/document-detail-list'
+  import ArtAsyncState from '@/components/core/feedback/art-async-state/index.vue'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import ArtDictDisplay from '@/components/core/base/art-dict-display/index.vue'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
@@ -88,6 +98,8 @@
   const tableQueryRef = ref<ArtTableQueryExpose>()
   const dialogRef = ref<DialogExpose>()
   const organizationTree = ref<Api.SystemManage.OrganizationListItem[]>([])
+  const categoriesLoading = ref(false)
+  const categoryLoadError = shallowRef<unknown>(null)
   const inspectionCategoryOptions = ref<Array<{ label: string; value: string }>>([])
   const overview = reactive<SmisEquipmentInspectionOverview>({
     total: 0,
@@ -186,6 +198,8 @@
         type: 'selectV2',
         props: {
           options: inspectionCategoryOptions.value,
+          loading: categoriesLoading.value,
+          disabled: categoriesLoading.value || !!categoryLoadError.value,
           filterable: true,
           clearable: true,
           placeholder: '全部类别'
@@ -338,7 +352,10 @@
     }
   ]
   const fetchTableData = async (params: TableParams, options?: TableRequestOptions) => {
-    const result = await fetchEquipmentInspectionList({ ...pageInfoHandler(params), ...params })
+    const result = await fetchEquipmentInspectionList({
+      ...buildSupabasePageRange(params),
+      ...params
+    })
     if (!options?.signal?.aborted) Object.assign(overview, result.overview)
     return { records: result.data, total: result.total }
   }
@@ -346,13 +363,30 @@
     await tableQueryRef.value?.getData()
   }
 
+  const loadCategories = async (): Promise<void> => {
+    categoriesLoading.value = true
+    categoryLoadError.value = null
+    inspectionCategoryOptions.value = []
+    try {
+      const categories = await loadAllDocumentPages<
+        SmisInspectionCategory,
+        SmisInspectionCategorySearchParams
+      >((params) => fetchInspectionCategoryList(params, { showErrorMessage: false }), {
+        status: 'enabled'
+      })
+      inspectionCategoryOptions.value = categories
+        .filter((item) => item.id)
+        .map((item) => ({ label: item.categoryName, value: item.id || '' }))
+    } catch (error) {
+      categoryLoadError.value = error
+    } finally {
+      categoriesLoading.value = false
+    }
+  }
   onMounted(async () => {
-    const [organizations, categories] = await Promise.all([
+    const [organizations] = await Promise.all([
       fetchOrganizationOptionsTree({ status: '1' }),
-      loadAllDocumentPages<SmisInspectionCategory, SmisInspectionCategorySearchParams>(
-        fetchInspectionCategoryList,
-        { status: 'enabled' }
-      ),
+      loadCategories(),
       ...[
         'smisEquipmentInspectionConclusion',
         'smisEquipmentInspectionReminderMonths',
@@ -360,24 +394,11 @@
       ].map((code) => userStore.ensureDictLoaded(code))
     ])
     organizationTree.value = organizations.data ?? []
-    inspectionCategoryOptions.value = categories
-      .filter((item) => item.id)
-      .map((item) => ({ label: item.categoryName, value: item.id || '' }))
   })
 </script>
 
 <style scoped lang="scss">
   .inspection-page {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-    min-height: 0;
-
-    &__table {
-      flex: 1;
-      min-height: 0;
-    }
-
     &__code {
       font-family: var(--art-code-font-family, 'SFMono-Regular', Consolas, monospace);
       font-weight: 600;

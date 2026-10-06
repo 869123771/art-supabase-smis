@@ -1,3 +1,4 @@
+import type { ApiFeedbackOptions } from '@/types/api/request'
 import { buildSupabaseRpcRange } from '@/utils/supabase'
 import { normalizeNullableText } from '@/utils/form/normalize'
 import { omit } from 'lodash-es'
@@ -103,7 +104,10 @@ export async function deleteMaterialCategories(ids: string[]) {
   )
 }
 
-export async function fetchMaterialList(params: SmisMaterialSearchParams = {}) {
+export async function fetchMaterialList(
+  params: SmisMaterialSearchParams = {},
+  options: ApiFeedbackOptions = {}
+) {
   const from = Math.max(params.from ?? 0, 0)
   const result = await responseHandle<MaterialListResult>(
     () =>
@@ -120,7 +124,7 @@ export async function fetchMaterialList(params: SmisMaterialSearchParams = {}) {
         p_ids: params.ids?.length ? params.ids : null,
         p_purpose: params.purpose ?? 'list'
       }),
-    { showErrorMessage: true }
+    { showErrorMessage: options.showErrorMessage ?? true }
   )
 
   return {

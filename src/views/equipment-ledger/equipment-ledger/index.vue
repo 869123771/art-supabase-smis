@@ -291,7 +291,7 @@
     ArtTableQueryHeaderActionContext
   } from '@/components/core/tables/art-table-query/index.vue'
   import type { ColumnOption } from '@/types'
-  import { pageInfoHandler } from '@/utils/table/table-utils'
+  import { buildSupabasePageRange } from '@/utils/supabase/pagination'
   import { useArtFeedback } from '@/hooks/core/useArtFeedback'
   import { useImageViewer } from '@/hooks/core/useImageViewer'
   import { useUserStore } from '@/store/modules/user'
@@ -393,10 +393,9 @@
     size: number
   }) => {
     const result = await fetchEquipmentInspectionList(
-      { equipmentId: params.equipmentId, ...pageInfoHandler(params) },
+      { equipmentId: params.equipmentId, ...buildSupabasePageRange(params) },
       { showErrorMessage: false }
     )
-    if (result.error) throw result.error
     return result
   }
   const {
@@ -842,7 +841,7 @@
     try {
       const [enableDateFrom, enableDateTo] = params.enableDateRange ?? []
       const result = await fetchEquipmentLedgerList({
-        ...pageInfoHandler(params),
+        ...buildSupabasePageRange(params),
         ...params,
         enableDateFrom,
         enableDateTo,
@@ -859,9 +858,11 @@
         tree.categoryTree = result.categoryTree
         tree.locationTree = result.locationTree
         Object.assign(overview, result.overview)
-        tree.error = result.error ? '台账结构加载失败，请重试。' : null
       }
       return { records: result.data, total: result.total }
+    } catch (error) {
+      if (!options?.signal?.aborted) tree.error = '台账结构加载失败，请重试。'
+      throw error
     } finally {
       if (!options?.signal?.aborted) tree.loading = false
     }

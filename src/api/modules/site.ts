@@ -1,3 +1,4 @@
+import type { ApiFeedbackOptions } from '@/types/api/request'
 import { buildSupabaseRpcRange } from '@/utils/supabase'
 import { normalizeNullableText } from '@/utils/form/normalize'
 import { omit, uniq } from 'lodash-es'
@@ -15,7 +16,7 @@ interface SiteEmployeeListResult {
 
 const { supabase, keysToSnakeDeep, responseHandle } = useSupabase()
 
-export async function fetchSiteList(options: { showErrorMessage?: boolean } = {}) {
+export async function fetchSiteList(options: ApiFeedbackOptions = {}) {
   return await responseHandle<SmisSite[]>(() => supabase.rpc('smis_list_sites_secure'), {
     showErrorMessage: options.showErrorMessage ?? true
   })
@@ -23,7 +24,7 @@ export async function fetchSiteList(options: { showErrorMessage?: boolean } = {}
 
 export async function fetchSiteEmployeeOptions(
   params: EmployeeSelectorContractParams = {},
-  options: { showErrorMessage?: boolean } = {}
+  options: ApiFeedbackOptions = {}
 ) {
   const from = Math.max(params.from ?? 0, 0)
   const result = await responseHandle<SiteEmployeeListResult>(

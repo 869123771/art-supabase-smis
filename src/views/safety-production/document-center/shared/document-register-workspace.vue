@@ -30,7 +30,8 @@
 
       <ArtTableQuery
         ref="tableQueryRef"
-        v-model="searchQuery"
+        :model-value="searchQuery"
+        @update:model-value="replaceReactiveModel(searchQuery, $event)"
         class="document-register-workspace__table"
         :api-fn="fetchTableData"
         :search-items="searchItems"
@@ -69,6 +70,7 @@
 </template>
 
 <script setup lang="tsx">
+  import { replaceReactiveModel } from '@/utils/form/model'
   import { ElTag } from 'element-plus'
   import { watchDebounced } from '@vueuse/core'
   import type { TableRequestOptions } from '@/hooks/core/useTable'
@@ -81,7 +83,7 @@
     ArtTableQueryHeaderActionContext
   } from '@/components/core/tables/art-table-query/index.vue'
   import type { ColumnOption } from '@/types'
-  import { pageInfoHandler } from '@/utils/table/table-utils'
+  import { buildSupabasePageRange } from '@/utils/supabase/pagination'
   import { useArtFeedback } from '@/hooks/core/useArtFeedback'
   import { useUserStore } from '@/store/modules/user'
   import ArtButtonMore, {
@@ -603,7 +605,7 @@
     const result = await fetchDocumentRegisterList({
       ...params,
       ...searchQuery,
-      ...pageInfoHandler(params),
+      ...buildSupabasePageRange(params),
       kind: props.kind
     })
     if (!options?.signal?.aborted) Object.assign(overview, result.overview)

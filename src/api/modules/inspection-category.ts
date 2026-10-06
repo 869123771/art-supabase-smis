@@ -1,3 +1,4 @@
+import type { ApiFeedbackOptions } from '@/types/api/request'
 import { buildSupabaseRpcRange } from '@/utils/supabase'
 import { normalizeNullableText } from '@/utils/form/normalize'
 import { omit } from 'lodash-es'
@@ -24,7 +25,10 @@ const emptyOverview = (): SmisInspectionCategoryOverview => ({
 
 const { supabase, keysToSnakeDeep, responseHandle } = useSupabase()
 
-export async function fetchInspectionCategoryList(params: SmisInspectionCategorySearchParams = {}) {
+export async function fetchInspectionCategoryList(
+  params: SmisInspectionCategorySearchParams = {},
+  options: ApiFeedbackOptions = {}
+) {
   const from = Math.max(params.from ?? 0, 0)
   const result = await responseHandle<InspectionCategoryListResult>(
     () =>
@@ -34,7 +38,7 @@ export async function fetchInspectionCategoryList(params: SmisInspectionCategory
         p_status: params.status || null,
         p_tenant_id: params.tenantId || null
       }),
-    { showErrorMessage: true }
+    { showErrorMessage: options.showErrorMessage ?? true }
   )
 
   return {

@@ -3,6 +3,7 @@ import { normalizeNullableText } from '@/utils/form/normalize'
 import dayjs from 'dayjs'
 import { omit } from 'lodash-es'
 import { useSupabase } from '@/hooks'
+import type { ApiFeedbackOptions } from '@/types/api/request'
 import TreeUtils from '@/utils/tree'
 import type {
   EmployeeIntegrationItem,
@@ -74,7 +75,10 @@ export interface PersonnelCertificateEmployee extends EmployeeIntegrationItem {
 const treeUtils = new TreeUtils({ idKey: 'id', parentKey: 'parentId', childrenKey: 'children' })
 const { supabase, keysToSnakeDeep, responseHandle } = useSupabase()
 
-export async function fetchQualificationCatalogList(params: SmisQualificationCatalogSearchParams) {
+export async function fetchQualificationCatalogList(
+  params: SmisQualificationCatalogSearchParams,
+  options: ApiFeedbackOptions = {}
+) {
   const from = Math.max(params.from ?? 0, 0)
   const result = await responseHandle<QualificationCatalogPayload>(
     () =>
@@ -87,7 +91,7 @@ export async function fetchQualificationCatalogList(params: SmisQualificationCat
         p_purpose: params.purpose ?? 'list',
         p_work_category_id: params.workCategoryId || null
       }),
-    { showErrorMessage: true }
+    { showErrorMessage: options.showErrorMessage ?? true }
   )
   const sorter = (a: SmisQualificationCatalog, b: SmisQualificationCatalog) =>
     a.sort - b.sort || a.itemName.localeCompare(b.itemName, 'zh-CN')
@@ -151,7 +155,8 @@ export async function deleteQualificationCatalog(
 }
 
 export async function fetchPersonnelCertificateList(
-  params: SmisPersonnelCertificateSearchParams = {}
+  params: SmisPersonnelCertificateSearchParams = {},
+  options: ApiFeedbackOptions = {}
 ) {
   const from = Math.max(params.from ?? 0, 0)
   const [startDate, endDate] = params.effectiveDateRange ?? []
@@ -167,7 +172,7 @@ export async function fetchPersonnelCertificateList(
         p_warning_status: params.warningStatus || null,
         p_purpose: params.purpose ?? 'list'
       }),
-    { showErrorMessage: true }
+    { showErrorMessage: options.showErrorMessage ?? true }
   )
   return {
     data: result.data?.records ?? [],
@@ -233,7 +238,8 @@ export async function fetchPersonnelCertificateCatalogOptions(
 }
 
 export async function fetchSafetyQualificationAnalysis(
-  params: SmisSafetyQualificationAnalysisSearchParams = {}
+  params: SmisSafetyQualificationAnalysisSearchParams = {},
+  options: ApiFeedbackOptions = {}
 ) {
   const result = await responseHandle<SmisSafetyQualificationAnalysisResult>(
     () =>
@@ -242,7 +248,7 @@ export async function fetchSafetyQualificationAnalysis(
         p_end_date: params.endDate || null,
         p_organization_id: params.organizationId || null
       }),
-    { showErrorMessage: true }
+    { showErrorMessage: options.showErrorMessage ?? true }
   )
   const data = result.data ?? emptySafetyQualificationAnalysis()
   return {

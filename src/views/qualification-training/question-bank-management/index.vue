@@ -78,7 +78,7 @@
         <ArtForm
           ref="categoryFormRef"
           :model-value="categoryForm"
-          @update:model-value="Object.assign(categoryForm, $event)"
+          @update:model-value="replaceReactiveModel(categoryForm, $event)"
           :items="categoryItems"
           :rules="categoryRules"
           :span="24"
@@ -98,7 +98,7 @@
         <ArtForm
           ref="questionFormRef"
           :model-value="questionForm"
-          @update:model-value="Object.assign(questionForm, $event)"
+          @update:model-value="replaceReactiveModel(questionForm, $event)"
           :items="questionItems"
           :rules="questionRules"
           :span="12"
@@ -159,6 +159,7 @@
 </template>
 
 <script setup lang="tsx">
+  import { replaceReactiveModel } from '@/utils/form/model'
   import type { TableRequestOptions } from '@/hooks/core/useTable'
   import type { FormRules } from 'element-plus'
   import type { SearchFormItem } from '@/components/core/forms/art-search-bar/index.vue'
@@ -168,7 +169,7 @@
     ArtTableQueryHeaderActionContext
   } from '@/components/core/tables/art-table-query/index.vue'
   import type { ColumnOption } from '@/types'
-  import { pageInfoHandler } from '@/utils/table/table-utils'
+  import { buildSupabasePageRange } from '@/utils/supabase/pagination'
   import { loadAllDocumentPages } from '@/utils/business/document-detail-list'
   import TreeUtils from '@/utils/tree'
   import { useArtFeedback } from '@/hooks/core/useArtFeedback'
@@ -720,15 +721,23 @@
   ])
   const fetchTableData = async (params: TableParams, options?: TableRequestOptions) => {
     categoryLoading.value = true
+    categoryError.value = null
     try {
-      const { from, to } = pageInfoHandler({ current: params.current, size: params.size })
-      const result = await fetchQuestionBankList({ ...params, from, to })
-      if (!options?.signal?.aborted) {
-        categories.value = result.categories
-        Object.assign(overview, result.overview)
-        categoryError.value = result.error ? '分类加载失败，请稍后重试。' : null
+      const { from, to } = buildSupabasePageRange({ current: params.current, size: params.size })
+      const result = await fetchQuestionBankList(
+        { ...params, from, to },
+        { showErrorMessage: false }
+      )
+      if (options?.signal?.aborted) return result
+      if (result.error) {
+        throw new Error('题库加载失败，请重新加载', { cause: result.error })
       }
+      categories.value = result.categories
+      Object.assign(overview, result.overview)
       return result
+    } catch (error) {
+      if (!options?.signal?.aborted) categoryError.value = '分类加载失败，请重新加载。'
+      throw error
     } finally {
       if (!options?.signal?.aborted) categoryLoading.value = false
     }

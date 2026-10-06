@@ -6,6 +6,13 @@
         <strong>检验结果将同步进入设备全生命周期</strong>
         <p>报告编号按租户规则自动生成；检验类别、机构和图片证据均保留结构化关联。</p>
       </ArtEntitySummary>
+      <ArtAsyncState
+        v-if="categoryLoadError"
+        size="compact"
+        :error="'检验类别加载失败，请重新加载'"
+        :loading="categoriesLoading"
+        @retry="reloadCategoryOptions"
+      />
 
       <ArtForm
         ref="formRef"
@@ -106,6 +113,7 @@
   import { useUserStore } from '@/store/modules/user'
   import { normalizeNullableText } from '@/utils/form/normalize'
   import { loadAllDocumentPages } from '@/utils/business/document-detail-list'
+  import ArtAsyncState from '@/components/core/feedback/art-async-state/index.vue'
   import {
     fetchEquipmentLedgerList,
     fetchInspectionCategoryList,
@@ -160,6 +168,32 @@
   const equipmentSelection = shallowRef<DataSelectRecord[]>([])
   const institutionSelection = shallowRef<DataSelectRecord[]>([])
   const numberRule = useDocumentNumberRule('smis.equipment_inspection')
+  const categoriesLoading = ref(false)
+  const categoryLoadError = shallowRef<unknown>(null)
+  const loadCategoryOptions = async (): Promise<{ data: SmisInspectionCategory[] }> => {
+    categoriesLoading.value = true
+    categoryLoadError.value = null
+    dialogRef.value?.setOptions({ confirmDisabled: true })
+    try {
+      return {
+        data: await loadAllDocumentPages<
+          SmisInspectionCategory,
+          SmisInspectionCategorySearchParams
+        >((params) => fetchInspectionCategoryList(params, { showErrorMessage: false }), {
+          status: 'enabled'
+        })
+      }
+    } catch (error) {
+      categoryLoadError.value = error
+      return { data: [] }
+    } finally {
+      categoriesLoading.value = false
+      dialogRef.value?.setOptions({ confirmDisabled: !!categoryLoadError.value })
+    }
+  }
+  const reloadCategoryOptions = async (): Promise<void> => {
+    await formRef.value?.reloadOptions('inspectionCategoryId')
+  }
 
   const initialForm = (): InspectionForm => ({
     inspectionNo: '',
@@ -231,16 +265,16 @@
         key: 'inspectionCategoryId',
         type: 'selectV2',
         span: 12,
-        api: async () => ({
-          data: await loadAllDocumentPages<
-            SmisInspectionCategory,
-            SmisInspectionCategorySearchParams
-          >(fetchInspectionCategoryList, { status: 'enabled' })
-        }),
+        api: loadCategoryOptions,
+        immediate: false,
         resultField: 'data',
         labelField: 'categoryName',
         valueField: 'id',
-        props: { filterable: true, placeholder: '请选择租户检验类别' }
+        props: {
+          filterable: true,
+          disabled: categoriesLoading.value || !!categoryLoadError.value,
+          placeholder: '请选择租户检验类别'
+        }
       },
       { label: '检验结果', key: 'resultSection', type: 'divider', span: 24 },
       {
@@ -483,6 +517,7 @@
     )
   }
   const handleSubmit = async (): Promise<boolean> => {
+    if (categoriesLoading.value || categoryLoadError.value) return false
     try {
       if (!(await validateArtFormForSubmit(formRef.value))) return false
       const response = await saveEquipmentInspection(buildPayload())
@@ -508,6 +543,7 @@
     }
   }
   const handleOpen = async (data: InspectionDeclarationDialogOpenData): Promise<void> => {
+    categoryLoadError.value = null
     await resetForm()
     if (data.row) {
       Object.assign(form.model, {
@@ -555,11 +591,12 @@
       confirmText: data.row ? '保存检验申报' : '创建检验申报',
       contentMaxHeight: 'calc(100vh - 176px)',
       loading: true,
+      confirmDisabled: true,
       onOpen: async (_data, api) => {
         try {
           await Promise.all([
             numberRule.loadRule(),
-            formRef.value?.reloadOptions('inspectionCategoryId'),
+            reloadCategoryOptions(),
             ...[
               'commonBoolean',
               'smisEquipmentInspectionConclusion',

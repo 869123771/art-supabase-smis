@@ -1,3 +1,4 @@
+import type { ApiFeedbackOptions } from '@/types/api/request'
 import { buildSupabaseRpcRange } from '@/utils/supabase'
 import { normalizeNullableText } from '@/utils/form/normalize'
 import { omit } from 'lodash-es'
@@ -31,7 +32,10 @@ const treeUtils = new TreeUtils({
 })
 const { supabase, keysToSnakeDeep, responseHandle } = useSupabase()
 
-export async function fetchStorageLocationList(params: SmisStorageLocationSearchParams = {}) {
+export async function fetchStorageLocationList(
+  params: SmisStorageLocationSearchParams = {},
+  options: ApiFeedbackOptions = {}
+) {
   const from = Math.max(params.from ?? 0, 0)
   const result = await responseHandle<StorageLocationListResult>(
     () =>
@@ -41,7 +45,7 @@ export async function fetchStorageLocationList(params: SmisStorageLocationSearch
         p_status: params.status || null,
         p_ancestor_id: params.ancestorId || null
       }),
-    { showErrorMessage: true }
+    { showErrorMessage: options.showErrorMessage ?? true }
   )
 
   const flatTree = (result.data?.tree ?? []).map((item) => ({

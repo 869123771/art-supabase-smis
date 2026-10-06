@@ -64,7 +64,7 @@ export async function fetchEquipmentLedgerList(params: SmisEquipmentSearchParams
           p_asset_status: params.assetStatus || null,
           p_use_status: params.useStatus || null
         }),
-      { showErrorMessage: true }
+      { showErrorMessage: false, breakReturn: true }
     ),
     fetchEquipmentCategoryProfiles()
   ])

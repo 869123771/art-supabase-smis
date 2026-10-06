@@ -36,6 +36,7 @@
     />
 
     <SupplierDialog ref="dialogRef" @success="handleSaveSuccess" />
+    <MasterDataDeleteGuard ref="deleteGuardRef" />
   </div>
 </template>
 
@@ -46,12 +47,12 @@
   import type {
     ArtTableQueryExcelColumn,
     ArtTableQueryExpose,
-    ArtTableQueryHeaderAction,
-    ArtTableQueryHeaderActionContext
+    ArtTableQueryHeaderAction
   } from '@/components/core/tables/art-table-query/index.vue'
   import type { ColumnOption } from '@/types'
-  import { pageInfoHandler } from '@/utils/table/table-utils'
-  import { useArtFeedback } from '@/hooks/core/useArtFeedback'
+  import { buildSupabasePageRange } from '@/utils/supabase/pagination'
+  import { useSupplierDelete } from '@/hooks/core/useSupplierDelete'
+  import MasterDataDeleteGuard from '@/components/business/master-data-delete-guard/index.vue'
   import { useUserStore } from '@/store/modules/user'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import BusinessTableIdentityCell from '@/components/business/business-table-identity-cell/index.vue'
@@ -60,7 +61,6 @@
     type BusinessWorkspaceMetric
   } from '@/components/business/business-workspace-header/index.vue'
   import {
-    deleteSuppliers,
     exportSupplierList,
     fetchSupplierList,
     type SmisSupplier,
@@ -90,7 +90,7 @@
     headerActions: ComputedRef<ArtTableQueryHeaderAction[]>
   }
 
-  const { confirmDelete } = useArtFeedback()
+  const { deleteGuardRef, deleteBusy, removeSuppliers } = useSupplierDelete('SmisSupplier:Delete')
   const userStore = useUserStore()
   const { getDictMap } = storeToRefs(userStore)
   const tableQueryRef = ref<ArtTableQueryExpose>()
@@ -191,15 +191,10 @@
     {
       permission: 'SmisSupplier:Delete',
       type: 'delete',
-      content: ({ selectedCount }: ArtTableQueryHeaderActionContext) =>
-        `确定删除选中的 ${selectedCount} 家供应商吗？删除后无法恢复。`,
-      onClick: async ({ selectedRows, api }) => {
-        const ids = selectedRows
-          .map((row) => row.id)
-          .filter((id): id is string => typeof id === 'string')
-        await deleteSuppliers(ids)
-        await api.refreshRemove()
-      }
+      confirm: false,
+      disabled: deleteBusy.value,
+      onClick: ({ selectedRows, api }) =>
+        removeSuppliers(selectedRows as SmisSupplier[], () => api.refreshRemove())
     }
   ])
 
@@ -336,7 +331,7 @@
   ]
 
   const fetchTableData = async (params: TableParams, options?: TableRequestOptions) => {
-    const { from, to } = pageInfoHandler({ current: params.current, size: params.size })
+    const { from, to } = buildSupabasePageRange({ current: params.current, size: params.size })
     const response = await fetchSupplierList({
       keyword: params.keyword,
       supplierCategory: params.supplierCategory,
@@ -356,16 +351,8 @@
       : tableQueryRef.value?.refreshUpdate())
   }
 
-  const handleDelete = async (row: SmisSupplier): Promise<void> => {
-    if (!row.id) return
-    try {
-      await confirmDelete(`确定删除供应商“${row.supplierName}”吗？删除后无法恢复。`)
-      await deleteSuppliers([row.id])
-      await tableQueryRef.value?.refreshRemove()
-    } catch {
-      /* 用户取消 */
-    }
-  }
+  const handleDelete = (row: SmisSupplier): Promise<void> =>
+    removeSuppliers([row], () => tableQueryRef.value?.refreshRemove())
 
   onMounted(async () => {
     await Promise.all(SUPPLIER_DICTIONARY_CODES.map((code) => userStore.ensureDictLoaded(code)))

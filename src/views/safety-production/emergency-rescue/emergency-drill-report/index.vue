@@ -44,7 +44,8 @@
       <ElScrollbar class="drill-report-page__scroll">
         <div class="drill-report-page__body">
           <ArtSearchBar
-            v-model="query"
+            :model-value="query"
+            @update:model-value="replaceReactiveModel(query, $event)"
             :items="searchItems"
             :span="6"
             label-position="top"
@@ -240,6 +241,7 @@
 </template>
 
 <script setup lang="ts">
+  import { replaceReactiveModel } from '@/utils/form/model'
   import { getFriendlySupabaseErrorMessage } from '@/utils/supabase'
   import { ElMessage } from 'element-plus'
   import { fetchEnabledOrganizationTree } from '@/api/system-manage'

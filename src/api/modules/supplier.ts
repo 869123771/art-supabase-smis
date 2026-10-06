@@ -80,10 +80,3 @@ export async function saveSupplier(params: SmisSupplierSavePayload) {
     }
   )
 }
-
-export async function deleteSuppliers(ids: string[]) {
-  return await responseHandle<number>(
-    () => supabase.rpc('smis_delete_suppliers_secure', { p_ids: ids }),
-    { showMessage: true, breakReturn: true, message: '供应商已删除' }
-  )
-}

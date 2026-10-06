@@ -238,7 +238,7 @@
       from,
       to: from + params.pageSize - 1
     })
-    return { data: result.data, total: result.total }
+    return result
   }
   const sourceMaximum = (sourceItemId: string): number =>
     selection.sources.find((item) => item.id === sourceItemId)?.returnableQuantity ??

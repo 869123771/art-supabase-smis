@@ -1,6 +1,12 @@
+import type { ApiFeedbackOptions } from '@/types/api/request'
 import { buildSupabaseRpcRange } from '@/utils/supabase'
 import { normalizeNullableText } from '@/utils/form/normalize'
-import { omit } from 'lodash-es'
+import { chunk, omit, uniq } from 'lodash-es'
+import {
+  fetchRecordDeleteDependencies,
+  type RecordDeleteDependency
+} from '@/api/master-data-delete'
+import { fetchAllRangePages } from '@/utils/supabase/pagination'
 import { useSupabase } from '@/hooks'
 import TreeUtils from '@/utils/tree'
 import type {
@@ -44,7 +50,8 @@ const categoryTree = new TreeUtils({ idKey: 'id', parentKey: 'parentId', childre
 const { supabase, keysToSnakeDeep, responseHandle } = useSupabase()
 
 export async function fetchHazardousWasteWarehouseList(
-  params: SmisHazardousWasteWarehouseSearchParams = {}
+  params: SmisHazardousWasteWarehouseSearchParams = {},
+  options: ApiFeedbackOptions = {}
 ) {
   const from = Math.max(params.from ?? 0, 0)
   const result = await responseHandle<WarehouseListResult>(
@@ -56,7 +63,7 @@ export async function fetchHazardousWasteWarehouseList(
         p_ids: params.ids?.length ? params.ids : null,
         p_purpose: params.purpose ?? 'list'
       }),
-    { showErrorMessage: true }
+    { showErrorMessage: options.showErrorMessage ?? true }
   )
   return {
     data: result.data?.records ?? [],
@@ -84,12 +91,18 @@ export async function saveHazardousWasteWarehouse(params: SmisHazardousWasteWare
 export async function deleteHazardousWasteWarehouses(ids: string[]) {
   return await responseHandle<number>(
     () => supabase.rpc('smis_delete_hazardous_waste_warehouses_secure', { p_ids: ids }),
-    { showMessage: true, breakReturn: true, message: '危废仓库已删除' }
+    {
+      showErrorMessage: false,
+      breakReturn: true,
+      requireAffected: true,
+      noAffectedMessage: '所选仓库未删除，请刷新列表核对状态和权限后重试'
+    }
   )
 }
 
 export async function fetchHazardousWasteCatalogList(
-  params: SmisHazardousWasteCatalogSearchParams = {}
+  params: SmisHazardousWasteCatalogSearchParams = {},
+  options: ApiFeedbackOptions = {}
 ) {
   const from = Math.max(params.from ?? 0, 0)
   const result = await responseHandle<CatalogListResult>(
@@ -102,7 +115,7 @@ export async function fetchHazardousWasteCatalogList(
         p_ids: params.ids?.length ? params.ids : null,
         p_purpose: params.purpose ?? 'list'
       }),
-    { showErrorMessage: true }
+    { showErrorMessage: options.showErrorMessage ?? true }
   )
   return {
     data: result.data?.records ?? [],
@@ -141,7 +154,12 @@ export async function saveHazardousWasteCategory(params: SmisHazardousWasteCateg
 export async function deleteHazardousWasteCategories(ids: string[]) {
   return await responseHandle<number>(
     () => supabase.rpc('smis_delete_hazardous_waste_categories_secure', { p_ids: ids }),
-    { showMessage: true, breakReturn: true, message: '危废分类已删除' }
+    {
+      showErrorMessage: false,
+      breakReturn: true,
+      requireAffected: true,
+      noAffectedMessage: '所选分类未删除，请刷新列表核对状态和权限后重试'
+    }
   )
 }
 
@@ -163,13 +181,77 @@ export async function saveHazardousWasteCatalog(params: SmisHazardousWasteCatalo
 export async function deleteHazardousWasteCatalog(ids: string[]) {
   return await responseHandle<number>(
     () => supabase.rpc('smis_delete_hazardous_waste_catalog_secure', { p_ids: ids }),
-    { showMessage: true, breakReturn: true, message: '危废名录已删除' }
+    {
+      showErrorMessage: false,
+      breakReturn: true,
+      requireAffected: true,
+      noAffectedMessage: '所选名录未删除，请刷新列表核对状态和权限后重试'
+    }
   )
+}
+
+export interface HazardousWasteCatalogDeleteDependency extends RecordDeleteDependency {
+  documentDirection?: SmisHazardousWasteDocumentDirection
+}
+
+export async function fetchHazardousWasteCatalogDeleteDependencies(
+  ids: string[]
+): Promise<HazardousWasteCatalogDeleteDependency[]> {
+  const references = await fetchRecordDeleteDependencies({
+    table: 'smis_hazardous_waste_catalog',
+    ids
+  })
+  interface DocumentItemReference {
+    id: string
+    document: Pick<SmisHazardousWasteDocument, 'id' | 'documentNo' | 'direction' | 'status'> | null
+  }
+  const documents = new Map<string, DocumentItemReference['document']>()
+  const itemIds = uniq(
+    references
+      .filter((row) => row.sourceTable === 'smis_hazardous_waste_document_item')
+      .map((row) => row.targetId)
+  )
+  for (const batch of chunk(itemIds, 100)) {
+    const { data, error } = await fetchAllRangePages<DocumentItemReference>(({ from, to }) =>
+      responseHandle<DocumentItemReference[]>(
+        () =>
+          supabase
+            .from('smis_hazardous_waste_document_item')
+            .select(
+              'id,document:smis_hazardous_waste_document!smis_hazardous_waste_document_item_document_id_fkey(id,document_no,direction,status)'
+            )
+            .in('id', batch)
+            .range(from, to),
+        { breakReturn: true, showErrorMessage: false, errorMessage: '关联单据定位失败，请重试' }
+      )
+    )
+    if (error || !data) throw new Error('关联单据定位失败，请重试', { cause: error })
+    for (const row of data) documents.set(row.id, row.document)
+  }
+  return references.map((row) => {
+    if (row.sourceTable !== 'smis_hazardous_waste_document_item') return row
+    const document = documents.get(row.targetId)
+    if (
+      !document?.id ||
+      !document.documentNo ||
+      (document.direction !== 'inbound' && document.direction !== 'outbound')
+    ) {
+      throw new Error('关联单据暂不可见，请核对查看权限后重新检查')
+    }
+    return {
+      ...row,
+      targetId: document.id,
+      recordNo: document.documentNo,
+      recordStatus: document.status,
+      documentDirection: document.direction
+    }
+  })
 }
 
 export async function fetchHazardousWasteDocumentList(
   direction: SmisHazardousWasteDocumentDirection,
-  params: SmisHazardousWasteDocumentSearchParams = {}
+  params: SmisHazardousWasteDocumentSearchParams = {},
+  options: ApiFeedbackOptions = {}
 ) {
   const from = Math.max(params.from ?? 0, 0)
   const result = await responseHandle<DocumentListResult>(
@@ -185,7 +267,7 @@ export async function fetchHazardousWasteDocumentList(
         p_status: params.status || null,
         p_purpose: params.purpose ?? 'list'
       }),
-    { showErrorMessage: true }
+    { showErrorMessage: options.showErrorMessage ?? true }
   )
   return {
     data: result.data?.records ?? [],
@@ -231,7 +313,13 @@ export async function deleteHazardousWasteDocuments(
         p_direction: direction,
         p_ids: ids
       }),
-    { showMessage: true, breakReturn: true, message: '危废单据已删除' }
+    {
+      breakReturn: true,
+      showErrorMessage: false,
+      requireAffected: true,
+      noAffectedMessage: '所选单据未删除，请刷新列表核对状态和权限后重试',
+      errorMessage: '危废单据删除失败，请重试'
+    }
   )
 }
 

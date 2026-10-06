@@ -166,7 +166,7 @@ export async function fetchSafetyAccidentStatistics(
         p_end_date: params.endDate || null,
         p_organization_id: params.organizationId || null
       }),
-    { showErrorMessage: true }
+    { showErrorMessage: false, breakReturn: true }
   )
   const data = result.data ?? accidentStatistics()
   return {

@@ -53,7 +53,7 @@
     ArtTableQueryHeaderActionContext
   } from '@/components/core/tables/art-table-query/index.vue'
   import type { ColumnOption } from '@/types'
-  import { pageInfoHandler } from '@/utils/table/table-utils'
+  import { buildSupabasePageRange } from '@/utils/supabase/pagination'
   import { loadAllDocumentPages } from '@/utils/business/document-detail-list'
   import { useArtFeedback } from '@/hooks/core/useArtFeedback'
   import { useUserStore } from '@/store/modules/user'
@@ -417,17 +417,23 @@
     }
   ]
   const fetchTableData = async (params: TableParams, options?: TableRequestOptions) => {
-    const { from, to } = pageInfoHandler({ current: params.current, size: params.size })
-    const response = await fetchSafetyRiskList({
-      ...params,
-      identifiedFrom: params.identifiedRange?.[0],
-      identifiedTo: params.identifiedRange?.[1]
-        ? `${params.identifiedRange[1]}T23:59:59`
-        : undefined,
-      from,
-      to
-    })
-    if (!options?.signal?.aborted) Object.assign(overview, response.overview)
+    const { from, to } = buildSupabasePageRange({ current: params.current, size: params.size })
+    const response = await fetchSafetyRiskList(
+      {
+        ...params,
+        identifiedFrom: params.identifiedRange?.[0],
+        identifiedTo: params.identifiedRange?.[1]
+          ? `${params.identifiedRange[1]}T23:59:59`
+          : undefined,
+        from,
+        to
+      },
+      { showErrorMessage: false }
+    )
+    if (options?.signal?.aborted) return response
+    if (response.error)
+      throw new Error('安全风险清单加载失败，请重新加载', { cause: response.error })
+    Object.assign(overview, response.overview)
     return response
   }
   const headerActions = computed<ArtTableQueryHeaderAction[]>(() => [

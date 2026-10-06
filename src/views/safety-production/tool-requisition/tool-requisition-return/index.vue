@@ -28,7 +28,8 @@
 
       <ArtTableQuery
         ref="tableRef"
-        v-model="searchQuery"
+        :model-value="searchQuery"
+        @update:model-value="replaceReactiveModel(searchQuery, $event)"
         class="tool-return-page__table"
         :api-fn="fetchTableData"
         :search-items="searchItems"
@@ -51,6 +52,7 @@
 </template>
 
 <script setup lang="tsx">
+  import { replaceReactiveModel } from '@/utils/form/model'
   import type { TableRequestOptions } from '@/hooks/core/useTable'
   import { useDictionaryOptions } from '@/hooks/core/useDictionaryOptions'
   import dayjs from 'dayjs'

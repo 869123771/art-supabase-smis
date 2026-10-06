@@ -401,7 +401,7 @@
   import { useLazyComponent } from '@/hooks/core/useLazyComponent'
   import { useUserStore } from '@/store/modules/user'
   import type { ColumnOption } from '@/types'
-  import { pageInfoHandler } from '@/utils/table/table-utils'
+  import { buildSupabasePageRange } from '@/utils/supabase/pagination'
   import { exportExcel, type ExcelColumn } from '@/utils/file'
   import TreeUtils from '@/utils/tree'
   import BusinessWorkspaceHeader, {
@@ -735,7 +735,7 @@
     }
   ]
   const fetchTableData = async (params: TableParams, options?: TableRequestOptions) => {
-    const { from, to } = pageInfoHandler({ current: params.current, size: params.size })
+    const { from, to } = buildSupabasePageRange({ current: params.current, size: params.size })
     const response = await fetchDocumentList({
       keyword: params.keyword,
       status: params.status,

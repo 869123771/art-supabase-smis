@@ -81,7 +81,7 @@
     ArtTableQueryHeaderActionContext
   } from '@/components/core/tables/art-table-query/index.vue'
   import type { ColumnOption } from '@/types'
-  import { pageInfoHandler } from '@/utils/table/table-utils'
+  import { buildSupabasePageRange } from '@/utils/supabase/pagination'
   import { useArtFeedback } from '@/hooks/core/useArtFeedback'
   import { useUserStore } from '@/store/modules/user'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
@@ -377,7 +377,7 @@
       const [standardResult, categoryResult] = await Promise.all([
         fetchAntiViolationStandardList({
           ...params,
-          ...pageInfoHandler(params),
+          ...buildSupabasePageRange(params),
           categoryId: tree.selectedKey === ALL_KEY ? undefined : tree.selectedKey
         }),
         fetchViolationCategoryList({ from: 0, to: 9999 })

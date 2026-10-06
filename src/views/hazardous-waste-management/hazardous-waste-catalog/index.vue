@@ -1,6 +1,6 @@
 <template>
   <ArtPermissionGuard permission="SmisHazardousWasteCatalog:View" resource-name="危废名录">
-    <div class="hazardous-catalog-page business-workspace-page art-full-height">
+    <div class="business-workspace-page art-full-height flex min-h-0 min-w-0 flex-col gap-[14px]">
       <BusinessWorkspaceHeader
         eyebrow="HAZARDOUS WASTE CATALOG"
         title="危废名录"
@@ -14,7 +14,7 @@
         :metrics="metrics"
         ><template #actions><BusinessTableWorkspaceActions :table="tableQueryRef" /></template
       ></BusinessWorkspaceHeader>
-      <div class="hazardous-catalog-page__workspace"
+      <div class="hazardous-catalog-page__workspace min-h-0 flex-1"
         ><ArtWorkspaceSplitter
           primary-size="300px"
           primary-min="250px"
@@ -32,46 +32,61 @@
               @add="handleAddCategory"
               @edit="openCategory"
               @delete="handleDeleteCategory" /></template
-          ><ArtTableQuery
-            ref="tableQueryRef"
-            v-model="searchQuery"
-            class="hazardous-catalog-page__table"
-            :api-fn="fetchData"
-            :search-items="searchItems"
-            :columns-factory="columnsFactory"
-            :header-actions="headerActions"
-            header-actions-placement="workspace"
-            :search-bar-props="{ span: 8, labelWidth: 82, showExpand: false }"
-            :table-props="{
-              rowKey: 'id',
-              tableLayout: 'fixed',
-              emptyText: '暂无危废名录',
-              emptyDescription: '请选择或新增分类，再维护危废名录。'
-            }"
-            focusable
-            focus-scope-selector=".hazardous-catalog-page__workspace" /></ArtWorkspaceSplitter
+          ><div class="flex min-h-0 min-w-0 flex-1 flex-col gap-[14px]">
+            <MasterDeleteProcessingNotice :location-ready="Boolean(deleteProcessing.recordId)" />
+            <ArtTableQuery
+              ref="tableQueryRef"
+              :model-value="searchQuery"
+              @update:model-value="replaceReactiveModel(searchQuery, $event)"
+              class="min-h-0 min-w-0"
+              :api-fn="fetchData"
+              :search-items="searchItems"
+              :columns-factory="columnsFactory"
+              :header-actions="headerActions"
+              header-actions-placement="workspace"
+              :search-bar-props="{ span: 8, labelWidth: 82, showExpand: false }"
+              :table-props="{
+                rowKey: 'id',
+                tableLayout: 'fixed',
+                emptyText: '暂无危废名录',
+                emptyDescription: '请选择或新增分类，再维护危废名录。'
+              }"
+              focusable
+              focus-scope-selector=".hazardous-catalog-page__workspace" /></div></ArtWorkspaceSplitter
       ></div>
       <CategoryDialog ref="categoryDialogRef" @success="refresh" /><CatalogDialog
         ref="catalogDialogRef"
         @success="refresh"
       />
+      <MasterDataDeleteGuard ref="deleteGuardRef" />
     </div>
   </ArtPermissionGuard>
 </template>
 <script setup lang="tsx">
+  import { replaceReactiveModel } from '@/utils/form/model'
   import type { TableRequestOptions } from '@/hooks/core/useTable'
   import dayjs from 'dayjs'
   import { ElTag } from 'element-plus'
   import type { SearchFormItem } from '@/components/core/forms/art-search-bar/index.vue'
   import type {
     ArtTableQueryExpose,
-    ArtTableQueryHeaderAction,
-    ArtTableQueryHeaderActionContext
+    ArtTableQueryHeaderAction
   } from '@/components/core/tables/art-table-query/index.vue'
   import type { ColumnOption } from '@/types'
-  import { pageInfoHandler } from '@/utils/table/table-utils'
+  import { buildSupabasePageRange } from '@/utils/supabase/pagination'
   import { loadAllDocumentPages } from '@/utils/business/document-detail-list'
-  import { useArtFeedback } from '@/hooks/core/useArtFeedback'
+  import { notifyFriendlyError, useArtFeedback } from '@/hooks/core/useArtFeedback'
+  import { useRecordDeleteGuard } from '@/hooks/core/useRecordDeleteGuard'
+  import { useMasterDataDeleteProcessingContext } from '@/hooks/core/useMasterDataDeleteProcessing'
+  import MasterDeleteProcessingNotice from '@/components/business/master-delete-processing-notice/index.vue'
+  import MasterDataDeleteGuard, {
+    type MasterDataDeleteDependencyMeta
+  } from '@/components/business/master-data-delete-guard/index.vue'
+  import {
+    formatReferenceStatus,
+    getRecordReferenceMeta
+  } from '@/components/business/master-data-delete-guard/record-meta'
+  import { DeleteReferenceBlockedError } from '@/utils/supabase/delete-reference'
   import { useAuth } from '@/hooks/core/useAuth'
   import { useUserStore } from '@/store/modules/user'
   import TreeUtils from '@/utils/tree'
@@ -89,6 +104,7 @@
     deleteHazardousWasteCatalog,
     deleteHazardousWasteCategories,
     fetchHazardousWasteCatalogList,
+    fetchHazardousWasteCatalogDeleteDependencies,
     type SmisHazardousWasteCatalogItem,
     type SmisHazardousWasteCatalogOverview,
     type SmisHazardousWasteCatalogSearchParams,
@@ -109,6 +125,22 @@
   }
   const { confirmDelete } = useArtFeedback()
   const { hasAnyAuth } = useAuth()
+  const { deleteGuardRef, inspectDeleteReferences: inspectCategoryReferences } =
+    useRecordDeleteGuard('smis_hazardous_waste_category', '危废分类', {
+      smis_hazardous_waste_category: {
+        label: '下级危废分类',
+        routeName: 'SmisHazardousWasteCatalog',
+        canNavigate: () => hasAnyAuth(['SmisHazardousWasteCatalog:View'])
+      },
+      smis_hazardous_waste_catalog: {
+        label: '危废名录',
+        routeName: 'SmisHazardousWasteCatalog',
+        canNavigate: () => hasAnyAuth(['SmisHazardousWasteCatalog:View'])
+      }
+    })
+  const deleteBusy = ref(false)
+  const deleteProcessing = useMasterDataDeleteProcessingContext()
+  const route = useRoute()
   const userStore = useUserStore()
   const displayDictionaryCodes = [
     'commonEnabledDisabledStatus',
@@ -251,12 +283,10 @@
     {
       permission: 'SmisHazardousWasteCatalog:Delete',
       type: 'delete',
-      content: ({ selectedCount }: ArtTableQueryHeaderActionContext) =>
-        `确定删除选中的 ${selectedCount} 条危废名录吗？`,
-      onClick: async ({ selectedRows, api }) => {
-        await deleteHazardousWasteCatalog(selectedRows.map((row) => String(row.id)))
-        await api.refreshRemove()
-      }
+      confirm: false,
+      disabled: deleteBusy.value,
+      onClick: ({ selectedRows, api }) =>
+        removeCatalog(selectedRows as SmisHazardousWasteCatalogItem[], () => api.refreshRemove())
     }
   ])
   const columnsFactory = (): ColumnOption<SmisHazardousWasteCatalogItem>[] => {
@@ -367,13 +397,29 @@
     tree.loading = !tree.data.length
     tree.error = null
     try {
-      const result = await fetchHazardousWasteCatalogList({
-        ...params,
-        ...pageInfoHandler(params),
-        categoryId: tree.selectedKey === ALL_KEY ? undefined : tree.selectedKey
-      })
+      const result = await fetchHazardousWasteCatalogList(
+        {
+          ...params,
+          ...buildSupabasePageRange(params),
+          categoryId: tree.selectedKey === ALL_KEY ? undefined : tree.selectedKey,
+          ...(deleteProcessing.value.active && deleteProcessing.value.recordId
+            ? route.query.dependencyCode === 'smis_hazardous_waste_category'
+              ? { categoryId: deleteProcessing.value.recordId }
+              : { ids: [deleteProcessing.value.recordId], categoryId: undefined }
+            : {})
+        },
+        { showErrorMessage: false }
+      )
+      if (result.error) {
+        throw new Error('危废名录加载失败，请重新加载', { cause: result.error })
+      }
       if (!options?.signal?.aborted) {
         tree.data = result.categories
+        if (
+          deleteProcessing.value.active &&
+          route.query.dependencyCode === 'smis_hazardous_waste_category'
+        )
+          tree.selectedKey = deleteProcessing.value.recordId
         Object.assign(overview, result.overview)
       }
       return { records: result.data, total: result.total }
@@ -391,45 +437,120 @@
   const refresh = async (): Promise<void> => {
     await tableQueryRef.value?.getData()
   }
-  const deleteRow = async (row: SmisHazardousWasteCatalogItem): Promise<void> => {
+  watch(
+    () => [
+      deleteProcessing.value.active,
+      deleteProcessing.value.recordId,
+      route.query.dependencyCode
+    ],
+    () => {
+      tree.selectedKey = ALL_KEY
+      void tableQueryRef.value?.getData()
+    }
+  )
+  const inspectCatalogReferences = async (rows: SmisHazardousWasteCatalogItem[]) => {
+    if (!deleteGuardRef.value) {
+      ElMessage.error('关联校验尚未就绪，请刷新页面后重试删除')
+      return true
+    }
+    const dependencyMeta: Record<string, MasterDataDeleteDependencyMeta> = {}
+    return deleteGuardRef.value.inspect({
+      resourceLabel: '危废名录',
+      resources: rows.map((row) => ({ id: row.id, label: `${row.wasteName} · ${row.wasteCode}` })),
+      navigationResource: { type: 'smis_hazardous_waste_catalog', queryKey: 'referencedRecordId' },
+      dependencyMeta,
+      fetchDependencies: async (ids) => {
+        const references = await fetchHazardousWasteCatalogDeleteDependencies(ids)
+        return references.map((row) => {
+          const dependencyCode = row.documentDirection
+            ? `${row.sourceTable}_${row.documentDirection}`
+            : row.sourceTable
+          const routeName =
+            row.documentDirection === 'inbound'
+              ? 'SmisHazardousWasteInbound'
+              : 'SmisHazardousWasteOutbound'
+          dependencyMeta[dependencyCode] = {
+            ...getRecordReferenceMeta(row.sourceTable),
+            ...(row.documentDirection
+              ? {
+                  label: row.documentDirection === 'inbound' ? '危废入库单据' : '危废出库单据',
+                  routeName,
+                  canNavigate: () => hasAnyAuth([`${routeName}:View`])
+                }
+              : {}),
+            unit: '条',
+            order: 1,
+            actionLabel: '查看关联',
+            description: '请核对引用单据，保留业务历史；名录可改为停用。'
+          }
+          return {
+            ...row,
+            dependencyCode,
+            createdAt: row.createdAt ?? '',
+            recordStatus: formatReferenceStatus(row.recordStatus) || '状态待核对',
+            cleanupAllowed: false
+          }
+        })
+      }
+    })
+  }
+  const removeCatalog = async (
+    rows: SmisHazardousWasteCatalogItem[],
+    refreshRows: () => unknown | Promise<unknown>
+  ): Promise<void> => {
+    if (deleteBusy.value || !rows.length) return
+    if (!hasAnyAuth(['SmisHazardousWasteCatalog:Delete'])) return
+    deleteBusy.value = true
     try {
-      await confirmDelete(`确定删除危废名录“${row.wasteName}”吗？`)
-      await deleteHazardousWasteCatalog([row.id])
-      await refresh()
-    } catch {
-      /* 取消删除 */
+      if (await inspectCatalogReferences(rows)) return
+      await confirmDelete(
+        rows.length === 1
+          ? `确定删除危废名录“${rows[0].wasteName}”吗？`
+          : `确定删除选中的 ${rows.length} 条危废名录吗？`
+      )
+      try {
+        await deleteHazardousWasteCatalog(rows.map((row) => row.id))
+      } catch (error) {
+        if (error instanceof DeleteReferenceBlockedError) return
+        if (await inspectCatalogReferences(rows)) return
+        throw error
+      }
+      ElMessage.success('危废名录已删除')
+      await refreshRows()
+    } catch (error) {
+      if (error !== 'cancel' && error !== 'close')
+        notifyFriendlyError(error, '危废名录删除失败，请重试')
+    } finally {
+      deleteBusy.value = false
     }
   }
+  const deleteRow = (row: SmisHazardousWasteCatalogItem) =>
+    removeCatalog([row], () => tableQueryRef.value?.refreshRemove())
   const handleDeleteCategory = async (row: SmisHazardousWasteCategory): Promise<void> => {
+    if (deleteBusy.value || !hasAnyAuth(['SmisHazardousWasteCatalog:DeleteCategory'])) return
+    deleteBusy.value = true
+    const resources = [{ id: row.id, label: `${row.categoryName} · ${row.categoryCode}` }]
     try {
+      if (await inspectCategoryReferences(resources)) return
       await confirmDelete(`确定删除危废分类“${row.categoryName}”吗？`)
-      await deleteHazardousWasteCategories([row.id])
+      try {
+        await deleteHazardousWasteCategories([row.id])
+      } catch (error) {
+        if (error instanceof DeleteReferenceBlockedError) return
+        if (await inspectCategoryReferences(resources)) return
+        throw error
+      }
+      ElMessage.success('危废分类已删除')
       tree.selectedKey = ALL_KEY
       await refresh()
-    } catch {
-      /* 取消删除 */
+    } catch (error) {
+      if (error !== 'cancel' && error !== 'close')
+        notifyFriendlyError(error, '危废分类删除失败，请重试')
+    } finally {
+      deleteBusy.value = false
     }
   }
   onMounted(
     () => void Promise.all(displayDictionaryCodes.map((code) => userStore.ensureDictLoaded(code)))
   )
 </script>
-<style scoped lang="scss">
-  .hazardous-catalog-page {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-    min-width: 0;
-    min-height: 0;
-
-    &__workspace {
-      flex: 1;
-      min-height: 0;
-    }
-
-    &__table {
-      min-width: 0;
-      min-height: 0;
-    }
-  }
-</style>

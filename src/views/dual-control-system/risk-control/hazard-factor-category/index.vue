@@ -55,7 +55,7 @@
     ArtTableQueryHeaderActionContext
   } from '@/components/core/tables/art-table-query/index.vue'
   import type { ColumnOption } from '@/types'
-  import { pageInfoHandler } from '@/utils/table/table-utils'
+  import { buildSupabasePageRange } from '@/utils/supabase/pagination'
   import { useArtFeedback } from '@/hooks/core/useArtFeedback'
   import { useUserStore } from '@/store/modules/user'
   import { useTenantScopeStore } from '@/store/modules/tenant-scope'
@@ -380,17 +380,23 @@
   ]
 
   const fetchTableData = async (params: TableParams, options?: TableRequestOptions) => {
-    const { from, to } = pageInfoHandler({ current: params.current, size: params.size })
-    const response = await fetchHazardFactorCategoryList({
-      keyword: params.keyword,
-      factorType: params.factorType,
-      status: params.status,
-      tagStyle: params.tagStyle,
-      tenantId: effectiveTenantId.value,
-      from,
-      to
-    })
-    if (!options?.signal?.aborted) Object.assign(overview, response.overview)
+    const { from, to } = buildSupabasePageRange({ current: params.current, size: params.size })
+    const response = await fetchHazardFactorCategoryList(
+      {
+        keyword: params.keyword,
+        factorType: params.factorType,
+        status: params.status,
+        tagStyle: params.tagStyle,
+        tenantId: effectiveTenantId.value,
+        from,
+        to
+      },
+      { showErrorMessage: false }
+    )
+    if (options?.signal?.aborted) return response
+    if (response.error)
+      throw new Error('危害因素类别加载失败，请重新加载', { cause: response.error })
+    Object.assign(overview, response.overview)
     return response
   }
 

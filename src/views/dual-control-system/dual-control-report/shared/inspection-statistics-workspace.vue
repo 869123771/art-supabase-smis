@@ -30,7 +30,8 @@
       <ElScrollbar class="inspection-statistics-page__scroll">
         <div class="inspection-statistics-page__body">
           <ArtSearchBar
-            v-model="query"
+            :model-value="query"
+            @update:model-value="replaceReactiveModel(query, $event)"
             :items="searchItems"
             :span="7"
             label-position="top"
@@ -109,6 +110,7 @@
 </template>
 
 <script setup lang="tsx">
+  import { replaceReactiveModel } from '@/utils/form/model'
   import dayjs from 'dayjs'
   import { ElProgress } from 'element-plus'
   import type { ColumnOption } from '@/types'

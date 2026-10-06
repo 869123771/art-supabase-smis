@@ -33,7 +33,7 @@
         <ElButton type="primary" :loading="state.loading" @click="loadData">
           <ArtSvgIcon icon="ri:search-line" />生成统计报表
         </ElButton>
-        <ElButton :disabled="!filter.organizationId || state.loading" @click="resetFilter">
+        <ElButton :disabled="!filter.organizationId" @click="resetFilter">
           <ArtSvgIcon icon="ri:refresh-line" />重置
         </ElButton>
       </div>
@@ -105,6 +105,7 @@
 </template>
 
 <script setup lang="ts">
+  import { groupBy, mapValues, sumBy } from 'lodash-es'
   import type { BarDataItem, PieDataItem } from '@/types/component/chart'
   import type { ColumnOption } from '@/types'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
@@ -138,11 +139,24 @@
     overview: emptyOverview()
   })
   const filter = reactive<{ organizationId?: string }>({})
-  const state = reactive<{
-    loading: boolean
-    error: string | null
-    data: SmisSpecialEquipmentAnalysis
-  }>({ loading: false, error: null, data: emptyData() })
+  const request = useAsyncState(
+    async (organizationId?: string): Promise<SmisSpecialEquipmentAnalysis> => {
+      const result = await fetchSpecialEquipmentAnalysis(organizationId)
+      return {
+        ...result.data,
+        organizations: result.data.organizations.length
+          ? result.data.organizations
+          : request.state.value.organizations
+      }
+    },
+    emptyData(),
+    { immediate: false, resetOnExecute: false, onError: () => undefined }
+  )
+  const state = reactive({
+    loading: request.isLoading,
+    error: computed(() => (request.error.value ? '统计报表加载失败，请重试。' : null)),
+    data: request.state
+  })
 
   const workspaceMetrics = computed<BusinessWorkspaceMetric[]>(() => [
     {
@@ -173,34 +187,29 @@
       tone: state.data.overview.majorHazardCount ? 'warning' : undefined
     }
   ])
-  const chartOrganizations = computed(() => [
-    ...new Set(state.data.rows.map((row) => row.organizationName))
-  ])
+  const organizationStats = computed(() =>
+    Object.entries(groupBy(state.data.rows, 'organizationId')).map(([id, rows]) => ({
+      id,
+      name: rows[0].organizationName,
+      categoryCounts: mapValues(groupBy(rows, 'categoryId'), (items) => sumBy(items, 'count'))
+    }))
+  )
+  const chartOrganizations = computed(() => organizationStats.value.map((item) => item.name))
   const barSeries = computed<BarDataItem[]>(() =>
     state.data.categories.map((category) => ({
       name: category.categoryName,
       stack: 'total',
-      data: chartOrganizations.value.map(
-        (organizationName) =>
-          state.data.rows.find(
-            (row) =>
-              row.organizationName === organizationName && row.categoryId === category.categoryId
-          )?.count ?? 0
-      )
+      data: organizationStats.value.map((item) => item.categoryCounts[category.categoryId] ?? 0)
     }))
   )
   const ringData = computed<PieDataItem[]>(() =>
     state.data.categories.map((item) => ({ name: item.categoryName, value: item.count }))
   )
   const reportRows = computed<ReportRow[]>(() =>
-    chartOrganizations.value.map((organizationName, index) => {
-      const row: ReportRow = { index: index + 1, organizationName, total: 0 }
+    organizationStats.value.map((organization, index) => {
+      const row: ReportRow = { index: index + 1, organizationName: organization.name, total: 0 }
       state.data.categories.forEach((category) => {
-        const count =
-          state.data.rows.find(
-            (item) =>
-              item.organizationName === organizationName && item.categoryId === category.categoryId
-          )?.count ?? 0
+        const count = organization.categoryCounts[category.categoryId] ?? 0
         row[`category_${category.categoryId}`] = count
         row.total = Number(row.total) + count
       })
@@ -220,20 +229,7 @@
   ])
 
   const loadData = async (): Promise<void> => {
-    state.loading = true
-    state.error = null
-    try {
-      const result = await fetchSpecialEquipmentAnalysis(filter.organizationId)
-      const organizations = result.data.organizations.length
-        ? result.data.organizations
-        : state.data.organizations
-      state.data = { ...result.data, organizations }
-      if (result.error) state.error = '统计报表加载失败，请重试。'
-    } catch {
-      state.error = '统计报表加载失败，请重试。'
-    } finally {
-      state.loading = false
-    }
+    await request.execute(0, filter.organizationId)
   }
   const resetFilter = (): void => {
     filter.organizationId = undefined

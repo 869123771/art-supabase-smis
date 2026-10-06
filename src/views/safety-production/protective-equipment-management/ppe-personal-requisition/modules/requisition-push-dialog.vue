@@ -180,13 +180,16 @@
     items as SmisStorageLocation[]
   const fetchWarehouseOptions = async (params: DataSelectFetchParams) => {
     const from = (params.page - 1) * params.pageSize
-    const result = await fetchStorageLocationList({
-      keyword: params.keyword,
-      status: 'enabled',
-      from,
-      to: from + params.pageSize - 1
-    })
-    return { data: result.data, total: result.total }
+    const result = await fetchStorageLocationList(
+      {
+        keyword: params.keyword,
+        status: 'enabled',
+        from,
+        to: from + params.pageSize - 1
+      },
+      { showErrorMessage: false }
+    )
+    return result
   }
   const currentIssuer = (): EmployeeIntegrationItem[] =>
     getUserInfo.value.hrEmployee

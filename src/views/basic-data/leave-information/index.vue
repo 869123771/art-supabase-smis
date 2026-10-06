@@ -96,7 +96,7 @@
   import { fetchOrganizationOptionsTree } from '@/api/system-manage'
   import { exportExcel } from '@/utils/file'
   import { loadAllDocumentPages } from '@/utils/business/document-detail-list'
-  import { pageInfoHandler } from '@/utils/table/table-utils'
+  import { buildSupabasePageRange } from '@/utils/supabase/pagination'
   import { getFriendlySupabaseErrorMessage } from '@/utils/supabase/error'
   import TreeUtils from '@/utils/tree'
   import {
@@ -455,7 +455,7 @@
     endDate: tableState.searchQuery.leaveDates?.[1]
   })
   const fetchTableData = (params: TableParams) => {
-    const { from, to } = pageInfoHandler({ current: params.current, size: params.size })
+    const { from, to } = buildSupabasePageRange({ current: params.current, size: params.size })
     return fetchLeaveInformationList(buildSearchParams({ from, to }))
   }
   const handleTableSuccess: NonNullable<ArtTableQueryProps['onSuccess']> = (rows, response) => {

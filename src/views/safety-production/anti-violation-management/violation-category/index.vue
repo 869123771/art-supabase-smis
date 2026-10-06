@@ -76,7 +76,7 @@
     ArtTableQueryHeaderActionContext
   } from '@/components/core/tables/art-table-query/index.vue'
   import type { ColumnOption } from '@/types'
-  import { pageInfoHandler } from '@/utils/table/table-utils'
+  import { buildSupabasePageRange } from '@/utils/supabase/pagination'
   import { useArtFeedback } from '@/hooks/core/useArtFeedback'
   import { useUserStore } from '@/store/modules/user'
   import TreeUtils from '@/utils/tree'
@@ -322,7 +322,7 @@
     try {
       const result = await fetchViolationCategoryList({
         ...params,
-        ...pageInfoHandler(params),
+        ...buildSupabasePageRange(params),
         ancestorId: tree.selectedKey === ALL_KEY ? undefined : tree.selectedKey
       })
       if (!options?.signal?.aborted) {

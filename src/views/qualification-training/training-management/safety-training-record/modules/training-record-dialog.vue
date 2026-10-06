@@ -153,7 +153,8 @@
 
         <ArtForm
           ref="formRef"
-          v-model="form"
+          :model-value="form"
+          @update:model-value="replaceReactiveModel(form, $event)"
           :items="items"
           :rules="rules"
           :span="12"
@@ -280,6 +281,7 @@
 </template>
 
 <script setup lang="tsx">
+  import { replaceReactiveModel } from '@/utils/form/model'
   import { createDateTimeFormatter } from '@/utils/ui/format'
 
   import { normalizeNullableText } from '@/utils/form/normalize'

@@ -1,6 +1,6 @@
 <template>
   <ArtPermissionGuard permission="SmisPpePersonalStandard:View">
-    <div class="personal-page business-workspace-page art-full-height">
+    <div class="smis-personal-standard business-workspace-page art-full-height">
       <BusinessWorkspaceHeader
         eyebrow="EMPLOYEE PPE ENTITLEMENT"
         title="防护用品个人标准"
@@ -16,7 +16,7 @@
         <template #actions><BusinessTableWorkspaceActions :table="tableQueryRef" /></template>
       </BusinessWorkspaceHeader>
 
-      <div class="personal-page__workspace">
+      <div class="smis-personal-standard__workspace">
         <ArtWorkspaceSplitter
           primary-size="296px"
           primary-min="264px"
@@ -25,7 +25,10 @@
           narrow-mode="hide"
         >
           <template #primary>
-            <aside v-if="isDesktopOrganizationLayout" class="personal-page__organization-panel">
+            <aside
+              v-if="isDesktopOrganizationLayout"
+              class="smis-personal-standard__organization-panel"
+            >
               <PpeOrganizationNavigator
                 :data="organizations"
                 :loading="organizationLoading"
@@ -38,10 +41,10 @@
             </aside>
           </template>
 
-          <main class="personal-page__main">
+          <main class="smis-personal-standard__main">
             <section
               v-if="!isDesktopOrganizationLayout"
-              class="personal-page__mobile-scope art-card-xs"
+              class="smis-personal-standard__mobile-scope art-card-xs"
             >
               <span aria-hidden="true"><ArtSvgIcon icon="ri:node-tree" /></span>
               <div
@@ -52,14 +55,14 @@
               </ElButton>
             </section>
 
-            <section class="personal-page__scope-bar" aria-live="polite">
-              <div class="personal-page__scope-identity">
+            <section class="smis-personal-standard__scope-bar" aria-live="polite">
+              <div class="smis-personal-standard__scope-identity">
                 <span aria-hidden="true"><ArtSvgIcon icon="ri:group-line" /></span>
                 <span
                   ><small>当前员工范围</small><strong>{{ selectedOrganizationLabel }}</strong></span
                 >
               </div>
-              <div class="personal-page__scope-summary">
+              <div class="smis-personal-standard__scope-summary">
                 <span>{{ overview.employeeTotal }} 名员工</span>
                 <span>{{ overview.generatedTotal }} 名已生成</span>
                 <span>{{ overview.itemTotal }} 项用品明细</span>
@@ -68,8 +71,9 @@
 
             <ArtTableQuery
               ref="tableQueryRef"
-              v-model="searchQuery"
-              class="personal-page__table"
+              :model-value="searchQuery"
+              @update:model-value="replaceReactiveModel(searchQuery, $event)"
+              class="smis-personal-standard__table"
               :api-fn="fetchTableData"
               :search-items="searchItems"
               :columns-factory="columnsFactory"
@@ -83,7 +87,7 @@
                 emptyDescription: '请切换组织范围，或检查 HR 员工花名册与岗位配置。'
               }"
               focusable
-              focus-scope-selector=".personal-page__workspace"
+              focus-scope-selector=".smis-personal-standard__workspace"
             />
           </main>
         </ArtWorkspaceSplitter>
@@ -96,7 +100,7 @@
         content-height="calc(100vh - 126px)"
       >
         <PpeOrganizationNavigator
-          class="personal-page__drawer-navigator"
+          class="smis-personal-standard__drawer-navigator"
           :data="organizations"
           :loading="organizationLoading"
           :error="organizationError"
@@ -113,6 +117,8 @@
 </template>
 
 <script setup lang="tsx">
+  import '../../../components/personal-standard-workspace.scss'
+  import { replaceReactiveModel } from '@/utils/form/model'
   import type { TableRequestOptions } from '@/hooks/core/useTable'
   import dayjs from 'dayjs'
   import { useMediaQuery } from '@vueuse/core'
@@ -124,7 +130,7 @@
   } from '@/components/core/tables/art-table-query/index.vue'
   import type { ArtDrawerExpose } from '@/components/core/drawers/art-drawer/types'
   import type { ColumnOption } from '@/types'
-  import { pageInfoHandler } from '@/utils/table/table-utils'
+  import { buildSupabasePageRange } from '@/utils/supabase/pagination'
   import { useUserStore } from '@/store/modules/user'
   import { getFriendlySupabaseErrorMessage } from '@/utils/supabase/error'
   import TreeUtils from '@/utils/tree'
@@ -358,7 +364,7 @@
       fixed: 'left',
       formatter: (row) => (
         <button
-          class="personal-page__employee"
+          class="smis-personal-standard__employee"
           type="button"
           title={`查看 ${row.employeeName} 的个人防护用品明细`}
           onClick={() => openDetails(row)}
@@ -378,7 +384,7 @@
       label: '组织与岗位',
       minWidth: 240,
       formatter: (row) => (
-        <div class="personal-page__assignment">
+        <div class="smis-personal-standard__assignment">
           <strong title={row.organizationName || undefined}>
             {row.organizationName || '未分配组织'}
           </strong>
@@ -391,7 +397,7 @@
       label: '个人标准',
       minWidth: 176,
       formatter: (row) => (
-        <div class="personal-page__standard-status">
+        <div class="smis-personal-standard__standard-status">
           <ElTag type={row.personalStandardId ? 'success' : 'warning'} effect="light">
             {row.personalStandardId ? '已生成' : '待生成'}
           </ElTag>
@@ -405,12 +411,12 @@
       width: 172,
       formatter: (row) =>
         row.generatedAt ? (
-          <div class="personal-page__generated-time">
+          <div class="smis-personal-standard__generated-time">
             <strong>{dayjs(row.generatedAt).format('YYYY-MM-DD')}</strong>
             <small>{dayjs(row.generatedAt).format('HH:mm')}</small>
           </div>
         ) : (
-          <span class="personal-page__muted">尚未生成</span>
+          <span class="smis-personal-standard__muted">尚未生成</span>
         )
     },
     {
@@ -419,7 +425,7 @@
       width: 160,
       fixed: 'right',
       formatter: (row) => (
-        <div class="personal-page__row-actions">
+        <div class="smis-personal-standard__row-actions">
           <ArtButtonTable
             type="view"
             icon="ri:file-list-3-line"
@@ -447,7 +453,7 @@
   ]
   const fetchTableData = async (params: TableParams, options?: TableRequestOptions) => {
     const result = await fetchPpePersonalStandardList({
-      ...pageInfoHandler(params),
+      ...buildSupabasePageRange(params),
       ...params,
       organizationIds: descendantIds.value
     })
@@ -467,213 +473,3 @@
     ])
   })
 </script>
-
-<style scoped lang="scss">
-  .personal-page {
-    gap: 12px;
-    min-width: 0;
-    min-height: 0;
-
-    &__workspace {
-      flex: 1 1 auto;
-      width: 100%;
-      min-width: 0;
-      min-height: 0;
-    }
-
-    &__organization-panel,
-    &__main,
-    &__table {
-      min-width: 0;
-      min-height: 0;
-    }
-
-    &__organization-panel {
-      height: 100%;
-      overflow: hidden;
-    }
-
-    &__main {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    &__table {
-      flex: 1 1 auto;
-    }
-
-    &__scope-bar,
-    &__mobile-scope {
-      display: flex;
-      flex: 0 0 auto;
-      gap: 16px;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    &__scope-bar {
-      min-height: 56px;
-      padding: 8px 14px 8px 12px;
-      background: var(--art-gray-100);
-      border-left: 3px solid var(--theme-color);
-      border-radius: var(--el-border-radius-base);
-    }
-
-    &__scope-identity,
-    &__mobile-scope > div {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-      min-width: 0;
-    }
-
-    &__scope-identity > span:first-child,
-    &__mobile-scope > span:first-child {
-      display: inline-flex;
-      flex: 0 0 32px;
-      align-items: center;
-      justify-content: center;
-      width: 32px;
-      height: 32px;
-      color: var(--theme-color);
-      background: color-mix(in srgb, var(--theme-color) 10%, var(--default-box-color));
-      border-radius: var(--el-border-radius-base);
-    }
-
-    &__scope-identity > span:last-child,
-    &__mobile-scope > div {
-      display: grid;
-      min-width: 0;
-    }
-
-    &__scope-identity small,
-    &__mobile-scope small {
-      font-size: 11px;
-      color: var(--el-text-color-secondary);
-    }
-
-    &__scope-identity strong,
-    &__mobile-scope strong {
-      margin-top: 2px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      color: var(--el-text-color-primary);
-      white-space: nowrap;
-    }
-
-    &__scope-summary {
-      display: flex;
-      gap: 16px;
-      align-items: center;
-      font-size: 12px;
-      color: var(--el-text-color-secondary);
-    }
-
-    &__scope-summary span + span {
-      padding-left: 16px;
-      border-left: 1px solid var(--el-border-color);
-    }
-
-    &__mobile-scope {
-      padding: 10px 12px;
-
-      > div {
-        flex: 1;
-      }
-    }
-
-    :deep(.personal-page__employee) {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-      width: 100%;
-      min-width: 0;
-      padding: 2px 0;
-      font: inherit;
-      color: inherit;
-      text-align: left;
-      cursor: pointer;
-      background: transparent;
-      border: 0;
-      border-radius: var(--el-border-radius-small);
-    }
-
-    :deep(.personal-page__employee:focus-visible) {
-      outline: 2px solid var(--theme-color);
-      outline-offset: 2px;
-    }
-
-    :deep(.personal-page__employee .el-avatar) {
-      flex: 0 0 auto;
-      color: var(--art-gray-700);
-      background: var(--art-gray-200);
-    }
-
-    :deep(.personal-page__employee > span),
-    :deep(.personal-page__assignment),
-    :deep(.personal-page__standard-status),
-    :deep(.personal-page__generated-time) {
-      display: grid;
-      min-width: 0;
-    }
-
-    :deep(.personal-page__employee strong),
-    :deep(.personal-page__employee small),
-    :deep(.personal-page__assignment strong),
-    :deep(.personal-page__assignment small) {
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    :deep(.personal-page__employee strong) {
-      color: var(--el-text-color-primary);
-    }
-
-    :deep(.personal-page__employee:hover strong) {
-      color: var(--theme-color);
-    }
-
-    :deep(.personal-page__employee small),
-    :deep(.personal-page__assignment small),
-    :deep(.personal-page__standard-status small),
-    :deep(.personal-page__generated-time small) {
-      margin-top: 3px;
-      font-size: 11px;
-      color: var(--el-text-color-secondary);
-    }
-
-    :deep(.personal-page__standard-status .el-tag) {
-      justify-self: start;
-    }
-
-    :deep(.personal-page__row-actions) {
-      display: flex;
-      gap: 4px;
-      align-items: center;
-      justify-content: center;
-      min-width: 0;
-      white-space: nowrap;
-    }
-
-    :deep(.personal-page__row-actions .art-button-table) {
-      flex: 0 0 32px;
-      margin-right: 0;
-    }
-
-    :deep(.personal-page__muted) {
-      color: var(--el-text-color-secondary);
-    }
-
-    &__drawer-navigator {
-      height: 100%;
-    }
-
-    @media (width <= 1080px) {
-      &__scope-summary {
-        display: none;
-      }
-    }
-  }
-</style>

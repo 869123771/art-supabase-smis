@@ -1,5 +1,6 @@
 import { normalizeNullableText } from '@/utils/form/normalize'
 import { useSupabase } from '@/hooks'
+import type { ApiFeedbackOptions } from '@/types/api/request'
 import type {
   SmisCourseLearningListResult,
   SmisCourseLearningSearchParams,
@@ -25,7 +26,10 @@ const pageBounds = (from?: number, to?: number) => {
   return { from: safeFrom, to: Math.max(to ?? safeFrom + 19, safeFrom) }
 }
 
-export async function fetchQuestionBankList(params: SmisQuestionBankSearchParams = {}) {
+export async function fetchQuestionBankList(
+  params: SmisQuestionBankSearchParams = {},
+  options: ApiFeedbackOptions = {}
+) {
   const { from, to } = pageBounds(params.from, params.to)
   const result = await responseHandle<Partial<SmisQuestionBankListResult>>(
     () =>
@@ -37,7 +41,7 @@ export async function fetchQuestionBankList(params: SmisQuestionBankSearchParams
         p_question_type: params.questionType || null,
         p_status: params.status || null
       }),
-    { showErrorMessage: true }
+    { showErrorMessage: options.showErrorMessage ?? true }
   )
   return {
     data: result.data?.records ?? [],
