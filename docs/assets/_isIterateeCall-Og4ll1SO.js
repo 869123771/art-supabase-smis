@@ -1,0 +1,1 @@
+import{fr as e,hr as t,sr as n,ur as r}from"./use-global-config-BjZmij48.js";function i(i,a,o){if(!t(o))return!1;var s=typeof a;return(s==`number`?n(o)&&e(a,o.length):s==`string`&&a in o)?r(o[a],i):!1}export{i as t};

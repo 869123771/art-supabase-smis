@@ -573,7 +573,6 @@
     }
 
     :deep(.risk-control-page__code) {
-      font-family: var(--art-font-family-mono, Consolas, monospace);
       font-size: 12px;
       color: var(--theme-color);
     }

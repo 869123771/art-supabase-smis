@@ -1,0 +1,1 @@
+import{gr as e}from"./use-global-config-BjZmij48.js";var t=t=>[``,...e].includes(t);export{t};

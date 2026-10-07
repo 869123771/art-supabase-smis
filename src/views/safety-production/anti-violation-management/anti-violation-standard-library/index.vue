@@ -433,7 +433,6 @@
       align-items: center;
       min-height: 28px;
       padding-inline: 9px;
-      font-family: var(--art-font-family-mono, Consolas, monospace);
       font-size: 12px;
       color: var(--theme-color);
       background: color-mix(in srgb, var(--theme-color) 8%, var(--el-bg-color));

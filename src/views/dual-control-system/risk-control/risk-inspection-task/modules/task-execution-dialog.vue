@@ -329,10 +329,6 @@
     border-radius: var(--el-border-radius-base);
   }
 
-  .task-execution-dialog__context strong {
-    font-family: var(--art-font-family-mono, Consolas, monospace);
-  }
-
   .task-execution-dialog__context p {
     margin: 3px 0 0;
     font-size: 12px;
@@ -341,7 +337,6 @@
 
   .task-execution-dialog__progress {
     padding: 6px 10px;
-    font-family: var(--art-font-family-mono, Consolas, monospace);
     color: var(--theme-color);
     background: color-mix(in srgb, var(--theme-color) 9%, var(--el-bg-color));
     border-radius: 999px;
@@ -404,7 +399,6 @@
     place-items: center;
     width: 34px;
     height: 34px;
-    font-family: var(--art-font-family-mono, Consolas, monospace);
     color: var(--theme-color);
     background: color-mix(in srgb, var(--theme-color) 8%, var(--el-bg-color));
     border-radius: var(--el-border-radius-base);

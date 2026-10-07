@@ -622,7 +622,6 @@
       justify-content: center;
       min-width: 72px;
       padding: 4px 8px;
-      font-family: var(--art-font-family-mono, Consolas, monospace);
       font-size: 12px;
       font-weight: 700;
       color: var(--theme-color);

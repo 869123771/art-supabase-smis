@@ -486,7 +486,6 @@
       }
 
       small {
-        font-family: var(--art-font-family-mono, Consolas, monospace);
         font-size: 11px;
         color: var(--el-text-color-secondary);
       }

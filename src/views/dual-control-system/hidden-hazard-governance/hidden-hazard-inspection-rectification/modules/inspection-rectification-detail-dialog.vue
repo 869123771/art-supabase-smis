@@ -227,7 +227,6 @@
     }
 
     &__identity strong {
-      font-family: var(--art-font-family-mono, Consolas, monospace);
       color: var(--el-text-color-primary);
     }
 

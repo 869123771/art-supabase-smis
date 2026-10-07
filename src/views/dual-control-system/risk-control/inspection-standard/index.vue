@@ -658,7 +658,6 @@
       padding: 4px 8px;
       overflow: hidden;
       text-overflow: ellipsis;
-      font-family: var(--art-font-family-mono, Consolas, monospace);
       font-size: 12px;
       font-weight: 700;
       color: var(--theme-color);

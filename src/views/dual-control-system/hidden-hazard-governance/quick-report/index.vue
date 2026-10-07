@@ -452,7 +452,6 @@
     }
 
     &__person span {
-      font-family: var(--art-font-family-mono, Consolas, monospace);
       color: var(--el-text-color-secondary);
     }
 

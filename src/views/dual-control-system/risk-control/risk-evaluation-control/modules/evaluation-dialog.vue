@@ -299,7 +299,6 @@
   }
 
   .evaluation-dialog__result span {
-    font-family: var(--art-font-family-mono, Consolas, monospace);
     font-size: 12px;
     color: var(--el-text-color-secondary);
   }

@@ -558,7 +558,6 @@
 
   :deep(.emergency-plan-page__identity small) {
     margin-top: 2px;
-    font-family: var(--art-font-family-mono, Consolas, monospace);
     font-size: 11px;
     color: var(--el-text-color-secondary);
   }

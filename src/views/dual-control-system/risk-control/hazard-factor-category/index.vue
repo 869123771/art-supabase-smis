@@ -446,7 +446,6 @@
       justify-content: center;
       min-width: 44px;
       padding: 4px 8px;
-      font-family: var(--art-font-family-mono, Consolas, monospace);
       font-size: 12px;
       font-weight: 600;
       color: var(--theme-color);
@@ -477,7 +476,6 @@
     }
 
     :deep(.hazard-factor-category-page__color-value) {
-      font-family: var(--art-font-family-mono, Consolas, monospace);
       font-size: 12px;
       color: var(--el-text-color-regular);
     }

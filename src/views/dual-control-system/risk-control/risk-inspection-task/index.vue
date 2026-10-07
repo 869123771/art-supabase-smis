@@ -513,7 +513,6 @@
 
     :deep(.risk-task-page__task-link) {
       padding: 0;
-      font-family: var(--art-font-family-mono, Consolas, monospace);
       color: var(--theme-color);
       cursor: pointer;
       background: transparent;
@@ -580,7 +579,6 @@
     }
 
     :deep(.risk-task-page__progress strong) {
-      font-family: var(--art-font-family-mono, Consolas, monospace);
       color: var(--theme-color);
     }
 

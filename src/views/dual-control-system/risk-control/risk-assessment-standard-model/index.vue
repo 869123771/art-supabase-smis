@@ -544,7 +544,6 @@
 
     &__result-code {
       padding-bottom: 2px;
-      font-family: var(--art-font-family-mono, Consolas, monospace);
     }
 
     &__levels {
@@ -695,7 +694,6 @@
     }
 
     &__score {
-      font-family: var(--art-font-family-mono, Consolas, monospace);
       font-size: 15px;
       font-variant-numeric: tabular-nums;
       color: var(--theme-color);

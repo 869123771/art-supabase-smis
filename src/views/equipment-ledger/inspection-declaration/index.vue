@@ -400,7 +400,6 @@
 <style scoped lang="scss">
   .inspection-page {
     &__code {
-      font-family: var(--art-code-font-family, 'SFMono-Regular', Consolas, monospace);
       font-weight: 600;
       color: var(--theme-color);
     }

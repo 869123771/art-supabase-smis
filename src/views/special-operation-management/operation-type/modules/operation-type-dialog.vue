@@ -562,7 +562,6 @@
       min-height: 32px;
 
       span {
-        font-family: var(--art-font-family-mono, Consolas, monospace);
         font-size: 12px;
         color: var(--el-text-color-secondary);
       }
@@ -622,7 +621,6 @@
         }
 
         small {
-          font-family: var(--art-font-family-mono, Consolas, monospace);
           font-size: 11px;
           color: var(--el-text-color-secondary);
         }

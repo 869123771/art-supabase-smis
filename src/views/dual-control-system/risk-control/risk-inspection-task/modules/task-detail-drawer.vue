@@ -230,7 +230,6 @@
 
   .task-detail-drawer__status strong {
     margin: 2px 0;
-    font-family: var(--art-font-family-mono, Consolas, monospace);
     font-size: 16px;
   }
 
@@ -328,7 +327,6 @@
     place-items: center;
     width: 30px;
     height: 30px;
-    font-family: var(--art-font-family-mono, Consolas, monospace);
     font-size: 11px;
     font-weight: 700;
     color: var(--theme-color);

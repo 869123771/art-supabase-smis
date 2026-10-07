@@ -728,7 +728,6 @@
     }
 
     &__code {
-      font-family: var(--art-font-family-mono, monospace);
       color: var(--theme-color) !important;
     }
 

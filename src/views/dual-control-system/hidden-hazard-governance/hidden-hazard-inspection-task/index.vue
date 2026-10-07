@@ -442,7 +442,6 @@
 
     :deep(.hidden-hazard-task-page__link) {
       padding: 0;
-      font-family: var(--art-font-family-mono, Consolas, monospace);
       color: var(--theme-color);
       cursor: pointer;
       background: transparent;
@@ -460,7 +459,6 @@
     }
 
     :deep(.hidden-hazard-task-page__count) {
-      font-family: var(--art-font-family-mono, Consolas, monospace);
       font-weight: 700;
     }
 

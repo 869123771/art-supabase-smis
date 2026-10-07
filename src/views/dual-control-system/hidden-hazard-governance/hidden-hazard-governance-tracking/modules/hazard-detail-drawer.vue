@@ -281,7 +281,6 @@
 
     &__identity strong {
       margin: 2px 0;
-      font-family: var(--art-font-family-mono, Consolas, monospace);
     }
 
     &__identity small,

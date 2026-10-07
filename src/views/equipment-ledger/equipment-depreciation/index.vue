@@ -328,7 +328,6 @@
 
       small {
         margin-top: var(--art-space-1);
-        font-family: var(--art-code-font-family, 'SFMono-Regular', Consolas, monospace);
         font-size: var(--art-font-size-caption);
         color: var(--el-text-color-secondary);
       }

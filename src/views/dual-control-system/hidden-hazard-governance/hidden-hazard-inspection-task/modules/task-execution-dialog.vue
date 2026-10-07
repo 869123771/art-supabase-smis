@@ -237,10 +237,6 @@
       border-radius: var(--el-border-radius-base);
     }
 
-    &__context strong {
-      font-family: var(--art-font-family-mono, Consolas, monospace);
-    }
-
     &__context p {
       margin: 3px 0 0;
       font-size: 12px;
@@ -249,7 +245,6 @@
 
     &__progress {
       padding: 6px 10px;
-      font-family: var(--art-font-family-mono, Consolas, monospace);
       color: var(--theme-color);
       background: color-mix(in srgb, var(--theme-color) 9%, var(--el-bg-color));
       border-radius: 999px;
