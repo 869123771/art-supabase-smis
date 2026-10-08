@@ -52,6 +52,8 @@
 </template>
 
 <script setup lang="ts">
+  import { toDictionaryOption } from '@/utils/form/option'
+
   import { notifyFriendlyError } from '@/hooks/core/useArtFeedback'
   import { validateArtFormForSubmit } from '@/utils/form/validate-art-form'
   import type { FormRules } from 'element-plus'
@@ -121,24 +123,15 @@
   })
 
   const statusOptions = computed<FormItemOption[]>(() =>
-    (getDictMap.value.commonEnabledDisabledStatus ?? []).map((item) => ({
-      label: item.label || item.name,
-      value: item.value
-    }))
+    (getDictMap.value.commonEnabledDisabledStatus ?? []).map(toDictionaryOption)
   )
 
   const factorTypeOptions = computed<FormItemOption[]>(() =>
-    (getDictMap.value.smisHazardFactorType ?? []).map((item) => ({
-      label: item.label || item.name,
-      value: item.value
-    }))
+    (getDictMap.value.smisHazardFactorType ?? []).map(toDictionaryOption)
   )
 
   const tagStyleOptions = computed<FormItemOption[]>(() =>
-    (getDictMap.value.smisTagStyle ?? []).map((item) => ({
-      label: item.label || item.name,
-      value: item.value
-    }))
+    (getDictMap.value.smisTagStyle ?? []).map(toDictionaryOption)
   )
 
   const form = reactive<{

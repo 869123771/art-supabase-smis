@@ -61,6 +61,8 @@
 </template>
 
 <script setup lang="tsx">
+  import { toDictionaryOption } from '@/utils/form/option'
+
   import { replaceReactiveModel } from '@/utils/form/model'
   import dayjs from 'dayjs'
   import { ElTag } from 'element-plus'
@@ -132,11 +134,7 @@
     error: string | null
   }>({ organizations: [], categories: [], loading: false, error: null })
   const stats = reactive({ total: 0, boilers: 0, majorHazards: 0, dueSoon: 0 })
-  const dictOptions = (code: string) =>
-    (getDictMap.value[code] ?? []).map((item) => ({
-      label: item.label || item.name,
-      value: item.value
-    }))
+  const dictOptions = (code: string) => (getDictMap.value[code] ?? []).map(toDictionaryOption)
   const workspaceMetrics = computed<BusinessWorkspaceMetric[]>(() => [
     {
       label: '重点设备',

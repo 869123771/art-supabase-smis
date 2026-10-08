@@ -117,6 +117,8 @@
 </template>
 
 <script setup lang="tsx">
+  import { toNameCodeOption } from '@/utils/form/option'
+
   import '../../../components/personal-standard-workspace.scss'
   import { replaceReactiveModel } from '@/utils/form/model'
   import type { TableRequestOptions } from '@/hooks/core/useTable'
@@ -220,10 +222,7 @@
       label: '岗位',
       key: 'positionId',
       type: 'select',
-      options: positionOptions.value.map((item) => ({
-        label: `${item.name} · ${item.code}`,
-        value: item.id
-      })),
+      options: positionOptions.value.map(toNameCodeOption),
       props: { clearable: true, filterable: true, placeholder: '全部岗位' }
     },
     {

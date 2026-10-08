@@ -61,6 +61,8 @@
 </template>
 
 <script setup lang="ts">
+  import { toDictionaryOption } from '@/utils/form/option'
+
   import { notifyFriendlyError } from '@/hooks/core/useArtFeedback'
   import { validateArtFormForSubmit } from '@/utils/form/validate-art-form'
   import { normalizeNullableText } from '@/utils/form/normalize'
@@ -131,16 +133,10 @@
     addressPicker: undefined
   })
   const tagStyleOptions = computed<FormItemOption[]>(() =>
-    (getDictMap.value.smisTagStyle ?? []).map((item) => ({
-      label: item.label || item.name,
-      value: item.value
-    }))
+    (getDictMap.value.smisTagStyle ?? []).map(toDictionaryOption)
   )
   const statusOptions = computed<FormItemOption[]>(() =>
-    (getDictMap.value.commonEnabledDisabledStatus ?? []).map((item) => ({
-      label: item.label || item.name,
-      value: item.value
-    }))
+    (getDictMap.value.commonEnabledDisabledStatus ?? []).map(toDictionaryOption)
   )
   const form = reactive<{
     model: WarehouseForm

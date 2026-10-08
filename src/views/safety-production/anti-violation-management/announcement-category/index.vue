@@ -38,6 +38,8 @@
 </template>
 
 <script setup lang="tsx">
+  import { toDictionaryOption } from '@/utils/form/option'
+
   import { replaceReactiveModel } from '@/utils/form/model'
   import type { TableRequestOptions } from '@/hooks/core/useTable'
   import type { SearchFormItem } from '@/components/core/forms/art-search-bar/index.vue'
@@ -88,10 +90,7 @@
     used: 0
   })
   const statusOptions = computed(() =>
-    (getDictMap.value.commonEnabledStatus ?? []).map((item) => ({
-      label: item.label || item.name,
-      value: item.value
-    }))
+    (getDictMap.value.commonEnabledStatus ?? []).map(toDictionaryOption)
   )
   const workspaceMetrics = computed<BusinessWorkspaceMetric[]>(() => [
     {

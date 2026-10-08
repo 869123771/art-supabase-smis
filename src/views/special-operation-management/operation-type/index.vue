@@ -41,6 +41,8 @@
 </template>
 
 <script setup lang="tsx">
+  import { toDictionaryOption } from '@/utils/form/option'
+
   import type { TableRequestOptions } from '@/hooks/core/useTable'
   import dayjs from 'dayjs'
   import { ElTag } from 'element-plus'
@@ -110,16 +112,10 @@
   })
 
   const statusOptions = computed(() =>
-    (getDictMap.value.commonEnabledDisabledVoidedStatus ?? []).map((item) => ({
-      label: item.label || item.name,
-      value: item.value
-    }))
+    (getDictMap.value.commonEnabledDisabledVoidedStatus ?? []).map(toDictionaryOption)
   )
   const tagStyleOptions = computed(() =>
-    (getDictMap.value.smisTagStyle ?? []).map((item) => ({
-      label: item.label || item.name,
-      value: item.value
-    }))
+    (getDictMap.value.smisTagStyle ?? []).map(toDictionaryOption)
   )
   const workspaceMetrics = computed<BusinessWorkspaceMetric[]>(() => [
     {

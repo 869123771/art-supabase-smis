@@ -1,0 +1,1 @@
+import{Qn as e,or as t,rr as n,tr as r}from"./use-global-config-TrC6eEMf.js";function i(i,a,o){if(!t(o))return!1;var s=typeof a;return(s==`number`?e(o)&&n(a,o.length):s==`string`&&a in o)?r(o[a],i):!1}export{i as t};

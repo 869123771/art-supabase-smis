@@ -41,6 +41,8 @@
   </ArtPermissionGuard>
 </template>
 <script setup lang="tsx">
+  import { toDictionaryOption } from '@/utils/form/option'
+
   import { useAuth } from '@/hooks/core/useAuth'
   import { useDictionaryOptions } from '@/hooks/core/useDictionaryOptions'
   import dayjs from 'dayjs'
@@ -96,8 +98,7 @@
   const searchQuery = ref<SmisDuplicateConfigurationSearchParams>({})
   const menus = ref<SmisConfigurableMenuOption[]>([])
   const overview = reactive({ total: 0, repeating: 0, once: 0, enabled: 0 })
-  const dictOptions = (code: string) =>
-    (getDictMap.value[code] ?? []).map((i) => ({ label: i.label || i.name, value: i.value }))
+  const dictOptions = (code: string) => (getDictMap.value[code] ?? []).map(toDictionaryOption)
   const statusOptions = computed(() => dictOptions('commonEnabledDisabledVoidedStatus'))
   const unitOptions = computed(() => dictOptions('smisFrequencyUnit'))
   const menuOptions = computed(() =>

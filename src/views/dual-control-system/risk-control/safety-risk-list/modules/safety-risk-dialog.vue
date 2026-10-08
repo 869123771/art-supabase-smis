@@ -128,6 +128,8 @@
 </template>
 
 <script setup lang="ts">
+  import { toDictionaryOption } from '@/utils/form/option'
+
   import { replaceReactiveModel } from '@/utils/form/model'
   import { computed, onDeactivated, reactive, ref, shallowRef } from 'vue'
   import { storeToRefs } from 'pinia'
@@ -175,10 +177,7 @@
   })
   const form = reactive<SmisSafetyRiskSavePayload>(initial())
   const accidentTypeOptions = computed(() =>
-    (getDictMap.value.smisAccidentCategory ?? []).map((item) => ({
-      label: item.label || item.name,
-      value: item.value
-    }))
+    (getDictMap.value.smisAccidentCategory ?? []).map(toDictionaryOption)
   )
   const rules: FormRules<SmisSafetyRiskSavePayload> = {
     riskPointId: [{ required: true, message: '请选择关联风险点', trigger: 'change' }],

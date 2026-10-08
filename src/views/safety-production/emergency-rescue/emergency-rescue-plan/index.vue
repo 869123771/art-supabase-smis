@@ -40,6 +40,8 @@
 </template>
 
 <script setup lang="tsx">
+  import { toDictionaryOption } from '@/utils/form/option'
+
   import type { TableRequestOptions } from '@/hooks/core/useTable'
   import dayjs from 'dayjs'
   import { ElTag } from 'element-plus'
@@ -100,11 +102,7 @@
   const organizations = shallowRef<SmisTreeOrganization[]>([])
   const positions = shallowRef<SmisEmergencyPosition[]>([])
   const overview = reactive({ total: 0, valid: 0, warning: 0, submitted: 0 })
-  const dictOptions = (code: string) =>
-    (getDictMap.value[code] ?? []).map((item) => ({
-      label: item.label || item.name,
-      value: item.value
-    }))
+  const dictOptions = (code: string) => (getDictMap.value[code] ?? []).map(toDictionaryOption)
   const metrics = computed<BusinessWorkspaceMetric[]>(() => [
     {
       label: '预案总数',

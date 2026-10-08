@@ -127,6 +127,8 @@
 </template>
 
 <script setup lang="ts">
+  import { toDictionaryOption } from '@/utils/form/option'
+
   import { replaceReactiveModel } from '@/utils/form/model'
   import type { FormRules } from 'element-plus'
   import type { EmployeeIntegrationItem } from '@/api/integration/employees'
@@ -229,11 +231,7 @@
   })
   const form = reactive<FormModel>(initial())
   const orgProps = { label: 'organizationName', children: 'children' }
-  const dictOptions = (code: string) =>
-    (getDictMap.value[code] ?? []).map((item) => ({
-      label: item.label || item.name,
-      value: item.value
-    }))
+  const dictOptions = (code: string) => (getDictMap.value[code] ?? []).map(toDictionaryOption)
   const flatOrganizations = computed(
     () => organizationTree.treeToList(organizations.value) as SmisTreeOrganization[]
   )

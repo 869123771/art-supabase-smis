@@ -1,5 +1,11 @@
 <template>
-  <ArtDrawer ref="drawerRef" size="lg" :show-footer="false" content-height="calc(100vh - 126px)">
+  <ArtDrawer
+    :loading="loading"
+    ref="drawerRef"
+    size="lg"
+    :show-footer="false"
+    content-height="calc(100vh - 126px)"
+  >
     <div v-if="employee" class="tool-detail">
       <section class="tool-detail__identity" aria-label="员工个人标准概览">
         <ElAvatar
@@ -37,7 +43,6 @@
         class="tool-detail__items"
         title="工器具个人标准明细"
         subtitle="展示定额、发放周期、领用节点及来源标准。"
-        :loading="loading"
         :error="error"
         :empty="!loading && !error && !items.length"
         :empty-title="employee.personalStandardId ? '暂无工器具明细' : '尚未生成个人标准'"

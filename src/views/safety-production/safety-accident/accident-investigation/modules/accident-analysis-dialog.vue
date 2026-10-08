@@ -72,6 +72,8 @@
 </template>
 
 <script setup lang="ts">
+  import { toDictionaryOption } from '@/utils/form/option'
+
   import { replaceReactiveModel } from '@/utils/form/model'
   import { notifyFriendlyError } from '@/hooks/core/useArtFeedback'
   import { validateArtFormForSubmit } from '@/utils/form/validate-art-form'
@@ -132,11 +134,7 @@
     accidentLevel: ''
   })
   const form = reactive<AccidentAnalysisForm>(initialForm())
-  const dictOptions = (code: string) =>
-    (getDictMap.value[code] ?? []).map((item) => ({
-      label: item.label || item.name,
-      value: item.value
-    }))
+  const dictOptions = (code: string) => (getDictMap.value[code] ?? []).map(toDictionaryOption)
   const items = computed<FormItem[]>(() => [
     {
       label: '关联事故名称',

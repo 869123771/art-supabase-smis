@@ -54,6 +54,7 @@
 </template>
 
 <script setup lang="tsx">
+  import { uniq } from 'lodash-es'
   import { replaceReactiveModel } from '@/utils/form/model'
   import type { TableRequestOptions } from '@/hooks/core/useTable'
   import dayjs from 'dayjs'
@@ -208,9 +209,9 @@
       violatorNames: row.violators
         .map((item) => `${item.employeeName}(${item.employeeNo})`)
         .join('、'),
-      organizations: [
-        ...new Set(row.violators.map((item) => item.organizationName).filter(Boolean))
-      ].join('、'),
+      organizations: uniq(row.violators.map((item) => item.organizationName).filter(Boolean)).join(
+        '、'
+      ),
       violationTimeText: dayjs(row.violationTime).format('YYYY-MM-DD HH:mm'),
       imageCount: row.imageUrls.length
     }))
@@ -351,9 +352,7 @@
       minWidth: 180,
       showOverflowTooltip: true,
       formatter: (row) =>
-        [...new Set(row.violators.map((item) => item.organizationName).filter(Boolean))].join(
-          '、'
-        ) || '—'
+        uniq(row.violators.map((item) => item.organizationName).filter(Boolean)).join('、') || '—'
     },
     {
       prop: 'violationTime',

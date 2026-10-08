@@ -43,6 +43,8 @@
 </template>
 
 <script setup lang="tsx">
+  import { toDictionaryOption } from '@/utils/form/option'
+
   import { useAuth } from '@/hooks/core/useAuth'
   import dayjs from 'dayjs'
   import { ElTag } from 'element-plus'
@@ -94,11 +96,7 @@
   const searchQuery = ref<SmisInspectionTypeSearchParams>({})
   const overview = reactive({ total: 0, enabled: 0, disabled: 0, voided: 0 })
 
-  const optionsOf = (code: string) =>
-    (getDictMap.value[code] ?? []).map((item) => ({
-      label: item.label || item.name,
-      value: item.value
-    }))
+  const optionsOf = (code: string) => (getDictMap.value[code] ?? []).map(toDictionaryOption)
   const statusOptions = computed(() => optionsOf('commonEnabledDisabledVoidedStatus'))
   const tagOptions = computed(() => optionsOf('smisTagStyle'))
   const metrics = computed<BusinessWorkspaceMetric[]>(() => [

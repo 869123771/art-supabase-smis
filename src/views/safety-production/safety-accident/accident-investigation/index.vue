@@ -40,6 +40,8 @@
 </template>
 
 <script setup lang="tsx">
+  import { toDictionaryOption } from '@/utils/form/option'
+
   import type { TableRequestOptions } from '@/hooks/core/useTable'
   import dayjs from 'dayjs'
   import { ElTag } from 'element-plus'
@@ -85,11 +87,7 @@
   const dialogRef = ref<DialogExpose>()
   const searchQuery = ref<SmisAccidentAnalysisSearchParams>({})
   const overview = reactive({ total: 0, complete: 0, pending: 0, participantCount: 0 })
-  const dictOptions = (code: string) =>
-    (getDictMap.value[code] ?? []).map((item) => ({
-      label: item.label || item.name,
-      value: item.value
-    }))
+  const dictOptions = (code: string) => (getDictMap.value[code] ?? []).map(toDictionaryOption)
   const dictLabel = (code: string, value: string): string =>
     getDictMap.value[code]?.find((item) => item.value === value)?.label || value
   const metrics = computed<BusinessWorkspaceMetric[]>(() => [

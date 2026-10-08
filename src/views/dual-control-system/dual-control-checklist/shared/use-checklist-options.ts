@@ -1,3 +1,4 @@
+import { toDictionaryOption } from '@/utils/form/option'
 import { computed, shallowRef } from 'vue'
 import { storeToRefs } from 'pinia'
 import { fetchOrganizationOptionsTree } from '@/api/system-manage'
@@ -31,11 +32,7 @@ export function useChecklistOptions(dictionaryCodes: readonly string[] = []) {
     label: 'organizationName',
     value: 'id'
   }
-  const dictionaryOptions = (code: string) =>
-    (getDictMap.value[code] ?? []).map((item) => ({
-      label: item.label || item.name,
-      value: item.value
-    }))
+  const dictionaryOptions = (code: string) => (getDictMap.value[code] ?? []).map(toDictionaryOption)
   const dictionaryLabel = (code: string, value?: string | null): string =>
     value ? dictionaryOptions(code).find((item) => item.value === value)?.label || value : '—'
   const loadOptions = async (): Promise<void> => {

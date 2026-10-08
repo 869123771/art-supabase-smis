@@ -160,6 +160,8 @@
 </template>
 
 <script setup lang="tsx">
+  import { toDictionaryOption } from '@/utils/form/option'
+
   import ArtTable from '@/components/core/tables/art-table/index.vue'
   import { computed, onMounted, reactive, ref } from 'vue'
   import { storeToRefs } from 'pinia'
@@ -310,11 +312,7 @@
     }
   ])
 
-  const dictionaryOptions = (code: string) =>
-    (getDictMap.value[code] ?? []).map((item) => ({
-      label: item.label || item.name,
-      value: item.value
-    }))
+  const dictionaryOptions = (code: string) => (getDictMap.value[code] ?? []).map(toDictionaryOption)
   const searchItems = computed<SearchFormItem[]>(() => [
     {
       label: '关键内容',

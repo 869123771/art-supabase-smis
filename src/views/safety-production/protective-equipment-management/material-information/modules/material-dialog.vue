@@ -34,6 +34,8 @@
 </template>
 
 <script setup lang="ts">
+  import { toDictionaryOption } from '@/utils/form/option'
+
   import { notifyFriendlyError } from '@/hooks/core/useArtFeedback'
   import { validateArtFormForSubmit } from '@/utils/form/validate-art-form'
   import type { FormRules } from 'element-plus'
@@ -130,10 +132,7 @@
   })
   const formModel = reactive<MaterialForm>(initialForm())
   const toOptions = (code: string): FormItemOption[] =>
-    (getDictMap.value[code] ?? []).map((item) => ({
-      label: item.label || item.name,
-      value: item.value
-    }))
+    (getDictMap.value[code] ?? []).map(toDictionaryOption)
   const categoryOptions = computed<CategoryTreeOption[]>(() =>
     treeUtils.mapTree(categoryTree.value as CategoryTreeOption[], (item) => ({
       ...item,

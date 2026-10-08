@@ -92,6 +92,8 @@
 </template>
 
 <script setup lang="ts">
+  import { toDictionaryOption } from '@/utils/form/option'
+
   import { notifyFriendlyError } from '@/hooks/core/useArtFeedback'
   import { validateArtFormForSubmit } from '@/utils/form/validate-art-form'
   import dayjs from 'dayjs'
@@ -215,11 +217,7 @@
   const imageUrls = ref<string[]>([])
   const ocrArtifactId = ref('')
 
-  const dictOptions = (code: string) =>
-    (getDictMap.value[code] ?? []).map((item) => ({
-      label: item.label || item.name,
-      value: item.value
-    }))
+  const dictOptions = (code: string) => (getDictMap.value[code] ?? []).map(toDictionaryOption)
   const conclusionOptions = computed(() => dictOptions('smisEquipmentInspectionConclusion'))
   const statusOptions = computed(() => dictOptions('smisEquipmentInspectionStatus'))
   const reminderOptions = computed(() =>

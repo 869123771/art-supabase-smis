@@ -66,6 +66,8 @@
 </template>
 
 <script setup lang="ts">
+  import { toDictionaryOption } from '@/utils/form/option'
+
   import { notifyFriendlyError } from '@/hooks/core/useArtFeedback'
   import { validateArtFormForSubmit } from '@/utils/form/validate-art-form'
   import { normalizeNullableText } from '@/utils/form/normalize'
@@ -140,10 +142,7 @@
   })
 
   const warningOptions = computed<FormItemOption[]>(() =>
-    (getDictMap.value.commonWarningStatus ?? []).map((item) => ({
-      label: item.label || item.name,
-      value: item.value
-    }))
+    (getDictMap.value.commonWarningStatus ?? []).map(toDictionaryOption)
   )
   const standardOptions = computed<FormItemOption[]>(() =>
     standards.value.map((item) => ({

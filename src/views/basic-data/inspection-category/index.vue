@@ -40,6 +40,8 @@
 </template>
 
 <script setup lang="tsx">
+  import { toDictionaryOption } from '@/utils/form/option'
+
   import type { TableRequestOptions } from '@/hooks/core/useTable'
   import BusinessTableIdentityCell from '@/components/business/business-table-identity-cell/index.vue'
   import dayjs from 'dayjs'
@@ -102,10 +104,7 @@
   })
 
   const statusOptions = computed(() =>
-    (getDictMap.value.commonEnabledStatus ?? []).map((item) => ({
-      label: item.label || item.name,
-      value: item.value
-    }))
+    (getDictMap.value.commonEnabledStatus ?? []).map(toDictionaryOption)
   )
 
   const workspaceMetrics = computed<BusinessWorkspaceMetric[]>(() => [

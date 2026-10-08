@@ -1,5 +1,5 @@
 <template>
-  <ArtDialog ref="dialogRef" size="xl" @close="closeEditors">
+  <ArtDialog ref="dialogRef" size="xl" :loading="loading" @close="closeEditors">
     <div class="hazard-workspace">
       <div class="hazard-workspace__summary">
         <span class="hazard-workspace__summary-icon" aria-hidden="true">
@@ -26,7 +26,6 @@
           :show-scrollbar="false"
           title="作业 / 活动信息"
           subtitle="维护作业活动与必经作业步骤"
-          :loading="loading"
           :error="error"
           :empty="!loading && !error && !activities.length"
           empty-title="暂无作业活动"
@@ -86,7 +85,6 @@
           :show-scrollbar="false"
           title="危害因素"
           subtitle="维护因素类别、事故类型、后果及关联活动"
-          :loading="loading"
           :error="error"
           :empty="!loading && !error && !hazards.length"
           empty-title="暂无危害因素"
@@ -305,6 +303,8 @@
 </template>
 
 <script setup lang="ts">
+  import { toDictionaryOption } from '@/utils/form/option'
+
   import { replaceReactiveModel } from '@/utils/form/model'
   import { normalizeNullableText } from '@/utils/form/normalize'
   import { Plus } from '@element-plus/icons-vue'
@@ -398,10 +398,7 @@
     hazardFactor: [{ required: true, whitespace: true, message: '请填写危害因素', trigger: 'blur' }]
   }
   const accidentTypeOptions = computed(() =>
-    (getDictMap.value.smisAccidentCategory ?? []).map((item) => ({
-      label: item.label || item.name,
-      value: item.value
-    }))
+    (getDictMap.value.smisAccidentCategory ?? []).map(toDictionaryOption)
   )
 
   const loadWorkspace = async (): Promise<void> => {

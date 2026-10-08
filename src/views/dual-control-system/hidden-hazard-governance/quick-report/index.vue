@@ -156,6 +156,8 @@
 </template>
 
 <script setup lang="ts">
+  import { toDictionaryOption } from '@/utils/form/option'
+
   import { getFriendlySupabaseErrorMessage } from '@/utils/supabase'
   import { normalizeNullableText } from '@/utils/form/normalize'
   import { ElMessage, type FormRules } from 'element-plus'
@@ -238,10 +240,7 @@
   const treeUtils = new TreeUtils({ idKey: 'id', parentKey: 'parentId', childrenKey: 'children' })
   const siteTree = computed(() => treeUtils.listToTree(state.sites) as SmisHazardReportingSite[])
   const hazardLevelOptions = computed(() =>
-    (getDictMap.value.smisHazardLevel ?? []).map((item) => ({
-      label: item.label || item.name,
-      value: item.value
-    }))
+    (getDictMap.value.smisHazardLevel ?? []).map(toDictionaryOption)
   )
   const selectedOrganizationName = computed(
     () =>

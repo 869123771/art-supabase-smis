@@ -62,6 +62,8 @@
 </template>
 
 <script setup lang="tsx">
+  import { toDictionaryOption } from '@/utils/form/option'
+
   import type { TableRequestOptions } from '@/hooks/core/useTable'
   import { getFriendlySupabaseErrorMessage } from '@/utils/supabase'
   import { normalizeNullableText } from '@/utils/form/normalize'
@@ -161,11 +163,7 @@
     error: null
   })
   const searchQuery = ref<SmisHazardSourceSearchParams>({})
-  const dictOptions = (code: string) =>
-    (getDictMap.value[code] ?? []).map((item) => ({
-      label: item.label || item.name,
-      value: item.value
-    }))
+  const dictOptions = (code: string) => (getDictMap.value[code] ?? []).map(toDictionaryOption)
   const metrics = computed<BusinessWorkspaceMetric[]>(() => [
     {
       label: '危险源总数',

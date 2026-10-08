@@ -48,6 +48,8 @@
 </template>
 
 <script setup lang="tsx">
+  import { toDictionaryOption } from '@/utils/form/option'
+
   import type { TableRequestOptions } from '@/hooks/core/useTable'
   import dayjs from 'dayjs'
   import { fetchOrganizationOptionsTree } from '@/api/system-manage'
@@ -137,11 +139,7 @@
       tone: 'primary'
     }
   ])
-  const dictOptions = (code: string) =>
-    (getDictMap.value[code] ?? []).map((item) => ({
-      label: item.label || item.name,
-      value: item.value
-    }))
+  const dictOptions = (code: string) => (getDictMap.value[code] ?? []).map(toDictionaryOption)
   const openDialog = (row?: SmisEquipmentInspection): void => {
     void dialogRef.value?.handleOpen({ row })
   }

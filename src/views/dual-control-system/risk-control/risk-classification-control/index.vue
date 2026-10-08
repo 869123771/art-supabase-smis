@@ -52,6 +52,8 @@
 </template>
 
 <script setup lang="tsx">
+  import { toDictionaryOption } from '@/utils/form/option'
+
   import type { TableRequestOptions } from '@/hooks/core/useTable'
   import { useDictionaryOptions } from '@/hooks/core/useDictionaryOptions'
   import dayjs from 'dayjs'
@@ -136,10 +138,7 @@
   ]
   const controlLevelLabel = new Map(controlLevelOptions.map((item) => [item.value, item.label]))
   const riskTypeOptions = computed(() =>
-    (getDictMap.value.smisRiskPointType ?? []).map((item) => ({
-      label: item.label || item.name,
-      value: item.value
-    }))
+    (getDictMap.value.smisRiskPointType ?? []).map(toDictionaryOption)
   )
   const statusOptions = useDictionaryOptions('smisRiskControlStatus')
   const workspaceMetrics = computed<BusinessWorkspaceMetric[]>(() => [

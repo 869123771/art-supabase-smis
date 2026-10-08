@@ -105,6 +105,8 @@
 </template>
 
 <script setup lang="tsx">
+  import { toDictionaryOption } from '@/utils/form/option'
+
   import { replaceReactiveModel } from '@/utils/form/model'
   import { notifyFriendlyError } from '@/hooks/core/useArtFeedback'
   import { validateArtFormForSubmit } from '@/utils/form/validate-art-form'
@@ -178,11 +180,7 @@
   const numberProps = computed(() =>
     numberRule.inputProps(Boolean(form.id), '保存时自动生成', true)
   )
-  const toOptions = (code: string) =>
-    (userStore.getDictMap[code] ?? []).map((item) => ({
-      label: item.label || item.name,
-      value: item.value
-    }))
+  const toOptions = (code: string) => (userStore.getDictMap[code] ?? []).map(toDictionaryOption)
   const cycleOptions = computed(() => toOptions('commonIssuanceCycle'))
   const statusOptions = computed(() => toOptions('commonEnabledStatus'))
   const formItems = computed<FormItem[]>(() => [

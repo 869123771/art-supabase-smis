@@ -42,6 +42,8 @@
 </template>
 
 <script setup lang="tsx">
+  import { toDictionaryOption } from '@/utils/form/option'
+
   import type { TableRequestOptions } from '@/hooks/core/useTable'
   import dayjs from 'dayjs'
   import { ElTag } from 'element-plus'
@@ -121,10 +123,7 @@
     () => new Map(controlLevelOptions.value.map((item) => [item.value, item.label]))
   )
   const accidentTypeOptions = computed(() =>
-    (getDictMap.value.smisAccidentCategory ?? []).map((item) => ({
-      label: item.label || item.name,
-      value: item.value
-    }))
+    (getDictMap.value.smisAccidentCategory ?? []).map(toDictionaryOption)
   )
   const statusOptions: Array<{ label: string; value: SmisRiskItemStatus }> = [
     { label: '已辨识', value: 'identified' },

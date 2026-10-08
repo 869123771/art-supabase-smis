@@ -128,6 +128,8 @@
 </template>
 
 <script setup lang="tsx">
+  import { toDictionaryOption } from '@/utils/form/option'
+
   import type { TableRequestOptions } from '@/hooks/core/useTable'
   import { getFriendlySupabaseErrorMessage } from '@/utils/supabase'
   import BusinessTableIdentityCell from '@/components/business/business-table-identity-cell/index.vue'
@@ -216,10 +218,7 @@
     optionsState.inspectionTypes.find((item) => item.id === searchQuery.value.inspectionTypeId)
   )
   const statusOptions = computed(() =>
-    (getDictMap.value.smisHiddenHazardGovernanceStatus ?? []).map((item) => ({
-      label: item.label || item.name,
-      value: item.value
-    }))
+    (getDictMap.value.smisHiddenHazardGovernanceStatus ?? []).map(toDictionaryOption)
   )
   const sourceLabels = computed(() =>
     Object.fromEntries(

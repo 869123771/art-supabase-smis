@@ -70,6 +70,8 @@
 </template>
 
 <script setup lang="tsx">
+  import { toDictionaryOption } from '@/utils/form/option'
+
   import { normalizeNullableText } from '@/utils/form/normalize'
   import dayjs from 'dayjs'
   import TreeUtils from '@/utils/tree'
@@ -152,10 +154,7 @@
   const tree = reactive<TreeGroup>({ data: [], selectedKey: ALL_KEY, loading: false, error: null })
   const tableSearchQuery = reactive<SmisAntiViolationStandardSearchParams>({})
   const statusOptions = computed(() =>
-    (getDictMap.value.commonEnabledStatus ?? []).map((item) => ({
-      label: item.label || item.name,
-      value: item.value
-    }))
+    (getDictMap.value.commonEnabledStatus ?? []).map(toDictionaryOption)
   )
   const selectedCategory = computed(() =>
     tree.selectedKey === ALL_KEY ? null : treeUtils.findNode(tree.data, tree.selectedKey)

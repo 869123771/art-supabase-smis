@@ -177,6 +177,8 @@
 </template>
 
 <script setup lang="tsx">
+  import { toDictionaryOption } from '@/utils/form/option'
+
   import { useAuth } from '@/hooks/core/useAuth'
   import ArtEmptyState from '@/components/core/feedback/art-empty-state/index.vue'
   import { getFriendlySupabaseErrorMessage } from '@/utils/supabase'
@@ -275,10 +277,7 @@
   })
   const selectedStandard = computed(() => treeState.rows.find((row) => row.id === selectedId.value))
   const statusOptions = computed(() =>
-    (getDictMap.value.commonEnabledDisabledVoidedStatus ?? []).map((item) => ({
-      label: item.label || item.name,
-      value: item.value
-    }))
+    (getDictMap.value.commonEnabledDisabledVoidedStatus ?? []).map(toDictionaryOption)
   )
   const metrics = computed<BusinessWorkspaceMetric[]>(() => [
     {

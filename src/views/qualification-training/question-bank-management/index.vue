@@ -159,6 +159,9 @@
 </template>
 
 <script setup lang="tsx">
+  import { toDictionaryOption } from '@/utils/form/option'
+
+  import { uniq } from 'lodash-es'
   import { replaceReactiveModel } from '@/utils/form/model'
   import type { TableRequestOptions } from '@/hooks/core/useTable'
   import type { FormRules } from 'element-plus'
@@ -259,11 +262,7 @@
       questionForm.correctAnswers = value ? [value] : []
     }
   })
-  const dictOptions = (code: string) =>
-    (getDictMap.value[code] ?? []).map((item) => ({
-      label: item.label || item.name,
-      value: item.value
-    }))
+  const dictOptions = (code: string) => (getDictMap.value[code] ?? []).map(toDictionaryOption)
   const exportDictLabel = (code: string, value: unknown) =>
     dictOptions(code).find((item) => item.value === String(value))?.label ?? String(value ?? '')
   const categoryTree = computed<QuestionCategoryTreeNode[]>(() =>
@@ -538,7 +537,7 @@
   }
   const setCorrect = (key: string, checked: boolean) => {
     questionForm.correctAnswers = checked
-      ? [...new Set([...questionForm.correctAnswers, key])]
+      ? uniq([...questionForm.correctAnswers, key])
       : questionForm.correctAnswers.filter((item) => item !== key)
   }
   const submitQuestion = async () => {

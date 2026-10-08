@@ -63,6 +63,8 @@
   </ArtPermissionGuard>
 </template>
 <script setup lang="tsx">
+  import { toDictionaryOption } from '@/utils/form/option'
+
   import { replaceReactiveModel } from '@/utils/form/model'
   import type { TableRequestOptions } from '@/hooks/core/useTable'
   import dayjs from 'dayjs'
@@ -170,10 +172,7 @@
     tree.selectedKey === ALL_KEY ? null : utils.findNode(tree.data, tree.selectedKey)
   )
   const options = computed(() =>
-    (getDictMap.value.commonEnabledDisabledStatus ?? []).map((item) => ({
-      label: item.label || item.name,
-      value: item.value
-    }))
+    (getDictMap.value.commonEnabledDisabledStatus ?? []).map(toDictionaryOption)
   )
   const metrics = computed<BusinessWorkspaceMetric[]>(() => [
     {

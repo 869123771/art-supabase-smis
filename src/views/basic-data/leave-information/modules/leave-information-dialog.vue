@@ -66,6 +66,8 @@
 </template>
 
 <script setup lang="ts">
+  import { toDictionaryOption } from '@/utils/form/option'
+
   import { notifyFriendlyError } from '@/hooks/core/useArtFeedback'
   import { validateArtFormForSubmit } from '@/utils/form/validate-art-form'
   import dayjs from 'dayjs'
@@ -246,10 +248,7 @@
   })
 
   const leaveTypeOptions = computed<FormItemOption[]>(() =>
-    (getDictMap.value.smisLeaveType ?? []).map((item) => ({
-      label: item.label || item.name,
-      value: item.value
-    }))
+    (getDictMap.value.smisLeaveType ?? []).map(toDictionaryOption)
   )
   const booleanOptions = computed<FormItemOption[]>(() =>
     (getDictMap.value.commonBoolean ?? []).map((item) => ({

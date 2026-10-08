@@ -62,6 +62,8 @@
 </template>
 
 <script setup lang="ts">
+  import { toDictionaryOption } from '@/utils/form/option'
+
   import { notifyFriendlyError } from '@/hooks/core/useArtFeedback'
   import { validateArtFormForSubmit } from '@/utils/form/validate-art-form'
   import { normalizeNullableText } from '@/utils/form/normalize'
@@ -131,11 +133,7 @@
     model: initialModel(),
     responsibleSelection: []
   })
-  const dictOptions = (code: string) =>
-    (getDictMap.value[code] ?? []).map((item) => ({
-      label: item.label || item.name,
-      value: item.value
-    }))
+  const dictOptions = (code: string) => (getDictMap.value[code] ?? []).map(toDictionaryOption)
   const approvalOptions = computed(() => dictOptions('smisHiddenHazardApprovalResult'))
   const acceptanceOptions = computed(() => dictOptions('smisHiddenHazardAcceptanceResult'))
   const modeConfig = computed(() => {

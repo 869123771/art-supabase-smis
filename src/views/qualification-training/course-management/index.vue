@@ -166,6 +166,8 @@
 </template>
 
 <script setup lang="tsx">
+  import { toDictionaryOption } from '@/utils/form/option'
+
   import { replaceReactiveModel } from '@/utils/form/model'
   import type { FormRules } from 'element-plus'
   import { ElProgress } from 'element-plus'
@@ -266,11 +268,7 @@
     employeeIds: []
   })
   const courseForm = reactive<SmisCoursePayload>(createCourse())
-  const dictOptions = (code: string) =>
-    (getDictMap.value[code] ?? []).map((item) => ({
-      label: item.label || item.name,
-      value: item.value
-    }))
+  const dictOptions = (code: string) => (getDictMap.value[code] ?? []).map(toDictionaryOption)
   const exportDictLabel = (code: string, value: unknown) =>
     dictOptions(code).find((item) => item.value === String(value))?.label ?? String(value ?? '')
   const metrics = computed<BusinessWorkspaceMetric[]>(() =>

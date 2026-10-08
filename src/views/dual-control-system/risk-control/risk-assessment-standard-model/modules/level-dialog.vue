@@ -13,6 +13,8 @@
   /></ArtDialog>
 </template>
 <script setup lang="ts">
+  import { toDictionaryOption } from '@/utils/form/option'
+
   import { replaceReactiveModel } from '@/utils/form/model'
   import { notifyFriendlyError } from '@/hooks/core/useArtFeedback'
   import { validateArtFormForSubmit } from '@/utils/form/validate-art-form'
@@ -48,9 +50,7 @@
     sort: 10
   })
   const tagOptions = computed(() =>
-    (getDictMap.value.smisTagStyle ?? [])
-      .filter((i) => i.value)
-      .map((i) => ({ label: i.label || i.name, value: i.value }))
+    (getDictMap.value.smisTagStyle ?? []).filter((i) => i.value).map(toDictionaryOption)
   )
   const items = computed<FormItem[]>(() => [
     {

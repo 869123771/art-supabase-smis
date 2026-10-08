@@ -49,6 +49,8 @@
 </template>
 
 <script setup lang="tsx">
+  import { toDictionaryOption } from '@/utils/form/option'
+
   import type { TableRequestOptions } from '@/hooks/core/useTable'
   import dayjs from 'dayjs'
   import type { SearchFormItem } from '@/components/core/forms/art-search-bar/index.vue'
@@ -99,11 +101,7 @@
   const searchQuery = ref<HistoricalCaseSearchModel>({})
   const organizations = shallowRef<SmisTreeOrganization[]>([])
   const overview = reactive({ total: 0, inUse: 0, currentYear: 0, highSeverity: 0 })
-  const dictOptions = (code: string) =>
-    (getDictMap.value[code] ?? []).map((item) => ({
-      label: item.label || item.name,
-      value: item.value
-    }))
+  const dictOptions = (code: string) => (getDictMap.value[code] ?? []).map(toDictionaryOption)
   const dictLabel = (code: string, value?: string | null): string =>
     (getDictMap.value[code] ?? []).find((item) => item.value === value)?.label || value || '未设置'
 

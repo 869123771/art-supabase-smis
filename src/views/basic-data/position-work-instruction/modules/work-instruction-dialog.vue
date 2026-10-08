@@ -120,6 +120,8 @@
 </template>
 
 <script setup lang="ts">
+  import { toDictionaryOption } from '@/utils/form/option'
+
   import { replaceReactiveModel } from '@/utils/form/model'
   import { notifyFriendlyError } from '@/hooks/core/useArtFeedback'
   import { validateArtFormForSubmit } from '@/utils/form/validate-art-form'
@@ -200,10 +202,7 @@
       )
   )
   const fileTypeOptions = computed<FormItemOption[]>(() => {
-    const options = (getDictMap.value.FILE_EXTENSION_LABEL_MAP ?? []).map((item) => ({
-      label: item.label || item.name,
-      value: item.value
-    }))
+    const options = (getDictMap.value.FILE_EXTENSION_LABEL_MAP ?? []).map(toDictionaryOption)
     if (form.fileType && !options.some((item) => item.value === form.fileType)) {
       return [{ label: form.fileType, value: form.fileType }, ...options]
     }

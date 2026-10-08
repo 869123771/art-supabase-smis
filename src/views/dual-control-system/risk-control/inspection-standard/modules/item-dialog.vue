@@ -22,6 +22,8 @@
   </ArtDialog>
 </template>
 <script setup lang="ts">
+  import { toDictionaryOption } from '@/utils/form/option'
+
   import { replaceReactiveModel } from '@/utils/form/model'
   import { notifyFriendlyError } from '@/hooks/core/useArtFeedback'
   import { validateArtFormForSubmit } from '@/utils/form/validate-art-form'
@@ -70,11 +72,9 @@
   const statusOptions = computed(() =>
     (getDictMap.value.commonEnabledDisabledVoidedStatus ?? [])
       .filter((i) => i.value !== 'voided')
-      .map((i) => ({ label: i.label || i.name, value: i.value }))
+      .map(toDictionaryOption)
   )
-  const tagOptions = computed(() =>
-    (getDictMap.value.smisTagStyle ?? []).map((i) => ({ label: i.label || i.name, value: i.value }))
-  )
+  const tagOptions = computed(() => (getDictMap.value.smisTagStyle ?? []).map(toDictionaryOption))
   const items = computed<FormItem[]>(() => [
     {
       label: '关联排查标准',

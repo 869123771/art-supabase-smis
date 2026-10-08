@@ -55,6 +55,8 @@
   </ArtPermissionGuard>
 </template>
 <script setup lang="tsx">
+  import { toDictionaryOption } from '@/utils/form/option'
+
   import { replaceReactiveModel } from '@/utils/form/model'
   import type { DataSelectFetchParams } from '@/components/core/forms/art-data-select/types'
   import type { TableRequestOptions } from '@/hooks/core/useTable'
@@ -166,10 +168,7 @@
     quantity: 0
   })
   const statusOptions = computed(() =>
-    (getDictMap.value.smisHazardousWasteDocumentStatus ?? []).map((item) => ({
-      label: item.label || item.name,
-      value: item.value
-    }))
+    (getDictMap.value.smisHazardousWasteDocumentStatus ?? []).map(toDictionaryOption)
   )
   const metrics = computed<BusinessWorkspaceMetric[]>(() => [
     {

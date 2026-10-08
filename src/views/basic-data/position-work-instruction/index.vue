@@ -67,6 +67,8 @@
 </template>
 
 <script setup lang="tsx">
+  import { toDictionaryOption } from '@/utils/form/option'
+
   import dayjs from 'dayjs'
   import { computed, onMounted, reactive, ref } from 'vue'
   import { storeToRefs } from 'pinia'
@@ -192,10 +194,7 @@
   ])
 
   const fileTypeOptions = computed(() =>
-    (getDictMap.value.FILE_EXTENSION_LABEL_MAP ?? []).map((item) => ({
-      label: item.label || item.name,
-      value: item.value
-    }))
+    (getDictMap.value.FILE_EXTENSION_LABEL_MAP ?? []).map(toDictionaryOption)
   )
   const searchItems = computed<SearchFormItem[]>(() => [
     {

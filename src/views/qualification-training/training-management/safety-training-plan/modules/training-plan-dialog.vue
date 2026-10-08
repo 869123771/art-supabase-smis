@@ -96,6 +96,8 @@
 </template>
 
 <script setup lang="ts">
+  import { toDictionaryOption } from '@/utils/form/option'
+
   import { replaceReactiveModel } from '@/utils/form/model'
   import { normalizeNullableText } from '@/utils/form/normalize'
   import dayjs from 'dayjs'
@@ -185,11 +187,7 @@
     participantIds: []
   })
   const form = reactive<FormModel>(createInitialForm())
-  const dictOptions = (code: string) =>
-    (getDictMap.value[code] ?? []).map((item) => ({
-      label: item.label || item.name,
-      value: item.value
-    }))
+  const dictOptions = (code: string) => (getDictMap.value[code] ?? []).map(toDictionaryOption)
   const items = computed<FormItem[]>(() => [
     { label: '计划信息', key: 'basicSection', type: 'divider', span: 24 },
     {

@@ -68,6 +68,8 @@
 </template>
 
 <script setup lang="ts">
+  import { toDictionaryOption } from '@/utils/form/option'
+
   import { notifyFriendlyError } from '@/hooks/core/useArtFeedback'
   import { validateArtFormForSubmit } from '@/utils/form/validate-art-form'
   import DOMPurify from 'dompurify'
@@ -131,10 +133,7 @@
     categories.value.map((item) => ({ label: item.categoryName, value: item.id }))
   )
   const audienceOptions = computed<FormItemOption[]>(() =>
-    (getDictMap.value.smisAnnouncementAudienceType ?? []).map((item) => ({
-      label: item.label || item.name,
-      value: item.value
-    }))
+    (getDictMap.value.smisAnnouncementAudienceType ?? []).map(toDictionaryOption)
   )
   const announcementModel = reactive<SmisAnnouncementSavePayload>(createInitialForm())
   const form = reactive<{

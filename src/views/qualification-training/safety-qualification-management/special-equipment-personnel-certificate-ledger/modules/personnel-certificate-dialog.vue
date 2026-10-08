@@ -80,6 +80,8 @@
 </template>
 
 <script setup lang="tsx">
+  import { toDictionaryOption } from '@/utils/form/option'
+
   import { replaceReactiveModel } from '@/utils/form/model'
   import { notifyFriendlyError } from '@/hooks/core/useArtFeedback'
   import { validateArtFormForSubmit } from '@/utils/form/validate-art-form'
@@ -223,17 +225,8 @@
     return result
   })
   const dictOptions = (code: string) =>
-    computed(() =>
-      (getDictMap.value[code] ?? []).map((item) => ({
-        label: item.label || item.name,
-        value: item.value
-      }))
-    )
-  const dictionaryOptions = (code: string) =>
-    (getDictMap.value[code] ?? []).map((item) => ({
-      label: item.label || item.name,
-      value: item.value
-    }))
+    computed(() => (getDictMap.value[code] ?? []).map(toDictionaryOption))
+  const dictionaryOptions = (code: string) => (getDictMap.value[code] ?? []).map(toDictionaryOption)
   const categoryOptions = dictOptions('smisCertificateCategory')
   const warningOptions = dictOptions('commonWarningStatus')
   const reminderOptions = dictOptions('smisCertificateReminderDays')

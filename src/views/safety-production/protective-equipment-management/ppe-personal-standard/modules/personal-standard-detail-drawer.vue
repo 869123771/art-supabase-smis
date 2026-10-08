@@ -1,5 +1,11 @@
 <template>
-  <ArtDrawer ref="drawerRef" size="lg" :show-footer="false" content-height="calc(100vh - 126px)">
+  <ArtDrawer
+    :loading="loading"
+    ref="drawerRef"
+    size="lg"
+    :show-footer="false"
+    content-height="calc(100vh - 126px)"
+  >
     <div v-if="employee" class="ppe-detail">
       <section class="ppe-detail__identity" aria-label="员工个人标准概览">
         <ElAvatar
@@ -37,7 +43,6 @@
         class="ppe-detail__items"
         title="个人防护用品明细"
         subtitle="展示定额、发放周期、领用节点及来源标准。"
-        :loading="loading"
         :error="error"
         :empty="!loading && !error && !items.length"
         :empty-title="employee.personalStandardId ? '暂无用品明细' : '尚未生成个人标准'"

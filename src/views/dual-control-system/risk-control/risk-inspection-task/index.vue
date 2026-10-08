@@ -54,6 +54,8 @@
 </template>
 
 <script setup lang="tsx">
+  import { toDictionaryOption } from '@/utils/form/option'
+
   import type { TableRequestOptions } from '@/hooks/core/useTable'
   import dayjs from 'dayjs'
   import type { EmployeeIntegrationItem } from '@/api/integration/employees'
@@ -121,10 +123,7 @@
     completed: 0
   })
   const riskTypeOptions = computed(() =>
-    (getDictMap.value.smisRiskPointType ?? []).map((item) => ({
-      label: item.label || item.name,
-      value: item.value
-    }))
+    (getDictMap.value.smisRiskPointType ?? []).map(toDictionaryOption)
   )
   const taskStatusOptions = computed(() =>
     (getDictMap.value.smisRiskInspectionTaskStatus ?? []).map((item) => ({

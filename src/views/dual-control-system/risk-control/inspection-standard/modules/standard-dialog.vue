@@ -23,6 +23,8 @@
 </template>
 
 <script setup lang="ts">
+  import { toDictionaryOption } from '@/utils/form/option'
+
   import { replaceReactiveModel } from '@/utils/form/model'
   import { notifyFriendlyError } from '@/hooks/core/useArtFeedback'
   import { validateArtFormForSubmit } from '@/utils/form/validate-art-form'
@@ -87,14 +89,9 @@
   const statusOptions = computed(() =>
     (getDictMap.value.commonEnabledDisabledVoidedStatus ?? [])
       .filter((item) => item.value !== 'voided')
-      .map((item) => ({ label: item.label || item.name, value: item.value }))
+      .map(toDictionaryOption)
   )
-  const tagOptions = computed(() =>
-    (getDictMap.value.smisTagStyle ?? []).map((item) => ({
-      label: item.label || item.name,
-      value: item.value
-    }))
-  )
+  const tagOptions = computed(() => (getDictMap.value.smisTagStyle ?? []).map(toDictionaryOption))
   const items = computed<FormItem[]>(() => [
     {
       label: '上级排查标准',

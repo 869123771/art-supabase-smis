@@ -48,6 +48,8 @@
 </template>
 
 <script setup lang="tsx">
+  import { toDictionaryOption } from '@/utils/form/option'
+
   import type { TableRequestOptions } from '@/hooks/core/useTable'
   import dayjs from 'dayjs'
   import { computed, onMounted, reactive, ref, shallowRef } from 'vue'
@@ -101,11 +103,7 @@
   const organizations = shallowRef<SmisTreeOrganization[]>([])
   const currentEmployee = shallowRef<SmisAccidentEmployee | null>(null)
   const overview = reactive({ total: 0, currentMonth: 0, highSeverity: 0, affectedPeople: 0 })
-  const dictOptions = (code: string) =>
-    (getDictMap.value[code] ?? []).map((item) => ({
-      label: item.label || item.name,
-      value: item.value
-    }))
+  const dictOptions = (code: string) => (getDictMap.value[code] ?? []).map(toDictionaryOption)
   const dictLabel = (code: string, value: string): string =>
     getDictMap.value[code]?.find((item) => item.value === value)?.label || value
   const metrics = computed<BusinessWorkspaceMetric[]>(() => [

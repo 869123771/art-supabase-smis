@@ -42,6 +42,8 @@
 </template>
 
 <script setup lang="ts">
+  import { toDictionaryOption } from '@/utils/form/option'
+
   import { replaceReactiveModel } from '@/utils/form/model'
   import { notifyFriendlyError } from '@/hooks/core/useArtFeedback'
   import { validateArtFormForSubmit } from '@/utils/form/validate-art-form'
@@ -125,10 +127,7 @@
   const form = reactive<PositionSafetyResponsibility>(createInitialForm())
 
   const toOptions = (code: string): FormItemOption[] =>
-    (getDictMap.value[code] ?? []).map((item) => ({
-      label: item.label || item.name,
-      value: item.value
-    }))
+    (getDictMap.value[code] ?? []).map(toDictionaryOption)
 
   const primaryCategoryItems = computed(() => getDictMap.value.smisPrimaryHazardCategory ?? [])
   const secondaryCategoryItems = computed(() => getDictMap.value.smisSecondaryHazardCategory ?? [])
@@ -141,14 +140,14 @@
   )
   const secondaryCategoryOptions = computed<FormItemOption[]>(() => {
     return getChildDictionaryItems(secondaryCategoryItems.value, selectedPrimaryCategory.value).map(
-      (item) => ({ label: item.label || item.name, value: item.value })
+      toDictionaryOption
     )
   })
   const hazardContentOptions = computed<FormItemOption[]>(() => {
     const options = getChildDictionaryItems(
       hazardContentItems.value,
       selectedSecondaryCategory.value
-    ).map((item) => ({ label: item.label || item.name, value: item.value }))
+    ).map(toDictionaryOption)
     const currentValue = form.hazardContent?.trim() ?? ''
 
     if (currentValue && !options.some((item) => item.value === currentValue)) {

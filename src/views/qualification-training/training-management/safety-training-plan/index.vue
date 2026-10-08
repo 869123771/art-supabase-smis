@@ -39,6 +39,8 @@
 </template>
 
 <script setup lang="tsx">
+  import { toDictionaryOption } from '@/utils/form/option'
+
   import type { TableRequestOptions } from '@/hooks/core/useTable'
   import dayjs from 'dayjs'
   import type { SearchFormItem } from '@/components/core/forms/art-search-bar/index.vue'
@@ -89,11 +91,7 @@
   const searchQuery = ref<SmisSafetyTrainingPlanSearchParams>({})
   const organizations = shallowRef<SmisSafetyTrainingOrganizationOption[]>([])
   const overview = reactive({ total: 0, draft: 0, published: 0, completed: 0, warning: 0 })
-  const dictOptions = (code: string) =>
-    (getDictMap.value[code] ?? []).map((item) => ({
-      label: item.label || item.name,
-      value: item.value
-    }))
+  const dictOptions = (code: string) => (getDictMap.value[code] ?? []).map(toDictionaryOption)
   const metrics = computed<BusinessWorkspaceMetric[]>(() => [
     {
       label: '计划总数',

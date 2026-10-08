@@ -47,6 +47,7 @@
 <script setup lang="tsx">
   import { replaceReactiveModel } from '@/utils/form/model'
   import type { TableRequestOptions } from '@/hooks/core/useTable'
+  import { withSupabaseTableRange } from '@/utils/supabase/pagination'
   import { useDictionaryOptions } from '@/hooks/core/useDictionaryOptions'
   import dayjs from 'dayjs'
   import { ElImage, ElTag } from 'element-plus'
@@ -447,16 +448,8 @@
     }
   ]
 
-  const normalizePaginationParams = (
-    params: TableParams
-  ): SmisPpePersonalRequisitionSearchParams => {
-    const page = params.current ?? params.page ?? 1
-    const size = params.size ?? params.pageSize ?? 20
-    return { ...params, from: (page - 1) * size, to: page * size - 1 }
-  }
-
   const fetchTableData = async (params: TableParams, options?: TableRequestOptions) => {
-    const result = await fetchPpePersonalRequisitionList(normalizePaginationParams(params))
+    const result = await fetchPpePersonalRequisitionList(withSupabaseTableRange(params))
     if (!options?.signal?.aborted) Object.assign(overview, result.overview)
     return { records: result.data, total: result.total }
   }

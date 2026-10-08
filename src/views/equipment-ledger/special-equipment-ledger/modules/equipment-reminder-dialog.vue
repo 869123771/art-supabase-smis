@@ -54,6 +54,8 @@
 </template>
 
 <script setup lang="ts">
+  import { toDictionaryOption } from '@/utils/form/option'
+
   import { notifyFriendlyError } from '@/hooks/core/useArtFeedback'
   import { validateArtFormForSubmit } from '@/utils/form/validate-art-form'
   import type { FormRules } from 'element-plus'
@@ -113,10 +115,7 @@
   })
   const formModel = reactive<ReminderForm>(initialForm())
   const channelOptions = computed(() =>
-    (getDictMap.value.smisEquipmentReminderChannel ?? []).map((item) => ({
-      label: item.label || item.name,
-      value: item.value
-    }))
+    (getDictMap.value.smisEquipmentReminderChannel ?? []).map(toDictionaryOption)
   )
   const reminderDayOptions = [0, 1, 3, 5, 7, 10, 15, 30, 45, 60, 90, 180, 365].map((value) => ({
     label: value === 0 ? '到期当天' : `提前 ${value} 天`,

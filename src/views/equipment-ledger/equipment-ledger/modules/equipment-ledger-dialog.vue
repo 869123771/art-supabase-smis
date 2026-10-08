@@ -151,6 +151,8 @@
 </template>
 
 <script setup lang="ts">
+  import { toDictionaryOption } from '@/utils/form/option'
+
   import { notifyFriendlyError } from '@/hooks/core/useArtFeedback'
   import { validateArtFormForSubmit } from '@/utils/form/validate-art-form'
   import { ElButton, type FormRules } from 'element-plus'
@@ -356,10 +358,7 @@
   })
   const formModel = reactive<EquipmentForm>(initialForm())
   const dictOptions = (code: string): FormItemOption[] =>
-    (getDictMap.value[code] ?? []).map((item) => ({
-      label: item.label || item.name,
-      value: item.value
-    }))
+    (getDictMap.value[code] ?? []).map(toDictionaryOption)
   const mapCategory = (items: SmisEquipmentCategory[]): FormItemOption[] =>
     items.map((item) => ({
       label: `${item.categoryName} · ${item.categoryCode}`,

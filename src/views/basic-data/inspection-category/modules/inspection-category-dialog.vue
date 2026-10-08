@@ -23,6 +23,8 @@
 </template>
 
 <script setup lang="ts">
+  import { toDictionaryOption } from '@/utils/form/option'
+
   import { notifyFriendlyError } from '@/hooks/core/useArtFeedback'
   import { validateArtFormForSubmit } from '@/utils/form/validate-art-form'
   import { useMediaQuery } from '@vueuse/core'
@@ -84,10 +86,7 @@
   })
 
   const statusOptions = computed<FormItemOption[]>(() =>
-    (getDictMap.value.commonEnabledStatus ?? []).map((item) => ({
-      label: item.label || item.name,
-      value: item.value
-    }))
+    (getDictMap.value.commonEnabledStatus ?? []).map(toDictionaryOption)
   )
 
   const form = reactive<{

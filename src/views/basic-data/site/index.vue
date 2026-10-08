@@ -65,6 +65,8 @@
 </template>
 
 <script setup lang="tsx">
+  import { toDictionaryOption } from '@/utils/form/option'
+
   import { ElImage, ElMessage } from 'element-plus'
   import type { SearchFormItem } from '@/components/core/forms/art-search-bar/index.vue'
   import type {
@@ -166,10 +168,7 @@
       .filter((id): id is string => Boolean(id))
   })
   const categoryOptions = computed(() =>
-    (getDictMap.value.smisSiteCategory ?? []).map((item) => ({
-      label: item.label || item.name,
-      value: item.value
-    }))
+    (getDictMap.value.smisSiteCategory ?? []).map(toDictionaryOption)
   )
   const resolveCategory = (value: string): string =>
     categoryOptions.value.find((item) => item.value === value)?.label || value

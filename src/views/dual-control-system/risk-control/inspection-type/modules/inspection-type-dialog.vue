@@ -22,6 +22,8 @@
 </template>
 
 <script setup lang="ts">
+  import { toDictionaryOption } from '@/utils/form/option'
+
   import { notifyFriendlyError } from '@/hooks/core/useArtFeedback'
   import { validateArtFormForSubmit } from '@/utils/form/validate-art-form'
   import { ElColorPicker, type FormRules } from 'element-plus'
@@ -68,13 +70,10 @@
   const statusOptions = computed<FormItemOption[]>(() =>
     (getDictMap.value.commonEnabledDisabledVoidedStatus ?? [])
       .filter((item) => item.value !== 'voided')
-      .map((item) => ({ label: item.label || item.name, value: item.value }))
+      .map(toDictionaryOption)
   )
   const tagOptions = computed<FormItemOption[]>(() =>
-    (getDictMap.value.smisTagStyle ?? []).map((item) => ({
-      label: item.label || item.name,
-      value: item.value
-    }))
+    (getDictMap.value.smisTagStyle ?? []).map(toDictionaryOption)
   )
 
   const form = reactive<{

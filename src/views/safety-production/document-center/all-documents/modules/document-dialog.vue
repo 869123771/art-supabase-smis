@@ -82,6 +82,8 @@
 </template>
 
 <script setup lang="ts">
+  import { toDictionaryOption } from '@/utils/form/option'
+
   import { replaceReactiveModel } from '@/utils/form/model'
   import { notifyFriendlyError } from '@/hooks/core/useArtFeedback'
   import { validateArtFormForSubmit } from '@/utils/form/validate-art-form'
@@ -186,10 +188,7 @@
   )
 
   const statusOptions = computed(() =>
-    (getDictMap.value.smisDocumentStatus ?? []).map((item) => ({
-      label: item.label || item.name,
-      value: item.value
-    }))
+    (getDictMap.value.smisDocumentStatus ?? []).map(toDictionaryOption)
   )
 
   const items = computed<FormItem[]>(() => [

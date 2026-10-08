@@ -278,6 +278,8 @@
 </template>
 
 <script setup lang="tsx">
+  import { toDictionaryOption } from '@/utils/form/option'
+
   import { useTable, type TableRequestOptions } from '@/hooks/core/useTable'
   import dayjs from 'dayjs'
   import { ElMessage, ElPagination } from 'element-plus'
@@ -416,11 +418,7 @@
   const qrValue = computed(() =>
     qr.row ? JSON.stringify({ type: 'smis-equipment', id: qr.row.id, token: qr.row.qrToken }) : ''
   )
-  const dictOptions = (code: string) =>
-    (getDictMap.value[code] ?? []).map((item) => ({
-      label: item.label || item.name,
-      value: item.value
-    }))
+  const dictOptions = (code: string) => (getDictMap.value[code] ?? []).map(toDictionaryOption)
 
   const workspaceMetrics = computed<BusinessWorkspaceMetric[]>(() => [
     {

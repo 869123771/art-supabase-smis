@@ -1,5 +1,5 @@
 <template>
-  <ArtDialog ref="dialogRef" size="lg">
+  <ArtDialog ref="dialogRef" size="lg" :loading="loading">
     <div class="personal-plan__notice">
       <ArtSvgIcon icon="ri:calendar-schedule-line" />
       <div>
@@ -11,7 +11,6 @@
     <ArtSectionCard
       title="工器具个人领用计划"
       subtitle="周期默认继承发放标准，可按人员实际入岗日期调整。"
-      :loading="loading"
       :empty="!loading && !form.items.length"
       empty-title="暂无工器具个人标准"
       empty-description="请先为该员工生成工器具个人标准。"
@@ -29,6 +28,8 @@
 </template>
 
 <script setup lang="tsx">
+  import { toDictionaryOption } from '@/utils/form/option'
+
   import { notifyFriendlyError } from '@/hooks/core/useArtFeedback'
   import dayjs from 'dayjs'
   import { ElDatePicker, ElInputNumber, ElOption, ElSelect } from 'element-plus'
@@ -57,10 +58,7 @@
   const userStore = useUserStore()
   const { getDictMap } = storeToRefs(userStore)
   const cycleOptions = computed(() =>
-    (getDictMap.value.commonIssuanceCycle ?? []).map((item) => ({
-      label: item.label || item.name,
-      value: item.value
-    }))
+    (getDictMap.value.commonIssuanceCycle ?? []).map(toDictionaryOption)
   )
   const planColumns = computed<ColumnOption<PlanItem>[]>(() => [
     { prop: 'materialName', label: '工器具', minWidth: 180, showOverflowTooltip: true },

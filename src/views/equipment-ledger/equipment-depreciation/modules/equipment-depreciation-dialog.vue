@@ -40,6 +40,8 @@
 </template>
 
 <script setup lang="tsx">
+  import { toDictionaryOption } from '@/utils/form/option'
+
   import { notifyFriendlyError } from '@/hooks/core/useArtFeedback'
   import { validateArtFormForSubmit } from '@/utils/form/validate-art-form'
   import { ElInputNumber, type FormRules } from 'element-plus'
@@ -104,10 +106,7 @@
 
   const formModel = reactive<DepreciationForm>(initialForm())
   const statusOptions = computed(() =>
-    (getDictMap.value.smisEquipmentDepreciationStatus ?? []).map((item) => ({
-      label: item.label || item.name,
-      value: item.value
-    }))
+    (getDictMap.value.smisEquipmentDepreciationStatus ?? []).map(toDictionaryOption)
   )
   const depreciationNoProps = computed<Record<string, unknown>>(() =>
     numberRule.inputProps(Boolean(formModel.id), '请输入折旧编码', true)

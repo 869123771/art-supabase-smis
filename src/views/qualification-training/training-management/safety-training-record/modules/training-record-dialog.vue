@@ -281,6 +281,8 @@
 </template>
 
 <script setup lang="tsx">
+  import { toDictionaryOption } from '@/utils/form/option'
+
   import { replaceReactiveModel } from '@/utils/form/model'
   import { createDateTimeFormatter } from '@/utils/ui/format'
 
@@ -400,11 +402,7 @@
     if (!form.participants.length) return '0%'
     return `${Math.round((presentCount.value / form.participants.length) * 100)}%`
   })
-  const dictOptions = (code: string) =>
-    (getDictMap.value[code] ?? []).map((item) => ({
-      label: item.label || item.name,
-      value: item.value
-    }))
+  const dictOptions = (code: string) => (getDictMap.value[code] ?? []).map(toDictionaryOption)
   const attendanceOptions = computed(() => dictOptions('smisSafetyTrainingAttendanceStatus'))
   const signMethodOptions = computed(() => dictOptions('smisSafetyTrainingSignMethod'))
   const assessmentResultOptions = computed(() => dictOptions('smisSafetyTrainingAssessmentResult'))

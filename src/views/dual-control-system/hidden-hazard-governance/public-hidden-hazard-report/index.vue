@@ -43,6 +43,8 @@
 </template>
 
 <script setup lang="tsx">
+  import { toDictionaryOption } from '@/utils/form/option'
+
   import dayjs from 'dayjs'
   import type { SearchFormItem } from '@/components/core/forms/art-search-bar/index.vue'
   import type {
@@ -91,10 +93,7 @@
   }>({ organizations: [], sites: [] })
   const overview = reactive({ total: 0, pending: 0, processing: 0, closed: 0 })
   const statusOptions = computed(() =>
-    (getDictMap.value.smisHiddenHazardGovernanceStatus ?? []).map((item) => ({
-      label: item.label || item.name,
-      value: item.value
-    }))
+    (getDictMap.value.smisHiddenHazardGovernanceStatus ?? []).map(toDictionaryOption)
   )
   const levelLabels = computed<Record<string, string>>(() =>
     Object.fromEntries(
