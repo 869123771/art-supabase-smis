@@ -138,6 +138,7 @@
   import { getFriendlySupabaseErrorMessage } from '@/utils/supabase/error'
   import TreeUtils from '@/utils/tree'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
+  import BusinessTableRowActions from '@/components/business/business-table-row-actions/index.vue'
   import ArtDrawer from '@/components/core/drawers/art-drawer/index.vue'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
   import ArtWorkspaceSplitter from '@/components/core/layouts/art-workspace-splitter/index.vue'
@@ -436,7 +437,7 @@
       width: 160,
       fixed: 'right',
       formatter: (row) => (
-        <div class="smis-personal-standard__row-actions">
+        <BusinessTableRowActions>
           <ArtButtonTable
             type="view"
             icon="ri:file-list-3-line"
@@ -458,7 +459,7 @@
             disabled={!row.personalStandardId}
             onClick={() => openPlan(row)}
           />
-        </div>
+        </BusinessTableRowActions>
       )
     }
   ]

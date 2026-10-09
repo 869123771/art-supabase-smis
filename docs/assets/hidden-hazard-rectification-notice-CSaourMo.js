@@ -1,0 +1,42 @@
+import{o as e}from"./rolldown-runtime-C0FnF6B9.js";import{At as t,H as n,S as r,b as i,d as a,f as o,gt as s,lt as c,p as l,xt as u,yt as d,z as f}from"./runtime-core.esm-bundler-jxzlpws6.js";import{Ti as p,ki as m}from"./api-dR7hQFiR.js";import{t as h}from"./escape-ClPIfvfb.js";import{t as g}from"./dayjs.min-CbsKVrjN.js";import{n as _,t as v}from"./business-table-workspace-actions-oLEpxUiH.js";/* empty css                            */import{t as y}from"./pagination-B1oSggc1.js";import{Lt as b,Z as x,jn as S}from"./index-DMzFi_XG.js";import{t as C}from"./_plugin-vue_export-helper-BDNMzG2s.js";import{t as w}from"./art-dict-display-v9IJnsar.js";import{t as T}from"./art-button-table-DVMSB8Ir.js";import{t as E}from"./business-workspace-header-B_07F0Gk.js";import{t as D}from"./art-permission-guard-BIF43JKn.js";import{n as O}from"./organization-tree-MJ0RPbvM.js";var k=e(g(),1),A=e=>{let t=(0,k.default)(e.inspectionTime).format(`YYYY年MM月DD日`),n=e.rectificationDeadline?(0,k.default)(e.rectificationDeadline).format(`YYYY年MM月DD日 HH:mm`):`待确定`;return`<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <title>隐患整改通知书-${h(e.noticeNo)}</title>
+    <style>
+      @page { size: A4 portrait; margin: 17mm 18mm; }
+      * { box-sizing: border-box; }
+      body { margin: 0; color: #111; font: 16px/1.85 "Microsoft YaHei", sans-serif; }
+      h1 { margin: 14px 0 0; font-size: 29px; text-align: center; letter-spacing: 5px; }
+      .number { margin: 2px 0 26px; font-size: 18px; text-align: center; }
+      .meta { margin-bottom: 18px; text-align: right; }
+      .recipient { font-size: 17px; text-decoration: underline; text-underline-offset: 6px; }
+      .content { min-height: 260px; margin: 24px 0; }
+      .content strong { display: block; margin-bottom: 10px; }
+      .requirement { padding: 14px 18px; margin-top: 18px; border: 1px solid #111; }
+      .deadline { margin-top: 18px; font-weight: 600; }
+      .signature { display: grid; grid-template-columns: 1fr 1fr; gap: 46px; margin-top: 52px; }
+      .date { margin-top: 34px; text-align: right; }
+      @media print { body { print-color-adjust: exact; } }
+    </style>
+  </head>
+  <body>
+    <div class="meta">通知单号：${h(e.noticeNo)}</div>
+    <h1>隐患整改通知书</h1>
+    <div class="number">〔${h(e.rectificationPlanNo)}〕</div>
+    <p class="recipient">${h(e.inspectedOrganizationName)}：</p>
+    <p>经检查，你单位存在以下安全隐患，请按照有关标准和制度要求落实整改，并在规定时限内反馈整改结果。</p>
+    <div class="content">
+      <strong>一、隐患（问题）详细情况</strong>
+      <p>${h(e.hazardDescription)}</p>
+      <div class="requirement"><strong>二、整改要求</strong>${h(e.rectificationRequirement||`请明确责任人和整改措施，完成后提交现场整改证据。`)}</div>
+      <div class="deadline">整改时限：${h(n)}</div>
+    </div>
+    <div class="signature">
+      <span>检查单位检查人员（签名）：____________</span>
+      <span>被检查单位负责人（签名）：____________</span>
+    </div>
+    <div class="date">检查单位：${h(e.inspectionOrganizationName)}<br>检查时间：${h(t)}</div>
+    <script>window.onload = () => window.print()<\/script>
+  </body>
+</html>`},j={class:`rectification-notice-page business-workspace-page art-full-height`},M=C(r({name:`SmisDualControlHiddenHazardRectificationNotice`,__name:`index`,setup(e){let r=u(),h=u({}),g=u([]),C=d({total:0,rectifying:0,pendingAcceptance:0,completed:0}),k=a(()=>O(g.value)),M=a(()=>[{label:`通知书`,value:C.total,description:`当前查询口径`,icon:`ri:file-warning-line`},{label:`整改中`,value:C.rectifying,description:`等待反馈结果`,icon:`ri:tools-line`,tone:`danger`},{label:`待验收`,value:C.pendingAcceptance,description:`已提交整改`,icon:`ri:file-search-line`,tone:`warning`},{label:`已完成`,value:C.completed,description:`验收闭环`,icon:`ri:checkbox-circle-line`,tone:`success`}]),N=a(()=>[{label:`检查时间`,key:`inspectionRange`,type:`daterange`,props:{valueFormat:`YYYY-MM-DD`,rangeSeparator:`至`,startPlaceholder:`开始日期`,endPlaceholder:`结束日期`}},{label:`检查单位`,key:`inspectionOrganizationId`,type:`treeSelect`,props:{data:k.value,props:{label:`organizationName`,value:`id`,children:`children`},nodeKey:`id`,valueKey:`id`,checkStrictly:!0,defaultExpandAll:!0,filterable:!0,clearable:!0,placeholder:`全部检查单位`}},{label:`检查人`,key:`inspectorKeyword`,type:`input`,props:{clearable:!0,placeholder:`输入检查人姓名`}},{label:`被检查单位`,key:`inspectedOrganizationId`,type:`treeSelect`,props:{data:k.value,props:{label:`organizationName`,value:`id`,children:`children`},nodeKey:`id`,valueKey:`id`,checkStrictly:!0,defaultExpandAll:!0,filterable:!0,clearable:!0,placeholder:`全部被检查单位`}}]),P=b({format:`YYYY-MM-DD HH:mm`,emptyText:`—`,invalidText:`—`}),F=e=>{let t=window.open(``,`_blank`,`width=980,height=820`);if(!t)return void S.warning(`浏览器阻止了打印窗口，请允许本站打开弹出式窗口`);t.opener=null,t.document.write(A(e)),t.document.close()},I=()=>[{type:`selection`,width:48},{type:`globalIndex`,label:`序号`,width:68},{prop:`noticeNo`,label:`通知单号`,width:156,fixed:`left`},{prop:`rectificationPlanNo`,label:`整改计划号`,width:160},{prop:`inspectionTime`,label:`检查时间`,width:164,formatter:e=>P(e.inspectionTime)},{prop:`inspectionOrganizationName`,label:`检查单位`,minWidth:170,showOverflowTooltip:!0},{prop:`inspectorNames`,label:`检查人员`,width:132,showOverflowTooltip:!0},{prop:`inspectedOrganizationName`,label:`被检查单位`,minWidth:180,showOverflowTooltip:!0},{prop:`hazardDescription`,label:`隐患描述`,minWidth:240,showOverflowTooltip:!0},{prop:`rectificationRequirement`,label:`整改要求`,minWidth:220,showOverflowTooltip:!0,formatter:e=>e.rectificationRequirement||`请按要求落实整改并反馈证据`},{prop:`rectificationDeadline`,label:`整改时限`,width:164,formatter:e=>P(e.rectificationDeadline)},{prop:`status`,label:`状态`,width:108,formatter:e=>i(w,{dictCode:`smisHiddenHazardGovernanceStatus`,value:e.status,display:`tag`},null)},{prop:`operation`,label:`操作`,width:82,fixed:`right`,formatter:e=>i(T,{type:`view`,icon:`ri:printer-line`,label:`打印通知书`,permission:`SmisDualControlHiddenHazardRectificationNotice:Print`,onClick:()=>F(e)},null)}],L=[{key:`noticeNo`,title:`通知单号`},{key:`rectificationPlanNo`,title:`整改计划号`},{key:`inspectionTime`,title:`检查时间`},{key:`inspectionOrganizationName`,title:`检查单位`},{key:`inspectorNames`,title:`检查人员`},{key:`inspectedOrganizationName`,title:`被检查单位`},{key:`hazardDescription`,title:`隐患描述`},{key:`rectificationRequirement`,title:`整改要求`},{key:`rectificationDeadline`,title:`整改时限`}],R=e=>e.selectedRows.length===1?e.selectedRows[0]:(S.warning(`请选择一条整改通知书`),null),z=a(()=>[{key:`print`,label:`打印通知书`,icon:`ri:printer-line`,permission:`SmisDualControlHiddenHazardRectificationNotice:Print`,selectionRequired:!0,onClick:e=>{let t=R(e);t&&F(t)}},{type:`export`,label:`导出`,permission:`SmisDualControlHiddenHazardRectificationNotice:Export`,exportFilename:`隐患整改通知书`,exportSheetName:`整改通知书`,exportColumns:L,exportApi:async({selectedIds:e,searchParams:t})=>{let n=t,r=new Set(e.map(String)),i={...n,ids:void 0,inspectionFrom:n.inspectionRange?.[0],inspectionTo:n.inspectionRange?.[1]?`${n.inspectionRange[1]}T23:59:59`:void 0};return{data:(await x(m,i)).filter(e=>!r.size||r.has(e.id)).map(e=>({...e,inspectionTime:P(e.inspectionTime),rectificationDeadline:P(e.rectificationDeadline)}))}}}]),B=async e=>{let{from:t,to:n}=y({current:e.current,size:e.size}),r=await m({...e,inspectionFrom:e.inspectionRange?.[0],inspectionTo:e.inspectionRange?.[1]?`${e.inspectionRange[1]}T23:59:59`:void 0,from:t,to:n});return Object.assign(C,{total:r.total,rectifying:r.rectifyingCount,pendingAcceptance:r.pendingAcceptanceCount,completed:r.completedCount}),r};return f(async()=>{let e=await p();g.value=e.organizations}),(e,a)=>{let u=_;return n(),l(D,{permission:`SmisDualControlHiddenHazardRectificationNotice:View`,"resource-name":`隐患整改通知书`},{default:c(()=>[o(`div`,j,[i(E,{eyebrow:`RECTIFICATION NOTICE`,title:`隐患整改通知书`,description:`汇总已核准进入整改的隐患，按标准模板生成可直接签发和归档的整改通知书。`,icon:`ri:file-warning-line`,density:`compact`,tags:[{label:`自动套用模板`,type:`primary`,effect:`plain`},{label:`来源可追溯`,type:`info`,effect:`plain`},{label:`整改时限明确`,type:`warning`,effect:`light`}],metrics:t(M)},{actions:c(()=>[i(v,{table:t(r)},null,8,[`table`])]),_:1},8,[`metrics`]),i(u,{ref_key:`tableRef`,ref:r,modelValue:t(h),"onUpdate:modelValue":a[0]||(a[0]=e=>s(h)?h.value=e:null),class:`rectification-notice-page__table`,"api-fn":B,"search-items":t(N),"columns-factory":I,"header-actions":t(z),"header-actions-placement":`workspace`,"search-bar-props":{span:6,labelWidth:92,showExpand:!0,defaultExpanded:!0},"table-props":{rowKey:`id`,tableLayout:`fixed`,emptyText:`暂无整改通知书`,emptyDescription:`隐患核准并进入整改后，将自动出现在此处。`},focusable:``},null,8,[`modelValue`,`search-items`,`header-actions`])])]),_:1})}}}),[[`__scopeId`,`data-v-aef0e7b9`]]);export{M as default};

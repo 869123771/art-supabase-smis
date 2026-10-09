@@ -490,11 +490,5 @@
         color: var(--el-text-color-secondary);
       }
     }
-
-    :deep(.art-upload) {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
   }
 </style>

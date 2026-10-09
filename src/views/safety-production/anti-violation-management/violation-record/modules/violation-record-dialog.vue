@@ -404,11 +404,5 @@
 <style scoped lang="scss">
   .violation-record-dialog {
     min-width: 0;
-
-    :deep(.art-upload) {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
   }
 </style>

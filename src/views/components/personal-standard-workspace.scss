@@ -177,20 +177,6 @@
     justify-self: start;
   }
 
-  .smis-personal-standard__row-actions {
-    display: flex;
-    gap: 4px;
-    align-items: center;
-    justify-content: center;
-    min-width: 0;
-    white-space: nowrap;
-  }
-
-  .smis-personal-standard__row-actions .art-button-table {
-    flex: 0 0 32px;
-    margin-right: 0;
-  }
-
   .smis-personal-standard__muted {
     color: var(--el-text-color-secondary);
   }

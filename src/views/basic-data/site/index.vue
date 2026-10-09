@@ -325,6 +325,7 @@
     {
       prop: 'siteName',
       label: '场所层级',
+      className: 'site-tree-identity-cell',
       minWidth: 260,
       fixed: 'left',
       formatter: (row) => (
@@ -333,7 +334,7 @@
             <ArtSvgIcon icon={row.children?.length ? 'ri:folder-3-line' : 'ri:map-pin-line'} />
           </span>
           <span>
-            <strong>{row.siteName}</strong>
+            <strong title={row.siteName}>{row.siteName}</strong>
             <small>{row.parentSiteName || '一级场所'}</small>
           </span>
         </div>
@@ -723,8 +724,29 @@
       box-shadow: inset 3px 0 0 var(--theme-color);
     }
 
+    :deep(.site-tree-identity-cell > .cell) {
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    :deep(.site-tree-identity-cell .art-table__cell-content) {
+      flex: 1;
+      min-width: 0;
+    }
+
+    :deep(.site-tree-identity-cell .el-table__indent) {
+      flex-shrink: 0;
+    }
+
+    :deep(.site-tree-identity-cell .el-table__placeholder) {
+      flex: 0 0 28px;
+      width: 28px;
+    }
+
     :deep(.site-tree-row .el-table__expand-icon) {
       display: inline-flex;
+      flex: 0 0 22px;
       align-items: center;
       justify-content: center;
       width: 22px;

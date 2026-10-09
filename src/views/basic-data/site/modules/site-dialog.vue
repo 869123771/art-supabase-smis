@@ -350,11 +350,5 @@
     &__full-control {
       width: 100%;
     }
-
-    :deep(.art-upload) {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
   }
 </style>

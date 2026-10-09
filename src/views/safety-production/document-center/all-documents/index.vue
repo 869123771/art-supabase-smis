@@ -390,6 +390,7 @@
 </template>
 
 <script setup lang="tsx">
+  import BusinessTableRowActions from '@/components/business/business-table-row-actions/index.vue'
   import { createDateTimeFormatter } from '@/utils/ui/format'
 
   import dayjs from 'dayjs'
@@ -715,7 +716,7 @@
       width: 120,
       fixed: 'right',
       formatter: (row) => (
-        <div class="document-center-page__row-actions">
+        <BusinessTableRowActions>
           <ArtButtonTable
             type="edit"
             permission="SmisAllDocuments:Edit"
@@ -725,7 +726,7 @@
             list={rowActions(row)}
             onClick={(item: ButtonMoreItem) => handleRowAction(item, row)}
           />
-        </div>
+        </BusinessTableRowActions>
       )
     }
   ]
@@ -1625,17 +1626,6 @@
 
       &.is-effective small {
         color: var(--el-text-color-secondary);
-      }
-    }
-
-    :deep(.document-center-page__row-actions) {
-      display: flex;
-      gap: 4px;
-      align-items: center;
-      justify-content: center;
-
-      .art-button-table {
-        margin-right: 0;
       }
     }
 
