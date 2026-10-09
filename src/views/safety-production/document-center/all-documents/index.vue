@@ -403,6 +403,7 @@
   import type { ColumnOption } from '@/types'
   import { buildSupabasePageRange } from '@/utils/supabase/pagination'
   import { exportExcel, type ExcelColumn } from '@/utils/file'
+  import { formatSize } from '@/utils/file/format-size'
   import TreeUtils from '@/utils/tree'
   import BusinessWorkspaceHeader, {
     type BusinessWorkspaceMetric
@@ -595,12 +596,6 @@
     if (/(ppt|presentation)/.test(type)) return 'warning'
     return 'primary'
   }
-  const formatFileSize = (size?: number | null): string =>
-    !size
-      ? '—'
-      : size >= 1024 * 1024
-        ? `${(size / 1024 / 1024).toFixed(1)} MB`
-        : `${Math.ceil(size / 1024)} KB`
   const formatDateTime = createDateTimeFormatter({ format: 'YYYY-MM-DD HH:mm', emptyText: '—' })
   const formatScheduled = (row: SmisDocument): string =>
     row.scheduledEffectiveDate ? dayjs(row.scheduledEffectiveDate).format('YYYY-MM-DD') : '待定'
@@ -705,7 +700,7 @@
       label: '大小',
       width: 94,
       align: 'right',
-      formatter: (row) => formatFileSize(row.fileSize)
+      formatter: (row) => formatSize(row.fileSize, { precision: 1 })
     },
     { prop: 'creatorName', label: '创建人', minWidth: 116, showOverflowTooltip: true },
     {

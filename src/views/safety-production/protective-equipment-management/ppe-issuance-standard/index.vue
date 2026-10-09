@@ -56,6 +56,7 @@
   import { useArtFeedback } from '@/hooks/core/useArtFeedback'
   import { useUserStore } from '@/store/modules/user'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
+  import BusinessTableRowActions from '@/components/business/business-table-row-actions/index.vue'
   import ArtDictDisplay from '@/components/core/base/art-dict-display/index.vue'
   import BusinessTableWorkspaceActions from '@/components/business/business-table-workspace-actions/index.vue'
   import BusinessWorkspaceHeader, {
@@ -272,7 +273,7 @@
       width: 154,
       fixed: 'right',
       formatter: (row) => (
-        <div class="row-actions">
+        <BusinessTableRowActions>
           <ArtButtonTable
             permission="SmisPpeIssuanceStandard:Edit"
             type="edit"
@@ -287,7 +288,7 @@
               await refresh()
             }}
           />
-        </div>
+        </BusinessTableRowActions>
       )
     }
   ]
@@ -320,11 +321,5 @@
   :deep(.standard-no) {
     font-variant-numeric: tabular-nums;
     color: var(--theme-color);
-  }
-
-  .row-actions {
-    display: flex;
-    gap: 6px;
-    justify-content: center;
   }
 </style>

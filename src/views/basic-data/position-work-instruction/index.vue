@@ -76,6 +76,7 @@
   import ArtTooltip from '@/components/core/feedback/art-tooltip/index.vue'
   import ArtAttachmentLink from '@/components/core/media/art-file-viewer/attachment-link.vue'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
+  import BusinessTableRowActions from '@/components/business/business-table-row-actions/index.vue'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
   import BusinessTableWorkspaceActions from '@/components/business/business-table-workspace-actions/index.vue'
   import BusinessWorkspaceHeader, {
@@ -318,7 +319,7 @@
       width: 112,
       fixed: 'right',
       formatter: (row) => (
-        <div class="work-instruction-page__row-actions">
+        <BusinessTableRowActions>
           <ArtButtonTable
             type="edit"
             permission="SmisPositionWorkInstruction:Edit"
@@ -329,7 +330,7 @@
             permission="SmisPositionWorkInstruction:Delete"
             onClick={() => handleDeleteRows([row])}
           />
-        </div>
+        </BusinessTableRowActions>
       )
     }
   ]
@@ -533,20 +534,6 @@
 
     :deep(.work-instruction-page__muted) {
       color: var(--el-text-color-secondary);
-    }
-
-    :deep(.work-instruction-page__row-actions) {
-      display: flex;
-      gap: 6px;
-      align-items: center;
-      justify-content: center;
-      min-width: 0;
-      white-space: nowrap;
-    }
-
-    :deep(.work-instruction-page__row-actions .art-button-table) {
-      flex: 0 0 32px;
-      margin-right: 0;
     }
 
     @media (width <= 820px) {
