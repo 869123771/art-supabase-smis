@@ -49,6 +49,8 @@
 </template>
 
 <script setup lang="tsx">
+  import { createDateTimeFormatter } from '@/utils/ui/format'
+
   import { toDictionaryOption } from '@/utils/form/option'
 
   import type { TableRequestOptions } from '@/hooks/core/useTable'
@@ -83,6 +85,17 @@
     type HistoricalAccidentCaseDialogOpenData
   } from './modules/historical-accident-case-dialog.vue'
 
+  const formatTableDate = createDateTimeFormatter({
+    format: 'YYYY-MM-DD',
+    emptyText: '--',
+    invalidText: '--'
+  })
+  const formatTableDateTime = createDateTimeFormatter({
+    format: 'YYYY-MM-DD HH:mm',
+    emptyText: '—',
+    invalidText: '—'
+  })
+
   defineOptions({ name: 'SmisHistoricalAccidentCases' })
   interface HistoricalCaseSearchModel extends SmisHistoricalAccidentCaseSearchParams {
     occurrenceDateRange?: [string, string]
@@ -102,8 +115,6 @@
   const organizations = shallowRef<SmisTreeOrganization[]>([])
   const overview = reactive({ total: 0, inUse: 0, currentYear: 0, highSeverity: 0 })
   const dictOptions = (code: string) => (getDictMap.value[code] ?? []).map(toDictionaryOption)
-  const dictLabel = (code: string, value?: string | null): string =>
-    (getDictMap.value[code] ?? []).find((item) => item.value === value)?.label || value || '未设置'
 
   const metrics = computed<BusinessWorkspaceMetric[]>(() => [
     {
@@ -173,8 +184,11 @@
     }
   }
   const categorySummary = (row: SmisHistoricalAccidentCase): string =>
-    row.accidentCategories.map((value) => dictLabel('smisAccidentCategory', value)).join('、') ||
-    '—'
+    row.accidentCategories
+      .map(
+        (value) => userStore.getDictLabelByValue('smisAccidentCategory', value) || value || '未设置'
+      )
+      .join('、') || '—'
   const columnsFactory = (): ColumnOption<SmisHistoricalAccidentCase>[] => [
     { type: 'selection', width: 48 },
     {
@@ -197,7 +211,7 @@
       prop: 'occurrenceDate',
       label: '发生日期',
       width: 120,
-      formatter: (row) => dayjs(row.occurrenceDate).format('YYYY-MM-DD')
+      formatter: (row) => formatTableDate(row.occurrenceDate)
     },
     {
       prop: 'accidentCategories',
@@ -243,7 +257,7 @@
       prop: 'createTime',
       label: '创建时间',
       width: 168,
-      formatter: (row) => (row.createTime ? dayjs(row.createTime).format('YYYY-MM-DD HH:mm') : '—')
+      formatter: (row) => formatTableDateTime(row.createTime)
     },
     {
       prop: 'operation',
@@ -324,10 +338,16 @@
             accidentName: row.accidentName,
             occurrenceDate: dayjs(row.occurrenceDate).format('YYYY-MM-DD'),
             accidentCategories: categorySummary(row),
-            accidentLevel: dictLabel('smisAccidentLevel', row.accidentLevel),
+            accidentLevel:
+              userStore.getDictLabelByValue('smisAccidentLevel', row.accidentLevel) ||
+              row.accidentLevel ||
+              '未设置',
             accidentOrganizationName: row.accidentOrganizationName || '',
             applicableCompanyName: row.applicableCompanyName || '',
-            caseStatus: dictLabel('smisAccidentCaseStatus', row.caseStatus),
+            caseStatus:
+              userStore.getDictLabelByValue('smisAccidentCaseStatus', row.caseStatus) ||
+              row.caseStatus ||
+              '未设置',
             summary: row.summary || '',
             content: row.content,
             createTime: row.createTime ? dayjs(row.createTime).format('YYYY-MM-DD HH:mm:ss') : ''

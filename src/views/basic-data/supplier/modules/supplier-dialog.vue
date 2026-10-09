@@ -44,18 +44,14 @@
   import type { FormRules } from 'element-plus'
   import ArtDialog from '@/components/core/dialogs/art-dialog/index.vue'
   import type { ArtDialogExpose } from '@/components/core/dialogs/art-dialog/types'
-  import ArtForm, {
-    type FormItem,
-    type FormItemOption
-  } from '@/components/core/forms/art-form/index.vue'
+  import ArtForm, { type FormItem } from '@/components/core/forms/art-form/index.vue'
   import ArtAddressPicker from '@/components/core/forms/art-address-picker/index.vue'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
   import { useUserStore } from '@/store/modules/user'
   import { saveSupplier, type SmisSupplier, type SmisSupplierSavePayload } from '@smis/api'
   import {
     getSupplierDictionaryOptions,
-    SUPPLIER_DICTIONARY_CODES,
-    type SupplierDictionaryCode
+    SUPPLIER_DICTIONARY_CODES
   } from '@smis/domain/supplier-dictionary'
 
   export interface SupplierDialogOpenData {
@@ -117,9 +113,6 @@
     remark: ''
   })
 
-  const toOptions = (code: SupplierDictionaryCode): FormItemOption[] =>
-    getSupplierDictionaryOptions(code, getDictMap.value[code])
-
   const form = reactive<{
     model: SupplierForm
     items: ComputedRef<FormItem[]>
@@ -144,7 +137,10 @@
         label: '供应商类别',
         key: 'supplierCategory',
         type: 'select',
-        options: toOptions('supplierCategory'),
+        options: getSupplierDictionaryOptions(
+          'supplierCategory',
+          getDictMap.value.supplierCategory
+        ),
         props: { clearable: true, placeholder: '请选择供应商类别' }
       },
       {
@@ -158,7 +154,7 @@
         key: 'supplierType',
         type: 'select',
         span: 8,
-        options: toOptions('supplierType'),
+        options: getSupplierDictionaryOptions('supplierType', getDictMap.value.supplierType),
         props: { clearable: false, placeholder: '请选择供应商类型' }
       },
       {
@@ -166,7 +162,10 @@
         key: 'enterpriseNature',
         type: 'select',
         span: 8,
-        options: toOptions('enterpriseNature'),
+        options: getSupplierDictionaryOptions(
+          'enterpriseNature',
+          getDictMap.value.enterpriseNature
+        ),
         props: { clearable: true, placeholder: '请选择企业性质' }
       },
       {
@@ -174,7 +173,10 @@
         key: 'industry',
         type: 'select',
         span: 8,
-        options: toOptions('supplierIndustry'),
+        options: getSupplierDictionaryOptions(
+          'supplierIndustry',
+          getDictMap.value.supplierIndustry
+        ),
         props: { clearable: true, placeholder: '请选择行业' }
       },
       { label: '联系与位置', key: 'contactSection', type: 'divider', span: 24 },

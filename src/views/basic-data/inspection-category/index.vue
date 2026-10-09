@@ -40,11 +40,12 @@
 </template>
 
 <script setup lang="tsx">
+  import { createDateTimeFormatter } from '@/utils/ui/format'
+
   import { toDictionaryOption } from '@/utils/form/option'
 
   import type { TableRequestOptions } from '@/hooks/core/useTable'
   import BusinessTableIdentityCell from '@/components/business/business-table-identity-cell/index.vue'
-  import dayjs from 'dayjs'
   import type { SearchFormItem } from '@/components/core/forms/art-search-bar/index.vue'
   import type {
     ArtTableQueryExpose,
@@ -73,6 +74,12 @@
   import InspectionCategoryDialog, {
     type InspectionCategoryDialogOpenData
   } from './modules/inspection-category-dialog.vue'
+
+  const formatTableDateTime = createDateTimeFormatter({
+    format: 'YYYY-MM-DD HH:mm',
+    emptyText: '—',
+    invalidText: '—'
+  })
 
   defineOptions({ name: 'SmisInspectionCategory' })
 
@@ -262,7 +269,7 @@
       prop: 'updateTime',
       label: '更新时间',
       width: 164,
-      formatter: (row) => (row.updateTime ? dayjs(row.updateTime).format('YYYY-MM-DD HH:mm') : '—')
+      formatter: (row) => formatTableDateTime(row.updateTime)
     },
     {
       prop: 'operation',

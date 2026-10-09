@@ -48,6 +48,8 @@
 </template>
 
 <script setup lang="tsx">
+  import { createDateTimeFormatter } from '@/utils/ui/format'
+
   import { toDictionaryOption } from '@/utils/form/option'
 
   import type { TableRequestOptions } from '@/hooks/core/useTable'
@@ -85,6 +87,17 @@
     type AccidentReportDialogOpenData
   } from './modules/accident-report-dialog.vue'
 
+  const formatTableDateTime = createDateTimeFormatter({
+    format: 'YYYY-MM-DD HH:mm',
+    emptyText: '--',
+    invalidText: '--'
+  })
+  const formatTableDateTime2 = createDateTimeFormatter({
+    format: 'YYYY-MM-DD HH:mm',
+    emptyText: '—',
+    invalidText: '—'
+  })
+
   defineOptions({ name: 'SmisAccidentFlashReport' })
   interface AccidentSearchModel extends SmisAccidentReportSearchParams {
     accidentTimeRange?: [string, string]
@@ -104,8 +117,7 @@
   const currentEmployee = shallowRef<SmisAccidentEmployee | null>(null)
   const overview = reactive({ total: 0, currentMonth: 0, highSeverity: 0, affectedPeople: 0 })
   const dictOptions = (code: string) => (getDictMap.value[code] ?? []).map(toDictionaryOption)
-  const dictLabel = (code: string, value: string): string =>
-    getDictMap.value[code]?.find((item) => item.value === value)?.label || value
+
   const metrics = computed<BusinessWorkspaceMetric[]>(() => [
     {
       label: '事故快报',
@@ -188,8 +200,9 @@
     }
   }
   const categorySummary = (row: SmisAccidentReport): string =>
-    row.accidentCategories.map((value) => dictLabel('smisAccidentCategory', value)).join('、') ||
-    '—'
+    row.accidentCategories
+      .map((value) => userStore.getDictLabelByValue('smisAccidentCategory', value) || value)
+      .join('、') || '—'
   const columnsFactory = (): ColumnOption<SmisAccidentReport>[] => [
     { type: 'selection', width: 48 },
     { type: 'globalIndex', label: '序号', width: 68 },
@@ -213,7 +226,7 @@
       prop: 'accidentTime',
       label: '事故时间',
       width: 158,
-      formatter: (row) => dayjs(row.accidentTime).format('YYYY-MM-DD HH:mm')
+      formatter: (row) => formatTableDateTime(row.accidentTime)
     },
     { prop: 'accidentLocation', label: '事故地点', minWidth: 180, showOverflowTooltip: true },
     {
@@ -288,7 +301,7 @@
       prop: 'updateTime',
       label: '更新时间',
       width: 158,
-      formatter: (row) => (row.updateTime ? dayjs(row.updateTime).format('YYYY-MM-DD HH:mm') : '—')
+      formatter: (row) => formatTableDateTime2(row.updateTime)
     },
     {
       prop: 'operation',
@@ -370,7 +383,9 @@
             accidentLocation: row.accidentLocation,
             accidentCategories: categorySummary(row),
             operationAreaOrganizationName: row.operationAreaOrganizationName || '',
-            accidentLevel: dictLabel('smisAccidentLevel', row.accidentLevel),
+            accidentLevel:
+              userStore.getDictLabelByValue('smisAccidentLevel', row.accidentLevel) ||
+              row.accidentLevel,
             indirectEconomicLoss: Number(row.indirectEconomicLoss || 0),
             minorInjuryCount: row.minorInjuryCount,
             seriousInjuryCount: row.seriousInjuryCount,

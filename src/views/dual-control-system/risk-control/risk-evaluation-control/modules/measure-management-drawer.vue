@@ -161,7 +161,10 @@
                     <strong>{{ binding.position?.positionName || '岗位信息待同步' }}</strong>
                     <small>
                       每 {{ binding.frequencyCount }}
-                      {{ dictLabel('smisFrequencyUnit', binding.frequencyUnit) }}排查
+                      {{
+                        userStore.getDictLabelByValue('smisFrequencyUnit', binding.frequencyUnit) ||
+                        binding.frequencyUnit
+                      }}排查
                     </small>
                   </span>
                 </div>
@@ -219,7 +222,6 @@
   const state = reactive({ rows: [] as SmisRiskControlMeasure[], loading: false, error: '' })
   const { confirmDelete, confirmAction } = useArtFeedback()
   const userStore = useUserStore()
-  const { getDictMap } = storeToRefs(userStore)
 
   const riskPointName = computed(
     () => item.value?.riskPointRecord?.pointName || item.value?.riskPoint || '风险点'
@@ -229,8 +231,6 @@
     () =>
       uniq(state.rows.flatMap((row) => row.positions.map((binding) => binding.positionId))).length
   )
-  const dictLabel = (code: string, value: string): string =>
-    (getDictMap.value[code] ?? []).find((option) => option.value === value)?.label || value
 
   const loadMeasures = async (): Promise<void> => {
     if (!item.value) return

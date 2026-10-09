@@ -128,6 +128,7 @@
 </template>
 
 <script setup lang="tsx">
+  import { createDateTimeFormatter } from '@/utils/ui/format'
   import { replaceReactiveModel } from '@/utils/form/model'
   import dayjs from 'dayjs'
   import { ElTag } from 'element-plus'
@@ -282,8 +283,11 @@
   })
   const chartLabels = computed(() => organizationStats.value.map((item) => item.name))
   const chartValues = computed(() => organizationStats.value.map((item) => item.count))
-  const formatDateTime = (value?: string | null): string =>
-    value ? dayjs(value).format('YYYY-MM-DD HH:mm') : '从未上报'
+  const formatDateTime = createDateTimeFormatter({
+    format: 'YYYY-MM-DD HH:mm',
+    emptyText: '从未上报',
+    invalidText: '日期异常'
+  })
   const columns: ColumnOption<SmisNoHazardPersonnelRecord>[] = [
     { type: 'globalIndex', label: '序号', width: 66 },
     { prop: 'employeeNo', label: '工号', width: 136, fixed: 'left' },

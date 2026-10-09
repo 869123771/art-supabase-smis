@@ -65,6 +65,8 @@
 </template>
 
 <script setup lang="tsx">
+  import { createDateTimeFormatter } from '@/utils/ui/format'
+
   import type { TableRequestOptions } from '@/hooks/core/useTable'
   import dayjs from 'dayjs'
   import { ElImage } from 'element-plus'
@@ -102,6 +104,12 @@
   import MaterialDialog, { type MaterialDialogOpenData } from './modules/material-dialog.vue'
   import MaterialDetailDrawer from './modules/material-detail-drawer.vue'
 
+  const formatTableDateTime = createDateTimeFormatter({
+    format: 'YYYY-MM-DD HH:mm',
+    emptyText: '—',
+    invalidText: '—'
+  })
+
   defineOptions({ name: 'SmisMaterialInformation' })
   const ALL_KEY = 'all'
   type TableParams = SmisMaterialSearchParams &
@@ -125,7 +133,6 @@
   }
   const { confirmDelete } = useArtFeedback()
   const userStore = useUserStore()
-  const { getDictMap } = storeToRefs(userStore)
   const treeUtils = new TreeUtils({ idKey: 'id', parentKey: 'parentId', childrenKey: 'children' })
   const tableQueryRef = ref<ArtTableQueryExpose>()
   const dialogRef = ref<DialogExpose>()
@@ -171,11 +178,6 @@
       tone: 'warning'
     }
   ])
-  const dictLabel = (code: string, value?: string | null): string => {
-    if (!value) return ''
-    const item = (getDictMap.value[code] ?? []).find((option) => option.value === value)
-    return item?.label || item?.name || value
-  }
   const materialTypeLabel = (row: SmisMaterial): string =>
     row.materialTypeName ||
     materialTypes.value.find(
@@ -257,11 +259,14 @@
             drawingNo: row.drawingNo || '',
             basicUnit: unitLabel(row),
             materialType: materialTypeLabel(row),
-            materialSource: dictLabel('mdmMaterialSource', row.materialSource),
+            materialSource: userStore.getDictDisplayLabelByValue(
+              'mdmMaterialSource',
+              row.materialSource
+            ),
             brand: row.brand || '',
             materialComposition: row.materialComposition || '',
             placeOfOrigin: row.placeOfOrigin || '',
-            status: dictLabel('commonEnabledStatus', row.status),
+            status: userStore.getDictDisplayLabelByValue('commonEnabledStatus', row.status),
             description: row.description || '',
             updateTime: row.updateTime ? dayjs(row.updateTime).format('YYYY-MM-DD HH:mm:ss') : ''
           }))
@@ -404,7 +409,7 @@
       prop: 'updateTime',
       label: '更新时间',
       width: 168,
-      formatter: (row) => (row.updateTime ? dayjs(row.updateTime).format('YYYY-MM-DD HH:mm') : '—')
+      formatter: (row) => formatTableDateTime(row.updateTime)
     },
     {
       prop: 'operation',

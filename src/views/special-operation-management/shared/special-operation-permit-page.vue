@@ -83,8 +83,8 @@
 </template>
 
 <script setup lang="tsx">
+  import { createDateTimeFormatter } from '@/utils/ui/format'
   import type { TableRequestOptions } from '@/hooks/core/useTable'
-  import dayjs from 'dayjs'
   import type { SearchFormItem } from '@/components/core/forms/art-search-bar/index.vue'
   import type {
     ArtTableQueryExcelColumn,
@@ -377,8 +377,11 @@
       }
     }
   ])
-  const formatDate = (value?: string | null) =>
-    value ? dayjs(value).format('YYYY-MM-DD HH:mm') : '—'
+  const formatDate = createDateTimeFormatter({
+    format: 'YYYY-MM-DD HH:mm',
+    emptyText: '—',
+    invalidText: '—'
+  })
   const groupByTenant = (rows: SmisSpecialOperationPermit[]) => {
     const result = new Map<string, SmisSpecialOperationPermit[]>()
     rows.forEach((row) => result.set(row.tenantId, [...(result.get(row.tenantId) || []), row]))

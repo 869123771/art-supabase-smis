@@ -133,7 +133,7 @@
               :value="learningCourse.courseType"
               display="tag"
             />
-            ><h3>{{ learningCourse.courseName }}</h3
+            <h3>{{ learningCourse.courseName }}</h3
             ><p>{{ learningCourse.introduction || '暂无课程简介' }}</p
             ><div
               ><span>最低学习 {{ learningCourse.minimumLearningMinutes }} 分钟</span

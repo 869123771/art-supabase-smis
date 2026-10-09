@@ -15,7 +15,7 @@
     empty-text="暂无可选违章项目"
     empty-description="请先在反违章标准库中维护并启用违章项目。"
     @update:model-value="emit('update:modelValue', normalizeStringList($event))"
-    @update:selected-data="emit('update:selectedData', normalizeRows($event))"
+    @update:selected-data="emit('update:selectedData', $event)"
   >
     <template #empty>
       <SmisDataSourceEmptyActions source="antiViolationStandard" />
@@ -28,10 +28,7 @@
 
   import ArtTableMultipleSelect from '@/components/core/forms/art-data-select/table-multiple.vue'
   import SmisDataSourceEmptyActions from '@smis/views/components/smis-data-source-empty-actions.vue'
-  import type {
-    DataSelectColumn,
-    DataSelectRecord
-  } from '@/components/core/forms/art-data-select/types'
+  import type { DataSelectColumn } from '@/components/core/forms/art-data-select/types'
   import type { SmisAntiViolationStandardOption } from '@smis/api'
 
   defineOptions({ name: 'SmisAntiViolationStandardMultipleSelect' })
@@ -47,18 +44,14 @@
     'update:modelValue': [value: string[]]
     'update:selectedData': [rows: SmisAntiViolationStandardOption[]]
   }>()
-  const standard = (row: DataSelectRecord) => row as SmisAntiViolationStandardOption
-  const standardLabel = (row: DataSelectRecord) =>
-    `(${standard(row).standardCode}) ${standard(row).standardName}`
-  const standardDescription = (row: DataSelectRecord) =>
-    `${standard(row).categoryName} · 扣 ${standard(row).deductionPoints} 分`
-  const columns: DataSelectColumn[] = [
+  const standardLabel = (row: SmisAntiViolationStandardOption) =>
+    `(${row.standardCode}) ${row.standardName}`
+  const standardDescription = (row: SmisAntiViolationStandardOption) =>
+    `${row.categoryName} · 扣 ${row.deductionPoints} 分`
+  const columns: DataSelectColumn<SmisAntiViolationStandardOption>[] = [
     { prop: 'categoryName', label: '违章分类', minWidth: 150 },
     { prop: 'standardCode', label: '项目编码', width: 130 },
     { prop: 'standardName', label: '项目名称', minWidth: 300 },
     { prop: 'deductionPoints', label: '扣减分值', width: 110, align: 'right' }
   ]
-
-  const normalizeRows = (rows: DataSelectRecord[]): SmisAntiViolationStandardOption[] =>
-    rows.map(standard)
 </script>

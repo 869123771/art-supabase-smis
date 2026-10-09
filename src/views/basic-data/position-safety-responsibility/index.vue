@@ -667,7 +667,7 @@
       permission: 'SmisPositionSafetyResponsibility:Import',
       disabled: !canMaintainCurrentScope.value,
       importColumns,
-      importTransformer: (rows) => transformImportRows(rows),
+      importRecordTransformer: transformImportRows,
       importApi: async (rows) => {
         await importPositionSafetyResponsibilities(
           rows as PositionSafetyResponsibilitySavePayload[]

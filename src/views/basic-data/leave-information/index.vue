@@ -243,8 +243,6 @@
   })
   const getLeaveTypeLabel = (row: LeaveInformation): string =>
     row.leaveTypeName || row.leaveTypeCode || '—'
-  const resolveLeaveTypeLabel = (value: string): string =>
-    getDictMap.value.smisLeaveType?.find((item) => item.value === value)?.label || value
 
   const columnsFactory = (): ColumnOption<LeaveInformation>[] => [
     { type: 'selection', width: 48 },
@@ -397,7 +395,10 @@
         applicantName: row.applicant.employeeName,
         employeeNo: row.applicant.employeeNo,
         organizationName: row.organization?.organizationName || '',
-        leaveType: resolveLeaveTypeLabel(row.leaveTypeCode) || getLeaveTypeLabel(row),
+        leaveType:
+          userStore.getDictItemByValue('smisLeaveType', row.leaveTypeCode)?.label ||
+          row.leaveTypeCode ||
+          getLeaveTypeLabel(row),
         startDate: row.startDate,
         endDate: row.endDate,
         requestedAmount: row.requestedAmount || 0,
@@ -405,8 +406,7 @@
         proxyName: row.proxyEmployee?.employeeName || '',
         reason: row.reason,
         status:
-          getDictMap.value.hrLeaveRequestStatus?.find((item) => item.value === row.status)?.label ||
-          row.status
+          userStore.getDictItemByValue('hrLeaveRequestStatus', row.status)?.label || row.status
       }))
     })
   }

@@ -13,8 +13,8 @@
     description-key="accidentNo"
     empty-text="暂无可关联事故快报"
     empty-description="请先新增当前租户的事故快报，再返回关联事故。"
-    @update:model-value="emit('update:modelValue', normalizeValue($event))"
-    @update:selected-data="emit('update:selectedData', normalizeRows($event))"
+    @update:model-value="emit('update:modelValue', normalizeSingleStringKey($event))"
+    @update:selected-data="emit('update:selectedData', $event)"
   >
     <template #empty>
       <SmisDataSourceEmptyActions source="accident-report" />
@@ -23,16 +23,22 @@
 </template>
 
 <script setup lang="ts">
-  import dayjs from 'dayjs'
+  import { normalizeSingleStringKey } from '@/utils/form/normalize'
+  import { createDateTimeFormatter } from '@/utils/ui/format'
+
   import ArtTableSingleSelect from '@/components/core/forms/art-data-select/table-single.vue'
   import SmisDataSourceEmptyActions from '@smis/views/components/smis-data-source-empty-actions.vue'
   import type {
     DataSelectColumn,
-    DataSelectFetchParams,
-    DataSelectKey,
-    DataSelectRecord
+    DataSelectFetchParams
   } from '@/components/core/forms/art-data-select/types'
   import { fetchAccidentReportOptions, type SmisAccidentOption } from '@smis/api'
+
+  const formatTableDateTime = createDateTimeFormatter({
+    format: 'YYYY-MM-DD HH:mm',
+    emptyText: '--',
+    invalidText: '--'
+  })
 
   defineOptions({ name: 'SmisAccidentReportSelect' })
   withDefaults(defineProps<{ modelValue?: string; selectedData?: SmisAccidentOption[] }>(), {
@@ -43,14 +49,14 @@
     'update:modelValue': [value: string | undefined]
     'update:selectedData': [rows: SmisAccidentOption[]]
   }>()
-  const columns: DataSelectColumn[] = [
+  const columns: DataSelectColumn<SmisAccidentOption>[] = [
     { prop: 'accidentNo', label: '事故编号', minWidth: 150 },
     { prop: 'accidentName', label: '事故名称', minWidth: 220 },
     {
       prop: 'accidentTime',
       label: '事故时间',
       width: 160,
-      formatter: (row) => dayjs(row.accidentTime).format('YYYY-MM-DD HH:mm')
+      formatter: (row) => formatTableDateTime(row.accidentTime)
     },
     { prop: 'accidentLocation', label: '事故地点', minWidth: 170 }
   ]
@@ -58,16 +64,4 @@
     const records = await fetchAccidentReportOptions(params.keyword)
     return { data: records, total: records.length }
   }
-  const normalizeValue = (
-    value: DataSelectKey | DataSelectKey[] | undefined
-  ): string | undefined =>
-    Array.isArray(value)
-      ? value[0] == null
-        ? undefined
-        : String(value[0])
-      : value == null
-        ? undefined
-        : String(value)
-  const normalizeRows = (rows: DataSelectRecord[]): SmisAccidentOption[] =>
-    rows as SmisAccidentOption[]
 </script>

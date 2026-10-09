@@ -55,13 +55,14 @@
   </ArtPermissionGuard>
 </template>
 <script setup lang="tsx">
+  import { createDateTimeFormatter } from '@/utils/ui/format'
+
   import { toDictionaryOption } from '@/utils/form/option'
 
   import { replaceReactiveModel } from '@/utils/form/model'
   import type { DataSelectFetchParams } from '@/components/core/forms/art-data-select/types'
   import type { TableRequestOptions } from '@/hooks/core/useTable'
   import BusinessTableIdentityCell from '@/components/business/business-table-identity-cell/index.vue'
-  import dayjs from 'dayjs'
   import { sumBy } from 'lodash-es'
   import type { SearchFormItem } from '@/components/core/forms/art-search-bar/index.vue'
   import type {
@@ -101,6 +102,13 @@
     type SmisHazardousWasteWarehouse
   } from '@smis/api'
   import DocumentDialog, { type DocumentDialogOpenData } from './document-dialog.vue'
+
+  const formatTableDateTime = createDateTimeFormatter({
+    format: 'YYYY-MM-DD HH:mm',
+    emptyText: '--',
+    invalidText: '--'
+  })
+
   interface DocumentPermissions {
     view: string
     add: string
@@ -260,8 +268,7 @@
   const refresh = async () => {
     await tableQueryRef.value?.getData()
   }
-  const unitLabel = (value: string) =>
-    getDictMap.value.smisMaterialUnit?.find((item) => item.value === value)?.label || value
+
   const exportColumns = [
     { key: 'documentNo', title: '单据编码' },
     { key: 'operationDate', title: direction.value === 'inbound' ? '入库日期' : '出库日期' },
@@ -325,7 +332,10 @@
             .map((row) => ({
               ...row,
               itemSummary: row.items
-                .map((item) => `${item.wasteName} × ${item.quantity}${unitLabel(item.unit)}`)
+                .map(
+                  (item) =>
+                    `${item.wasteName} × ${item.quantity}${userStore.getDictLabelByValue('smisMaterialUnit', item.unit) || item.unit}`
+                )
                 .join('；'),
               statusLabel:
                 statusOptions.value.find((item) => item.value === row.status)?.label || row.status
@@ -449,7 +459,10 @@
         showOverflowTooltip: true,
         formatter: (row) =>
           row.items
-            .map((item) => `${item.wasteName} × ${item.quantity}${unitLabel(item.unit)}`)
+            .map(
+              (item) =>
+                `${item.wasteName} × ${item.quantity}${userStore.getDictLabelByValue('smisMaterialUnit', item.unit) || item.unit}`
+            )
             .join('；')
       },
       {
@@ -476,7 +489,7 @@
         prop: 'createTime',
         label: '创建时间',
         width: 164,
-        formatter: (row) => dayjs(row.createTime).format('YYYY-MM-DD HH:mm')
+        formatter: (row) => formatTableDateTime(row.createTime)
       },
       {
         prop: 'operation',

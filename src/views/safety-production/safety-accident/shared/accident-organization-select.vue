@@ -14,19 +14,17 @@
     clearable
     empty-text="暂无可选组织"
     empty-description="请先在系统组织管理中维护当前租户的公司、部门或作业区。"
-    @update:model-value="emit('update:modelValue', normalizeValue($event))"
+    @update:model-value="emit('update:modelValue', normalizeSingleStringKey($event))"
   >
     <template #empty><SmisDataSourceEmptyActions source="organization" /></template>
   </ArtTreeSingleSelect>
 </template>
 
 <script setup lang="ts">
+  import { normalizeSingleStringKey } from '@/utils/form/normalize'
   import ArtTreeSingleSelect from '@/components/core/forms/art-data-select/tree-single.vue'
   import SmisDataSourceEmptyActions from '@smis/views/components/smis-data-source-empty-actions.vue'
-  import type {
-    DataSelectKey,
-    DataSelectRecord
-  } from '@/components/core/forms/art-data-select/types'
+  import type { DataSelectRecord } from '@/components/core/forms/art-data-select/types'
   import TreeUtils from '@/utils/tree'
   import type { SmisTreeOrganization } from '@smis/api'
 
@@ -59,8 +57,4 @@
   })
   const organizationDescription = (row: DataSelectRecord): string =>
     [row.organizationCode, row.organizationType].filter(Boolean).join(' · ')
-  const normalizeValue = (
-    value: DataSelectKey | DataSelectKey[] | undefined
-  ): string | undefined =>
-    typeof value === 'string' ? value : value == null ? undefined : String(value)
 </script>

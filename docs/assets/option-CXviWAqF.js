@@ -1,1 +1,0 @@
-function e(e){return{label:e.label||e.name,value:e.value}}export{e as t};

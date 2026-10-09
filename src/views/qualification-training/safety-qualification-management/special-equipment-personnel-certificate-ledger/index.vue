@@ -294,14 +294,15 @@
     categoryOptions.value.find((item) => item.value === value)?.label || value
   const warningLabel = (value: string): string =>
     warningOptions.value.find((item) => item.value === value)?.label || value
-  const dictionaryLabel = (code: string, value: string): string =>
-    (getDictMap.value[code] ?? []).find((item) => item.value === value)?.label || value
+
   const categoryDetail = (row: SmisPersonnelCertificate): string => {
     const meta = getCertificateCategoryMeta(row.certificateCategory)
     const details = (meta.extraFields ?? []).flatMap((field) => {
       const value = row.extraFields[field.key]?.trim()
       if (!value) return []
-      return [`${field.label}：${field.dictCode ? dictionaryLabel(field.dictCode, value) : value}`]
+      return [
+        `${field.label}：${field.dictCode ? userStore.getDictItemByValue(field.dictCode, value)?.label || value : value}`
+      ]
     })
     return details.join('；') || '—'
   }

@@ -62,12 +62,13 @@
 </template>
 
 <script setup lang="tsx">
+  import { createDateTimeFormatter } from '@/utils/ui/format'
+
   import { toDictionaryOption } from '@/utils/form/option'
 
   import type { TableRequestOptions } from '@/hooks/core/useTable'
   import { getFriendlySupabaseErrorMessage } from '@/utils/supabase'
   import { normalizeNullableText } from '@/utils/form/normalize'
-  import dayjs from 'dayjs'
   import { ElImage, ElMessage } from 'element-plus'
   import type { SearchFormItem } from '@/components/core/forms/art-search-bar/index.vue'
   import type {
@@ -109,6 +110,12 @@
   } from './modules/hazard-source-dialog.vue'
   import HazardStatisticsDialog from './modules/hazard-statistics-dialog.vue'
   import HazardSourceDetailDrawer from './modules/hazard-source-detail-drawer.vue'
+
+  const formatTableDateTime = createDateTimeFormatter({
+    format: 'YYYY-MM-DD HH:mm',
+    emptyText: '—',
+    invalidText: '—'
+  })
 
   defineOptions({ name: 'SmisHazardSourceLedger' })
   type TableParams = SmisHazardSourceSearchParams &
@@ -355,7 +362,7 @@
       prop: 'updateTime',
       label: '更新时间',
       width: 164,
-      formatter: (row) => (row.updateTime ? dayjs(row.updateTime).format('YYYY-MM-DD HH:mm') : '—')
+      formatter: (row) => formatTableDateTime(row.updateTime)
     },
     {
       prop: 'operation',
@@ -512,12 +519,10 @@
         ).map((row) => ({
           hazardName: row.hazardName,
           siteName: row.siteName,
-          hazardLevel: getDictMap.value.smisHazardSourceLevel?.find(
-            (item) => item.value === row.hazardLevel
-          )?.label,
-          riskLevel: getDictMap.value.smisHazardSourceRiskLevel?.find(
-            (item) => item.value === row.riskLevel
-          )?.label,
+          hazardLevel: userStore.getDictItemByValue('smisHazardSourceLevel', row.hazardLevel)
+            ?.label,
+          riskLevel: userStore.getDictItemByValue('smisHazardSourceRiskLevel', row.riskLevel)
+            ?.label,
           controlOrganizationName: row.controlOrganizationName,
           responsibleEmployeeNo: row.responsibleEmployeeNo || '',
           quantity: row.quantity ?? '',

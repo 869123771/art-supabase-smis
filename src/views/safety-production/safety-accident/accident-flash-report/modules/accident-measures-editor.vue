@@ -29,7 +29,8 @@
 </template>
 
 <script setup lang="tsx">
-  import { cloneDeep, isEqual, omit } from 'lodash-es'
+  import { cloneDeep, isEqual } from 'lodash-es'
+  import { serializeOrderedEditorRows } from '@/utils/form/model'
   import { ref, watch } from 'vue'
   import { ElButton, ElDatePicker, ElInput } from 'element-plus'
   import type { EmployeeIntegrationItem } from '@/api/integration/employees'
@@ -61,8 +62,6 @@
   const tableRef = ref<ArtTableExpose>()
   let localSequence = 0
   const createLocalKey = (): string => `measure-${Date.now()}-${localSequence++}`
-  const toModelRows = (): SmisAccidentPreventionMeasure[] =>
-    rows.value.map((row, index) => ({ ...omit(row, 'localKey'), sort: index }))
   const toEditorRows = (value: SmisAccidentPreventionMeasure[]): EditorRow[] => {
     const currentRows = rows.value
     return cloneDeep(value).map((item, index) => ({
@@ -70,11 +69,11 @@
       localKey: item.id || currentRows[index]?.localKey || createLocalKey()
     }))
   }
-  const sync = (): void => emit('update:modelValue', toModelRows())
+  const sync = (): void => emit('update:modelValue', serializeOrderedEditorRows(rows.value))
   watch(
     () => props.modelValue,
     (value) => {
-      if (isEqual(value, toModelRows())) return
+      if (isEqual(value, serializeOrderedEditorRows(rows.value))) return
       rows.value = toEditorRows(value)
     },
     { immediate: true }
@@ -116,7 +115,7 @@
           maxlength={1000}
           showWordLimit
           resize="none"
-          class="accident-measures-editor__measure-input"
+          class="w-full!"
           placeholder="请输入可执行、可核验的防范措施"
         />
       )
@@ -132,7 +131,7 @@
           type="date"
           valueFormat="YYYY-MM-DD"
           placeholder="选择日期"
-          class="!w-full"
+          class="w-full!"
         />
       )
     },
@@ -204,10 +203,6 @@
 
     :deep(.el-table__cell) {
       vertical-align: top;
-    }
-
-    :deep(.accident-measures-editor__measure-input) {
-      width: 100%;
     }
 
     @media (width <= 760px) {

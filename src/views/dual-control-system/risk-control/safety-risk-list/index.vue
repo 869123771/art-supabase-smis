@@ -42,6 +42,8 @@
 </template>
 
 <script setup lang="tsx">
+  import { createDateTimeFormatter } from '@/utils/ui/format'
+
   import { toDictionaryOption } from '@/utils/form/option'
 
   import type { TableRequestOptions } from '@/hooks/core/useTable'
@@ -79,6 +81,12 @@
     type SmisSafetyRiskSearchParams
   } from '@smis/api'
   import SafetyRiskDialog, { type SafetyRiskDialogOpenData } from './modules/safety-risk-dialog.vue'
+
+  const formatTableDateTime = createDateTimeFormatter({
+    format: 'YYYY-MM-DD HH:mm',
+    emptyText: '--',
+    invalidText: '--'
+  })
 
   defineOptions({ name: 'SmisDualControlSafetyRiskList' })
 
@@ -390,7 +398,7 @@
       formatter: (row) => (
         <div class="safety-risk-page__stack">
           <strong>{row.identifiedBy || '系统记录'}</strong>
-          <small>{dayjs(row.identifiedAt).format('YYYY-MM-DD HH:mm')}</small>
+          <small>{formatTableDateTime(row.identifiedAt)}</small>
         </div>
       )
     },

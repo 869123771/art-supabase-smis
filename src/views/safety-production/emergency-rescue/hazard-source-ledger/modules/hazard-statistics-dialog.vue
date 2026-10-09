@@ -72,7 +72,6 @@
     organizations: SmisTreeOrganization[]
   }
   const userStore = useUserStore()
-  const { getDictMap } = storeToRefs(userStore)
   const dialogRef = ref<ArtDialogExpose<HazardStatisticsDialogOpenData>>()
   const organizations = shallowRef<SmisTreeOrganization[]>([])
   const organizationId = ref<string>()
@@ -83,8 +82,8 @@
     statistics.rows.map((row) => ({
       ...row,
       label:
-        getDictMap.value.smisHazardSourceLevel?.find((item) => item.value === row.hazardLevel)
-          ?.label || row.hazardLevel
+        userStore.getDictItemByValue('smisHazardSourceLevel', row.hazardLevel)?.label ||
+        row.hazardLevel
     }))
   )
   const loadStatistics = async (): Promise<void> => {

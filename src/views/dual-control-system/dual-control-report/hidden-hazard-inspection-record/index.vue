@@ -147,7 +147,6 @@
   })
   const query = reactive<RecordQuery>(initialQuery())
   const userStore = useUserStore()
-  const { getDictMap } = storeToRefs(userStore)
   const state = reactive<{
     loading: boolean
     error: string | null
@@ -255,8 +254,7 @@
     })
   }
   const formatDateTime = createDateTimeFormatter({ format: 'YYYY-MM-DD HH:mm', emptyText: '—' })
-  const dictLabel = (code: string, value: string): string =>
-    (getDictMap.value[code] ?? []).find((item) => item.value === value)?.label || value
+
   const frequencyLabel = (unit: string, count: number): string =>
     `${count || 1}${({ shift: '班', day: '日', week: '周', ten_day: '旬', month: '月', quarter: '季', year: '年' } as Record<string, string>)[unit] || unit}`
   const personnelColumns: ColumnOption<SmisHiddenHazardInspectionPersonnelStat>[] = [
@@ -311,7 +309,8 @@
   const exportRows = computed(() =>
     state.data.details.map((row) => ({
       ...row,
-      status: dictLabel('smisRiskInspectionTaskStatus', row.status),
+      status:
+        userStore.getDictLabelByValue('smisRiskInspectionTaskStatus', row.status) || row.status,
       frequency: frequencyLabel(row.frequencyUnit, row.repeatFrequency),
       plannedStartAt: formatDateTime(row.plannedStartAt),
       plannedEndAt: formatDateTime(row.plannedEndAt),

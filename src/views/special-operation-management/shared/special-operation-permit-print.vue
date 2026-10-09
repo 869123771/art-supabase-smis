@@ -173,6 +173,7 @@
 </template>
 
 <script setup lang="ts">
+  import { createDateTimeFormatter } from '@/utils/ui/format'
   import dayjs from 'dayjs'
   import type {
     SmisSpecialOperationFieldDefinition,
@@ -216,8 +217,11 @@
   )
   const statusLabel = computed(() => statusLabels[props.record.status])
   const printedAt = dayjs().format('YYYY-MM-DD HH:mm')
-  const formatDate = (value?: string | null) =>
-    value ? dayjs(value).format('YYYY-MM-DD HH:mm') : '—'
+  const formatDate = createDateTimeFormatter({
+    format: 'YYYY-MM-DD HH:mm',
+    emptyText: '—',
+    invalidText: '—'
+  })
   const formatValue = (value: unknown): string => {
     if (value === null || value === undefined || value === '') return '—'
     if (Array.isArray(value)) return value.map((item) => String(item)).join('、') || '—'

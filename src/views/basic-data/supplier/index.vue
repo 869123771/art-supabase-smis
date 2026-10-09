@@ -41,8 +41,9 @@
 </template>
 
 <script setup lang="tsx">
+  import { createDateTimeFormatter } from '@/utils/ui/format'
+
   import type { TableRequestOptions } from '@/hooks/core/useTable'
-  import dayjs from 'dayjs'
   import type { SearchFormItem } from '@/components/core/forms/art-search-bar/index.vue'
   import type {
     ArtTableQueryExcelColumn,
@@ -75,6 +76,12 @@
     type SupplierDictionaryCode
   } from '@smis/domain/supplier-dictionary'
 
+  const formatTableDateTime = createDateTimeFormatter({
+    format: 'YYYY-MM-DD HH:mm',
+    emptyText: '—',
+    invalidText: '—'
+  })
+
   defineOptions({ name: 'SmisSupplier' })
 
   type TableParams = SmisSupplierSearchParams &
@@ -101,9 +108,6 @@
     categoryCount: 0,
     contactComplete: 0
   })
-
-  const toOptions = (code: SupplierDictionaryCode) =>
-    getSupplierDictionaryOptions(code, getDictMap.value[code])
 
   const resolveDictLabel = (code: SupplierDictionaryCode, value?: string | null) =>
     resolveSupplierDictionaryLabel(code, value, getDictMap.value[code])
@@ -211,25 +215,50 @@
         label: '供应商类别',
         key: 'supplierCategory',
         type: 'select',
-        props: { options: toOptions('supplierCategory'), clearable: true, placeholder: '全部类别' }
+        props: {
+          options: getSupplierDictionaryOptions(
+            'supplierCategory',
+            getDictMap.value.supplierCategory
+          ),
+          clearable: true,
+          placeholder: '全部类别'
+        }
       },
       {
         label: '供应商类型',
         key: 'supplierType',
         type: 'select',
-        props: { options: toOptions('supplierType'), clearable: true, placeholder: '全部类型' }
+        props: {
+          options: getSupplierDictionaryOptions('supplierType', getDictMap.value.supplierType),
+          clearable: true,
+          placeholder: '全部类型'
+        }
       },
       {
         label: '企业性质',
         key: 'enterpriseNature',
         type: 'select',
-        props: { options: toOptions('enterpriseNature'), clearable: true, placeholder: '全部性质' }
+        props: {
+          options: getSupplierDictionaryOptions(
+            'enterpriseNature',
+            getDictMap.value.enterpriseNature
+          ),
+          clearable: true,
+          placeholder: '全部性质'
+        }
       },
       {
         label: '行业',
         key: 'industry',
         type: 'select',
-        props: { options: toOptions('supplierIndustry'), clearable: true, placeholder: '全部行业' }
+        props: {
+          options: getSupplierDictionaryOptions(
+            'supplierIndustry',
+            getDictMap.value.supplierIndustry
+          ),
+          clearable: true,
+          placeholder: '全部行业'
+        }
       }
     ]),
     headerActions
@@ -306,7 +335,7 @@
       prop: 'updateTime',
       label: '更新时间',
       width: 164,
-      formatter: (row) => (row.updateTime ? dayjs(row.updateTime).format('YYYY-MM-DD HH:mm') : '—')
+      formatter: (row) => formatTableDateTime(row.updateTime)
     },
     {
       prop: 'operation',

@@ -105,8 +105,6 @@
   })
   const form = reactive<PositionRiskControl>(createInitialForm())
 
-  const toOptions = (code: string): FormItemOption[] =>
-    (getDictMap.value[code] ?? []).map(toDictionaryOption)
   const primaryCategoryItems = computed(() => getDictMap.value.smisPrimaryHazardCategory ?? [])
   const secondaryCategoryItems = computed(() => getDictMap.value.smisSecondaryHazardCategory ?? [])
   const selectedPrimaryCategory = computed(() =>
@@ -167,14 +165,14 @@
       label: '管控措施类别',
       key: 'controlMeasureCategory',
       type: 'select',
-      options: toOptions('smisControlMeasureCategory'),
+      options: (getDictMap.value.smisControlMeasureCategory ?? []).map(toDictionaryOption),
       props: { placeholder: '请选择管控措施类别' }
     },
     {
       label: '防控级别',
       key: 'controlLevel',
       type: 'select',
-      options: toOptions('smisControlLevel'),
+      options: (getDictMap.value.smisControlLevel ?? []).map(toDictionaryOption),
       props: { placeholder: '请选择防控级别' }
     },
     { label: '依据与失效', key: 'basisSection', type: 'divider', span: 24 },
@@ -209,7 +207,7 @@
       label: '一级隐患类别',
       key: 'primaryHazardCategory',
       type: 'select',
-      options: toOptions('smisPrimaryHazardCategory'),
+      options: (getDictMap.value.smisPrimaryHazardCategory ?? []).map(toDictionaryOption),
       props: {
         placeholder: '请选择一级隐患类别',
         onChange: () => {
@@ -231,7 +229,7 @@
       label: '隐患级别',
       key: 'hazardLevel',
       type: 'select',
-      options: toOptions('smisHazardLevel'),
+      options: (getDictMap.value.smisHazardLevel ?? []).map(toDictionaryOption),
       props: { placeholder: '请选择隐患级别' }
     },
     {

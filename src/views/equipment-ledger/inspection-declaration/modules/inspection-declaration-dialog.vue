@@ -10,7 +10,6 @@
         v-if="categoryLoadError"
         size="compact"
         :error="'检验类别加载失败，请重新加载'"
-        :loading="categoriesLoading"
         @retry="reloadCategoryOptions"
       />
 
@@ -92,6 +91,7 @@
 </template>
 
 <script setup lang="ts">
+  import { buildSupabasePageRange } from '@/utils/supabase/pagination'
   import { toDictionaryOption } from '@/utils/form/option'
 
   import { notifyFriendlyError } from '@/hooks/core/useArtFeedback'
@@ -402,11 +402,11 @@
     { prop: 'contactPhone', label: '联系电话', minWidth: 140 }
   ]
   const fetchEquipmentOptions = async (params: DataSelectFetchParams) => {
-    const from = (params.page - 1) * params.pageSize
+    const { from, to } = buildSupabasePageRange({ current: params.page, size: params.pageSize })
     const result = await fetchEquipmentLedgerList({
       keyword: params.keyword,
       from,
-      to: from + params.pageSize - 1
+      to
     })
     return {
       data: result.data.map((row) => ({
@@ -418,12 +418,12 @@
     }
   }
   const fetchInstitutionOptions = async (params: DataSelectFetchParams) => {
-    const from = (params.page - 1) * params.pageSize
+    const { from, to } = buildSupabasePageRange({ current: params.page, size: params.pageSize })
     const result = await fetchSupplierList({
       keyword: params.keyword,
       supplierCategory: 'inspection_agency',
       from,
-      to: from + params.pageSize - 1
+      to
     })
     return { data: result.data as DataSelectRecord[], total: result.total }
   }

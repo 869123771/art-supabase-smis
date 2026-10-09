@@ -92,7 +92,7 @@
     organizationTree,
     organizationTreeProps,
     dictionaryOptions,
-    dictionaryLabel,
+    getDictDisplayLabelByValue,
     loadOptions
   } = useChecklistOptions([
     'smisRiskLevel',
@@ -205,7 +205,7 @@
       minWidth: 160,
       formatter: (row) =>
         row.accidentTypes
-          ?.map((item) => dictionaryLabel('smisAccidentCategory', item))
+          ?.map((item) => getDictDisplayLabelByValue('smisAccidentCategory', item, item || '—'))
           .join('、') || '—'
     },
     {
@@ -236,7 +236,11 @@
       width: 120,
       formatter: (row) => (
         <ElTag effect="plain">
-          {dictionaryLabel('smisControlMeasureCategory', row.controlMeasureCategory)}
+          {getDictDisplayLabelByValue(
+            'smisControlMeasureCategory',
+            row.controlMeasureCategory,
+            row.controlMeasureCategory || '—'
+          )}
         </ElTag>
       )
     },
@@ -286,11 +290,12 @@
     rows.map((row) => ({
       ...row,
       accidentTypes: row.accidentTypes
-        .map((item) => dictionaryLabel('smisAccidentCategory', item))
+        .map((item) => getDictDisplayLabelByValue('smisAccidentCategory', item, item || '—'))
         .join('、'),
-      controlMeasureCategory: dictionaryLabel(
+      controlMeasureCategory: getDictDisplayLabelByValue(
         'smisControlMeasureCategory',
-        row.controlMeasureCategory
+        row.controlMeasureCategory,
+        row.controlMeasureCategory || '—'
       ),
       frequencyCount: formatChecklistFrequency(row.frequencyCount, row.frequencyUnit),
       identificationUnits: row.identificationUnits.map((item) => item.organizationName).join('、')

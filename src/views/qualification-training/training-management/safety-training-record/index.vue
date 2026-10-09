@@ -39,9 +39,10 @@
 </template>
 
 <script setup lang="tsx">
+  import { createDateTimeFormatter } from '@/utils/ui/format'
+
   import { useAuth } from '@/hooks/core/useAuth'
   import type { TableRequestOptions } from '@/hooks/core/useTable'
-  import dayjs from 'dayjs'
   import { ElProgress } from 'element-plus'
   import type { SearchFormItem } from '@/components/core/forms/art-search-bar/index.vue'
   import type {
@@ -77,6 +78,17 @@
     trainingRecordStatusLabel,
     trainingRecordStatusOptions
   } from './modules/training-record-status'
+
+  const formatTableDateTime = createDateTimeFormatter({
+    format: 'MM-DD HH:mm',
+    emptyText: '--',
+    invalidText: '--'
+  })
+  const formatTableDateTime2 = createDateTimeFormatter({
+    format: 'YYYY-MM-DD HH:mm',
+    emptyText: '—',
+    invalidText: '—'
+  })
 
   defineOptions({ name: 'SmisSafetyTrainingRecord' })
   type TableParams = SmisSafetyTrainingRecordSearchParams &
@@ -254,7 +266,7 @@
       width: 220,
       formatter: (row) =>
         row.actualStartAt && row.actualEndAt
-          ? `${dayjs(row.actualStartAt).format('MM-DD HH:mm')} 至 ${dayjs(row.actualEndAt).format('MM-DD HH:mm')}`
+          ? `${formatTableDateTime(row.actualStartAt)} 至 ${formatTableDateTime(row.actualEndAt)}`
           : '待填写'
     },
     {
@@ -308,8 +320,7 @@
       prop: 'submittedAt',
       label: '归档时间',
       width: 158,
-      formatter: (row) =>
-        row.submittedAt ? dayjs(row.submittedAt).format('YYYY-MM-DD HH:mm') : '—'
+      formatter: (row) => formatTableDateTime2(row.submittedAt)
     },
     {
       prop: 'operation',

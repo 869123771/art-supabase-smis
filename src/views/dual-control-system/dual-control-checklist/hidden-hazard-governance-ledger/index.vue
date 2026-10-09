@@ -43,8 +43,8 @@
 </template>
 
 <script setup lang="tsx">
+  import { createDateTimeFormatter } from '@/utils/ui/format'
   import type { TableRequestOptions } from '@/hooks/core/useTable'
-  import dayjs from 'dayjs'
   import { ElTag } from 'element-plus'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import ArtDictDisplay from '@/components/core/base/art-dict-display/index.vue'
@@ -98,7 +98,7 @@
     organizationTree,
     organizationTreeProps,
     dictionaryOptions,
-    dictionaryLabel,
+    getDictDisplayLabelByValue,
     loadOptions
   } = useChecklistOptions([
     'smisHiddenHazardGovernanceStatus',
@@ -207,8 +207,11 @@
       }
     }
   ])
-  const formatDate = (value?: string | null): string =>
-    value ? dayjs(value).format('YYYY-MM-DD HH:mm') : '—'
+  const formatDate = createDateTimeFormatter({
+    format: 'YYYY-MM-DD HH:mm',
+    emptyText: '—',
+    invalidText: '—'
+  })
   const openDetail = (row: SmisHiddenHazardLedgerRecord): void => {
     void detailRef.value?.handleOpen({ row })
   }
@@ -222,7 +225,13 @@
       formatter: (row) => (
         <button type="button" class="hazard-ledger-page__link" onClick={() => openDetail(row)}>
           <strong>{row.hazardNo}</strong>
-          <small>{dictionaryLabel('smisHiddenHazardSourceType', row.sourceType)}</small>
+          <small>
+            {getDictDisplayLabelByValue(
+              'smisHiddenHazardSourceType',
+              row.sourceType,
+              row.sourceType || '—'
+            )}
+          </small>
         </button>
       )
     },
@@ -337,9 +346,21 @@
   ]
   const mapExportRow = (row: SmisHiddenHazardLedgerRecord) => ({
     ...row,
-    statusText: dictionaryLabel('smisHiddenHazardGovernanceStatus', row.status),
-    sourceText: dictionaryLabel('smisHiddenHazardSourceType', row.sourceType),
-    hazardLevelText: dictionaryLabel('smisHazardLevel', row.hazardLevel),
+    statusText: getDictDisplayLabelByValue(
+      'smisHiddenHazardGovernanceStatus',
+      row.status,
+      row.status || '—'
+    ),
+    sourceText: getDictDisplayLabelByValue(
+      'smisHiddenHazardSourceType',
+      row.sourceType,
+      row.sourceType || '—'
+    ),
+    hazardLevelText: getDictDisplayLabelByValue(
+      'smisHazardLevel',
+      row.hazardLevel,
+      row.hazardLevel || '—'
+    ),
     reportedAtText: formatDate(row.reportedAt),
     rectificationDeadlineText: formatDate(row.rectificationDeadline),
     rectificationCompletedAtText: formatDate(row.rectificationCompletedAt),

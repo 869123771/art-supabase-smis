@@ -33,8 +33,7 @@ export function useChecklistOptions(dictionaryCodes: readonly string[] = []) {
     value: 'id'
   }
   const dictionaryOptions = (code: string) => (getDictMap.value[code] ?? []).map(toDictionaryOption)
-  const dictionaryLabel = (code: string, value?: string | null): string =>
-    value ? dictionaryOptions(code).find((item) => item.value === value)?.label || value : '—'
+  const { getDictDisplayLabelByValue } = userStore
   const loadOptions = async (): Promise<void> => {
     const [organizationResponse] = await Promise.all([
       fetchOrganizationOptionsTree({ status: '1' }),
@@ -48,7 +47,7 @@ export function useChecklistOptions(dictionaryCodes: readonly string[] = []) {
     flatOrganizations,
     organizationTreeProps,
     dictionaryOptions,
-    dictionaryLabel,
+    getDictDisplayLabelByValue,
     loadOptions
   }
 }

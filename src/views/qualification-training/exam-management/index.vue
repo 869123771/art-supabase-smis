@@ -350,7 +350,7 @@
                 :value="question.questionType"
                 display="tag"
               />
-              ><strong>{{ index + 1 }}. {{ question.stem }}</strong
+              <strong>{{ index + 1 }}. {{ question.stem }}</strong
               ><span>{{ question.score }} 分</span></header
             ><div class="exam-page__detail-options"
               ><p
@@ -371,7 +371,7 @@
         ></div>
       </ArtDialog>
 
-      <ArtDialog ref="sessionDialogRef" size="full" @closed="stopSessionClock">
+      <ArtDialog ref="sessionDialogRef" size="full" :show-footer="false" @closed="stopSessionClock">
         <div v-if="session" class="exam-session"
           ><aside
             ><small>剩余时间</small><strong>{{ remainingText }}</strong
@@ -397,7 +397,7 @@
                   :value="currentQuestion.questionType"
                   display="tag"
                 />
-                ><span>第 {{ currentIndex + 1 }} / {{ session.questions.length }} 题</span></div
+                <span>第 {{ currentIndex + 1 }} / {{ session.questions.length }} 题</span></div
               ><b>{{ currentQuestion.score }} 分</b></header
             ><h3>{{ currentQuestion.stem }}</h3
             ><ElCheckboxGroup

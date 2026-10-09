@@ -100,7 +100,7 @@
     organizationTree,
     organizationTreeProps,
     dictionaryOptions,
-    dictionaryLabel,
+    getDictDisplayLabelByValue,
     loadOptions
   } = useChecklistOptions(['smisRiskLevel', 'smisAccidentCategory'])
 
@@ -196,7 +196,9 @@
   ])
   const accidentText = (values: string[]): string =>
     values.length
-      ? values.map((value) => dictionaryLabel('smisAccidentCategory', value)).join('、')
+      ? values
+          .map((value) => getDictDisplayLabelByValue('smisAccidentCategory', value, value || '—'))
+          .join('、')
       : '—'
   const assessmentText = (row: SmisRiskControlInformationRecord): string => {
     if (!row.methodCode) return '待评价'

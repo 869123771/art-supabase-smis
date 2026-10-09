@@ -43,11 +43,12 @@
 </template>
 
 <script setup lang="tsx">
+  import { createDateTimeFormatter } from '@/utils/ui/format'
+
   import { toDictionaryOption } from '@/utils/form/option'
 
   import { replaceReactiveModel } from '@/utils/form/model'
   import type { TableRequestOptions } from '@/hooks/core/useTable'
-  import dayjs from 'dayjs'
   import { ElTag } from 'element-plus'
   import type { SearchFormItem } from '@/components/core/forms/art-search-bar/index.vue'
   import type {
@@ -85,6 +86,12 @@
   } from './modules/announcement-editor-dialog.vue'
   import AnnouncementDetailDialog from './modules/announcement-detail-dialog.vue'
   import AnnouncementReadStatsDialog from './modules/announcement-read-stats-dialog.vue'
+
+  const formatTableDateTime = createDateTimeFormatter({
+    format: 'YYYY-MM-DD HH:mm',
+    emptyText: '待发布',
+    invalidText: '待发布'
+  })
 
   defineOptions({ name: 'SmisViolationAnnouncement' })
   type TableParams = SmisAnnouncementSearchParams &
@@ -295,8 +302,7 @@
       prop: 'publishedAt',
       label: '发布时间',
       width: 158,
-      formatter: (row) =>
-        row.publishedAt ? dayjs(row.publishedAt).format('YYYY-MM-DD HH:mm') : '待发布'
+      formatter: (row) => formatTableDateTime(row.publishedAt)
     },
     {
       prop: 'readCount',

@@ -117,12 +117,13 @@
 </template>
 
 <script setup lang="tsx">
+  import { createDateTimeFormatter } from '@/utils/ui/format'
+
   import { toNameCodeOption } from '@/utils/form/option'
 
   import '../../../components/personal-standard-workspace.scss'
   import { replaceReactiveModel } from '@/utils/form/model'
   import type { TableRequestOptions } from '@/hooks/core/useTable'
-  import dayjs from 'dayjs'
   import { useMediaQuery } from '@vueuse/core'
   import { ElAvatar, ElTag } from 'element-plus'
   import type { SearchFormItem } from '@/components/core/forms/art-search-bar/index.vue'
@@ -156,6 +157,17 @@
     type SmisToolPersonalStandardSearchParams,
     type SmisToolScopeOption
   } from '@smis/api'
+
+  const formatTableDate = createDateTimeFormatter({
+    format: 'YYYY-MM-DD',
+    emptyText: '--',
+    invalidText: '--'
+  })
+  const formatTableDateTime = createDateTimeFormatter({
+    format: 'HH:mm',
+    emptyText: '--',
+    invalidText: '--'
+  })
 
   defineOptions({ name: 'SmisToolPersonalStandard' })
 
@@ -411,8 +423,8 @@
       formatter: (row) =>
         row.generatedAt ? (
           <div class="smis-personal-standard__generated-time">
-            <strong>{dayjs(row.generatedAt).format('YYYY-MM-DD')}</strong>
-            <small>{dayjs(row.generatedAt).format('HH:mm')}</small>
+            <strong>{formatTableDate(row.generatedAt)}</strong>
+            <small>{formatTableDateTime(row.generatedAt)}</small>
           </div>
         ) : (
           <span class="smis-personal-standard__muted">尚未生成</span>

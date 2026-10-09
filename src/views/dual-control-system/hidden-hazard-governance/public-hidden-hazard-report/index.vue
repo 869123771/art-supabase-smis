@@ -43,9 +43,8 @@
 </template>
 
 <script setup lang="tsx">
+  import { createDateTimeFormatter } from '@/utils/ui/format'
   import { toDictionaryOption } from '@/utils/form/option'
-
-  import dayjs from 'dayjs'
   import type { SearchFormItem } from '@/components/core/forms/art-search-bar/index.vue'
   import type {
     ArtTableQueryExpose,
@@ -154,8 +153,11 @@
       props: { options: statusOptions.value, clearable: true, placeholder: '全部状态' }
     }
   ])
-  const formatDate = (value?: string | null) =>
-    value ? dayjs(value).format('YYYY-MM-DD HH:mm') : '—'
+  const formatDate = createDateTimeFormatter({
+    format: 'YYYY-MM-DD HH:mm',
+    emptyText: '—',
+    invalidText: '—'
+  })
   const columnsFactory = (): ColumnOption<SmisPublicHazardReportRecord>[] => [
     { type: 'selection', width: 48 },
     { type: 'globalIndex', label: '序号', width: 68 },

@@ -61,6 +61,8 @@
 </template>
 
 <script setup lang="tsx">
+  import { createDateTimeFormatter } from '@/utils/ui/format'
+
   import { toDictionaryOption } from '@/utils/form/option'
 
   import { replaceReactiveModel } from '@/utils/form/model'
@@ -98,6 +100,12 @@
   import EquipmentReminderDialog, {
     type EquipmentReminderDialogOpenData
   } from './modules/equipment-reminder-dialog.vue'
+
+  const formatTableDate = createDateTimeFormatter({
+    format: 'YYYY-MM-DD',
+    emptyText: '未计划',
+    invalidText: '未计划'
+  })
 
   defineOptions({ name: 'SmisSpecialEquipmentLedger' })
   interface TableParams
@@ -306,8 +314,7 @@
       prop: 'nextInspectionDueDate',
       label: '最近检验到期',
       width: 135,
-      formatter: (row) =>
-        row.nextInspectionDueDate ? dayjs(row.nextInspectionDueDate).format('YYYY-MM-DD') : '未计划'
+      formatter: (row) => formatTableDate(row.nextInspectionDueDate)
     },
     {
       prop: 'operation',

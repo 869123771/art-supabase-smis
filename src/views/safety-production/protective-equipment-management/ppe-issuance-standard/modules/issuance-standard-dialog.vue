@@ -109,6 +109,7 @@
 </template>
 
 <script setup lang="tsx">
+  import { buildSupabasePageRange } from '@/utils/supabase/pagination'
   import { toDictionaryOption } from '@/utils/form/option'
 
   import { replaceReactiveModel } from '@/utils/form/model'
@@ -184,9 +185,12 @@
   const numberProps = computed(() =>
     numberRule.inputProps(Boolean(form.id), '保存时自动生成', true)
   )
-  const toOptions = (code: string) => (userStore.getDictMap[code] ?? []).map(toDictionaryOption)
-  const cycleOptions = computed(() => toOptions('commonIssuanceCycle'))
-  const statusOptions = computed(() => toOptions('commonEnabledStatus'))
+  const cycleOptions = computed(() =>
+    (userStore.getDictMap.commonIssuanceCycle ?? []).map(toDictionaryOption)
+  )
+  const statusOptions = computed(() =>
+    (userStore.getDictMap.commonEnabledStatus ?? []).map(toDictionaryOption)
+  )
   const formItems = computed<FormItem[]>(() => [
     { label: '标准基础', key: 'basicSection', type: 'divider', span: 24 },
     {
@@ -252,7 +256,7 @@
     { prop: 'code', label: '岗位编码', width: 130 },
     { prop: 'organizationName', label: '所属组织', minWidth: 180 }
   ]
-  const materialColumns: DataSelectColumn[] = [
+  const materialColumns: DataSelectColumn<SmisMaterial>[] = [
     { prop: 'materialName', label: '物料名称', minWidth: 170 },
     { prop: 'materialCode', label: '物料编码', width: 150 },
     { prop: 'specificationModel', label: '规格型号', minWidth: 150 },
@@ -260,13 +264,7 @@
       prop: 'basicUnit',
       label: '计量单位',
       width: 100,
-      formatter: (row) => {
-        const value = (row as SmisMaterial).basicUnit
-        return (
-          userStore.getDictMap.smisMaterialUnit?.find((item) => item.value === value)?.label ||
-          value
-        )
-      }
+      dict: { code: 'smisMaterialUnit', display: 'text' }
     }
   ]
   const detailColumns = computed<ColumnOption<SmisPpeIssuanceStandardDetail>[]>(() => [
@@ -387,21 +385,20 @@
     return { data: result.data.slice(from, from + params.pageSize), total: result.data.length }
   }
   const fetchMaterials = async (params: DataSelectFetchParams) => {
-    const from = (params.page - 1) * params.pageSize
+    const { from, to } = buildSupabasePageRange({ current: params.page, size: params.pageSize })
     const result = await fetchMaterialList(
       {
         materialName: params.keyword,
         materialType: 'protective_equipment',
         status: 'enabled',
         from,
-        to: from + params.pageSize - 1
+        to
       },
       { showErrorMessage: false }
     )
     return result
   }
-  const handleMaterialsSelected = (rows: DataSelectRecord[]) => {
-    const materials = rows as SmisMaterial[]
+  const handleMaterialsSelected = (materials: SmisMaterial[]): void => {
     selectedMaterials.value = materials
     const current = new Map(form.details.map((item) => [item.materialId, item]))
     form.details = materials.map(

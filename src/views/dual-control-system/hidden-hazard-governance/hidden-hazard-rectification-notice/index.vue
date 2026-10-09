@@ -42,7 +42,7 @@
 </template>
 
 <script setup lang="tsx">
-  import dayjs from 'dayjs'
+  import { createDateTimeFormatter } from '@/utils/ui/format'
   import { ElMessage } from 'element-plus'
   import type { SearchFormItem } from '@/components/core/forms/art-search-bar/index.vue'
   import type {
@@ -161,8 +161,11 @@
       }
     }
   ])
-  const formatDate = (value?: string | null) =>
-    value ? dayjs(value).format('YYYY-MM-DD HH:mm') : '—'
+  const formatDate = createDateTimeFormatter({
+    format: 'YYYY-MM-DD HH:mm',
+    emptyText: '—',
+    invalidText: '—'
+  })
   const printNotice = (row: SmisRectificationNoticeRecord): void => {
     const popup = window.open('', '_blank', 'width=980,height=820')
     if (!popup) return void ElMessage.warning('浏览器阻止了打印窗口，请允许本站打开弹出式窗口')

@@ -67,9 +67,9 @@
 </template>
 
 <script setup lang="tsx">
-  import { toDictionaryOption } from '@/utils/form/option'
+  import { createDateTimeFormatter } from '@/utils/ui/format'
 
-  import dayjs from 'dayjs'
+  import { toDictionaryOption } from '@/utils/form/option'
   import { computed, onMounted, reactive, ref } from 'vue'
   import { storeToRefs } from 'pinia'
   import { ElTag } from 'element-plus'
@@ -111,6 +111,12 @@
     flattenWorkInstructionTree,
     type WorkInstructionTreeNode
   } from './modules/types'
+
+  const formatTableDateTime = createDateTimeFormatter({
+    format: 'YYYY-MM-DD HH:mm',
+    emptyText: '-',
+    invalidText: '-'
+  })
 
   defineOptions({ name: 'SmisPositionWorkInstruction' })
 
@@ -304,7 +310,7 @@
       prop: 'updateTime',
       label: '更新时间',
       width: 156,
-      formatter: (row) => (row.updateTime ? dayjs(row.updateTime).format('YYYY-MM-DD HH:mm') : '-')
+      formatter: (row) => formatTableDateTime(row.updateTime)
     },
     {
       prop: 'operation',

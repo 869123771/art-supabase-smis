@@ -199,7 +199,6 @@
   }
 
   const userStore = useUserStore()
-  const { getDictMap } = storeToRefs(userStore)
   const initialQuery = (): ReportQuery => ({
     reportedRange: [
       dayjs().startOf('year').format('YYYY-MM-DD'),
@@ -233,10 +232,6 @@
     { label: '本年未闭环', value: 'yearOutstanding' }
   ]
 
-  const dictLabel = (code: string, value?: string): string =>
-    value
-      ? (getDictMap.value[code] ?? []).find((item) => item.value === value)?.label || value
-      : '—'
   const formatDateTime = createDateTimeFormatter({ format: 'YYYY-MM-DD HH:mm', emptyText: '—' })
   const organizationOptions = computed(() =>
     toDualControlOrganizationTree(state.data.organizationOptions)
@@ -313,7 +308,10 @@
   const categoryValues = computed(() => categoryStats.value.map((item) => item.count))
   const sourceChartData = computed<PieDataItem[]>(() =>
     state.data.sourceStats.map((item) => ({
-      name: dictLabel('smisHiddenHazardSourceType', item.value),
+      name:
+        userStore.getDictLabelByValue('smisHiddenHazardSourceType', item.value) ||
+        item.value ||
+        '—',
       value: item.count
     }))
   )
@@ -421,9 +419,16 @@
   const exportRows = computed(() =>
     state.data.hazardDetails.map((row) => ({
       ...row,
-      hazardLevel: dictLabel('smisHazardLevel', row.hazardLevel),
-      status: dictLabel('smisHiddenHazardGovernanceStatus', row.status),
-      sourceType: dictLabel('smisHiddenHazardSourceType', row.sourceType),
+      hazardLevel:
+        userStore.getDictLabelByValue('smisHazardLevel', row.hazardLevel) || row.hazardLevel || '—',
+      status:
+        userStore.getDictLabelByValue('smisHiddenHazardGovernanceStatus', row.status) ||
+        row.status ||
+        '—',
+      sourceType:
+        userStore.getDictLabelByValue('smisHiddenHazardSourceType', row.sourceType) ||
+        row.sourceType ||
+        '—',
       reportedAt: formatDateTime(row.reportedAt),
       rectificationDeadline: formatDateTime(row.rectificationDeadline),
       rectificationCompletedAt: formatDateTime(row.rectificationCompletedAt),

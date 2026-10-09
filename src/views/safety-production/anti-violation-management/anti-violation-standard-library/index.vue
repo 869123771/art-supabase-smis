@@ -70,10 +70,11 @@
 </template>
 
 <script setup lang="tsx">
+  import { createDateTimeFormatter } from '@/utils/ui/format'
+
   import { toDictionaryOption } from '@/utils/form/option'
 
   import { normalizeNullableText } from '@/utils/form/normalize'
-  import dayjs from 'dayjs'
   import TreeUtils from '@/utils/tree'
   import type { SearchFormItem } from '@/components/core/forms/art-search-bar/index.vue'
   import type {
@@ -108,6 +109,12 @@
   import AntiViolationStandardDialog, {
     type AntiViolationStandardDialogOpenData
   } from './modules/anti-violation-standard-dialog.vue'
+
+  const formatTableDateTime = createDateTimeFormatter({
+    format: 'YYYY-MM-DD HH:mm',
+    emptyText: '—',
+    invalidText: '—'
+  })
 
   defineOptions({ name: 'SmisAntiViolationStandardLibrary' })
 
@@ -345,7 +352,7 @@
       prop: 'updateTime',
       label: '更新时间',
       width: 164,
-      formatter: (row) => (row.updateTime ? dayjs(row.updateTime).format('YYYY-MM-DD HH:mm') : '—')
+      formatter: (row) => formatTableDateTime(row.updateTime)
     },
     {
       prop: 'operation',

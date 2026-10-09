@@ -39,10 +39,11 @@
 </template>
 
 <script setup lang="tsx">
+  import { createDateTimeFormatter } from '@/utils/ui/format'
+
   import { toDictionaryOption } from '@/utils/form/option'
 
   import type { TableRequestOptions } from '@/hooks/core/useTable'
-  import dayjs from 'dayjs'
   import type { SearchFormItem } from '@/components/core/forms/art-search-bar/index.vue'
   import type {
     ArtTableQueryExpose,
@@ -75,6 +76,12 @@
   import TrainingPlanDialog, {
     type TrainingPlanDialogOpenData
   } from './modules/training-plan-dialog.vue'
+
+  const formatTableDateTime = createDateTimeFormatter({
+    format: 'MM-DD HH:mm',
+    emptyText: '--',
+    invalidText: '--'
+  })
 
   defineOptions({ name: 'SmisSafetyTrainingPlan' })
   type TableParams = SmisSafetyTrainingPlanSearchParams &
@@ -305,7 +312,7 @@
       label: '计划时间',
       width: 220,
       formatter: (row) =>
-        `${dayjs(row.plannedStartAt).format('MM-DD HH:mm')} 至 ${dayjs(row.plannedEndAt).format('MM-DD HH:mm')}`
+        `${formatTableDateTime(row.plannedStartAt)} 至 ${formatTableDateTime(row.plannedEndAt)}`
     },
     {
       prop: 'trainingCategory',

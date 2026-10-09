@@ -151,6 +151,7 @@
 </template>
 
 <script setup lang="ts">
+  import { buildSupabasePageRange } from '@/utils/supabase/pagination'
   import { toDictionaryOption } from '@/utils/form/option'
 
   import { notifyFriendlyError } from '@/hooks/core/useArtFeedback'
@@ -770,11 +771,11 @@
     { prop: 'locationName', label: '安装位置', minWidth: 150 }
   ]
   const fetchSupplierOptions = async (params: DataSelectFetchParams) => {
-    const from = (params.page - 1) * params.pageSize
+    const { from, to } = buildSupabasePageRange({ current: params.page, size: params.pageSize })
     const result = await fetchSupplierList({
       keyword: params.keyword,
       from,
-      to: from + params.pageSize - 1
+      to
     })
     return { data: result.data as DataSelectRecord[], total: result.total }
   }

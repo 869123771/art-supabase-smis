@@ -135,7 +135,7 @@
 </template>
 
 <script setup lang="ts">
-  import dayjs from 'dayjs'
+  import { createDateTimeFormatter } from '@/utils/ui/format'
   import ArtDrawer from '@/components/core/drawers/art-drawer/index.vue'
   import type { ArtDrawerExpose } from '@/components/core/drawers/art-drawer/types'
   import ArtSectionTitle from '@/components/core/surfaces/art-section-title/index.vue'
@@ -163,8 +163,11 @@
   const abnormalCount = computed(
     () => detail.value?.items.filter((item) => item.result === 'abnormal').length ?? 0
   )
-  const formatDate = (value?: string | null): string =>
-    value ? dayjs(value).format('YYYY-MM-DD HH:mm') : '—'
+  const formatDate = createDateTimeFormatter({
+    format: 'YYYY-MM-DD HH:mm',
+    emptyText: '—',
+    invalidText: '—'
+  })
   const eventLabels: Record<SmisRiskInspectionTaskEvent['eventType'], string> = {
     generated: '任务生成',
     transferred: '任务转交',

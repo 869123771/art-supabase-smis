@@ -85,7 +85,7 @@
   import { replaceReactiveModel } from '@/utils/form/model'
   import { notifyFriendlyError } from '@/hooks/core/useArtFeedback'
   import { validateArtFormForSubmit } from '@/utils/form/validate-art-form'
-  import { normalizeNullableText } from '@/utils/form/normalize'
+  import { normalizeNullableText, normalizeSingleStringKey } from '@/utils/form/normalize'
   import { uniqBy } from 'lodash-es'
   import { ElButton, ElDatePicker, ElOption, ElSelect, type FormRules } from 'element-plus'
   import type { ColumnOption } from '@/types'
@@ -623,13 +623,14 @@
     form.employeeEducationLevel = employee.educationLevel?.trim() || ''
   }
   const handleEmployeeChange = (
-    value: string | undefined,
+    value: string | string[] | undefined,
     rows: EmployeeIntegrationItem[]
   ): void => {
     employeeSelection.value = rows
     form.employeeIdCardNo = ''
     form.employeeEducationLevel = ''
-    if (value) void loadEmployeeDetail(value)
+    const employeeId = normalizeSingleStringKey(value)
+    if (employeeId) void loadEmployeeDetail(employeeId)
   }
 
   const validateItems = async (): Promise<boolean> => {

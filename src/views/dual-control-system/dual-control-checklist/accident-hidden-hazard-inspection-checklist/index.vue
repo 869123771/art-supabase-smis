@@ -85,7 +85,7 @@
     organizationTree,
     organizationTreeProps,
     dictionaryOptions,
-    dictionaryLabel,
+    getDictDisplayLabelByValue,
     loadOptions
   } = useChecklistOptions([
     'smisPrimaryHazardCategory',
@@ -196,7 +196,11 @@
       label: '隐患子类别',
       minWidth: 160,
       formatter: (row) =>
-        dictionaryLabel('smisSecondaryHazardCategory', row.secondaryHazardCategory)
+        getDictDisplayLabelByValue(
+          'smisSecondaryHazardCategory',
+          row.secondaryHazardCategory,
+          row.secondaryHazardCategory || '—'
+        )
     },
     {
       prop: 'hazardLevel',
@@ -228,15 +232,21 @@
   const exportRows = (rows: SmisAccidentInspectionChecklistRecord[]) =>
     rows.map((row) => ({
       ...row,
-      primaryHazardCategory: dictionaryLabel(
+      primaryHazardCategory: getDictDisplayLabelByValue(
         'smisPrimaryHazardCategory',
-        row.primaryHazardCategory
+        row.primaryHazardCategory,
+        row.primaryHazardCategory || '—'
       ),
-      secondaryHazardCategory: dictionaryLabel(
+      secondaryHazardCategory: getDictDisplayLabelByValue(
         'smisSecondaryHazardCategory',
-        row.secondaryHazardCategory
+        row.secondaryHazardCategory,
+        row.secondaryHazardCategory || '—'
       ),
-      hazardLevel: dictionaryLabel('smisHazardLevel', row.hazardLevel),
+      hazardLevel: getDictDisplayLabelByValue(
+        'smisHazardLevel',
+        row.hazardLevel,
+        row.hazardLevel || '—'
+      ),
       inspectionFrequency: formatChecklistFrequency(row.inspectionFrequency, row.frequencyUnit)
     }))
   const headerActions = computed<ArtTableQueryHeaderAction[]>(() => [

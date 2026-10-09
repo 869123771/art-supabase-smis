@@ -52,11 +52,12 @@
 </template>
 
 <script setup lang="tsx">
+  import { createDateTimeFormatter } from '@/utils/ui/format'
+
   import { replaceReactiveModel } from '@/utils/form/model'
   import type { TableRequestOptions } from '@/hooks/core/useTable'
   import { withSupabaseTableRange } from '@/utils/supabase/pagination'
   import { useDictionaryOptions } from '@/hooks/core/useDictionaryOptions'
-  import dayjs from 'dayjs'
   import BusinessTableWorkspaceActions from '@/components/business/business-table-workspace-actions/index.vue'
   import BusinessWorkspaceHeader, {
     type BusinessWorkspaceMetric
@@ -86,6 +87,12 @@
     type SmisToolReturnSearchParams
   } from '@smis/api'
   import ToolReturnDialog, { type ToolReturnDialogOpenData } from './modules/tool-return-dialog.vue'
+
+  const formatTableDateTime = createDateTimeFormatter({
+    format: 'YYYY-MM-DD HH:mm',
+    emptyText: '—',
+    invalidText: '—'
+  })
 
   defineOptions({ name: 'SmisToolRequisitionReturn' })
 
@@ -241,8 +248,7 @@
       prop: 'submittedAt',
       label: '提交时间',
       width: 168,
-      formatter: (row) =>
-        row.submittedAt ? dayjs(row.submittedAt).format('YYYY-MM-DD HH:mm') : '—'
+      formatter: (row) => formatTableDateTime(row.submittedAt)
     },
     { prop: 'rejectionReason', label: '退回原因', minWidth: 170, showOverflowTooltip: true },
     { prop: 'remark', label: '备注', minWidth: 150, showOverflowTooltip: true },

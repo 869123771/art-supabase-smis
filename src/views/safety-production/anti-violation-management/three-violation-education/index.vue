@@ -59,6 +59,8 @@
 </template>
 
 <script setup lang="tsx">
+  import { createDateTimeFormatter } from '@/utils/ui/format'
+
   import { toDictionaryOption } from '@/utils/form/option'
 
   import { replaceReactiveModel } from '@/utils/form/model'
@@ -107,6 +109,17 @@
   import EducationRecordDialog from './modules/education-record-dialog.vue'
   import ThreeViolationDetailDialog from './modules/three-violation-detail-dialog.vue'
   import { formatGender, printThreeViolationLedger } from './modules/three-violation-ledger'
+
+  const formatTableDateTime = createDateTimeFormatter({
+    format: 'YYYY-MM-DD HH:mm',
+    emptyText: '--',
+    invalidText: '--'
+  })
+  const formatTableDateTime2 = createDateTimeFormatter({
+    format: 'YYYY-MM-DD HH:mm',
+    emptyText: '待完成',
+    invalidText: '待完成'
+  })
 
   defineOptions({ name: 'SmisThreeViolationEducation' })
 
@@ -413,7 +426,7 @@
       prop: 'inspectionTime',
       label: '检查时间',
       width: 162,
-      formatter: (row) => dayjs(row.inspectionTime).format('YYYY-MM-DD HH:mm')
+      formatter: (row) => formatTableDateTime(row.inspectionTime)
     },
     { prop: 'categoryName', label: '违章分类', minWidth: 150, showOverflowTooltip: true },
     { prop: 'standardName', label: '反违章标准', minWidth: 220, showOverflowTooltip: true },
@@ -435,10 +448,7 @@
       prop: 'educationCompletedAt',
       label: '教育完成时间',
       width: 162,
-      formatter: (row) =>
-        row.educationCompletedAt
-          ? dayjs(row.educationCompletedAt).format('YYYY-MM-DD HH:mm')
-          : '待完成'
+      formatter: (row) => formatTableDateTime2(row.educationCompletedAt)
     },
     {
       prop: 'operation',

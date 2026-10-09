@@ -126,9 +126,6 @@
   })
   const form = reactive<PositionSafetyResponsibility>(createInitialForm())
 
-  const toOptions = (code: string): FormItemOption[] =>
-    (getDictMap.value[code] ?? []).map(toDictionaryOption)
-
   const primaryCategoryItems = computed(() => getDictMap.value.smisPrimaryHazardCategory ?? [])
   const secondaryCategoryItems = computed(() => getDictMap.value.smisSecondaryHazardCategory ?? [])
   const hazardContentItems = computed(() => getDictMap.value.smisHazardContent ?? [])
@@ -190,7 +187,7 @@
       label: '一级隐患类别',
       key: 'primaryHazardCategory',
       type: 'select',
-      options: toOptions('smisPrimaryHazardCategory'),
+      options: (getDictMap.value.smisPrimaryHazardCategory ?? []).map(toDictionaryOption),
       props: {
         placeholder: '请选择一级隐患类别',
         onChange: () => {
@@ -229,14 +226,14 @@
       label: '隐患级别',
       key: 'hazardLevel',
       type: 'select',
-      options: toOptions('smisHazardLevel'),
+      options: (getDictMap.value.smisHazardLevel ?? []).map(toDictionaryOption),
       props: { placeholder: '请选择隐患级别' }
     },
     {
       label: '隐患风险等级',
       key: 'riskLevel',
       type: 'select',
-      options: toOptions('smisRiskLevel'),
+      options: (getDictMap.value.smisRiskLevel ?? []).map(toDictionaryOption),
       props: { placeholder: '请选择风险等级' }
     },
     { label: '排查要求', key: 'inspectionSection', type: 'divider', span: 24 },
@@ -251,7 +248,7 @@
       label: '频次单位',
       key: 'frequencyUnit',
       type: 'select',
-      options: toOptions('smisFrequencyUnit'),
+      options: (getDictMap.value.smisFrequencyUnit ?? []).map(toDictionaryOption),
       props: { placeholder: '请选择频次单位' }
     },
     {

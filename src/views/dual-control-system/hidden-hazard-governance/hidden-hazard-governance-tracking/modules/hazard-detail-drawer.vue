@@ -169,7 +169,7 @@
 </template>
 
 <script setup lang="tsx">
-  import dayjs from 'dayjs'
+  import { createDateTimeFormatter } from '@/utils/ui/format'
   import { ElImage } from 'element-plus'
   import ArtDrawer from '@/components/core/drawers/art-drawer/index.vue'
   import type { ArtDrawerExpose } from '@/components/core/drawers/art-drawer/types'
@@ -219,8 +219,11 @@
   const drawerRef = ref<ArtDrawerExpose<HazardDetailDrawerOpenData>>()
   const detail = shallowRef<SmisHiddenHazardGovernanceDetail | null>(null)
   const loading = ref(false)
-  const formatDate = (value?: string | null): string =>
-    value ? dayjs(value).format('YYYY-MM-DD HH:mm') : '—'
+  const formatDate = createDateTimeFormatter({
+    format: 'YYYY-MM-DD HH:mm',
+    emptyText: '—',
+    invalidText: '—'
+  })
   const employeeText = (name?: string | null, no?: string | null): string =>
     name ? name + (no ? ' · ' + no : '') : '—'
   const handleOpen = async (data: HazardDetailDrawerOpenData): Promise<void> => {

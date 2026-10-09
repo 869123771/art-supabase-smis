@@ -1,5 +1,5 @@
 <template>
-  <ArtDialog ref="dialogRef" size="xl">
+  <ArtDialog ref="dialogRef" size="xl" :loading="loading" loading-text="正在加载发放统计…">
     <ArtForm
       v-model="filter.model"
       :items="filterItems"
@@ -50,7 +50,6 @@
     <ArtSectionCard
       title="组织与防护用品发放汇总"
       subtitle="按所属组织、物料名称与规格型号汇总已过账发放数量。"
-      :loading="loading"
       :empty="!loading && !statistics.rows.length"
       empty-title="暂无统计数据"
       empty-description="调整领用时间、组织或领用人条件后重新查询。"

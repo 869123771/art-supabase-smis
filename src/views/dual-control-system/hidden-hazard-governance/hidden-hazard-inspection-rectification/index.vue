@@ -44,7 +44,7 @@
 </template>
 
 <script setup lang="tsx">
-  import dayjs from 'dayjs'
+  import { createDateTimeFormatter } from '@/utils/ui/format'
   import { useUserStore } from '@/store/modules/user'
   import type { SearchFormItem } from '@/components/core/forms/art-search-bar/index.vue'
   import type {
@@ -132,8 +132,11 @@
       }
     }
   ]
-  const formatDate = (value?: string | null) =>
-    value ? dayjs(value).format('YYYY-MM-DD HH:mm') : '—'
+  const formatDate = createDateTimeFormatter({
+    format: 'YYYY-MM-DD HH:mm',
+    emptyText: '—',
+    invalidText: '—'
+  })
   const openDialog = async (selectedId?: string): Promise<void> => {
     await dialogRef.value?.handleOpen({
       records: [],

@@ -169,6 +169,7 @@
                 <ArtTable
                   :data="outstanding"
                   :pagination="false"
+                  height="auto"
                   table-layout="fixed"
                   empty-text="很好，当前范围没有未兑现演练计划"
                 >
@@ -244,6 +245,7 @@
   import { replaceReactiveModel } from '@/utils/form/model'
   import { getFriendlySupabaseErrorMessage } from '@/utils/supabase'
   import { ElMessage } from 'element-plus'
+  import { sumBy, uniq } from 'lodash-es'
   import { fetchEnabledOrganizationTree } from '@/api/system-manage'
   import { useUserStore } from '@/store/modules/user'
   import { exportExcel, type ExcelColumn } from '@/utils/file'
@@ -286,7 +288,7 @@
     warningStatus: string
   }
   const userStore = useUserStore()
-  const { getDictMap, getUserInfo } = storeToRefs(userStore)
+  const { getUserInfo } = storeToRefs(userStore)
   const query = reactive<ReportQuery>({})
   const appliedQuery = shallowRef<ReportQuery>({})
   let reportRequestId = 0
@@ -344,17 +346,10 @@
   const sprintRate = computed(() =>
     calculateSprintRate(overview.completedCount, overview.planCount)
   )
-  const totalDrillCount = computed(() =>
-    rows.value.reduce((total, row) => total + row.drillCount, 0)
-  )
+  const totalDrillCount = computed(() => sumBy(rows.value, 'drillCount'))
   const coveredOrganizationCount = computed(
-    () => new Set(rows.value.map((row) => row.organizationName).filter(Boolean)).size
+    () => uniq(rows.value.map((row) => row.organizationName).filter(Boolean)).length
   )
-  const dictLabel = (code: string, value: unknown): string => {
-    const normalizedValue = String(value ?? '')
-    const item = getDictMap.value[code]?.find((option) => option.value === normalizedValue)
-    return item?.label || item?.name || normalizedValue || '—'
-  }
   const exportColumns: ExcelColumn<ReportExportRow>[] = [
     { key: 'recordType', title: '报表分区', width: 14 },
     { key: 'organizationName', title: '演练单位', width: 24 },
@@ -463,8 +458,16 @@
       const groupedRows: ReportExportRow[] = rows.value.map((row) => ({
         recordType: '执行分析',
         organizationName: row.organizationName,
-        planCategory: dictLabel('smisEmergencyPlanCategory', row.planCategory),
-        planLevel: dictLabel('smisEmergencyPlanLevel', row.planLevel),
+        planCategory: userStore.getDictDisplayLabelByValue(
+          'smisEmergencyPlanCategory',
+          row.planCategory,
+          row.planCategory || '—'
+        ),
+        planLevel: userStore.getDictDisplayLabelByValue(
+          'smisEmergencyPlanLevel',
+          row.planLevel,
+          row.planLevel || '—'
+        ),
         planCount: row.planCount,
         completedCount: row.completedCount,
         sprintRate: `${row.sprintRate}%`,
@@ -479,8 +482,16 @@
       const outstandingRows: ReportExportRow[] = outstanding.value.map((row) => ({
         recordType: '未兑现计划',
         organizationName: row.organizationName,
-        planCategory: dictLabel('smisEmergencyPlanCategory', row.planCategory),
-        planLevel: dictLabel('smisEmergencyPlanLevel', row.planLevel),
+        planCategory: userStore.getDictDisplayLabelByValue(
+          'smisEmergencyPlanCategory',
+          row.planCategory,
+          row.planCategory || '—'
+        ),
+        planLevel: userStore.getDictDisplayLabelByValue(
+          'smisEmergencyPlanLevel',
+          row.planLevel,
+          row.planLevel || '—'
+        ),
         planCount: '',
         completedCount: '',
         sprintRate: '',
@@ -490,7 +501,11 @@
         planNo: row.planNo,
         drillName: row.drillName,
         planEndDate: row.planEndDate || '',
-        warningStatus: dictLabel('commonWarningStatus', row.warningStatus)
+        warningStatus: userStore.getDictDisplayLabelByValue(
+          'commonWarningStatus',
+          row.warningStatus,
+          row.warningStatus || '—'
+        )
       }))
       await exportExcel({
         data: [summary, ...groupedRows, ...outstandingRows],

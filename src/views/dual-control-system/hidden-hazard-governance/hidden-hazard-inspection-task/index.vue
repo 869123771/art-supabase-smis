@@ -54,6 +54,8 @@
 </template>
 
 <script setup lang="tsx">
+  import { createDateTimeFormatter } from '@/utils/ui/format'
+
   import type { TableRequestOptions } from '@/hooks/core/useTable'
   import BusinessTableIdentityCell from '@/components/business/business-table-identity-cell/index.vue'
   import dayjs from 'dayjs'
@@ -91,6 +93,12 @@
   import TaskExecutionDialog, {
     type HiddenHazardTaskExecutionOpenData
   } from './modules/task-execution-dialog.vue'
+
+  const formatTableDateTime = createDateTimeFormatter({
+    format: 'YYYY-MM-DD HH:mm',
+    emptyText: '--',
+    invalidText: '--'
+  })
 
   defineOptions({ name: 'SmisDualControlHiddenHazardInspectionTask' })
   interface TaskQuery extends SmisHiddenHazardTaskSearchParams {
@@ -301,13 +309,13 @@
       prop: 'plannedStartAt',
       label: '计划开始时间',
       width: 164,
-      formatter: (row) => dayjs(row.plannedStartAt).format('YYYY-MM-DD HH:mm')
+      formatter: (row) => formatTableDateTime(row.plannedStartAt)
     },
     {
       prop: 'plannedEndAt',
       label: '计划结束时间',
       width: 164,
-      formatter: (row) => dayjs(row.plannedEndAt).format('YYYY-MM-DD HH:mm')
+      formatter: (row) => formatTableDateTime(row.plannedEndAt)
     },
     { prop: 'inspectionDescription', label: '检查说明', minWidth: 200, showOverflowTooltip: true },
     { prop: 'itemCount', label: '排查内容', width: 86, align: 'right' },

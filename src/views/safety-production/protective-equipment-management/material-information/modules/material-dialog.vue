@@ -131,8 +131,6 @@
     sort: 10
   })
   const formModel = reactive<MaterialForm>(initialForm())
-  const toOptions = (code: string): FormItemOption[] =>
-    (getDictMap.value[code] ?? []).map(toDictionaryOption)
   const categoryOptions = computed<CategoryTreeOption[]>(() =>
     treeUtils.mapTree(categoryTree.value as CategoryTreeOption[], (item) => ({
       ...item,
@@ -228,7 +226,7 @@
         label: '物料来源',
         key: 'materialSource',
         type: 'select',
-        options: toOptions('mdmMaterialSource'),
+        options: (getDictMap.value.mdmMaterialSource ?? []).map(toDictionaryOption),
         props: { clearable: false, placeholder: '请选择物料来源' }
       },
       {
@@ -265,7 +263,7 @@
         label: '启用状态',
         key: 'status',
         type: 'select',
-        options: toOptions('commonEnabledStatus'),
+        options: (getDictMap.value.commonEnabledStatus ?? []).map(toDictionaryOption),
         props: { clearable: false, placeholder: '请选择启用状态' }
       },
       {

@@ -278,10 +278,11 @@
 </template>
 
 <script setup lang="tsx">
+  import { createDateTimeFormatter } from '@/utils/ui/format'
+
   import { toDictionaryOption } from '@/utils/form/option'
 
   import { useTable, type TableRequestOptions } from '@/hooks/core/useTable'
-  import dayjs from 'dayjs'
   import { ElMessage, ElPagination } from 'element-plus'
   import ArtAsyncState from '@/components/core/feedback/art-async-state/index.vue'
   import QrcodeVue from 'qrcode.vue'
@@ -338,6 +339,17 @@
     type EquipmentLedgerDialogOpenData
   } from './modules/equipment-ledger-dialog.vue'
   import { getEquipmentProfileLabel } from '@smis/domain/equipment-profile'
+
+  const formatTableDate = createDateTimeFormatter({
+    format: 'YYYY-MM-DD',
+    emptyText: '未计划',
+    invalidText: '未计划'
+  })
+  const formatTableDateTime = createDateTimeFormatter({
+    format: 'YYYY-MM-DD HH:mm',
+    emptyText: '—',
+    invalidText: '—'
+  })
 
   defineOptions({ name: 'SmisEquipmentLedgerList' })
   const ALL_KEY = 'all'
@@ -772,8 +784,7 @@
       prop: 'nextInspectionDueDate',
       label: '最近检验到期',
       width: 135,
-      formatter: (row) =>
-        row.nextInspectionDueDate ? dayjs(row.nextInspectionDueDate).format('YYYY-MM-DD') : '未计划'
+      formatter: (row) => formatTableDate(row.nextInspectionDueDate)
     },
     {
       prop: 'lifecycle',
@@ -793,7 +804,7 @@
       prop: 'updateTime',
       label: '更新时间',
       width: 165,
-      formatter: (row) => (row.updateTime ? dayjs(row.updateTime).format('YYYY-MM-DD HH:mm') : '—')
+      formatter: (row) => formatTableDateTime(row.updateTime)
     },
     {
       prop: 'operation',

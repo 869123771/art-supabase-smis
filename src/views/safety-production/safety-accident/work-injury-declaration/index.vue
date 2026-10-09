@@ -57,10 +57,11 @@
 </template>
 
 <script setup lang="tsx">
+  import { createDateTimeFormatter } from '@/utils/ui/format'
+
   import { toDictionaryOption } from '@/utils/form/option'
 
   import type { TableRequestOptions } from '@/hooks/core/useTable'
-  import dayjs from 'dayjs'
   import type { SearchFormItem } from '@/components/core/forms/art-search-bar/index.vue'
   import type {
     ArtTableQueryExcelColumn,
@@ -90,6 +91,12 @@
   } from '@smis/api'
   import WorkInjuryDialog, { type WorkInjuryDialogOpenData } from './modules/work-injury-dialog.vue'
 
+  const formatTableDateTime = createDateTimeFormatter({
+    format: 'YYYY-MM-DD HH:mm',
+    emptyText: '—',
+    invalidText: '—'
+  })
+
   defineOptions({ name: 'SmisWorkInjuryDeclaration' })
   interface InjurySearchModel extends SmisWorkInjurySearchParams {
     declarationDateRange?: [string, string]
@@ -108,8 +115,7 @@
   const currentEmployee = shallowRef<SmisAccidentEmployee | null>(null)
   const overview = reactive({ total: 0, slight: 0, minor: 0, serious: 0, fatal: 0 })
   const dictOptions = (code: string) => (getDictMap.value[code] ?? []).map(toDictionaryOption)
-  const dictLabel = (code: string, value: string): string =>
-    getDictMap.value[code]?.find((item) => item.value === value)?.label || value
+
   const metrics = computed<BusinessWorkspaceMetric[]>(() => [
     {
       label: '申报总数',
@@ -273,7 +279,7 @@
       prop: 'updateTime',
       label: '更新时间',
       width: 158,
-      formatter: (row) => (row.updateTime ? dayjs(row.updateTime).format('YYYY-MM-DD HH:mm') : '—')
+      formatter: (row) => formatTableDateTime(row.updateTime)
     },
     {
       prop: 'operation',
@@ -340,7 +346,8 @@
             accidentNo: row.accident.accidentNo,
             declarantName: row.declarantNameSnapshot,
             departmentName: row.departmentNameSnapshot || '',
-            injuryType: dictLabel('smisWorkInjuryType', row.injuryType)
+            injuryType:
+              userStore.getDictLabelByValue('smisWorkInjuryType', row.injuryType) || row.injuryType
           }))
         }
       }

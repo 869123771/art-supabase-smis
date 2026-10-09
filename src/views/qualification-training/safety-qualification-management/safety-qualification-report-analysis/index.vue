@@ -319,7 +319,6 @@
     organizationId: undefined
   })
   const userStore = useUserStore()
-  const { getDictMap } = storeToRefs(userStore)
   const query = reactive<AnalysisQuery>(initialQuery())
   const request = useAsyncState(
     async (params: Parameters<typeof fetchSafetyQualificationAnalysis>[0]) => {
@@ -365,10 +364,9 @@
     { key: 'safetyManager', category: 'safety_manager' },
     { key: 'registeredSafetyEngineer', category: 'registered_safety_engineer' }
   ]
-  const dictLabel = (code: string, value: string): string =>
-    (getDictMap.value[code] ?? []).find((item) => item.value === value)?.label || value || '未维护'
+
   const categoryLabel = (value: SmisCertificateCategory): string =>
-    dictLabel('smisCertificateCategory', value)
+    userStore.getDictLabelByValue('smisCertificateCategory', value) || value || '未维护'
   const periodLabel = computed(() =>
     query.dateRange?.length === 2 ? `${query.dateRange[0]} — ${query.dateRange[1]}` : '全部时间'
   )
@@ -462,8 +460,11 @@
     }))
   )
   const educationLabels = computed(() =>
-    state.data.educationDistribution.map((item) =>
-      dictLabel('hrEducationLevel', item.educationLevel)
+    state.data.educationDistribution.map(
+      (item) =>
+        userStore.getDictLabelByValue('hrEducationLevel', item.educationLevel) ||
+        item.educationLevel ||
+        '未维护'
     )
   )
   const educationSeries = computed<BarDataItem[]>(() => [
@@ -563,7 +564,10 @@
     rows.map((item) => ({
       ...item,
       dimensionLabel: dimensionNames[item.dimension],
-      valueLabel: dictLabel(dimensionDictionary[item.dimension], item.value)
+      valueLabel:
+        userStore.getDictLabelByValue(dimensionDictionary[item.dimension], item.value) ||
+        item.value ||
+        '未维护'
     }))
   const safetyManagerTypeRows = computed(() => toDimensionRows(state.data.safetyManagerTypes))
   const registeredEngineerTypeRows = computed(() =>

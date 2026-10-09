@@ -85,6 +85,8 @@
 </template>
 
 <script setup lang="tsx">
+  import { createDateTimeFormatter } from '@/utils/ui/format'
+
   import type { TableRequestOptions } from '@/hooks/core/useTable'
   import dayjs from 'dayjs'
   import type { SearchFormItem } from '@/components/core/forms/art-search-bar/index.vue'
@@ -112,11 +114,16 @@
     type SmisSafetyRiskSearchParams
   } from '@smis/api'
 
+  const formatTableDateTime = createDateTimeFormatter({
+    format: 'YYYY-MM-DD HH:mm',
+    emptyText: '--',
+    invalidText: '--'
+  })
+
   defineOptions({ name: 'SmisDualControlRiskListSummary' })
   type TableParams = SmisSafetyRiskSearchParams &
     Pick<Api.Common.PaginationParams, 'current' | 'size'>
   const userStore = useUserStore()
-  const { getDictMap } = storeToRefs(userStore)
   const tableQueryRef = ref<ArtTableQueryExpose>()
   const searchQuery = ref<SmisSafetyRiskSearchParams>({})
   const overview = reactive<SmisSafetyRiskOverview>({
@@ -225,11 +232,7 @@
   ]
   const accidentTypeText = (row: SmisSafetyRiskRecord): string =>
     row.accidentTypes
-      .map(
-        (item) =>
-          (getDictMap.value.smisAccidentCategory ?? []).find((dict) => dict.value === item)
-            ?.label || item
-      )
+      .map((item) => userStore.getDictItemByValue('smisAccidentCategory', item)?.label || item)
       .join('、') || '暂无事故类型'
   const measureItems = (row: SmisSafetyRiskRecord) =>
     [
@@ -339,7 +342,7 @@
       formatter: (row) => (
         <div class="risk-summary-page__identity">
           <strong>{row.identifiedBy || '系统记录'}</strong>
-          <small>{dayjs(row.identifiedAt).format('YYYY-MM-DD HH:mm')}</small>
+          <small>{formatTableDateTime(row.identifiedAt)}</small>
         </div>
       )
     }

@@ -54,6 +54,8 @@
 </template>
 
 <script setup lang="tsx">
+  import { createDateTimeFormatter } from '@/utils/ui/format'
+
   import { uniq } from 'lodash-es'
   import { replaceReactiveModel } from '@/utils/form/model'
   import type { TableRequestOptions } from '@/hooks/core/useTable'
@@ -96,6 +98,12 @@
     type ViolationRecordDialogMode,
     type ViolationRecordDialogOpenData
   } from './modules/violation-record-dialog.vue'
+
+  const formatTableDateTime = createDateTimeFormatter({
+    format: 'YYYY-MM-DD HH:mm',
+    emptyText: '--',
+    invalidText: '--'
+  })
 
   defineOptions({ name: 'SmisViolationRecord' })
 
@@ -358,7 +366,7 @@
       prop: 'violationTime',
       label: '违章时间',
       width: 158,
-      formatter: (row) => dayjs(row.violationTime).format('YYYY-MM-DD HH:mm')
+      formatter: (row) => formatTableDateTime(row.violationTime)
     },
     { prop: 'siteName', label: '违章地点', minWidth: 170, showOverflowTooltip: true },
     {

@@ -77,7 +77,7 @@
 </template>
 
 <script setup lang="ts">
-  import dayjs from 'dayjs'
+  import { createDateTimeFormatter } from '@/utils/ui/format'
   import ArtDrawer from '@/components/core/drawers/art-drawer/index.vue'
   import type { ArtDrawerExpose } from '@/components/core/drawers/art-drawer/types'
   import ArtSectionTitle from '@/components/core/surfaces/art-section-title/index.vue'
@@ -108,8 +108,11 @@
       ? '不循环'
       : `每 ${detail.value.cycleInterval} ${cycleLabels[detail.value.cycleType]}`
   })
-  const formatDate = (value?: string | null): string =>
-    value ? dayjs(value).format('YYYY-MM-DD HH:mm') : '—'
+  const formatDate = createDateTimeFormatter({
+    format: 'YYYY-MM-DD HH:mm',
+    emptyText: '—',
+    invalidText: '—'
+  })
   const handleOpen = async (data: HiddenHazardPlanDetailOpenData): Promise<void> => {
     detail.value = null
     await drawerRef.value?.handleOpen(data, {

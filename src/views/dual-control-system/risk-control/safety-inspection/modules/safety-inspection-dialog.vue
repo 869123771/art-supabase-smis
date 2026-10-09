@@ -49,10 +49,14 @@
           />
         </template>
         <template #inspectorIds>
-          <SafetyInspectionEmployeeMultipleSelect
-            v-model="form.model.inspectorIds"
+          <ArtEmployeeSelect
+            v-model:model-values="form.model.inspectorIds"
             v-model:selected-data="inspectorSelection"
+            multiple
             :tenant-id="getUserInfo.tenantId"
+            title="选择检查人"
+            subtitle="数据来自当前租户员工花名册，可多选"
+            placeholder="选择一名或多名检查人"
           />
         </template>
         <template #planAttachmentUrls>
@@ -90,7 +94,7 @@
     type SmisSafetyInspectionTypeOption
   } from '@smis/api'
   import OrganizationTreeSelect from '@smis/views/dual-control-system/shared/organization-tree-select.vue'
-  import SafetyInspectionEmployeeMultipleSelect from './safety-inspection-employee-multiple-select.vue'
+  import ArtEmployeeSelect from '@/components/business/art-employee-select/index.vue'
 
   export interface SafetyInspectionDialogOpenData {
     row?: SmisSafetyInspectionRecord

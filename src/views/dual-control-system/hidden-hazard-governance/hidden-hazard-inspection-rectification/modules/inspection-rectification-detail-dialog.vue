@@ -79,7 +79,7 @@
 </template>
 
 <script setup lang="ts">
-  import dayjs from 'dayjs'
+  import { createDateTimeFormatter } from '@/utils/ui/format'
   import ArtDialog from '@/components/core/dialogs/art-dialog/index.vue'
   import type { ArtDialogExpose } from '@/components/core/dialogs/art-dialog/types'
   import ArtEmptyState from '@/components/core/feedback/art-empty-state/index.vue'
@@ -92,8 +92,11 @@
 
   const dialogRef = ref<ArtDialogExpose<SmisRectificationNoticeRecord>>()
   const record = shallowRef<SmisRectificationNoticeRecord | null>(null)
-  const formatDate = (value?: string | null): string =>
-    value ? dayjs(value).format('YYYY-MM-DD HH:mm') : '—'
+  const formatDate = createDateTimeFormatter({
+    format: 'YYYY-MM-DD HH:mm',
+    emptyText: '—',
+    invalidText: '—'
+  })
   const inspectionItems: ArtDescriptionItem<SmisRectificationNoticeRecord>[] = [
     { key: 'noticeNo', label: '通知单号', field: 'noticeNo', copyable: true },
     { key: 'rectificationPlanNo', label: '整改计划号', field: 'rectificationPlanNo' },

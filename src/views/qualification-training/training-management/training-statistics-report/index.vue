@@ -165,6 +165,8 @@
 </template>
 
 <script setup lang="tsx">
+  import { createDateTimeFormatter } from '@/utils/ui/format'
+
   import { replaceReactiveModel } from '@/utils/form/model'
   import dayjs from 'dayjs'
   import { useAsyncState } from '@vueuse/core'
@@ -192,6 +194,12 @@
     type SmisSafetyTrainingReportResult
   } from '@smis/api'
 
+  const formatTableDate = createDateTimeFormatter({
+    format: 'YYYY-MM-DD',
+    emptyText: '--',
+    invalidText: '--'
+  })
+
   defineOptions({ name: 'SmisTrainingStatisticsReport' })
   type Dimension = 'trainingCategory' | 'trainingType' | 'trainingForm'
   interface ReportQuery extends Record<string, unknown> {
@@ -200,7 +208,6 @@
   }
 
   const userStore = useUserStore()
-  const { getDictMap } = storeToRefs(userStore)
   const initialQuery = (): ReportQuery => ({
     dateRange: [
       dayjs().startOf('year').format('YYYY-MM-DD'),
@@ -261,8 +268,7 @@
     trainingType: 'smisSafetyTrainingType',
     trainingForm: 'smisSafetyTrainingForm'
   }
-  const dictLabel = (code: string, value: string): string =>
-    (getDictMap.value[code] ?? []).find((item) => item.value === value)?.label || value
+
   const metrics = computed<BusinessWorkspaceMetric[]>(() => [
     {
       label: '计划兑现率',
@@ -337,7 +343,9 @@
   ])
   const attendanceChartData = computed<PieDataItem[]>(() =>
     state.data.attendanceStats.map((item) => ({
-      name: dictLabel('smisSafetyTrainingAttendanceStatus', item.value),
+      name:
+        userStore.getDictLabelByValue('smisSafetyTrainingAttendanceStatus', item.value) ||
+        item.value,
       value: item.count
     }))
   )
@@ -345,7 +353,11 @@
     state.data.categoryStats.filter((item) => item.dimension === activeDimension.value).slice(0, 10)
   )
   const dimensionLabels = computed(() =>
-    dimensionStats.value.map((item) => dictLabel(dimensionDict[activeDimension.value], item.value))
+    dimensionStats.value.map(
+      (item) =>
+        userStore.getDictLabelByValue(dimensionDict[activeDimension.value], item.value) ||
+        item.value
+    )
   )
   const dimensionValues = computed<BarDataItem[]>(() => [
     { name: '计划数', data: dimensionStats.value.map((item) => item.planCount) }
@@ -387,7 +399,7 @@
       prop: 'plannedEndAt',
       label: '计划结束',
       width: 112,
-      formatter: (row) => dayjs(row.plannedEndAt).format('YYYY-MM-DD')
+      formatter: (row) => formatTableDate(row.plannedEndAt)
     },
     {
       prop: 'warningStatus',

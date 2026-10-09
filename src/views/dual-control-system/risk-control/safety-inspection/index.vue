@@ -71,6 +71,8 @@
 </template>
 
 <script setup lang="tsx">
+  import { createDateTimeFormatter } from '@/utils/ui/format'
+
   import { useAuth } from '@/hooks/core/useAuth'
   import dayjs from 'dayjs'
   import { ElMessage, ElTag } from 'element-plus'
@@ -109,6 +111,12 @@
     type SafetyInspectionDialogOpenData
   } from './modules/safety-inspection-dialog.vue'
   import { buildRectificationNoticeHtml } from './modules/safety-inspection-document'
+
+  const formatTableDateTime = createDateTimeFormatter({
+    format: 'YYYY-MM-DD HH:mm',
+    emptyText: '--',
+    invalidText: '--'
+  })
 
   defineOptions({ name: 'SmisDualControlSafetyInspection' })
   const { hasAnyAuth } = useAuth()
@@ -253,7 +261,7 @@
         prop: 'inspectionTime',
         label: '检查时间',
         width: 166,
-        formatter: (row) => dayjs(row.inspectionTime).format('YYYY-MM-DD HH:mm')
+        formatter: (row) => formatTableDateTime(row.inspectionTime)
       },
       {
         prop: 'planAttachmentUrls',
@@ -290,7 +298,7 @@
         prop: 'createTime',
         label: '创建时间',
         width: 166,
-        formatter: (row) => dayjs(row.createTime).format('YYYY-MM-DD HH:mm')
+        formatter: (row) => formatTableDateTime(row.createTime)
       },
       {
         prop: 'operation',

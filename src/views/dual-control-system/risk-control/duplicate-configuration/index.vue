@@ -41,11 +41,12 @@
   </ArtPermissionGuard>
 </template>
 <script setup lang="tsx">
+  import { createDateTimeFormatter } from '@/utils/ui/format'
+
   import { toDictionaryOption } from '@/utils/form/option'
 
   import { useAuth } from '@/hooks/core/useAuth'
   import { useDictionaryOptions } from '@/hooks/core/useDictionaryOptions'
-  import dayjs from 'dayjs'
   import { ElTag } from 'element-plus'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import BusinessTableRowActions from '@/components/business/business-table-row-actions/index.vue'
@@ -76,6 +77,12 @@
     type SmisDuplicateConfigurationSearchParams
   } from '@smis/api'
   import DuplicateDialog, { type DuplicateDialogOpenData } from './modules/duplicate-dialog.vue'
+
+  const formatTableDateTime = createDateTimeFormatter({
+    format: 'YYYY-MM-DD HH:mm',
+    emptyText: '--',
+    invalidText: '--'
+  })
 
   const smisRiskRepeatFlagOptions = useDictionaryOptions(
     'smisRiskRepeatFlag',
@@ -331,7 +338,7 @@
         prop: 'createTime',
         label: '创建时间',
         width: 164,
-        formatter: (row) => dayjs(row.createTime).format('YYYY-MM-DD HH:mm')
+        formatter: (row) => formatTableDateTime(row.createTime)
       },
       {
         prop: 'operation',

@@ -177,12 +177,13 @@
 </template>
 
 <script setup lang="tsx">
+  import { createDateTimeFormatter } from '@/utils/ui/format'
+
   import { toDictionaryOption } from '@/utils/form/option'
 
   import { useAuth } from '@/hooks/core/useAuth'
   import ArtEmptyState from '@/components/core/feedback/art-empty-state/index.vue'
   import { getFriendlySupabaseErrorMessage } from '@/utils/supabase'
-  import dayjs from 'dayjs'
   import { ElTag, ElTree } from 'element-plus'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import ArtIconButton from '@/components/core/widget/art-icon-button/index.vue'
@@ -220,6 +221,12 @@
   } from '@smis/api'
   import StandardDialog, { type StandardDialogOpenData } from './modules/standard-dialog.vue'
   import ItemDialog, { type ItemDialogOpenData } from './modules/item-dialog.vue'
+
+  const formatTableDateTime = createDateTimeFormatter({
+    format: 'YYYY-MM-DD HH:mm',
+    emptyText: '--',
+    invalidText: '--'
+  })
 
   defineOptions({ name: 'SmisDualControlInspectionStandard' })
   const { hasAnyAuth } = useAuth()
@@ -449,7 +456,7 @@
         prop: 'createTime',
         label: '创建时间',
         width: 164,
-        formatter: (row) => dayjs(row.createTime).format('YYYY-MM-DD HH:mm')
+        formatter: (row) => formatTableDateTime(row.createTime)
       },
       {
         prop: 'operation',

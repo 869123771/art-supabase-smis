@@ -38,9 +38,13 @@
           />
         </template>
         <template #participantEmployeeIds>
-          <AccidentEmployeeMultipleSelect
-            v-model="form.participantEmployeeIds"
+          <ArtEmployeeSelect
+            v-model:model-values="form.participantEmployeeIds"
             v-model:selected-data="participantSelection"
+            multiple
+            allow-all-tenant-read
+            :api-fn="fetchAccidentEmployeeCandidates"
+            :display-fields="['organization', 'jobTitle', 'gender', 'age', 'phone']"
             title="选择参加人员"
             subtitle="支持从员工花名册多选，已选人员可再次打开弹窗调整"
             placeholder="点击选择参加人员"
@@ -93,7 +97,6 @@
     type SmisAccidentLevel,
     type SmisAccidentOption
   } from '@smis/api'
-  import AccidentEmployeeMultipleSelect from '../../shared/accident-employee-multiple-select.vue'
   import AccidentReportSelect from '../../shared/accident-report-select.vue'
 
   export interface AccidentAnalysisDialogOpenData {

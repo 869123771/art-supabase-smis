@@ -48,10 +48,11 @@
 </template>
 
 <script setup lang="tsx">
+  import { createDateTimeFormatter } from '@/utils/ui/format'
+
   import { toDictionaryOption } from '@/utils/form/option'
 
   import type { TableRequestOptions } from '@/hooks/core/useTable'
-  import dayjs from 'dayjs'
   import { fetchOrganizationOptionsTree } from '@/api/system-manage'
   import type { SearchFormItem } from '@/components/core/forms/art-search-bar/index.vue'
   import type {
@@ -86,6 +87,17 @@
   import InspectionDeclarationDialog, {
     type InspectionDeclarationDialogOpenData
   } from './modules/inspection-declaration-dialog.vue'
+
+  const formatTableDate = createDateTimeFormatter({
+    format: 'YYYY-MM-DD',
+    emptyText: '--',
+    invalidText: '--'
+  })
+  const formatTableDate3 = createDateTimeFormatter({
+    format: 'YYYY-MM-DD',
+    emptyText: '未计划',
+    invalidText: '未计划'
+  })
 
   defineOptions({ name: 'SmisInspectionDeclaration' })
   type TableParams = SmisEquipmentInspectionSearchParams &
@@ -253,7 +265,7 @@
       prop: 'inspectionDate',
       label: '检验日期',
       width: 118,
-      formatter: (row) => dayjs(row.inspectionDate).format('YYYY-MM-DD')
+      formatter: (row) => formatTableDate(row.inspectionDate)
     },
     {
       prop: 'conclusion',
@@ -281,16 +293,14 @@
       prop: 'nextDueDate',
       label: '下次检验',
       width: 118,
-      formatter: (row) => (row.nextDueDate ? dayjs(row.nextDueDate).format('YYYY-MM-DD') : '未计划')
+      formatter: (row) => formatTableDate3(row.nextDueDate)
     },
     {
       prop: 'extensionDate',
       label: '延期安排',
       width: 126,
       formatter: (row) =>
-        row.needsExtension && row.extensionDate
-          ? dayjs(row.extensionDate).format('YYYY-MM-DD')
-          : '无需延期'
+        row.needsExtension && row.extensionDate ? formatTableDate(row.extensionDate) : '无需延期'
     },
     {
       prop: 'images',

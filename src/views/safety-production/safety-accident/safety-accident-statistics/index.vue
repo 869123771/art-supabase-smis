@@ -152,7 +152,6 @@
   }
 
   const userStore = useUserStore()
-  const { getDictMap } = storeToRefs(userStore)
   const initialQuery = (): StatisticsQuery => ({
     dateRange: [
       dayjs().startOf('year').format('YYYY-MM-DD'),
@@ -189,8 +188,6 @@
     error: computed(() => (request.error.value ? '事故统计加载失败，请重试。' : null)),
     data: request.state
   })
-  const dictLabel = (code: string, value: string): string =>
-    (getDictMap.value[code] ?? []).find((item) => item.value === value)?.label || value
 
   const metrics = computed<BusinessWorkspaceMetric[]>(() => [
     {
@@ -256,13 +253,15 @@
   const trendTotal = computed(() => trendValues.value.reduce((total, count) => total + count, 0))
   const levelChartData = computed<PieDataItem[]>(() =>
     state.data.levels.map((item) => ({
-      name: dictLabel('smisAccidentLevel', item.value),
+      name: userStore.getDictLabelByValue('smisAccidentLevel', item.value) || item.value,
       value: item.count
     }))
   )
   const visibleCategories = computed(() => state.data.categories.slice(0, 10))
   const categoryLabels = computed(() =>
-    visibleCategories.value.map((item) => dictLabel('smisAccidentCategory', item.value))
+    visibleCategories.value.map(
+      (item) => userStore.getDictLabelByValue('smisAccidentCategory', item.value) || item.value
+    )
   )
   const categoryValues = computed(() => visibleCategories.value.map((item) => item.count))
   const organizationColumns: ColumnOption<SmisSafetyAccidentOrganizationStat>[] = [

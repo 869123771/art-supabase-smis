@@ -66,6 +66,7 @@
 </template>
 
 <script setup lang="tsx">
+  import { buildSupabasePageRange } from '@/utils/supabase/pagination'
   import { notifyFriendlyError } from '@/hooks/core/useArtFeedback'
   import { validateArtFormForSubmit } from '@/utils/form/validate-art-form'
   import { getFriendlySupabaseErrorMessage } from '@/utils/supabase'
@@ -232,11 +233,11 @@
     return `${source.employeeName} · 可归还 ${source.returnableQuantity} ${source.unit}`
   }
   const fetchSourceOptions = async (params: DataSelectFetchParams) => {
-    const from = (params.page - 1) * params.pageSize
+    const { from, to } = buildSupabasePageRange({ current: params.page, size: params.pageSize })
     const result = await fetchToolReturnableItems({
       keyword: params.keyword,
       from,
-      to: from + params.pageSize - 1
+      to
     })
     return result
   }

@@ -45,11 +45,13 @@
 
 <script setup lang="tsx">
   import { replaceReactiveModel } from '@/utils/form/model'
+  import { normalizeNullableNumber } from '@/utils/form/normalize'
   import type { TableRequestOptions } from '@/hooks/core/useTable'
   import { withSupabaseTableRange } from '@/utils/supabase/pagination'
   import { useDictionaryOptions } from '@/hooks/core/useDictionaryOptions'
   import dayjs from 'dayjs'
-  import { fetchEmployeeSelectorList } from '@/api/integration/employees'
+  import { useTenantScopeFormPolicy } from '@/hooks/core/useTenantScopeFormPolicy'
+  import { createIssuanceImportLookup } from '../../issuance-import'
   import BusinessTableWorkspaceActions from '@/components/business/business-table-workspace-actions/index.vue'
   import BusinessTableRowActions from '@/components/business/business-table-row-actions/index.vue'
   import BusinessWorkspaceHeader from '@/components/business/business-workspace-header/index.vue'
@@ -73,18 +75,14 @@
   import { printIssuanceRecord } from '../../issuance-print'
   import {
     deletePpeIssuanceRecords,
-    fetchMaterialList,
     fetchPpeIssuanceRecordList,
     fetchPpeScopeOptions,
-    fetchStorageLocationList,
     postPpeIssuanceRecord,
     savePpeIssuanceRecord,
-    type SmisMaterial,
     type SmisPpeIssuanceRecord,
     type SmisPpeIssuanceRecordOverview,
     type SmisPpeIssuanceRecordSearchParams,
-    type SmisPpeScopeOption,
-    type SmisStorageLocation
+    type SmisPpeScopeOption
   } from '@smis/api'
   import IssuanceRecordDialog from './modules/issuance-record-dialog.vue'
   import IssuanceStatisticsDialog from './modules/issuance-statistics-dialog.vue'
@@ -109,18 +107,9 @@
     handleOpen: () => Promise<void>
   }
 
-  interface ImportRow {
-    employeeNo?: unknown
-    warehouseCode?: unknown
-    issuerEmployeeNo?: unknown
-    materialCode?: unknown
-    issueQuantity?: unknown
-    issueDate?: unknown
-    remark?: unknown
-  }
-
   const tableQueryRef = ref<ArtTableQueryExpose>()
   const userStore = useUserStore()
+  const { defaultWriteTenantId } = useTenantScopeFormPolicy()
   const { confirmAction } = useArtFeedback()
   const recordDialogRef = ref<RecordDialogExpose>()
   const statisticsDialogRef = ref<StatisticsDialogExpose>()
@@ -211,61 +200,37 @@
   const refreshData = async (): Promise<void> => {
     await tableQueryRef.value?.getData()
   }
-  const unitLabel = (value: string): string =>
-    userStore.getDictMap.smisMaterialUnit?.find((item) => item.value === value)?.label || value
 
   const openDialog = (mode: 'add' | 'edit' | 'copy', row?: SmisPpeIssuanceRecord): void => {
     void recordDialogRef.value?.handleOpen({ mode, row })
   }
 
-  const resolveExactEmployee = async (employeeNo: string) => {
-    const result = await fetchEmployeeSelectorList({ keyword: employeeNo, from: 0, to: 19 })
-    const employee = result.data.find((item) => item.employeeNo === employeeNo)
-    if (!employee) throw new Error(`未找到员工工号：${employeeNo}`)
-    return employee
-  }
-
-  const resolveExactWarehouse = async (locationCode: string): Promise<SmisStorageLocation> => {
-    const result = await fetchStorageLocationList({
-      keyword: locationCode,
-      status: 'enabled',
-      from: 0,
-      to: 99
-    })
-    const warehouse = result.data.find((item) => item.locationCode === locationCode)
-    if (!warehouse?.id) throw new Error(`未找到启用仓库编码：${locationCode}`)
-    return warehouse
-  }
-
-  const resolveExactMaterial = async (materialCode: string): Promise<SmisMaterial> => {
-    const result = await fetchMaterialList({
-      materialCode,
-      materialType: 'protective_equipment',
-      status: 'enabled',
-      from: 0,
-      to: 99
-    })
-    const material = result.data.find((item) => item.materialCode === materialCode)
-    if (!material?.id) throw new Error(`未找到防护用品编码：${materialCode}`)
-    return material
-  }
-
-  const importRows = async (rows: unknown[]): Promise<void> => {
-    for (const raw of rows as ImportRow[]) {
+  const importRows = async (rows: Array<Record<string, unknown>>): Promise<void> => {
+    const targetTenantId = defaultWriteTenantId.value
+    if (!targetTenantId) throw new Error('无法确定导入目标租户，请刷新后重试')
+    const resolveReferences = createIssuanceImportLookup(targetTenantId, 'protective_equipment')
+    for (const raw of rows) {
       const employeeNo = String(raw.employeeNo || '').trim()
       const warehouseCode = String(raw.warehouseCode || '').trim()
       const issuerEmployeeNo = String(raw.issuerEmployeeNo || '').trim()
       const materialCode = String(raw.materialCode || '').trim()
-      const quantity = Number(raw.issueQuantity)
-      if (!employeeNo || !warehouseCode || !issuerEmployeeNo || !materialCode || !(quantity > 0)) {
+      const quantity = normalizeNullableNumber(raw.issueQuantity)
+      if (
+        !employeeNo ||
+        !warehouseCode ||
+        !issuerEmployeeNo ||
+        !materialCode ||
+        quantity === null ||
+        quantity <= 0
+      ) {
         throw new Error('导入行缺少必填字段或发放数量无效')
       }
-      const [employee, warehouse, issuer, material] = await Promise.all([
-        resolveExactEmployee(employeeNo),
-        resolveExactWarehouse(warehouseCode),
-        resolveExactEmployee(issuerEmployeeNo),
-        resolveExactMaterial(materialCode)
-      ])
+      const { employee, warehouse, issuer, material } = await resolveReferences({
+        employeeNo,
+        warehouseCode,
+        issuerEmployeeNo,
+        materialCode
+      })
       const rawIssueDate = String(raw.issueDate ?? '')
       await savePpeIssuanceRecord({
         employeeId: employee.id,
@@ -301,7 +266,11 @@
   }
 
   const printRecord = (row: SmisPpeIssuanceRecord): void => {
-    printIssuanceRecord(row, '防护用品', unitLabel)
+    printIssuanceRecord(
+      row,
+      '防护用品',
+      (value) => userStore.getDictLabelByValue('smisMaterialUnit', value) || value
+    )
   }
 
   const headerActions = computed<ArtTableQueryHeaderAction[]>(() => [
@@ -403,7 +372,10 @@
         ).data.map((row) => ({
           ...row,
           itemsText: row.items
-            .map((item) => `${item.materialName} ${item.issueQuantity}${unitLabel(item.unit)}`)
+            .map(
+              (item) =>
+                `${item.materialName} ${item.issueQuantity}${userStore.getDictLabelByValue('smisMaterialUnit', item.unit) || item.unit}`
+            )
             .join('；')
         }))
       })
@@ -449,7 +421,10 @@
       showOverflowTooltip: true,
       formatter: (row) =>
         row.items
-          .map((item) => `${item.materialName} × ${item.issueQuantity}${unitLabel(item.unit)}`)
+          .map(
+            (item) =>
+              `${item.materialName} × ${item.issueQuantity}${userStore.getDictLabelByValue('smisMaterialUnit', item.unit) || item.unit}`
+          )
           .join('；')
     },
     {

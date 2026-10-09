@@ -125,6 +125,8 @@
 </template>
 
 <script setup lang="tsx">
+  import { createDateTimeFormatter } from '@/utils/ui/format'
+
   import { toDictionaryOption } from '@/utils/form/option'
 
   import type { TableRequestOptions } from '@/hooks/core/useTable'
@@ -168,6 +170,12 @@
   import PlanDetailDrawer, {
     type HiddenHazardPlanDetailOpenData
   } from './modules/plan-detail-drawer.vue'
+
+  const formatTableDateTime = createDateTimeFormatter({
+    format: 'YYYY-MM-DD HH:mm',
+    emptyText: '--',
+    invalidText: '--'
+  })
 
   defineOptions({ name: 'SmisDualControlHiddenHazardInspectionPlan' })
   interface PlanQuery extends SmisHiddenHazardPlanSearchParams {
@@ -430,13 +438,13 @@
       prop: 'plannedStartAt',
       label: '计划开始时间',
       width: 164,
-      formatter: (row) => dayjs(row.plannedStartAt).format('YYYY-MM-DD HH:mm')
+      formatter: (row) => formatTableDateTime(row.plannedStartAt)
     },
     {
       prop: 'plannedEndAt',
       label: '计划结束时间',
       width: 164,
-      formatter: (row) => dayjs(row.plannedEndAt).format('YYYY-MM-DD HH:mm')
+      formatter: (row) => formatTableDateTime(row.plannedEndAt)
     },
     {
       prop: 'taskDeadlineValue',
@@ -503,7 +511,7 @@
       prop: 'createTime',
       label: '创建时间',
       width: 164,
-      formatter: (row) => dayjs(row.createTime).format('YYYY-MM-DD HH:mm')
+      formatter: (row) => formatTableDateTime(row.createTime)
     },
     {
       prop: 'operation',

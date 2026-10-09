@@ -38,7 +38,7 @@
           search-placeholder="搜索仓库名称或编码"
           empty-text="暂无可用仓库"
           empty-description="当前租户没有启用的仓库或存放位置，请先维护仓储位置。"
-          @update:selected-data="selection.warehouse = normalizeWarehouses($event)"
+          @update:selected-data="selection.warehouse = $event"
         >
           <template #empty>
             <SmisDataSourceEmptyActions source="storage-location" />
@@ -71,6 +71,7 @@
 </template>
 
 <script setup lang="tsx">
+  import { buildSupabasePageRange } from '@/utils/supabase/pagination'
   import { notifyFriendlyError } from '@/hooks/core/useArtFeedback'
   import { validateArtFormForSubmit } from '@/utils/form/validate-art-form'
   import dayjs from 'dayjs'
@@ -82,8 +83,7 @@
   import type { ArtTableExpose } from '@/components/core/tables/art-table/index.vue'
   import type {
     DataSelectColumn,
-    DataSelectFetchParams,
-    DataSelectRecord
+    DataSelectFetchParams
   } from '@/components/core/forms/art-data-select/types'
   import type { ArtDialogExpose } from '@/components/core/dialogs/art-dialog/types'
   import type { ColumnOption } from '@/types'
@@ -176,16 +176,14 @@
     { prop: 'locationCode', label: '位置编码', width: 140 },
     { prop: 'detailLocation', label: '详细位置', minWidth: 160 }
   ]
-  const normalizeWarehouses = (items: DataSelectRecord[]): SmisStorageLocation[] =>
-    items as SmisStorageLocation[]
   const fetchWarehouseOptions = async (params: DataSelectFetchParams) => {
-    const from = (params.page - 1) * params.pageSize
+    const { from, to } = buildSupabasePageRange({ current: params.page, size: params.pageSize })
     const result = await fetchStorageLocationList(
       {
         keyword: params.keyword,
         status: 'enabled',
         from,
-        to: from + params.pageSize - 1
+        to
       },
       { showErrorMessage: false }
     )

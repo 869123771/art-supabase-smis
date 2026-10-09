@@ -54,6 +54,8 @@
 </template>
 
 <script setup lang="tsx">
+  import { createDateTimeFormatter } from '@/utils/ui/format'
+
   import { toDictionaryOption } from '@/utils/form/option'
 
   import type { TableRequestOptions } from '@/hooks/core/useTable'
@@ -91,6 +93,12 @@
   import TaskExecutionDialog, {
     type TaskExecutionDialogOpenData
   } from './modules/task-execution-dialog.vue'
+
+  const formatTableDateTime = createDateTimeFormatter({
+    format: 'YYYY-MM-DD HH:mm',
+    emptyText: '--',
+    invalidText: '--'
+  })
 
   defineOptions({ name: 'SmisDualControlRiskInspectionTask' })
   interface TaskQuery extends SmisRiskInspectionTaskSearchParams {
@@ -358,8 +366,8 @@
       minWidth: 190,
       formatter: (row) => (
         <div class="risk-task-page__stack">
-          <strong>{dayjs(row.plannedStartAt).format('YYYY-MM-DD HH:mm')}</strong>
-          <small>至 {dayjs(row.plannedEndAt).format('YYYY-MM-DD HH:mm')}</small>
+          <strong>{formatTableDateTime(row.plannedStartAt)}</strong>
+          <small>至 {formatTableDateTime(row.plannedEndAt)}</small>
         </div>
       )
     },
@@ -467,19 +475,16 @@
         ).map((row) => ({
           ...row,
           riskPointType:
-            (getDictMap.value.smisRiskPointType ?? []).find(
-              (item) => item.value === row.riskPointType
-            )?.label || row.riskPointType,
+            userStore.getDictItemByValue('smisRiskPointType', row.riskPointType)?.label ||
+            row.riskPointType,
           controlLevel:
-            (getDictMap.value.smisRiskControlLevel ?? []).find(
-              (item) => item.value === row.controlLevel
-            )?.label || row.controlLevel,
+            userStore.getDictItemByValue('smisRiskControlLevel', row.controlLevel)?.label ||
+            row.controlLevel,
           plannedStartAt: dayjs(row.plannedStartAt).format('YYYY-MM-DD HH:mm'),
           plannedEndAt: dayjs(row.plannedEndAt).format('YYYY-MM-DD HH:mm'),
           status:
-            (getDictMap.value.smisRiskInspectionTaskStatus ?? []).find(
-              (item) => item.value === row.status
-            )?.label || row.status,
+            userStore.getDictItemByValue('smisRiskInspectionTaskStatus', row.status)?.label ||
+            row.status,
           progress: `${row.completedItemCount}/${row.itemCount}`
         }))
       })

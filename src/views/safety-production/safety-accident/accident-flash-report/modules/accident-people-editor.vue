@@ -5,9 +5,16 @@
         <strong>人员信息</strong>
         <span>批量选择员工后自动固化事故发生时的人事档案快照</span>
       </div>
-      <AccidentEmployeeMultipleSelect
-        v-model="selectedIds"
+      <ArtEmployeeSelect
+        v-model:model-values="selectedIds"
         v-model:selected-data="selectedEmployees"
+        multiple
+        allow-all-tenant-read
+        :api-fn="fetchAccidentEmployeeCandidates"
+        :display-fields="['organization', 'jobTitle', 'gender', 'age', 'phone']"
+        title="批量添加事故人员"
+        subtitle="从当前租户员工花名册选择，确认后自动带入组织、身份与任职档案"
+        placeholder="批量选择人员"
       />
     </div>
 
@@ -150,14 +157,19 @@
 </template>
 
 <script setup lang="ts">
-  import { cloneDeep, isEqual, omit } from 'lodash-es'
+  import { cloneDeep, isEqual } from 'lodash-es'
+  import { serializeOrderedEditorRows } from '@/utils/form/model'
   import { computed, ref, watch } from 'vue'
   import ArtDictDisplay from '@/components/core/base/art-dict-display/index.vue'
   import ArtEmptyState from '@/components/core/feedback/art-empty-state/index.vue'
   import ArtSectionTitle from '@/components/core/surfaces/art-section-title/index.vue'
   import ArtTable from '@/components/core/tables/art-table/index.vue'
-  import type { SmisAccidentEmployee, SmisAccidentPerson } from '@smis/api'
-  import AccidentEmployeeMultipleSelect from '../../shared/accident-employee-multiple-select.vue'
+  import {
+    fetchAccidentEmployeeCandidates,
+    type SmisAccidentEmployee,
+    type SmisAccidentPerson
+  } from '@smis/api'
+  import ArtEmployeeSelect from '@/components/business/art-employee-select/index.vue'
 
   interface EditorRow extends SmisAccidentPerson {
     localKey: string
@@ -170,8 +182,6 @@
   const rows = ref<EditorRow[]>([])
   let localSequence = 0
   const createLocalKey = (): string => `person-${Date.now()}-${localSequence++}`
-  const toModelRows = (): SmisAccidentPerson[] =>
-    rows.value.map((row, index) => ({ ...omit(row, 'localKey'), sort: index }))
   const toEditorRows = (value: SmisAccidentPerson[]): EditorRow[] => {
     const currentByEmployeeId = new Map(rows.value.map((row) => [row.employeeId, row.localKey]))
     return cloneDeep(value).map((item) => ({
@@ -179,11 +189,11 @@
       localKey: item.id || currentByEmployeeId.get(item.employeeId) || createLocalKey()
     }))
   }
-  const sync = (): void => emit('update:modelValue', toModelRows())
+  const sync = (): void => emit('update:modelValue', serializeOrderedEditorRows(rows.value))
   watch(
     () => props.modelValue,
     (value) => {
-      if (isEqual(value, toModelRows())) return
+      if (isEqual(value, serializeOrderedEditorRows(rows.value))) return
       rows.value = toEditorRows(value)
     },
     { immediate: true }

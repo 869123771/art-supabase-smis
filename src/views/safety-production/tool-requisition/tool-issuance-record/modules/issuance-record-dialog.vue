@@ -40,7 +40,7 @@
           search-placeholder="搜索仓库名称或编码"
           empty-text="暂无可用仓库"
           empty-description="当前租户没有启用的仓库或存放位置，请先维护仓储位置。"
-          @update:selected-data="selection.warehouse = normalizeWarehouses($event)"
+          @update:selected-data="selection.warehouse = $event"
         >
           <template #empty><SmisDataSourceEmptyActions source="storage-location" /></template>
         </ArtTableSingleSelect>
@@ -95,6 +95,7 @@
 </template>
 
 <script setup lang="tsx">
+  import { buildSupabasePageRange } from '@/utils/supabase/pagination'
   import ArtEntitySummary from '@/components/core/surfaces/art-entity-summary/index.vue'
   import BusinessTableIdentityCell from '@/components/business/business-table-identity-cell/index.vue'
   import { notifyFriendlyError } from '@/hooks/core/useArtFeedback'
@@ -109,8 +110,7 @@
   import type { ArtTableExpose } from '@/components/core/tables/art-table/index.vue'
   import type {
     DataSelectColumn,
-    DataSelectFetchParams,
-    DataSelectRecord
+    DataSelectFetchParams
   } from '@/components/core/forms/art-data-select/types'
   import type { ArtDialogExpose } from '@/components/core/dialogs/art-dialog/types'
   import type { ColumnOption } from '@/types'
@@ -155,7 +155,7 @@
   const formRef = ref<{ validate: () => Promise<boolean>; clearValidate: () => void }>()
   const detailTableRef = ref<ArtTableExpose>()
   const userStore = useUserStore()
-  const { getUserInfo, getDictMap } = storeToRefs(userStore)
+  const { getUserInfo } = storeToRefs(userStore)
 
   const createInitialForm = (): FormModel => ({
     id: undefined,
@@ -279,7 +279,7 @@
       formatter: (row) => (row as SmisStorageLocation).organization?.organizationName || '—'
     }
   ]
-  const materialColumns: DataSelectColumn[] = [
+  const materialColumns: DataSelectColumn<SmisMaterial>[] = [
     { prop: 'materialName', label: '物料名称', minWidth: 180 },
     { prop: 'materialCode', label: '物料编码', width: 150 },
     { prop: 'specificationModel', label: '规格型号', minWidth: 150 },
@@ -287,26 +287,18 @@
       prop: 'basicUnit',
       label: '计量单位',
       width: 96,
-      formatter: (row) => {
-        const value = (row as SmisMaterial).basicUnit
-        return (
-          getDictMap.value.smisMaterialUnit?.find((item) => item.value === value)?.label || value
-        )
-      }
+      dict: { code: 'smisMaterialUnit', display: 'text' }
     }
   ]
 
-  const normalizeWarehouses = (rows: DataSelectRecord[]): SmisStorageLocation[] =>
-    rows as SmisStorageLocation[]
-
   const fetchWarehouseOptions = async (params: DataSelectFetchParams) => {
-    const from = (params.page - 1) * params.pageSize
+    const { from, to } = buildSupabasePageRange({ current: params.page, size: params.pageSize })
     const result = await fetchStorageLocationList(
       {
         keyword: params.keyword,
         status: 'enabled',
         from,
-        to: from + params.pageSize - 1
+        to
       },
       { showErrorMessage: false }
     )
@@ -314,22 +306,21 @@
   }
 
   const fetchMaterialOptions = async (params: DataSelectFetchParams) => {
-    const from = (params.page - 1) * params.pageSize
+    const { from, to } = buildSupabasePageRange({ current: params.page, size: params.pageSize })
     const result = await fetchMaterialList(
       {
         materialName: params.keyword,
         materialType: 'tool',
         status: 'enabled',
         from,
-        to: from + params.pageSize - 1
+        to
       },
       { showErrorMessage: false }
     )
     return result
   }
 
-  const handleMaterialsChange = (rows: DataSelectRecord[]): void => {
-    const materials = rows as SmisMaterial[]
+  const handleMaterialsChange = (materials: SmisMaterial[]): void => {
     const existing = new Map(form.model.items.map((item) => [item.materialId, item]))
     selection.materials = materials
     form.model.items = materials.map(

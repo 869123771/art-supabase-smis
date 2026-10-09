@@ -195,7 +195,7 @@
 </template>
 
 <script setup lang="ts">
-  import dayjs from 'dayjs'
+  import { createDateTimeFormatter } from '@/utils/ui/format'
   import type { ColumnOption } from '@/types'
   import ArtDialog from '@/components/core/dialogs/art-dialog/index.vue'
   import type { ArtDialogExpose } from '@/components/core/dialogs/art-dialog/types'
@@ -320,8 +320,11 @@
     }
     return items
   })
-  const formatDate = (value?: string | null) =>
-    value ? dayjs(value).format('YYYY-MM-DD HH:mm') : '—'
+  const formatDate = createDateTimeFormatter({
+    format: 'YYYY-MM-DD HH:mm',
+    emptyText: '—',
+    invalidText: '—'
+  })
   const basicItems = computed<ArtDescriptionItem<SmisSpecialOperationPermit>[]>(() => [
     { key: 'permitNo', label: '作业证编号', field: 'permitNo', copyable: true },
     {

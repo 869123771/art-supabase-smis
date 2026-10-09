@@ -70,11 +70,12 @@
 </template>
 
 <script setup lang="tsx">
+  import { createDateTimeFormatter } from '@/utils/ui/format'
+
   import { toDictionaryOption } from '@/utils/form/option'
 
   import type { TableRequestOptions } from '@/hooks/core/useTable'
   import BusinessTableIdentityCell from '@/components/business/business-table-identity-cell/index.vue'
-  import dayjs from 'dayjs'
   import { ElTag } from 'element-plus'
   import type { SearchFormItem } from '@/components/core/forms/art-search-bar/index.vue'
   import type {
@@ -114,6 +115,12 @@
   import SpecialOperationCatalogDialog, {
     type SpecialOperationCatalogDialogOpenData
   } from './special-operation-catalog-dialog.vue'
+
+  const formatTableDateTime = createDateTimeFormatter({
+    format: 'YYYY-MM-DD HH:mm',
+    emptyText: '--',
+    invalidText: '--'
+  })
 
   const props = defineProps<{
     catalogKind: SmisSpecialOperationCatalogKind
@@ -494,7 +501,7 @@
       prop: 'createTime',
       label: '创建时间',
       width: 164,
-      formatter: (row) => dayjs(row.createTime).format('YYYY-MM-DD HH:mm')
+      formatter: (row) => formatTableDateTime(row.createTime)
     },
     ...(isPlatformScope.value
       ? [

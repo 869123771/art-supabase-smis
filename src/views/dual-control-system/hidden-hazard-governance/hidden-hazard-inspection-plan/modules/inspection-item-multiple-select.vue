@@ -14,20 +14,20 @@
     empty-text="暂无可用排查标准"
     empty-description="请先在排查标准中启用至少一条排查项。"
     @update:model-value="emit('update:modelValue', normalizeStringList($event))"
-    @update:selected-data="emit('update:selectedData', normalizeRows($event))"
+    @update:selected-data="emit('update:selectedData', $event)"
   >
     <template #empty><SmisDataSourceEmptyActions source="inspection-standard" /></template>
   </ArtTableMultipleSelect>
 </template>
 
 <script setup lang="ts">
+  import { buildSupabasePageRange } from '@/utils/supabase/pagination'
   import { normalizeStringList } from '@/utils/form/normalize'
 
   import ArtTableMultipleSelect from '@/components/core/forms/art-data-select/table-multiple.vue'
   import type {
     DataSelectColumn,
-    DataSelectFetchParams,
-    DataSelectRecord
+    DataSelectFetchParams
   } from '@/components/core/forms/art-data-select/types'
   import { fetchInspectionItems, type SmisInspectionItem } from '@smis/api'
   import SmisDataSourceEmptyActions from '@smis/views/components/smis-data-source-empty-actions.vue'
@@ -40,37 +40,31 @@
     'update:modelValue': [value: string[]]
     'update:selectedData': [rows: SmisInspectionItem[]]
   }>()
-  const item = (row: DataSelectRecord): SmisInspectionItem => row as SmisInspectionItem
-  const itemLabel = (row: DataSelectRecord): string => {
-    const record = item(row)
-    return `${record.itemCode} · ${record.inspectionContent}`
+  const itemLabel = (row: SmisInspectionItem): string => {
+    return `${row.itemCode} · ${row.inspectionContent}`
   }
-  const itemDescription = (row: DataSelectRecord): string => {
-    const record = item(row)
-    return record.standard
-      ? `${record.standard.standardName} · ${record.standard.standardCode}`
+  const itemDescription = (row: SmisInspectionItem): string => {
+    return row.standard
+      ? `${row.standard.standardName} · ${row.standard.standardCode}`
       : '未关联排查标准'
   }
-  const columns: DataSelectColumn[] = [
+  const columns: DataSelectColumn<SmisInspectionItem>[] = [
     { prop: 'itemCode', label: '内容编号', width: 130 },
     { prop: 'inspectionContent', label: '排查内容', minWidth: 280 },
     {
       prop: 'standard',
       label: '所属标准',
       minWidth: 180,
-      formatter: (row) => item(row).standard?.standardName || '未关联标准'
+      formatter: (row) => row.standard?.standardName || '未关联标准'
     }
   ]
   const fetchItems = async (params: DataSelectFetchParams) => {
-    const from = Math.max((params.page - 1) * params.pageSize, 0)
-    const result = await fetchInspectionItems({
+    const { from, to } = buildSupabasePageRange({ current: params.page, size: params.pageSize })
+    return fetchInspectionItems({
       keyword: params.keyword,
       status: 'enabled',
       from,
-      to: from + params.pageSize - 1
+      to
     })
-    return { ...result }
   }
-
-  const normalizeRows = (rows: DataSelectRecord[]): SmisInspectionItem[] => rows.map(item)
 </script>
