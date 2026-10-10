@@ -180,6 +180,7 @@
 
 <script setup lang="tsx">
   import { replaceReactiveModel } from '@/utils/form/model'
+  import { formatPercentValue } from '@/utils/ui/format'
   import { ElProgress, ElTag } from 'element-plus'
   import type { ColumnOption } from '@/types'
   import ArtSearchBar, {
@@ -290,7 +291,6 @@
   const categoryStats = computed(() => state.data.categoryStats.slice(0, 10).reverse())
   const categoryLabels = computed(() => categoryStats.value.map((row) => row.categoryName))
   const categoryValues = computed(() => categoryStats.value.map((row) => row.equipmentCount))
-  const rate = (value: number): string => `${Number(value || 0).toFixed(2)}%`
   const cycleLabel = (unit: string): string =>
     (
       ({
@@ -344,6 +344,7 @@
         <div class="special-equipment-page__org-rate">
           <ElProgress
             percentage={row.inspectionRate}
+            format={(value) => formatPercentValue(value, { fractionDigits: 2 })}
             strokeWidth={7}
             color={row.inspectionRate >= 90 ? 'var(--el-color-success)' : 'var(--theme-color)'}
           />
@@ -384,11 +385,14 @@
       label: '完成率',
       width: 96,
       align: 'right',
-      formatter: (row) => rate(row.inspectionRate)
+      formatter: (row) => formatPercentValue(row.inspectionRate || 0, { fractionDigits: 2 })
     }
   ]
   const exportRows = computed(() =>
-    state.data.riskDetails.map((row) => ({ ...row, inspectionRate: rate(row.inspectionRate) }))
+    state.data.riskDetails.map((row) => ({
+      ...row,
+      inspectionRate: formatPercentValue(row.inspectionRate || 0, { fractionDigits: 2 })
+    }))
   )
   const exportColumns = {
     equipmentCode: { title: '设备编号' },

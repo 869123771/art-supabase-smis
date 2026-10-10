@@ -1,7 +1,7 @@
 import { normalizeNullableText } from '@/utils/form/normalize'
 import { buildSupabaseRpcRange, normalizeSupabaseFunctionError } from '@/utils/supabase'
 import { omit } from 'lodash-es'
-import { useSupabase } from '@/hooks'
+import { useSupabase } from '@/hooks/core/useSupabase'
 
 export type SmisHiddenHazardGovernanceStatus =
   'pending_approval' | 'rectifying' | 'pending_acceptance' | 'completed' | 'closed'

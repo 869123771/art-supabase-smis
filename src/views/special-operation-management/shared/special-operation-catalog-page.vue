@@ -642,7 +642,6 @@
     await loadOperationTypes()
     const tableQuery = tableQueryRef.value
     tableQuery?.clearSelection()
-    tableQuery?.resetColumns()
     void tableQuery?.refreshContext()
   })
 </script>

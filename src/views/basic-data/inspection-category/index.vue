@@ -335,7 +335,6 @@
   watch(revision, () => {
     const tableQuery = tableQueryRef.value
     tableQuery?.clearSelection()
-    tableQuery?.resetColumns()
     void tableQuery?.refreshContext()
   })
 </script>

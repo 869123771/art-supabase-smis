@@ -2,7 +2,7 @@ import { buildSupabaseRpcRange } from '@/utils/supabase'
 import { loadAllDocumentPages } from '@/utils/business/document-detail-list'
 import { normalizeNullableText } from '@/utils/form/normalize'
 import { omit } from 'lodash-es'
-import { useSupabase } from '@/hooks'
+import { useSupabase } from '@/hooks/core/useSupabase'
 import { normalizeBooleanFilter } from '@/api/providers/supabase/query'
 import TreeUtils from '@/utils/tree'
 import type {

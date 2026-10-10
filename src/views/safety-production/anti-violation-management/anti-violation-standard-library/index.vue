@@ -70,7 +70,7 @@
 </template>
 
 <script setup lang="tsx">
-  import { createDateTimeFormatter } from '@/utils/ui/format'
+  import { createDateTimeFormatter, formatNumberValue } from '@/utils/ui/format'
 
   import { toDictionaryOption } from '@/utils/form/option'
 
@@ -335,7 +335,7 @@
       width: 112,
       align: 'right',
       sortable: true,
-      formatter: (row) => `${Number(row.deductionPoints).toLocaleString('zh-CN')} 分`
+      formatter: (row) => `${formatNumberValue(Number(row.deductionPoints))} 分`
     },
     { prop: 'handlingRequirements', label: '处理要求', minWidth: 240, showOverflowTooltip: true },
     { prop: 'legalBasis', label: '制度依据', minWidth: 200, showOverflowTooltip: true },

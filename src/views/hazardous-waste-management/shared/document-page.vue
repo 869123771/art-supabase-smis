@@ -21,13 +21,7 @@
         ><template #actions><BusinessTableWorkspaceActions :table="tableQueryRef" /></template
       ></BusinessWorkspaceHeader>
       <div class="hazardous-document-workspace flex min-h-0 min-w-0 flex-1 flex-col gap-[14px]">
-        <MasterDeleteProcessingNotice
-          :location-ready="
-            Boolean(
-              deleteProcessing.recordId && deleteProcessing.recordNo && deleteProcessing.resourceId
-            )
-          "
-        />
+        <MasterDeleteProcessingNotice :table="tableQueryRef" />
         <ArtTableQuery
           ref="tableQueryRef"
           :model-value="searchQuery"

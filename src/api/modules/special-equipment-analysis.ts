@@ -1,4 +1,4 @@
-import { useSupabase } from '@/hooks'
+import { useSupabase } from '@/hooks/core/useSupabase'
 import TreeUtils from '@/utils/tree'
 import type { SmisSpecialEquipmentAnalysis } from '@smis/api/types'
 

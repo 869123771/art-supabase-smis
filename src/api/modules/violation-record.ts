@@ -2,7 +2,7 @@ import { buildSupabaseRpcRange } from '@/utils/supabase'
 import { normalizeNullableText } from '@/utils/form/normalize'
 import dayjs from 'dayjs'
 import { omit } from 'lodash-es'
-import { useSupabase } from '@/hooks'
+import { useSupabase } from '@/hooks/core/useSupabase'
 import type {
   SmisViolationRecord,
   SmisViolationRecordOverview,

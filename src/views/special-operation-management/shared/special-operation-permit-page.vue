@@ -620,7 +620,6 @@
   watch(revision, async () => {
     activeStatus.value = undefined
     await loadOperationTypes()
-    tableQueryRef.value?.resetColumns()
     void tableQueryRef.value?.refreshContext()
   })
 </script>

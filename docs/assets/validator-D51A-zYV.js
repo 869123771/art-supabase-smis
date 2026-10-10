@@ -1,1 +1,0 @@
-import{sr as e}from"./use-global-config-TrC6eEMf.js";var t=t=>[``,...e].includes(t);export{t};

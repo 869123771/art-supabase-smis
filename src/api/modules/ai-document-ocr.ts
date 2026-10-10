@@ -1,5 +1,5 @@
 import { normalizeSupabaseFunctionError } from '@/utils/supabase'
-import { useSupabase } from '@/hooks'
+import { useSupabase } from '@/hooks/core/useSupabase'
 import type { SmisCertificateCategory, SmisEquipmentInspectionConclusion } from '@smis/api/types'
 
 export interface SmisAiOcrResponseBase {

@@ -7,7 +7,7 @@ import {
   type RecordDeleteDependency
 } from '@/api/master-data-delete'
 import { fetchAllRangePages } from '@/utils/supabase/pagination'
-import { useSupabase } from '@/hooks'
+import { useSupabase } from '@/hooks/core/useSupabase'
 import TreeUtils from '@/utils/tree'
 import type {
   SmisHazardousWasteCatalogItem,

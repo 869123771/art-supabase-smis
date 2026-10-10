@@ -12,7 +12,7 @@
     <MasterDeleteProcessingNotice
       class="mb-4"
       :location-ready="deleteLocationReady"
-      action-hint="当前已定位关联设备或检验记录，请核对资料后返回供应商管理重新检查。"
+      action-hint="请核对关联设备或检验资料后返回供应商管理重新检查。"
     />
     <ArtPageHeader
       class="equipment-archive-detail__header"
@@ -281,8 +281,12 @@
   const activeTab = ref(String(route.query.tab || 'archive'))
   const deleteLocationReady = computed(() =>
     isInspectionReference.value
-      ? inspections.value.some((item) => item.id === deleteContext.value.recordId)
-      : equipment.value?.id === deleteContext.value.recordId
+      ? !inspectionLoading.value &&
+        !inspectionError.value &&
+        inspections.value.some((item) => item.id === deleteContext.value.recordId)
+      : !loading.value &&
+        !loadError.value &&
+        Boolean(equipment.value?.id && equipment.value.id === deleteContext.value.recordId)
   )
   watch(
     () => route.query.tab,

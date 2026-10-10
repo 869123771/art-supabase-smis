@@ -1,6 +1,6 @@
 import { normalizeNullableText } from '@/utils/form/normalize'
 import { omit } from 'lodash-es'
-import { useSupabase } from '@/hooks'
+import { useSupabase } from '@/hooks/core/useSupabase'
 
 export type SmisRiskMapShapeType = 'rectangle' | 'circle' | 'polygon' | 'text'
 

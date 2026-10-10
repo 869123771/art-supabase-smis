@@ -2,7 +2,7 @@ import { buildSupabaseRpcRange } from '@/utils/supabase'
 import { loadAllDocumentPages } from '@/utils/business/document-detail-list'
 import { normalizeNullableText } from '@/utils/form/normalize'
 import { omit } from 'lodash-es'
-import { useSupabase } from '@/hooks'
+import { useSupabase } from '@/hooks/core/useSupabase'
 import type {
   SmisSupplier,
   SmisSupplierOverview,

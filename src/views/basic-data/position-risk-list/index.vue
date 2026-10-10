@@ -160,6 +160,7 @@
 </template>
 
 <script setup lang="tsx">
+  import BusinessTableRowActions from '@/components/business/business-table-row-actions/index.vue'
   import { toDictionaryOption } from '@/utils/form/option'
 
   import ArtTable from '@/components/core/tables/art-table/index.vue'
@@ -422,7 +423,7 @@
       width: 112,
       fixed: 'right',
       formatter: (row) => (
-        <div class="flex items-center">
+        <BusinessTableRowActions>
           <ArtButtonTable
             type="edit"
             permission="SmisPositionRiskList:Edit"
@@ -433,7 +434,7 @@
             permission="SmisPositionRiskList:Delete"
             onClick={() => handleDeleteRows([row])}
           />
-        </div>
+        </BusinessTableRowActions>
       )
     }
   ]

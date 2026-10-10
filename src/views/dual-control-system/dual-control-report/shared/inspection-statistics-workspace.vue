@@ -111,6 +111,7 @@
 
 <script setup lang="tsx">
   import { replaceReactiveModel } from '@/utils/form/model'
+  import { formatPercentValue } from '@/utils/ui/format'
   import dayjs from 'dayjs'
   import { ElProgress } from 'element-plus'
   import type { ColumnOption } from '@/types'
@@ -364,7 +365,6 @@
     )
   )
   const hasChartValues = computed(() => chartValues.value.some((value) => value > 0))
-  const formatRate = (value: number): string => `${value.toFixed(2)}%`
   const openDetail = (row: SmisInspectionOrganizationStat): void => {
     if (!row.organizationId) return
     void detailRef.value?.handleOpen({
@@ -405,6 +405,7 @@
                 <div class="inspection-statistics-page__rate-cell">
                   <ElProgress
                     percentage={row.inspectionRate}
+                    format={(value) => formatPercentValue(value, { fractionDigits: 2 })}
                     strokeWidth={7}
                     color={
                       row.inspectionRate >= 90 ? 'var(--el-color-success)' : 'var(--theme-color)'
@@ -423,7 +424,7 @@
               label: '漏查率',
               width: 96,
               align: 'right',
-              formatter: (row) => formatRate(row.missedRate)
+              formatter: (row) => formatPercentValue(row.missedRate, { fractionDigits: 2 })
             },
             { prop: 'repeatedMissedCount', label: '重复漏查', width: 104, align: 'right' },
             {
@@ -431,7 +432,7 @@
               label: '重复漏查率',
               width: 120,
               align: 'right',
-              formatter: (row) => formatRate(row.repeatRate)
+              formatter: (row) => formatPercentValue(row.repeatRate, { fractionDigits: 2 })
             }
           ]
     return [
@@ -459,9 +460,9 @@
   const exportRows = computed(() =>
     state.data.organizationStats.map((row) => ({
       ...row,
-      inspectionRate: formatRate(row.inspectionRate),
-      missedRate: formatRate(row.missedRate),
-      repeatRate: formatRate(row.repeatRate)
+      inspectionRate: formatPercentValue(row.inspectionRate, { fractionDigits: 2 }),
+      missedRate: formatPercentValue(row.missedRate, { fractionDigits: 2 }),
+      repeatRate: formatPercentValue(row.repeatRate, { fractionDigits: 2 })
     }))
   )
   const exportColumns = computed<Record<string, { title: string; width?: number }>>(() => {

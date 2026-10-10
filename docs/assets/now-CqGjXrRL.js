@@ -1,0 +1,1 @@
+import{u as e}from"./toString-mrUreL90.js";var t=function(){return e.Date.now()};export{t};

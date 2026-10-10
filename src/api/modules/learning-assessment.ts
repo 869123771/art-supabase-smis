@@ -1,5 +1,5 @@
 import { normalizeNullableText } from '@/utils/form/normalize'
-import { useSupabase } from '@/hooks'
+import { useSupabase } from '@/hooks/core/useSupabase'
 import type { ApiFeedbackOptions } from '@/types/api/request'
 import type {
   SmisCourseLearningListResult,

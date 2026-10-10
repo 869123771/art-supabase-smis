@@ -2,7 +2,7 @@ import { normalizeNullableText } from '@/utils/form/normalize'
 import { buildOrIlikeFilter } from '@/utils/supabase/search'
 import { fetchAllRangePages } from '@/utils/supabase/pagination'
 import { omit } from 'lodash-es'
-import { useSupabase } from '@/hooks'
+import { useSupabase } from '@/hooks/core/useSupabase'
 import type {
   SmisConfigurableMenuOption,
   SmisDuplicateConfiguration,

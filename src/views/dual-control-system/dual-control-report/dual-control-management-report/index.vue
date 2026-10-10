@@ -50,6 +50,7 @@
 </template>
 
 <script setup lang="tsx">
+  import { formatSensitiveCountValue } from '@/utils/ui/format'
   import type { TableRequestOptions } from '@/hooks/core/useTable'
   import dayjs from 'dayjs'
   import { ElProgress, ElTag } from 'element-plus'
@@ -218,7 +219,8 @@
             {row.riskItemCount} 项风险 · {row.measureCount} 项措施
           </strong>
           <small>
-            {row.riskPointCount} 个风险点 · 风险值 {Number(row.riskValue).toLocaleString()}
+            {row.riskPointCount} 个风险点 · 风险值{' '}
+            {formatSensitiveCountValue(Number(row.riskValue))}
           </small>
         </div>
       )

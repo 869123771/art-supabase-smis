@@ -1,5 +1,5 @@
 import { normalizeSupabaseFunctionError } from '@/utils/supabase'
-import { useSupabase } from '@/hooks'
+import { useSupabase } from '@/hooks/core/useSupabase'
 
 export type SmisSpecialOperationPrecheckReadiness = 'ready' | 'needs_attention' | 'blocked'
 

@@ -1,4 +1,4 @@
-import { useSupabase } from '@/hooks'
+import { useSupabase } from '@/hooks/core/useSupabase'
 import type { SmisEquipmentReminderConfig, SmisEquipmentReminderDetail } from '@smis/api/types'
 
 const { supabase, keysToSnakeDeep, responseHandle } = useSupabase()
