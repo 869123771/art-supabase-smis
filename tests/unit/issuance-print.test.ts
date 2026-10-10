@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { SmisPpeIssuanceRecord } from '../../src/api/types/issuance-and-documents'
-import { printIssuanceRecord } from '../../src/views/safety-production/issuance-print'
+import { buildIssuanceRecordHtml } from '../../src/views/safety-production/issuance-print'
 
 const row: SmisPpeIssuanceRecord = {
   id: 'record-1',
@@ -28,35 +28,12 @@ const row: SmisPpeIssuanceRecord = {
 }
 
 test('issuance print shares the template and escapes business data', () => {
-  const previousWindow = globalThis.window
-  let html = ''
-  let closed = false
-  const popup = {
-    opener: {} as unknown,
-    document: {
-      write: (content: string) => {
-        html = content
-      },
-      close: () => {
-        closed = true
-      }
-    }
-  }
-  globalThis.window = {
-    open: () => popup
-  } as unknown as Window & typeof globalThis
-
-  try {
-    printIssuanceRecord(row, '防护用品', (unit) => `${unit}<件>`)
-    assert.equal(popup.opener, null)
-    assert.equal(closed, true)
-    assert.match(html, /防护用品发放单/)
-    assert.match(html, /&lt;领用人&gt;/)
-    assert.match(html, /&lt;手套&gt;/)
-    assert.match(html, /piece&lt;件&gt;/)
-    assert.match(html, /&lt;备注&gt;/)
-    assert.doesNotMatch(html, /<手套>/)
-  } finally {
-    globalThis.window = previousWindow
-  }
+  const html = buildIssuanceRecordHtml(row, '防护用品', (unit) => `${unit}<件>`)
+  assert.match(html, /防护用品发放单/)
+  assert.match(html, /&lt;领用人&gt;/)
+  assert.match(html, /&lt;手套&gt;/)
+  assert.match(html, /piece&lt;件&gt;/)
+  assert.match(html, /&lt;备注&gt;/)
+  assert.doesNotMatch(html, /<手套>/)
+  assert.doesNotMatch(html, /<script>/)
 })

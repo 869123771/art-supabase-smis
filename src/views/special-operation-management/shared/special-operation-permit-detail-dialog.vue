@@ -185,6 +185,7 @@
 
       <SpecialOperationPermitPrint
         v-else
+        ref="permitPrintRef"
         :record="record"
         :field-definitions="fieldDefinitions"
         :hot-work-level-labels="hotWorkLevelLabels"
@@ -195,6 +196,7 @@
 </template>
 
 <script setup lang="ts">
+  import { ElMessage } from 'element-plus'
   import { createDateTimeFormatter } from '@/utils/ui/format'
   import type { ColumnOption } from '@/types'
   import ArtDialog from '@/components/core/dialogs/art-dialog/index.vue'
@@ -229,6 +231,7 @@
     mode?: 'detail' | 'print'
   }
   const dialogRef = ref<ArtDialogExpose<OpenData>>()
+  const permitPrintRef = ref<InstanceType<typeof SpecialOperationPermitPrint>>()
   const record = shallowRef<SmisSpecialOperationPermit>()
   const loading = ref(false)
   const activeView = ref<'detail' | 'print'>('detail')
@@ -522,7 +525,10 @@
       activeView.value = 'print'
       return
     }
-    window.print()
+    void permitPrintRef.value?.print().catch((error: unknown) => {
+      console.error('作业票打印失败', error)
+      ElMessage.error('作业票打印失败，请重试')
+    })
   }
   const handleOpen = async (data: OpenData): Promise<void> => {
     record.value = undefined

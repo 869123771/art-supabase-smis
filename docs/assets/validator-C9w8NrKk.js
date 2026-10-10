@@ -1,0 +1,1 @@
+import{cn as e}from"./use-global-config-CYoslb5b.js";var t=t=>[``,...e].includes(t);export{t};

@@ -1,1 +1,0 @@
-import{Jn as e}from"./use-global-config-BLcm1gXW.js";var t=t=>[``,...e].includes(t);export{t};

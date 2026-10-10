@@ -40,7 +40,6 @@ export const buildRectificationNoticeHtml = (row: SmisSafetyInspectionRecord): s
       <tr><th>检查单位签章</th><td class="signature"></td><th>被检查单位签章</th><td class="signature"></td></tr>
     </table>
     <div class="footer"><span>检查人：${inspectorNames}</span><span>${escape(inspectionDate)}</span></div>
-    <script>window.onload = () => window.print()<${'/script'}>
   </body>
 </html>`
 }

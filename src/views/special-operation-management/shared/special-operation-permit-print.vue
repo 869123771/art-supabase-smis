@@ -1,178 +1,181 @@
 <template>
-  <article class="permit-print" :aria-label="`${documentTitle}打印预览`">
-    <header class="permit-print__header">
-      <div>
-        <span>特殊作业安全许可</span>
-        <h2>{{ documentTitle }}</h2>
-      </div>
-      <dl>
-        <dt>作业编号</dt>
-        <dd>{{ record.permitNo }}</dd>
-        <dt>当前状态</dt>
-        <dd>{{ statusLabel }}</dd>
-      </dl>
-    </header>
+  <Teleport to="body" :disabled="!printing">
+    <article class="permit-print" :aria-label="`${documentTitle}打印预览`">
+      <header class="permit-print__header">
+        <div>
+          <span>特殊作业安全许可</span>
+          <h2>{{ documentTitle }}</h2>
+        </div>
+        <dl>
+          <dt>作业编号</dt>
+          <dd>{{ record.permitNo }}</dd>
+          <dt>当前状态</dt>
+          <dd>{{ statusLabel }}</dd>
+        </dl>
+      </header>
 
-    <table class="permit-print__table permit-print__table--summary">
-      <tbody>
-        <tr>
-          <th>作业申请单位</th>
-          <td>{{ record.workUnit || '—' }}</td>
-          <th>作业申请时间</th>
-          <td>{{ formatDate(record.applicationTime) }}</td>
-        </tr>
-        <tr>
-          <th>作业内容</th>
-          <td colspan="3">{{ record.workContent || '—' }}</td>
-        </tr>
-        <tr>
-          <th>作业地点</th>
-          <td>{{ record.workLocation || '—' }}</td>
-          <th>作业部位</th>
-          <td>{{ record.workSection || '—' }}</td>
-        </tr>
-        <tr>
-          <th>作业起止时间</th>
-          <td colspan="3">
-            {{ formatDate(record.workStartTime) }} 至 {{ formatDate(record.workEndTime) }}
-          </td>
-        </tr>
-        <tr>
-          <th>危害因素</th>
-          <td colspan="3">{{ hazardNames }}</td>
-        </tr>
-        <tr v-for="(row, index) in customRows" :key="`${row[0]?.label}-${index}`">
-          <template v-for="item in row" :key="item.label">
-            <th>{{ item.label }}</th>
-            <td>{{ item.value }}</td>
-          </template>
-          <template v-if="row.length === 1">
-            <th></th>
-            <td></td>
-          </template>
-        </tr>
-        <tr>
-          <th>作业负责人</th>
-          <td>{{ record.responsibleEmployee?.employeeName || '—' }}</td>
-          <th>现场监护人</th>
-          <td>{{ peopleNames(record.guardianEmployees) }}</td>
-        </tr>
-        <tr>
-          <th>作业验证人</th>
-          <td>{{ peopleNames(record.verifierEmployees) }}</td>
-          <th>现场分析人</th>
-          <td>{{ peopleNames(record.analysts) }}</td>
-        </tr>
-        <tr>
-          <th>作业人员</th>
-          <td colspan="3">{{ workerSummary }}</td>
-        </tr>
-        <tr>
-          <th>涉及其他作业</th>
-          <td colspan="3">{{ relatedPermitSummary }}</td>
-        </tr>
-      </tbody>
-    </table>
-
-    <section v-if="blindPlateItems.length" class="permit-print__section">
-      <h3>盲板明细</h3>
-      <table class="permit-print__table permit-print__table--blind-plate">
-        <thead>
+      <table class="permit-print__table permit-print__table--summary">
+        <tbody>
           <tr>
-            <th>序号</th><th>设备 / 管线名称</th><th>介质</th><th>温度</th><th>压力</th
-            ><th>材质 / 规格</th><th>盲板编号</th>
+            <th>作业申请单位</th>
+            <td>{{ record.workUnit || '—' }}</td>
+            <th>作业申请时间</th>
+            <td>{{ formatDate(record.applicationTime) }}</td>
           </tr>
-        </thead>
-        <tbody>
-          <tr v-for="(item, index) in blindPlateItems" :key="item.id">
-            <td>{{ index + 1 }}</td>
-            <td>{{ item.equipmentPipelineName }}</td>
-            <td>{{ formatValue(item.medium) }}</td>
-            <td>{{ formatValue(item.temperature) }}</td>
-            <td>{{ formatValue(item.pressure) }}</td>
-            <td>{{ [item.material, item.specification].filter(Boolean).join(' / ') || '—' }}</td>
-            <td>{{ formatValue(item.blindPlateNo) }}</td>
+          <tr>
+            <th>作业内容</th>
+            <td colspan="3">{{ record.workContent || '—' }}</td>
           </tr>
-        </tbody>
-      </table>
-    </section>
-
-    <section v-if="record.siteAnalysisRecords.length" class="permit-print__section">
-      <h3>现场分析记录</h3>
-      <table class="permit-print__table">
-        <thead>
-          <tr><th>序号</th><th>分析项目</th><th>正常值</th><th>本次记录</th><th>分析人</th></tr>
-        </thead>
-        <tbody>
-          <tr v-for="(item, index) in record.siteAnalysisRecords" :key="item.id">
-            <td>{{ index + 1 }}</td>
-            <td>{{ item.itemName }}</td>
-            <td>{{ formatValue(item.normalValue) }}</td>
-            <td>{{ formatValue(item.recordedValue) }}</td>
+          <tr>
+            <th>作业地点</th>
+            <td>{{ record.workLocation || '—' }}</td>
+            <th>作业部位</th>
+            <td>{{ record.workSection || '—' }}</td>
+          </tr>
+          <tr>
+            <th>作业起止时间</th>
+            <td colspan="3">
+              {{ formatDate(record.workStartTime) }} 至 {{ formatDate(record.workEndTime) }}
+            </td>
+          </tr>
+          <tr>
+            <th>危害因素</th>
+            <td colspan="3">{{ hazardNames }}</td>
+          </tr>
+          <tr v-for="(row, index) in customRows" :key="`${row[0]?.label}-${index}`">
+            <template v-for="item in row" :key="item.label">
+              <th>{{ item.label }}</th>
+              <td>{{ item.value }}</td>
+            </template>
+            <template v-if="row.length === 1">
+              <th></th>
+              <td></td>
+            </template>
+          </tr>
+          <tr>
+            <th>作业负责人</th>
+            <td>{{ record.responsibleEmployee?.employeeName || '—' }}</td>
+            <th>现场监护人</th>
+            <td>{{ peopleNames(record.guardianEmployees) }}</td>
+          </tr>
+          <tr>
+            <th>作业验证人</th>
+            <td>{{ peopleNames(record.verifierEmployees) }}</td>
+            <th>现场分析人</th>
             <td>{{ peopleNames(record.analysts) }}</td>
           </tr>
-        </tbody>
-      </table>
-    </section>
-
-    <section class="permit-print__section">
-      <h3>安全措施确认</h3>
-      <table class="permit-print__table">
-        <thead>
-          <tr><th>序号</th><th>安全措施</th><th>是否落实</th><th>确认人</th></tr>
-        </thead>
-        <tbody>
-          <tr v-for="(item, index) in record.safetyMeasures" :key="item.id">
-            <td>{{ index + 1 }}</td>
-            <td>{{ item.itemName }}</td>
-            <td>{{ item.involved ? '√ 已落实' : '／ 未确认' }}</td>
-            <td>{{ safetyConfirmer }}</td>
-          </tr>
-          <tr v-if="!record.safetyMeasures.length">
-            <td colspan="4">暂无安全措施记录</td>
-          </tr>
-        </tbody>
-      </table>
-    </section>
-
-    <section class="permit-print__section">
-      <h3>交底、审批与验收记录</h3>
-      <table class="permit-print__table permit-print__table--events">
-        <tbody>
           <tr>
-            <th>安全交底人</th>
-            <td>{{ peopleNames(record.briefingGiverEmployees) }}</td>
-            <th>接受交底人</th>
-            <td>{{ peopleNames(record.briefingReceiverEmployees) }}</td>
-          </tr>
-          <tr v-for="event in orderedEvents" :key="event.id">
-            <th>{{ event.eventTitle }}</th>
-            <td>{{ event.operatorName || '系统' }}</td>
-            <td>{{ event.eventDescription || '—' }}</td>
-            <td>{{ formatDate(event.createTime) }}</td>
-          </tr>
-          <tr v-if="!orderedEvents.length">
-            <th>流程记录</th>
-            <td colspan="3">暂无审批或验收记录</td>
+            <th>作业人员</th>
+            <td colspan="3">{{ workerSummary }}</td>
           </tr>
           <tr>
-            <th>验收结果</th>
-            <td>{{ acceptanceLabel }}</td>
-            <td>{{ record.acceptanceDescription || '—' }}</td>
-            <td>{{ record.acceptedBy || '—' }} · {{ formatDate(record.acceptedAt) }}</td>
+            <th>涉及其他作业</th>
+            <td colspan="3">{{ relatedPermitSummary }}</td>
           </tr>
         </tbody>
       </table>
-    </section>
 
-    <footer class="permit-print__footer">
-      <span>本票据由系统生成，流程记录与业务台账同步留痕。</span>
-      <span>打印时间：{{ printedAt }}</span>
-    </footer>
-  </article>
+      <section v-if="blindPlateItems.length" class="permit-print__section">
+        <h3>盲板明细</h3>
+        <table class="permit-print__table permit-print__table--blind-plate">
+          <thead>
+            <tr>
+              <th>序号</th><th>设备 / 管线名称</th><th>介质</th><th>温度</th><th>压力</th
+              ><th>材质 / 规格</th><th>盲板编号</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(item, index) in blindPlateItems" :key="item.id">
+              <td>{{ index + 1 }}</td>
+              <td>{{ item.equipmentPipelineName }}</td>
+              <td>{{ formatValue(item.medium) }}</td>
+              <td>{{ formatValue(item.temperature) }}</td>
+              <td>{{ formatValue(item.pressure) }}</td>
+              <td>{{ [item.material, item.specification].filter(Boolean).join(' / ') || '—' }}</td>
+              <td>{{ formatValue(item.blindPlateNo) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section v-if="record.siteAnalysisRecords.length" class="permit-print__section">
+        <h3>现场分析记录</h3>
+        <table class="permit-print__table">
+          <thead>
+            <tr><th>序号</th><th>分析项目</th><th>正常值</th><th>本次记录</th><th>分析人</th></tr>
+          </thead>
+          <tbody>
+            <tr v-for="(item, index) in record.siteAnalysisRecords" :key="item.id">
+              <td>{{ index + 1 }}</td>
+              <td>{{ item.itemName }}</td>
+              <td>{{ formatValue(item.normalValue) }}</td>
+              <td>{{ formatValue(item.recordedValue) }}</td>
+              <td>{{ peopleNames(record.analysts) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="permit-print__section">
+        <h3>安全措施确认</h3>
+        <table class="permit-print__table">
+          <thead>
+            <tr><th>序号</th><th>安全措施</th><th>是否落实</th><th>确认人</th></tr>
+          </thead>
+          <tbody>
+            <tr v-for="(item, index) in record.safetyMeasures" :key="item.id">
+              <td>{{ index + 1 }}</td>
+              <td>{{ item.itemName }}</td>
+              <td>{{ item.involved ? '√ 已落实' : '／ 未确认' }}</td>
+              <td>{{ safetyConfirmer }}</td>
+            </tr>
+            <tr v-if="!record.safetyMeasures.length">
+              <td colspan="4">暂无安全措施记录</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="permit-print__section">
+        <h3>交底、审批与验收记录</h3>
+        <table class="permit-print__table permit-print__table--events">
+          <tbody>
+            <tr>
+              <th>安全交底人</th>
+              <td>{{ peopleNames(record.briefingGiverEmployees) }}</td>
+              <th>接受交底人</th>
+              <td>{{ peopleNames(record.briefingReceiverEmployees) }}</td>
+            </tr>
+            <tr v-for="event in orderedEvents" :key="event.id">
+              <th>{{ event.eventTitle }}</th>
+              <td>{{ event.operatorName || '系统' }}</td>
+              <td>{{ event.eventDescription || '—' }}</td>
+              <td>{{ formatDate(event.createTime) }}</td>
+            </tr>
+            <tr v-if="!orderedEvents.length">
+              <th>流程记录</th>
+              <td colspan="3">暂无审批或验收记录</td>
+            </tr>
+            <tr>
+              <th>验收结果</th>
+              <td>{{ acceptanceLabel }}</td>
+              <td>{{ record.acceptanceDescription || '—' }}</td>
+              <td>{{ record.acceptedBy || '—' }} · {{ formatDate(record.acceptedAt) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <footer class="permit-print__footer">
+        <span>本票据由系统生成，流程记录与业务台账同步留痕。</span>
+        <span>打印时间：{{ printedAt }}</span>
+      </footer>
+    </article>
+  </Teleport>
 </template>
 
 <script setup lang="ts">
+  import { usePrintSheet } from '@/hooks/core/usePrintSheet'
   import { createDateTimeFormatter } from '@/utils/ui/format'
   import dayjs from 'dayjs'
   import type {
@@ -188,6 +191,15 @@
     hotWorkLevelLabels?: Record<string, string>
     hotWorkMethodLabels?: Record<string, string>
   }>()
+  const printing = ref(false)
+  const { print: printSheet } = usePrintSheet('is-special-operation-permit-printing', () => {
+    printing.value = false
+  })
+  const print = async (): Promise<void> => {
+    printing.value = true
+    await printSheet()
+  }
+  defineExpose({ print })
 
   interface PrintField {
     label: string
@@ -469,18 +481,12 @@
   }
 
   @media print {
-    :global(body *) {
-      visibility: hidden !important;
+    :global(body.is-special-operation-permit-printing > :not(.permit-print)) {
+      display: none !important;
     }
 
-    .permit-print,
-    .permit-print * {
-      visibility: visible !important;
-    }
-
-    .permit-print {
-      position: absolute;
-      inset: 0;
+    body.is-special-operation-permit-printing .permit-print {
+      position: static;
       width: 100%;
       min-height: auto;
       padding: 8mm;

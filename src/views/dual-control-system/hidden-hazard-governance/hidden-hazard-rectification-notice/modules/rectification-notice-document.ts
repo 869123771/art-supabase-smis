@@ -48,7 +48,6 @@ export const buildHiddenHazardRectificationNoticeHtml = (
       <span>被检查单位负责人（签名）：____________</span>
     </div>
     <div class="date">检查单位：${escape(row.inspectionOrganizationName)}<br>检查时间：${escape(inspectionDate)}</div>
-    <script>window.onload = () => window.print()<${'/script'}>
   </body>
 </html>`
 }

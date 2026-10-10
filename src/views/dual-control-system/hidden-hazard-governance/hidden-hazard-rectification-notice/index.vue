@@ -68,6 +68,7 @@
     type SmisRectificationNoticeSearchParams
   } from '@smis/api'
   import { toDualControlOrganizationTree } from '@smis/views/dual-control-system/shared/organization-tree'
+  import { printHtmlDocument } from '@/utils/file/print-document'
   import { buildHiddenHazardRectificationNoticeHtml } from './modules/rectification-notice-document'
 
   defineOptions({ name: 'SmisDualControlHiddenHazardRectificationNotice' })
@@ -167,11 +168,7 @@
     invalidText: '—'
   })
   const printNotice = (row: SmisRectificationNoticeRecord): void => {
-    const popup = window.open('', '_blank', 'width=980,height=820')
-    if (!popup) return void ElMessage.warning('浏览器阻止了打印窗口，请允许本站打开弹出式窗口')
-    popup.opener = null
-    popup.document.write(buildHiddenHazardRectificationNoticeHtml(row))
-    popup.document.close()
+    printHtmlDocument(buildHiddenHazardRectificationNoticeHtml(row), 'width=980,height=820')
   }
   const columnsFactory = (): ColumnOption<SmisRectificationNoticeRecord>[] => [
     { type: 'selection', width: 48 },

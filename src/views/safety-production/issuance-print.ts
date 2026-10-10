@@ -1,19 +1,12 @@
-import { ElMessage } from 'element-plus'
+import { printHtmlDocument } from '@/utils/file/print-document'
 import { escape } from 'lodash-es'
 import type { SmisPpeIssuanceRecord } from '@smis/api'
 
-export function printIssuanceRecord(
+export function buildIssuanceRecordHtml(
   row: SmisPpeIssuanceRecord,
   materialLabel: '工器具' | '防护用品',
   unitLabel: (unit: string) => string
-): void {
-  const popup = window.open('', '_blank', 'width=980,height=760')
-  if (!popup) {
-    ElMessage.warning('浏览器阻止了打印窗口，请允许本站打开弹窗后重试')
-    return
-  }
-
-  popup.opener = null
+): string {
   const itemRows = row.items
     .map(
       (item, index) =>
@@ -21,7 +14,7 @@ export function printIssuanceRecord(
     )
     .join('')
 
-  popup.document.write(`<!doctype html>
+  return `<!doctype html>
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8">
@@ -62,8 +55,14 @@ export function printIssuanceRecord(
     <span>发放人：${escape(row.issuerName)}</span>
     <span>日期：____________</span>
   </div>
-  <script>window.onload=()=>window.print()<${'/script'}>
 </body>
-</html>`)
-  popup.document.close()
+</html>`
+}
+
+export function printIssuanceRecord(
+  row: SmisPpeIssuanceRecord,
+  materialLabel: '工器具' | '防护用品',
+  unitLabel: (unit: string) => string
+): void {
+  printHtmlDocument(buildIssuanceRecordHtml(row, materialLabel, unitLabel), 'width=980,height=760')
 }
