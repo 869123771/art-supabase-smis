@@ -180,7 +180,7 @@
               :class="{ 'is-active': !selectedCategoryId }"
               @click="handleCategorySelect()"
             >
-              <span><ArtSvgIcon icon="ri:folders-line" />全部分类</span
+              <span class="art-icon-label"><ArtSvgIcon icon="ri:folders-line" />全部分类</span
               ><strong>{{ overview.total }}</strong>
             </button>
             <ElScrollbar class="document-center-page__category-scrollbar">
@@ -197,7 +197,7 @@
               >
                 <template #default="{ data: category }">
                   <span class="document-center-page__tree-node">
-                    <span>
+                    <span class="art-icon-label">
                       <ArtSvgIcon
                         :icon="category.children?.length ? 'ri:folder-3-line' : 'ri:folder-line'"
                       />

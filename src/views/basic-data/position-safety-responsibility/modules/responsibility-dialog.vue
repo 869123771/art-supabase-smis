@@ -21,11 +21,11 @@
             <small>当前维护岗位</small>
             <strong>{{ context.positionName || '未选择岗位' }}</strong>
             <div class="responsibility-dialog__context-meta">
-              <span>
+              <span class="art-icon-label">
                 <ArtSvgIcon icon="ri:node-tree" aria-hidden="true" />
                 {{ context.organizationName || '未选择组织' }}
               </span>
-              <span translate="no">
+              <span class="art-icon-label" translate="no">
                 <ArtSvgIcon icon="ri:hashtag" aria-hidden="true" />
                 {{ context.positionCode || '--' }}
               </span>

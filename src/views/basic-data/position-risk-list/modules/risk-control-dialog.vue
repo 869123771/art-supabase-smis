@@ -21,8 +21,12 @@
             <small>当前维护岗位</small>
             <strong>{{ context.positionName || '未选择岗位' }}</strong>
             <div>
-              <span><ArtSvgIcon icon="ri:node-tree" />{{ context.organizationName }}</span>
-              <span translate="no"><ArtSvgIcon icon="ri:hashtag" />{{ context.positionCode }}</span>
+              <span class="art-icon-label"
+                ><ArtSvgIcon icon="ri:node-tree" />{{ context.organizationName }}</span
+              >
+              <span class="art-icon-label" translate="no"
+                ><ArtSvgIcon icon="ri:hashtag" />{{ context.positionCode }}</span
+              >
             </div>
           </div>
           <span class="risk-dialog__source"><ArtSvgIcon icon="ri:link-m" />关联 HR 岗位</span>

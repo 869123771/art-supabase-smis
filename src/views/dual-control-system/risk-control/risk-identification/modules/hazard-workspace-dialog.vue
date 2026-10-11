@@ -120,7 +120,7 @@
                     </div>
                     <p class="hazard-workspace__code">{{ hazard.hazardNo }}</p>
                     <div class="hazard-workspace__meta">
-                      <span>
+                      <span class="art-icon-label">
                         <ArtSvgIcon icon="ri:links-line" />
                         关联 {{ hazard.activityIds.length }} 项活动
                       </span>

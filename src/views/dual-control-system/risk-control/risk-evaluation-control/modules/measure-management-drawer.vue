@@ -149,7 +149,9 @@
 
             <div class="measure-management-drawer__positions">
               <div class="measure-management-drawer__positions-heading">
-                <span><ArtSvgIcon icon="ri:briefcase-4-line" />责任岗位与周期</span>
+                <span class="art-icon-label"
+                  ><ArtSvgIcon icon="ri:briefcase-4-line" />责任岗位与周期</span
+                >
                 <small>{{ row.positions?.length || 0 }} 个岗位</small>
               </div>
               <div v-if="row.positions?.length" class="measure-management-drawer__position-grid">
