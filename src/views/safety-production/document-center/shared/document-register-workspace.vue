@@ -522,7 +522,7 @@
       formatter: (row) => (
         <ArtDictDisplay
           dictCode="commonBoolean"
-          value={String(row.isSpecialEquipment)}
+          value={String(row.isSpecialEquipment ?? '')}
           display="tag"
         />
       )
