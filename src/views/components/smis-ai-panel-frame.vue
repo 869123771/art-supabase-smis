@@ -34,32 +34,12 @@
 </script>
 
 <style scoped lang="scss">
-  .smis-ai-panel-frame {
-    position: relative;
-    padding: var(--art-space-4);
-    overflow: hidden;
-    background:
-      radial-gradient(
-        circle at 0 0,
-        color-mix(in srgb, var(--theme-color) 8%, transparent) 0,
-        transparent 34%
-      ),
-      var(--default-box-color);
-    border: 1px solid color-mix(in srgb, var(--theme-color) 16%, var(--el-border-color));
-    border-radius: calc(var(--el-border-radius-base) + 2px);
+  @use '@/assets/styles/core/ai-surface-mixins' as ai;
 
-    &::before {
-      position: absolute;
-      inset: 0 0 auto;
-      height: 2px;
-      content: '';
-      background: linear-gradient(
-        90deg,
-        var(--theme-color),
-        rgb(56 189 248 / 75%),
-        transparent 72%
-      );
-    }
+  .smis-ai-panel-frame {
+    @include ai.surface;
+
+    padding: var(--art-space-4);
 
     &__header,
     &__identity {
@@ -78,17 +58,7 @@
     }
 
     &__icon {
-      display: grid;
-      flex: 0 0 42px;
-      place-items: center;
-      width: 42px;
-      height: 42px;
-      font-size: 20px;
-      color: #fff;
-      background: linear-gradient(145deg, var(--theme-color), #6366f1);
-      border: 1px solid rgb(255 255 255 / 28%);
-      border-radius: calc(var(--el-border-radius-base) + 2px);
-      box-shadow: 0 7px 18px color-mix(in srgb, var(--theme-color) 18%, transparent);
+      @include ai.identity-icon(42px, 20px);
     }
 
     &__copy {
@@ -101,21 +71,18 @@
         font-size: 16px;
         font-weight: 650;
         line-height: 1.45;
-        color: var(--art-text-gray-900);
+        color: var(--el-text-color-primary);
       }
 
       small {
         font-size: var(--art-font-size-caption);
         line-height: 1.5;
-        color: var(--art-text-gray-500);
+        color: var(--el-text-color-secondary);
       }
     }
 
     &__eyebrow {
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--theme-color);
-      letter-spacing: 0.08em;
+      @include ai.eyebrow;
     }
 
     &__action {

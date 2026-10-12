@@ -236,7 +236,7 @@
       > p {
         margin: var(--art-space-3) 0;
         line-height: 1.6;
-        color: var(--art-text-gray-600);
+        color: var(--el-text-color-secondary);
       }
     }
 
@@ -272,13 +272,13 @@
       dt {
         margin-bottom: 4px;
         font-size: var(--art-font-size-caption);
-        color: var(--art-text-gray-500);
+        color: var(--el-text-color-secondary);
       }
 
       dd {
         margin: 0;
         line-height: 1.55;
-        color: var(--art-text-gray-800);
+        color: var(--el-text-color-primary);
         overflow-wrap: anywhere;
       }
     }

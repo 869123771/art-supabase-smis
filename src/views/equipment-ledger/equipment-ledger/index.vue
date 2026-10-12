@@ -248,7 +248,7 @@
             v-if="inspectionsPagination.total"
             class="mt-4 flex flex-col items-center justify-center gap-2 sm:flex-row"
           >
-            <span class="text-sm text-[var(--art-text-gray-600)]"
+            <span class="text-sm text-[var(--el-text-color-secondary)]"
               >共 {{ inspectionsPagination.total }} 条</span
             >
             <ElPagination

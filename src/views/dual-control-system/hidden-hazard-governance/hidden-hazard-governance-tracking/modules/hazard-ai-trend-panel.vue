@@ -269,13 +269,13 @@
 
     &__conclusion > div > strong {
       font-size: 15px;
-      color: var(--art-text-gray-900);
+      color: var(--el-text-color-primary);
     }
 
     &__conclusion p {
       margin: 5px 0 0;
       line-height: 1.55;
-      color: var(--art-text-gray-500);
+      color: var(--el-text-color-secondary);
     }
 
     &__meta-row {
@@ -288,7 +288,7 @@
 
     &__meta-row > span {
       font-size: var(--art-font-size-caption);
-      color: var(--art-text-gray-500);
+      color: var(--el-text-color-secondary);
       text-align: right;
     }
 
@@ -325,14 +325,14 @@
 
     &__drivers span,
     &__drivers small {
-      color: var(--art-text-gray-500);
+      color: var(--el-text-color-secondary);
     }
 
     &__drivers strong {
       overflow: hidden;
       text-overflow: ellipsis;
       font-size: 18px;
-      color: var(--art-text-gray-900);
+      color: var(--el-text-color-primary);
       white-space: nowrap;
     }
 
@@ -359,7 +359,7 @@
       padding-left: 18px;
       margin: 8px 0 0;
       line-height: 1.5;
-      color: var(--art-text-gray-700);
+      color: var(--el-text-color-regular);
     }
 
     @media (width <= 1080px) {

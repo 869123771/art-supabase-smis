@@ -180,7 +180,7 @@
           v-if="inspectionPagination.total"
           class="mt-4 flex flex-col items-center justify-center gap-2 sm:flex-row"
         >
-          <span class="text-sm text-[var(--art-text-gray-600)]">
+          <span class="text-sm text-[var(--el-text-color-secondary)]">
             共 {{ inspectionPagination.total }} 条
           </span>
           <ElPagination
@@ -525,7 +525,7 @@
   .equipment-archive-detail {
     min-height: 100%;
     padding: 16px;
-    background: var(--art-main-bg-color);
+    background: var(--default-box-color);
 
     &__identity {
       display: flex;

@@ -215,7 +215,7 @@
     &__summary {
       margin: var(--art-space-3) 0;
       line-height: 1.65;
-      color: var(--art-text-gray-600);
+      color: var(--el-text-color-secondary);
     }
 
     &__fields {
@@ -235,13 +235,13 @@
       dt {
         margin-bottom: 4px;
         font-size: var(--art-font-size-caption);
-        color: var(--art-text-gray-500);
+        color: var(--el-text-color-secondary);
       }
 
       dd {
         margin: 0;
         line-height: 1.6;
-        color: var(--art-text-gray-800);
+        color: var(--el-text-color-primary);
         overflow-wrap: anywhere;
       }
     }
@@ -251,7 +251,7 @@
 
       > strong {
         font-size: var(--art-font-size-caption);
-        color: var(--art-text-gray-600);
+        color: var(--el-text-color-secondary);
       }
 
       ul {
@@ -266,7 +266,7 @@
       li {
         padding: 5px 9px;
         font-size: var(--art-font-size-caption);
-        color: var(--art-text-gray-700);
+        color: var(--el-text-color-regular);
         background: color-mix(in srgb, var(--theme-color) 3%, var(--default-box-color));
         border: 1px solid color-mix(in srgb, var(--theme-color) 14%, var(--el-border-color));
         border-radius: 999px;

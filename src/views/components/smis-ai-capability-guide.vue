@@ -94,14 +94,14 @@
       strong {
         font-size: 12px;
         font-weight: 650;
-        color: var(--art-text-gray-800);
+        color: var(--el-text-color-primary);
       }
 
       small {
         overflow: hidden;
         text-overflow: ellipsis;
         font-size: 11px;
-        color: var(--art-text-gray-500);
+        color: var(--el-text-color-secondary);
         white-space: nowrap;
       }
     }

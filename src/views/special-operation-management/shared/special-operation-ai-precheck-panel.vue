@@ -276,13 +276,13 @@
 
       > div > strong {
         font-size: 15px;
-        color: var(--art-text-gray-900);
+        color: var(--el-text-color-primary);
       }
 
       p {
         margin: 6px 0 0;
         line-height: 1.6;
-        color: var(--art-text-gray-500);
+        color: var(--el-text-color-secondary);
       }
     }
 
@@ -301,14 +301,14 @@
 
       dt {
         font-size: var(--art-font-size-caption);
-        color: var(--art-text-gray-500);
+        color: var(--el-text-color-secondary);
       }
 
       dd {
         margin: 3px 0 0;
         font-size: 16px;
         font-weight: 650;
-        color: var(--art-text-gray-900);
+        color: var(--el-text-color-primary);
       }
     }
 
@@ -341,13 +341,13 @@
       }
 
       li strong {
-        color: var(--art-text-gray-900);
+        color: var(--el-text-color-primary);
       }
 
       li span,
       p {
         margin: 0;
-        color: var(--art-text-gray-500);
+        color: var(--el-text-color-secondary);
       }
 
       &.is-blocking {
