@@ -655,7 +655,6 @@
     }
 
     &__position-search {
-      width: 220px;
       max-width: calc(100% - 44px);
     }
 
