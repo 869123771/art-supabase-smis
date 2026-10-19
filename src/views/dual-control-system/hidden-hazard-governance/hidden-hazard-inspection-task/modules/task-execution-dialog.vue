@@ -44,8 +44,12 @@
                   ><small>{{ detail.items[index]?.itemCode }}</small></div
                 >
                 <ElRadioGroup v-model="item.result" size="small"
-                  ><ElRadioButton value="normal">正常</ElRadioButton
-                  ><ElRadioButton value="abnormal">异常</ElRadioButton></ElRadioGroup
+                  ><ElRadioButton
+                    v-for="option in itemResultOptions"
+                    :key="option.value"
+                    :value="option.value"
+                    >{{ option.label }}</ElRadioButton
+                  ></ElRadioGroup
                 >
               </header>
               <p>{{ detail.items[index]?.inspectionContent }}</p>
@@ -87,6 +91,7 @@
 </template>
 
 <script setup lang="ts">
+  import { useDictionaryOptions } from '@/hooks/core/useDictionaryOptions'
   import { createDateTimeFormatter } from '@/utils/ui/format'
 
   import { normalizeNullableText } from '@/utils/form/normalize'
@@ -103,6 +108,13 @@
     type SmisHiddenHazardInspectionTask,
     type SmisHiddenHazardInspectionTaskDetail
   } from '@smis/api'
+
+  const configuredItemResultOptions = useDictionaryOptions('smisHiddenHazardInspectionResult')
+  const itemResultOptions = computed(() =>
+    configuredItemResultOptions.filter(
+      (option) => option.value === 'normal' || option.value === 'abnormal'
+    )
+  )
 
   export interface HiddenHazardTaskExecutionOpenData {
     row: SmisHiddenHazardInspectionTask

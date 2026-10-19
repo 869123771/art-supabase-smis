@@ -35,17 +35,6 @@
         }"
         focusable
       >
-        <template #search-violatorEmployeeId="{ value, setValue }">
-          <ArtEmployeeSelect
-            :model-value="value"
-            :selected-data="violatorSearchSelection"
-            title="选择违章人员"
-            subtitle="数据来自当前租户员工花名册"
-            placeholder="请选择违章人员"
-            @update:model-value="setValue"
-            @update:selected-data="violatorSearchSelection = $event"
-          />
-        </template>
       </ArtTableQuery>
 
       <ViolationRecordDialog ref="dialogRef" @success="handleSaveSuccess" />
@@ -77,7 +66,6 @@
   import ArtButtonMore, {
     type ButtonMoreItem
   } from '@/components/core/forms/art-button-more/index.vue'
-  import ArtEmployeeSelect from '@/components/business/art-employee-select/index.vue'
   import ArtPermissionGuard from '@/components/core/feedback/art-permission-guard/index.vue'
   import BusinessTableWorkspaceActions from '@/components/business/business-table-workspace-actions/index.vue'
   import BusinessWorkspaceHeader, {
@@ -176,7 +164,20 @@
       type: 'input',
       props: { clearable: true, placeholder: '项目编码、名称或现场情况' }
     },
-    { label: '违章人员', key: 'violatorEmployeeId' },
+    {
+      label: '违章人员',
+      key: 'violatorEmployeeId',
+      type: 'employeeSelect',
+      props: {
+        selectedData: violatorSearchSelection.value,
+        title: '选择违章人员',
+        subtitle: '数据来自当前租户员工花名册',
+        placeholder: '请选择违章人员',
+        'onUpdate:selectedData': (rows: EmployeeIntegrationItem[]) => {
+          violatorSearchSelection.value = rows
+        }
+      }
+    },
     {
       label: '违章时间',
       key: 'violationTimeRange',

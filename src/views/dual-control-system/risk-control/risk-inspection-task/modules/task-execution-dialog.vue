@@ -83,8 +83,12 @@
                 :rules="completeMode ? [{ validator: validateItemResult, trigger: 'change' }] : []"
                 class="task-execution-dialog__result-field"
                 ><ElRadioGroup v-model="item.result" size="small"
-                  ><ElRadioButton value="normal">正常</ElRadioButton
-                  ><ElRadioButton value="abnormal">异常</ElRadioButton></ElRadioGroup
+                  ><ElRadioButton
+                    v-for="option in itemResultOptions"
+                    :key="option.value"
+                    :value="option.value"
+                    >{{ option.label }}</ElRadioButton
+                  ></ElRadioGroup
                 ></ElFormItem
               ></header
             >
@@ -153,6 +157,7 @@
 </template>
 
 <script setup lang="ts">
+  import { useDictionaryOptions } from '@/hooks/core/useDictionaryOptions'
   import { replaceReactiveModel } from '@/utils/form/model'
   import { createDateTimeFormatter } from '@/utils/ui/format'
 
@@ -176,6 +181,13 @@
     type SmisRiskInspectionTask,
     type SmisRiskInspectionTaskDetail
   } from '@smis/api'
+
+  const configuredItemResultOptions = useDictionaryOptions('smisRiskInspectionResult')
+  const itemResultOptions = computed(() =>
+    configuredItemResultOptions.filter(
+      (option) => option.value === 'normal' || option.value === 'abnormal'
+    )
+  )
 
   export interface TaskExecutionDialogOpenData {
     row: SmisRiskInspectionTask

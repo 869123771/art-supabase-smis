@@ -38,17 +38,6 @@
         }"
         focusable
       >
-        <template #search-checkerEmployeeId="{ value, setValue }">
-          <ArtEmployeeSelect
-            :model-value="value"
-            :selected-data="checkerSearchSelection"
-            title="选择检查人"
-            subtitle="数据来自当前租户员工花名册"
-            placeholder="请选择检查人"
-            @update:model-value="setValue"
-            @update:selected-data="checkerSearchSelection = $event"
-          />
-        </template>
       </ArtTableQuery>
 
       <ThreeViolationDialog ref="dialogRef" @success="handleSaveSuccess" />
@@ -85,7 +74,6 @@
   import ArtButtonMore, {
     type ButtonMoreItem
   } from '@/components/core/forms/art-button-more/index.vue'
-  import ArtEmployeeSelect from '@/components/business/art-employee-select/index.vue'
   import ArtDictDisplay from '@/components/core/base/art-dict-display/index.vue'
   import ArtPermissionGuard from '@/components/core/feedback/art-permission-guard/index.vue'
   import BusinessTableWorkspaceActions from '@/components/business/business-table-workspace-actions/index.vue'
@@ -204,7 +192,20 @@
         placeholder: '全部公司与组织'
       }
     },
-    { label: '检查人', key: 'checkerEmployeeId' },
+    {
+      label: '检查人',
+      key: 'checkerEmployeeId',
+      type: 'employeeSelect',
+      props: {
+        selectedData: checkerSearchSelection.value,
+        title: '选择检查人',
+        subtitle: '数据来自当前租户员工花名册',
+        placeholder: '请选择检查人',
+        'onUpdate:selectedData': (rows: EmployeeIntegrationItem[]) => {
+          checkerSearchSelection.value = rows
+        }
+      }
+    },
     {
       label: '教育状态',
       key: 'educationStatus',
