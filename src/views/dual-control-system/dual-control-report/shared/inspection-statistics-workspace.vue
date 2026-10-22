@@ -110,6 +110,7 @@
 </template>
 
 <script setup lang="tsx">
+  import { emptyInspectionStatistics } from '@smis/domain/report-defaults'
   import { replaceReactiveModel } from '@/utils/form/model'
   import { formatPercentValue } from '@/utils/ui/format'
   import dayjs from 'dayjs'
@@ -229,23 +230,13 @@
     organizationId: undefined,
     riskLevel: undefined
   })
-  const emptyData = (): SmisInspectionStatisticsResult => ({
-    overview: {
-      organizationCount: 0,
-      generatedCount: 0,
-      completedCount: 0,
-      pendingCount: 0,
-      missedCount: 0,
-      repeatedMissedCount: 0,
-      inspectionRate: 0,
-      missedRate: 0
-    },
-    organizationStats: [],
-    organizationOptions: [],
-    riskLevelOptions: []
-  })
+
   const query = reactive<StatisticsQuery>(initialQuery())
-  const state = reactive<StatisticsState>({ loading: false, error: null, data: emptyData() })
+  const state = reactive<StatisticsState>({
+    loading: false,
+    error: null,
+    data: emptyInspectionStatistics()
+  })
   const organizationOptions = computed(() =>
     toDualControlOrganizationTree(state.data.organizationOptions)
   )

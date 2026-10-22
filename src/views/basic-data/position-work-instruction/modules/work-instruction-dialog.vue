@@ -183,6 +183,7 @@
   const showLinkInput = ref(false)
 
   const createInitialForm = (): WorkInstructionForm => ({
+    id: undefined,
     instructionName: '',
     scopeKeys: [],
     fileNumber: '',

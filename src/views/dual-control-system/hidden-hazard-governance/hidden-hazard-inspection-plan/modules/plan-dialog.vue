@@ -162,6 +162,7 @@
   const deadlineOptions = useDictionaryOptions('commonDeadlineUnit')
   const cycleOptions = useDictionaryOptions('commonPlanCycle')
   const initial = (): SmisHiddenHazardInspectionPlanPayload => ({
+    id: undefined,
     planName: '',
     inspectionTypeId: '',
     inspectionOrganizationId: '',

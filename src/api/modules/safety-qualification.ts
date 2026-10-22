@@ -1,3 +1,4 @@
+import { emptySafetyQualificationAnalysis } from '@smis/domain/report-defaults'
 import { buildSupabaseRpcRange } from '@/utils/supabase'
 import { normalizeNullableText } from '@/utils/form/normalize'
 import dayjs from 'dayjs'
@@ -46,26 +47,6 @@ interface PersonnelCertificateEmployeePayload {
 interface PersonnelCertificateCatalogPayload {
   records?: SmisQualificationCatalog[]
 }
-
-const emptySafetyQualificationAnalysis = (): SmisSafetyQualificationAnalysisResult => ({
-  overview: {
-    totalCertificates: 0,
-    certificateHolders: 0,
-    warningCount: 0,
-    expiringInRange: 0,
-    dismissedInRange: 0,
-    addedInRange: 0
-  },
-  organizationDistribution: [],
-  topHolders: [],
-  periodStats: [],
-  equipmentProjects: [],
-  specialOperations: [],
-  safetyManagerTypes: [],
-  registeredEngineerTypes: [],
-  educationDistribution: [],
-  organizationOptions: []
-})
 
 export interface PersonnelCertificateEmployee extends EmployeeIntegrationItem {
   idCardNo?: string | null

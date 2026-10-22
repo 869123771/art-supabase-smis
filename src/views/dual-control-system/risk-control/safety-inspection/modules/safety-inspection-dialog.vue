@@ -119,6 +119,7 @@
     organizations: [] as SmisSafetyInspectionOrganization[]
   })
   const initial = (): SmisSafetyInspectionPayload => ({
+    id: undefined,
     inspectionTypeId: '',
     inspectionName: '',
     inspectionOrganizationId: '',

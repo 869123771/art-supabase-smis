@@ -365,6 +365,7 @@
   const numberDescription = numberRule.description
 
   const initial = (): FormModel => ({
+    id: undefined,
     recordNo: '',
     status: 'draft',
     trainingPlanId: '',

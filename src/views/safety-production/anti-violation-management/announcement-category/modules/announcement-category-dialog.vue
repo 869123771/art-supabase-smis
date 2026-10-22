@@ -40,6 +40,7 @@
   const dialogRef = ref<ArtDialogExpose<AnnouncementCategoryDialogOpenData>>()
   const formRef = ref<FormExpose>()
   const createInitialForm = (): SmisAnnouncementCategorySavePayload => ({
+    id: undefined,
     categoryName: '',
     sort: 10,
     status: 'enabled',

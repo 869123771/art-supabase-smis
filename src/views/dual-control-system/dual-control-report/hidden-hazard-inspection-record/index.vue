@@ -79,6 +79,7 @@
 </template>
 
 <script setup lang="tsx">
+  import { emptyHiddenHazardInspectionRecord } from '@smis/domain/report-defaults'
   import { replaceReactiveModel } from '@/utils/form/model'
   import { useDictionaryOptions } from '@/hooks/core/useDictionaryOptions'
   import { createDateTimeFormatter } from '@/utils/ui/format'
@@ -123,19 +124,6 @@
     isSpecialEquipment?: boolean | ''
   }
 
-  const emptyData = (): SmisHiddenHazardInspectionRecordResult => ({
-    overview: {
-      inspectorCount: 0,
-      taskCount: 0,
-      completedCount: 0,
-      overdueCount: 0,
-      abnormalTaskCount: 0,
-      completionRate: 0
-    },
-    personnelStats: [],
-    details: [],
-    organizationOptions: []
-  })
   const initialQuery = (): RecordQuery => ({
     plannedRange: [
       dayjs().startOf('month').format('YYYY-MM-DD'),
@@ -151,7 +139,7 @@
     loading: boolean
     error: string | null
     data: SmisHiddenHazardInspectionRecordResult
-  }>({ loading: false, error: null, data: emptyData() })
+  }>({ loading: false, error: null, data: emptyHiddenHazardInspectionRecord() })
   const detailDrawerRef = ref<InspectionRecordDetailDrawerExpose>()
   const employeeKey = (employeeId?: string | null, employeeNo?: string): string =>
     employeeId || employeeNo || '__unassigned__'

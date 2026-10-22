@@ -72,6 +72,7 @@
   const categoryTree = ref<SmisHazardousWasteCategory[]>([])
   const treeUtils = new TreeUtils({ idKey: 'id', parentKey: 'parentId', childrenKey: 'children' })
   const initial = (): FormModel => ({
+    id: undefined,
     categoryId: '',
     wasteCode: '',
     wasteName: '',

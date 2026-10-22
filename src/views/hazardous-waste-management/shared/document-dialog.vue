@@ -135,6 +135,7 @@
   const userStore = useUserStore()
   const { getUserInfo } = storeToRefs(userStore)
   const initial = (): FormModel => ({
+    id: undefined,
     documentNo: '',
     operationDate: dayjs().format('YYYY-MM-DD'),
     warehouseId: '',

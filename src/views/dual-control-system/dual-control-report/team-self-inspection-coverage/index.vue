@@ -107,6 +107,7 @@
 </template>
 
 <script setup lang="tsx">
+  import { emptyTeamSelfInspectionCoverage } from '@smis/domain/report-defaults'
   import { replaceReactiveModel } from '@/utils/form/model'
   import { formatPercentValue } from '@/utils/ui/format'
   import dayjs from 'dayjs'
@@ -136,18 +137,7 @@
     plannedRange?: [string, string]
     organizationId?: string
   }
-  const emptyData = (): SmisTeamSelfInspectionCoverageResult => ({
-    overview: {
-      organizationCount: 0,
-      teamCount: 0,
-      memberCount: 0,
-      coveredMemberCount: 0,
-      coverageRate: 0,
-      completedTaskCount: 0
-    },
-    records: [],
-    organizationOptions: []
-  })
+
   const initialQuery = (): CoverageQuery => ({
     plannedRange: [
       dayjs().startOf('month').format('YYYY-MM-DD'),
@@ -160,7 +150,7 @@
     loading: boolean
     error: string | null
     data: SmisTeamSelfInspectionCoverageResult
-  }>({ loading: false, error: null, data: emptyData() })
+  }>({ loading: false, error: null, data: emptyTeamSelfInspectionCoverage() })
   const organizationOptions = computed(() =>
     toDualControlOrganizationTree(state.data.organizationOptions)
   )

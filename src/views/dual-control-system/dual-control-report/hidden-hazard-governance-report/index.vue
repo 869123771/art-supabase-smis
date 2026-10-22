@@ -156,6 +156,7 @@
 </template>
 
 <script setup lang="tsx">
+  import { emptyHazardGovernanceReport } from '@smis/domain/report-defaults'
   import { replaceReactiveModel } from '@/utils/form/model'
   import { createDateTimeFormatter } from '@/utils/ui/format'
 
@@ -206,25 +207,13 @@
     ],
     organizationId: undefined
   })
-  const emptyData = (): SmisHazardGovernanceReportResult => ({
-    overview: { total: 0, closed: 0, open: 0, overdue: 0, major: 0, closureRate: 0 },
-    organizationStats: [],
-    categoryStats: [],
-    sourceStats: [],
-    cycleStats: {
-      withinDay: 0,
-      withinThreeDays: 0,
-      withinWeek: 0,
-      withinMonth: 0,
-      overMonth: 0
-    },
-    hazardDetails: [],
-    majorHazards: [],
-    yearOutstanding: [],
-    organizationOptions: []
-  })
+
   const query = reactive<ReportQuery>(initialQuery())
-  const state = reactive<ReportState>({ loading: false, error: null, data: emptyData() })
+  const state = reactive<ReportState>({
+    loading: false,
+    error: null,
+    data: emptyHazardGovernanceReport()
+  })
   const activeDetail = ref<DetailView>('all')
   const detailOptions = [
     { label: '全部明细', value: 'all' },

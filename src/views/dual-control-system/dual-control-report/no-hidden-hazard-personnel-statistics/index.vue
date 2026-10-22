@@ -128,6 +128,7 @@
 </template>
 
 <script setup lang="tsx">
+  import { emptyNoHazardPersonnelStatistics } from '@smis/domain/report-defaults'
   import { createDateTimeFormatter } from '@/utils/ui/format'
   import { replaceReactiveModel } from '@/utils/form/model'
   import dayjs from 'dayjs'
@@ -159,17 +160,7 @@
     maxHazardCount?: number
     employeeKeyword?: string
   }
-  const emptyData = (): SmisNoHazardPersonnelStatisticsResult => ({
-    overview: {
-      personnelCount: 0,
-      matchedCount: 0,
-      zeroReportCount: 0,
-      onLeaveCount: 0,
-      averageHazardCount: 0
-    },
-    records: [],
-    organizationOptions: []
-  })
+
   const initialQuery = (): PersonnelQuery => ({
     reportedRange: [
       dayjs().startOf('month').format('YYYY-MM-DD'),
@@ -184,7 +175,7 @@
     loading: boolean
     error: string | null
     data: SmisNoHazardPersonnelStatisticsResult
-  }>({ loading: false, error: null, data: emptyData() })
+  }>({ loading: false, error: null, data: emptyNoHazardPersonnelStatistics() })
   const organizationOptions = computed(() =>
     toDualControlOrganizationTree(state.data.organizationOptions)
   )

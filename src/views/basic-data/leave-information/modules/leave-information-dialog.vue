@@ -135,6 +135,7 @@
   }
 
   const createInitialForm = (): LeaveInformationForm => ({
+    id: undefined,
     organizationId: '',
     employeeId: '',
     applicantIdCardNo: '',

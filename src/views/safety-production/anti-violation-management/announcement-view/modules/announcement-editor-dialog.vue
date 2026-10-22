@@ -116,6 +116,7 @@
   const organizationTreeProps = { children: 'children', label: 'organizationName', value: 'id' }
 
   const createInitialForm = (): SmisAnnouncementSavePayload => ({
+    id: undefined,
     operation: 'add',
     categoryId: '',
     title: '',

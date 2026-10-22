@@ -155,6 +155,7 @@
   const participantSelection = shallowRef<EmployeeIntegrationItem[]>([])
   onDeactivated(() => dialogRef.value?.handleClose())
   const initial = (): FormModel => ({
+    id: undefined,
     drillPlanId: '',
     actualStartDate: '',
     actualEndDate: '',

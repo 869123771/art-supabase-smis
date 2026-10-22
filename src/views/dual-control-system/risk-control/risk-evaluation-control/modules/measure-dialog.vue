@@ -142,6 +142,7 @@
   const positions = ref<SmisRiskPositionOption[]>([])
   const selectedPositionIds = ref<string[]>([])
   const initial = (): SmisRiskControlMeasurePayload => ({
+    id: undefined,
     riskItemId: '',
     controlMeasure: '',
     controlMeasureCategory: '',

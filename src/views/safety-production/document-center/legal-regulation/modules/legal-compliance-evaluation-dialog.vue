@@ -62,6 +62,7 @@
   const formRef = ref<FormExpose>()
   const mode = ref<LegalComplianceEvaluationDialogMode>('add')
   const initial = (): FormModel => ({
+    id: undefined,
     documentId: '',
     relatedClause: '',
     controlStatus: '',

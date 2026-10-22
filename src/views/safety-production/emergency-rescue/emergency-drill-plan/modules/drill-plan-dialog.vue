@@ -211,6 +211,7 @@
   })
   onDeactivated(() => dialogRef.value?.handleClose())
   const initial = (): FormModel => ({
+    id: undefined,
     planNo: '',
     drillName: '',
     sourcePlanId: '',

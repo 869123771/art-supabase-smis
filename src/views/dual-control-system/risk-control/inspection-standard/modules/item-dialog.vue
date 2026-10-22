@@ -56,6 +56,7 @@
   const formRef = ref<FormExpose>()
   const standards = ref<SmisInspectionStandard[]>([])
   const initial = (): SmisInspectionItemPayload => ({
+    id: undefined,
     tenantId: null,
     standardId: '',
     itemCode: '',

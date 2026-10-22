@@ -179,6 +179,7 @@
 </template>
 
 <script setup lang="tsx">
+  import { emptySpecialEquipmentRiskControl } from '@smis/domain/report-defaults'
   import { replaceReactiveModel } from '@/utils/form/model'
   import { formatPercentValue } from '@/utils/ui/format'
   import { ElProgress, ElTag } from 'element-plus'
@@ -208,30 +209,13 @@
   interface EquipmentQuery extends Record<string, unknown> {
     organizationId?: string
   }
-  const emptyData = (): SmisSpecialEquipmentRiskControlStatisticsResult => ({
-    overview: {
-      equipmentCount: 0,
-      riskPointCount: 0,
-      highRiskPointCount: 0,
-      riskItemCount: 0,
-      measureCount: 0,
-      taskCount: 0,
-      completedTaskCount: 0,
-      inspectionRate: 0
-    },
-    riskLevelStats: [],
-    categoryStats: [],
-    cycleStats: [],
-    organizationStats: [],
-    riskDetails: [],
-    organizationOptions: []
-  })
+
   const query = reactive<EquipmentQuery>({ organizationId: undefined })
   const state = reactive<{
     loading: boolean
     error: string | null
     data: SmisSpecialEquipmentRiskControlStatisticsResult
-  }>({ loading: false, error: null, data: emptyData() })
+  }>({ loading: false, error: null, data: emptySpecialEquipmentRiskControl() })
   const organizationOptions = computed(() =>
     toDualControlOrganizationTree(state.data.organizationOptions)
   )

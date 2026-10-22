@@ -63,6 +63,7 @@
   const formRef = ref<FormExpose>()
   const menus = ref<SmisConfigurableMenuOption[]>([])
   const initial = (): SmisDuplicateConfigurationPayload => ({
+    id: undefined,
     tenantId: null,
     menuId: '',
     contentItem: '',

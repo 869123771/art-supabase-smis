@@ -127,6 +127,7 @@
   const categoryProps = { label: 'categoryName', children: 'children' }
 
   const initial = (): FormModel => ({
+    id: undefined,
     categoryId: '',
     fileName: '',
     documentCode: '',

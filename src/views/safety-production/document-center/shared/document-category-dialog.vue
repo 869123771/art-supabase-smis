@@ -72,6 +72,7 @@
   const categories = shallowRef<SmisDocumentCategory[]>([])
   const categoryProps = { label: 'categoryName', children: 'children' }
   const initial = (): SmisDocumentCategorySavePayload => ({
+    id: undefined,
     parentId: null,
     categoryName: '',
     sort: 10,

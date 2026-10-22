@@ -253,6 +253,7 @@
 </template>
 
 <script setup lang="ts">
+  import { emptySafetyQualificationAnalysis } from '@smis/domain/report-defaults'
   import { replaceReactiveModel } from '@/utils/form/model'
   import dayjs from 'dayjs'
   import { useAsyncState } from '@vueuse/core'
@@ -295,25 +296,6 @@
     valueLabel: string
   }
 
-  const emptyData = (): SmisSafetyQualificationAnalysisResult => ({
-    overview: {
-      totalCertificates: 0,
-      certificateHolders: 0,
-      warningCount: 0,
-      expiringInRange: 0,
-      dismissedInRange: 0,
-      addedInRange: 0
-    },
-    organizationDistribution: [],
-    topHolders: [],
-    periodStats: [],
-    equipmentProjects: [],
-    specialOperations: [],
-    safetyManagerTypes: [],
-    registeredEngineerTypes: [],
-    educationDistribution: [],
-    organizationOptions: []
-  })
   const initialQuery = (): AnalysisQuery => ({
     dateRange: [dayjs().startOf('year').format('YYYY-MM-DD'), dayjs().format('YYYY-MM-DD')],
     organizationId: undefined
@@ -328,7 +310,7 @@
       }
       return result
     },
-    emptyData(),
+    emptySafetyQualificationAnalysis(),
     {
       immediate: false,
       resetOnExecute: false,

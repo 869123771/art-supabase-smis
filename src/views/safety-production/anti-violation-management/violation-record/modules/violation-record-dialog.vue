@@ -126,6 +126,7 @@
   const standardSelection = shallowRef<SmisAntiViolationStandardOption[]>([])
 
   const createInitialForm = (): ViolationRecordForm => ({
+    id: undefined,
     operation: 'add',
     violationTime: dayjs().format('YYYY-MM-DD HH:mm:ss'),
     siteId: '',

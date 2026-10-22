@@ -111,6 +111,7 @@
   })
 
   const createInitialForm = (): PositionSafetyResponsibility => ({
+    id: undefined,
     organizationId: '',
     positionId: '',
     primaryHazardCategory: 'basic_management',

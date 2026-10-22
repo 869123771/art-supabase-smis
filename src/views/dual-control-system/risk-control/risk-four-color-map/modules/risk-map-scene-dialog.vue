@@ -74,6 +74,7 @@
   const sceneTree = shallowRef<SmisRiskMapScene[]>([])
   const treeProps = { label: 'sceneName', children: 'children', disabled: 'disabled' }
   const initial = (): SmisRiskMapScenePayload => ({
+    id: undefined,
     parentId: null,
     sceneName: '',
     backgroundUrl: '',

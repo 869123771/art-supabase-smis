@@ -1,3 +1,11 @@
+import {
+  emptyHazardGovernanceReport,
+  emptySpecialEquipmentRiskControl,
+  emptyInspectionStatistics,
+  emptyHiddenHazardInspectionRecord,
+  emptyTeamSelfInspectionCoverage,
+  emptyNoHazardPersonnelStatistics
+} from '@smis/domain/report-defaults'
 import { buildSupabaseRpcRange } from '@/utils/supabase'
 import { normalizeNullableText } from '@/utils/form/normalize'
 import { useSupabase } from '@/hooks/core/useSupabase'
@@ -37,98 +45,6 @@ interface ListResult<TRecord, TOverview> {
 }
 
 const { supabase, responseHandle } = useSupabase()
-
-const emptyHazardGovernanceReport = (): SmisHazardGovernanceReportResult => ({
-  overview: { total: 0, closed: 0, open: 0, overdue: 0, major: 0, closureRate: 0 },
-  organizationStats: [],
-  categoryStats: [],
-  sourceStats: [],
-  cycleStats: {
-    withinDay: 0,
-    withinThreeDays: 0,
-    withinWeek: 0,
-    withinMonth: 0,
-    overMonth: 0
-  },
-  hazardDetails: [],
-  majorHazards: [],
-  yearOutstanding: [],
-  organizationOptions: []
-})
-
-const emptyInspectionStatistics = (): SmisInspectionStatisticsResult => ({
-  overview: {
-    organizationCount: 0,
-    generatedCount: 0,
-    completedCount: 0,
-    pendingCount: 0,
-    missedCount: 0,
-    repeatedMissedCount: 0,
-    inspectionRate: 0,
-    missedRate: 0
-  },
-  organizationStats: [],
-  organizationOptions: [],
-  riskLevelOptions: []
-})
-
-const emptyHiddenHazardInspectionRecord = (): SmisHiddenHazardInspectionRecordResult => ({
-  overview: {
-    inspectorCount: 0,
-    taskCount: 0,
-    completedCount: 0,
-    overdueCount: 0,
-    abnormalTaskCount: 0,
-    completionRate: 0
-  },
-  personnelStats: [],
-  details: [],
-  organizationOptions: []
-})
-
-const emptyNoHazardPersonnelStatistics = (): SmisNoHazardPersonnelStatisticsResult => ({
-  overview: {
-    personnelCount: 0,
-    matchedCount: 0,
-    zeroReportCount: 0,
-    onLeaveCount: 0,
-    averageHazardCount: 0
-  },
-  records: [],
-  organizationOptions: []
-})
-
-const emptyTeamSelfInspectionCoverage = (): SmisTeamSelfInspectionCoverageResult => ({
-  overview: {
-    organizationCount: 0,
-    teamCount: 0,
-    memberCount: 0,
-    coveredMemberCount: 0,
-    coverageRate: 0,
-    completedTaskCount: 0
-  },
-  records: [],
-  organizationOptions: []
-})
-
-const emptySpecialEquipmentRiskControl = (): SmisSpecialEquipmentRiskControlStatisticsResult => ({
-  overview: {
-    equipmentCount: 0,
-    riskPointCount: 0,
-    highRiskPointCount: 0,
-    riskItemCount: 0,
-    measureCount: 0,
-    taskCount: 0,
-    completedTaskCount: 0,
-    inspectionRate: 0
-  },
-  riskLevelStats: [],
-  categoryStats: [],
-  cycleStats: [],
-  organizationStats: [],
-  riskDetails: [],
-  organizationOptions: []
-})
 
 const normalizeList = <TRecord, TOverview>(
   data: ListResult<TRecord, TOverview> | null,

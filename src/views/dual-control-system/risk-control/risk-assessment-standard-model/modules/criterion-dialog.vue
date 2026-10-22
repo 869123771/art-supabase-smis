@@ -39,6 +39,7 @@
   const dialogRef = ref<ArtDialogExpose<CriterionDialogOpenData>>()
   const formRef = ref<FormExpose>()
   const initial = (): SmisRiskAssessmentCriterionPayload => ({
+    id: undefined,
     tenantId: null,
     dimensionId: '',
     criterionText: '',

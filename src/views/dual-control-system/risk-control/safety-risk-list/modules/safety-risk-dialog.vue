@@ -167,6 +167,7 @@
   const activityLoading = ref(false)
   const submitting = ref(false)
   const initial = (): SmisSafetyRiskSavePayload => ({
+    id: undefined,
     riskPointId: '',
     hazardFactor: '',
     factorCategoryId: null,

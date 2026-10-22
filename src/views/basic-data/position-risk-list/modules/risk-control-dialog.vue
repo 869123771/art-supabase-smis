@@ -94,6 +94,7 @@
   const context = reactive({ organizationName: '', positionName: '', positionCode: '' })
 
   const createInitialForm = (): PositionRiskControl => ({
+    id: undefined,
     organizationId: '',
     positionId: '',
     hazardFactor: '',
