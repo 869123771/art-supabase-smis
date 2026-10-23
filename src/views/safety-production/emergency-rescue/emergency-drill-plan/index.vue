@@ -65,6 +65,7 @@
     type BusinessWorkspaceMetric
   } from '@/components/business/business-workspace-header/index.vue'
   import BusinessTableWorkspaceActions from '@/components/business/business-table-workspace-actions/index.vue'
+  import BusinessRecordLink from '@/components/business/business-record-link/index.vue'
   import {
     deleteEmergencyDrillPlans,
     fetchEmergencyDrillPlanList,
@@ -226,17 +227,14 @@
               }
             />
           </span>
-          <span>
-            <button
-              type="button"
-              class="drill-plan-page__record-link"
-              title={`查看演练计划：${row.drillName}`}
-              onClick={() => openDetail(row)}
-            >
-              {row.drillName}
-            </button>
-            <small>{row.planNo}</small>
-          </span>
+          <BusinessRecordLink
+            label={row.drillName}
+            meta={row.planNo}
+            title={`查看演练计划：${row.drillName}`}
+            interactive
+            compact
+            onClick={() => openDetail(row)}
+          />
         </div>
       )
     },
@@ -412,49 +410,6 @@
           color: var(--el-color-danger);
           background: color-mix(in srgb, var(--el-color-danger) 9%, var(--el-bg-color));
         }
-      }
-
-      > span:last-child {
-        display: grid;
-        min-width: 0;
-      }
-
-      strong,
-      .drill-plan-page__record-link,
-      small {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-
-      .drill-plan-page__record-link {
-        width: fit-content;
-        max-width: 100%;
-        padding: 0;
-        font: inherit;
-        font-weight: 600;
-        color: var(--theme-color);
-        text-align: left;
-        cursor: pointer;
-        background: transparent;
-        border: 0;
-        border-radius: var(--el-border-radius-small);
-
-        &:hover {
-          text-decoration: underline;
-          text-underline-offset: 3px;
-        }
-
-        &:focus-visible {
-          outline: 2px solid color-mix(in srgb, var(--theme-color) 42%, transparent);
-          outline-offset: 2px;
-        }
-      }
-
-      small {
-        margin-top: 2px;
-        font-size: 11px;
-        color: var(--el-text-color-secondary);
       }
     }
   }

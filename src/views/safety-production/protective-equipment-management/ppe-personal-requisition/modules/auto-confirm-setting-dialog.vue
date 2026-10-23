@@ -1,9 +1,12 @@
 <template>
   <ArtDialog ref="dialogRef" size="sm">
-    <div class="auto-confirm-setting__notice">
-      <ArtSvgIcon icon="ri:timer-line" />
-      <p>发放后领用人未主动确认时，系统将在设定天数到期后自动确认，并记录确认来源为“系统”。</p>
-    </div>
+    <ElAlert
+      class="mb-4"
+      title="发放后领用人未主动确认时，系统将在设定天数到期后自动确认，并记录确认来源为“系统”。"
+      type="info"
+      :closable="false"
+      show-icon
+    />
     <ArtForm
       ref="formRef"
       :model-value="form"
@@ -83,29 +86,3 @@
 
   defineExpose({ handleOpen })
 </script>
-
-<style scoped lang="scss">
-  .auto-confirm-setting {
-    &__notice {
-      display: flex;
-      gap: 12px;
-      align-items: flex-start;
-      padding: 12px 16px;
-      margin-bottom: 16px;
-      color: var(--art-gray-800);
-      background: var(--art-gray-100);
-      border-radius: var(--el-border-radius-base);
-
-      svg {
-        flex: 0 0 auto;
-        margin-top: 2px;
-        font-size: 22px;
-        color: var(--theme-color);
-      }
-
-      p {
-        margin: 0;
-      }
-    }
-  }
-</style>

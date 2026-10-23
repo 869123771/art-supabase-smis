@@ -45,13 +45,16 @@
 
 <script setup lang="tsx">
   import { replaceReactiveModel } from '@/utils/form/model'
-  import { normalizeNullableNumber } from '@/utils/form/normalize'
   import type { TableRequestOptions } from '@/hooks/core/useTable'
   import { withSupabaseTableRange } from '@/utils/supabase/pagination'
   import { useDictionaryOptions } from '@/hooks/core/useDictionaryOptions'
   import dayjs from 'dayjs'
   import { useTenantScopeFormPolicy } from '@/hooks/core/useTenantScopeFormPolicy'
-  import { createIssuanceImportLookup } from '../../issuance-import'
+  import {
+    createIssuanceImportLookup,
+    readIssuanceImportRows,
+    resolveIssuanceImportRows
+  } from '../../issuance-import'
   import BusinessTableWorkspaceActions from '@/components/business/business-table-workspace-actions/index.vue'
   import BusinessTableRowActions from '@/components/business/business-table-row-actions/index.vue'
   import BusinessWorkspaceHeader from '@/components/business/business-workspace-header/index.vue'
@@ -209,38 +212,18 @@
     const targetTenantId = defaultWriteTenantId.value
     if (!targetTenantId) throw new Error('无法确定导入目标租户，请刷新后重试')
     const resolveReferences = createIssuanceImportLookup(targetTenantId, 'protective_equipment')
-    for (const raw of rows) {
-      const employeeNo = String(raw.employeeNo || '').trim()
-      const warehouseCode = String(raw.warehouseCode || '').trim()
-      const issuerEmployeeNo = String(raw.issuerEmployeeNo || '').trim()
-      const materialCode = String(raw.materialCode || '').trim()
-      const quantity = normalizeNullableNumber(raw.issueQuantity)
-      if (
-        !employeeNo ||
-        !warehouseCode ||
-        !issuerEmployeeNo ||
-        !materialCode ||
-        quantity === null ||
-        quantity <= 0
-      ) {
-        throw new Error('导入行缺少必填字段或发放数量无效')
-      }
-      const { employee, warehouse, issuer, material } = await resolveReferences({
-        employeeNo,
-        warehouseCode,
-        issuerEmployeeNo,
-        materialCode
-      })
-      const rawIssueDate = String(raw.issueDate ?? '')
+    const resolvedRows = await resolveIssuanceImportRows(
+      readIssuanceImportRows(rows),
+      resolveReferences
+    )
+    for (const row of resolvedRows) {
       await savePpeIssuanceRecord({
-        employeeId: employee.id,
-        warehouseId: String(warehouse.id),
-        issuerEmployeeId: issuer.id,
-        issueDate: dayjs(rawIssueDate).isValid()
-          ? dayjs(rawIssueDate).format('YYYY-MM-DD')
-          : dayjs().format('YYYY-MM-DD'),
-        remark: String(raw.remark || ''),
-        items: [{ materialId: String(material.id), issueQuantity: quantity }]
+        employeeId: row.employee.id,
+        warehouseId: String(row.warehouse.id),
+        issuerEmployeeId: row.issuer.id,
+        issueDate: row.issueDate,
+        remark: row.remark,
+        items: [{ materialId: String(row.material.id), issueQuantity: row.issueQuantity }]
       })
     }
     await refreshData()

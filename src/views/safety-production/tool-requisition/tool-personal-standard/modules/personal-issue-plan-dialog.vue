@@ -1,12 +1,15 @@
 <template>
   <ArtDialog ref="dialogRef" size="lg" :loading="loading">
-    <div class="personal-plan__notice">
-      <ArtSvgIcon icon="ri:calendar-schedule-line" />
-      <div>
-        <strong>{{ employee?.employeeName }} · {{ employee?.employeeNo }}</strong>
-        <p>设置首次领用时间和周期后，到期任务会按个人标准生成待领用单。</p>
-      </div>
-    </div>
+    <ElAlert
+      class="mb-4"
+      :title="
+        employee ? `${employee.employeeName} · ${employee.employeeNo}` : '尚未选择工器具领用员工'
+      "
+      description="设置首次领用时间和周期后，到期任务会按个人标准生成待领用单。"
+      type="info"
+      :closable="false"
+      show-icon
+    />
 
     <ArtSectionCard
       title="工器具个人领用计划"
@@ -193,36 +196,3 @@
 
   defineExpose({ handleOpen })
 </script>
-
-<style scoped lang="scss">
-  .personal-plan {
-    &__notice {
-      display: flex;
-      gap: 12px;
-      align-items: flex-start;
-      padding: 12px 16px;
-      margin-bottom: 16px;
-      color: var(--art-gray-800);
-      background: var(--art-gray-100);
-      border-radius: var(--el-border-radius-base);
-
-      svg {
-        flex: 0 0 auto;
-        margin-top: 2px;
-        font-size: 22px;
-        color: var(--theme-color);
-      }
-
-      strong,
-      p {
-        display: block;
-        margin: 0;
-      }
-
-      p {
-        margin-top: 4px;
-        color: var(--art-gray-700);
-      }
-    }
-  }
-</style>

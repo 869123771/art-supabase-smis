@@ -74,7 +74,6 @@
 
   import { toDictionaryOption } from '@/utils/form/option'
 
-  import { normalizeNullableText } from '@/utils/form/normalize'
   import TreeUtils from '@/utils/tree'
   import type { SearchFormItem } from '@/components/core/forms/art-search-bar/index.vue'
   import type {
@@ -109,6 +108,7 @@
   import AntiViolationStandardDialog, {
     type AntiViolationStandardDialogOpenData
   } from './modules/anti-violation-standard-dialog.vue'
+  import { prepareAntiViolationStandardImport } from './anti-violation-standard-import'
 
   const formatTableDateTime = createDateTimeFormatter({
     format: 'YYYY-MM-DD HH:mm',
@@ -123,16 +123,6 @@
     Pick<Api.Common.PaginationParams, 'current' | 'size'>
   interface DialogExpose {
     handleOpen: (data: AntiViolationStandardDialogOpenData) => Promise<void>
-  }
-  interface ImportRow {
-    standardCode?: unknown
-    standardName?: unknown
-    categoryCode?: unknown
-    deductionPoints?: unknown
-    handlingRequirements?: unknown
-    legalBasis?: unknown
-    status?: unknown
-    description?: unknown
   }
   interface TableGroup {
     searchQuery: SmisAntiViolationStandardSearchParams
@@ -220,31 +210,8 @@
       tree.data = categoryResult.tree
     }
     const categories = treeUtils.treeToList(tree.data)
-    for (const raw of rows as ImportRow[]) {
-      const categoryCode = String(raw.categoryCode || '')
-        .trim()
-        .toUpperCase()
-      const category = categories.find(
-        (item) => item.categoryCode.toUpperCase() === categoryCode && item.status === 'enabled'
-      )
-      const standardCode = String(raw.standardCode || '').trim()
-      const standardName = String(raw.standardName || '').trim()
-      const deductionPoints = Number(raw.deductionPoints)
-      if (!category?.id || !standardCode || !standardName || !Number.isFinite(deductionPoints)) {
-        throw new Error('导入行缺少违章编号、名称、有效分类编码或扣减分值')
-      }
-      await saveAntiViolationStandard({
-        operation: 'import',
-        categoryId: category.id,
-        standardCode,
-        standardName,
-        deductionPoints,
-        handlingRequirements: normalizeNullableText(String(raw.handlingRequirements || '')),
-        legalBasis: normalizeNullableText(String(raw.legalBasis || '')),
-        status: raw.status === 'disabled' ? 'disabled' : 'enabled',
-        description: normalizeNullableText(String(raw.description || ''))
-      })
-    }
+    const preparedRows = prepareAntiViolationStandardImport(rows, categories)
+    for (const payload of preparedRows) await saveAntiViolationStandard(payload)
     await tableQueryRef.value?.getData()
   }
 

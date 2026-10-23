@@ -1,13 +1,14 @@
 <template>
   <ArtDialog ref="dialogRef" size="xl">
     <div class="tool-return-dialog">
-      <div class="tool-return-dialog__intro">
-        <ArtSvgIcon icon="ri:arrow-go-back-line" />
-        <div>
-          <strong>按源发放明细办理归还</strong>
-          <p>支持同一领用人跨发放单多选；系统会汇总源单号，并逐行校验剩余可归还数量。</p>
-        </div>
-      </div>
+      <ElAlert
+        class="mb-4"
+        title="按源发放明细办理归还"
+        description="支持同一领用人跨发放单多选；系统会汇总源单号，并逐行校验剩余可归还数量。"
+        type="info"
+        :closable="false"
+        show-icon
+      />
 
       <ArtForm
         ref="formRef"
@@ -82,7 +83,6 @@
     DataSelectRecord
   } from '@/components/core/forms/art-data-select/types'
   import ArtSectionCard from '@/components/core/surfaces/art-section-card/index.vue'
-  import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
   import ArtTable from '@/components/core/tables/art-table/index.vue'
   import type { ArtTableExpose } from '@/components/core/tables/art-table/index.vue'
   import SmisDataSourceEmptyActions from '@smis/views/components/smis-data-source-empty-actions.vue'
@@ -403,36 +403,3 @@
 
   defineExpose({ handleOpen })
 </script>
-
-<style scoped lang="scss">
-  .tool-return-dialog {
-    &__intro {
-      display: flex;
-      gap: 12px;
-      align-items: flex-start;
-      padding: 12px 16px;
-      margin-bottom: 16px;
-      color: var(--art-gray-800);
-      background: var(--art-gray-100);
-      border-radius: var(--el-border-radius-base);
-
-      svg {
-        flex: 0 0 auto;
-        margin-top: 2px;
-        font-size: 22px;
-        color: var(--theme-color);
-      }
-
-      strong,
-      p {
-        display: block;
-        margin: 0;
-      }
-
-      p {
-        margin-top: 4px;
-        color: var(--art-gray-700);
-      }
-    }
-  }
-</style>

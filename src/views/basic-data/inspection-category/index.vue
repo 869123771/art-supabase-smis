@@ -40,6 +40,7 @@
 </template>
 
 <script setup lang="tsx">
+  import { ElTag } from 'element-plus'
   import { createDateTimeFormatter } from '@/utils/ui/format'
 
   import { toDictionaryOption } from '@/utils/form/option'
@@ -59,7 +60,6 @@
   import { useTenantScopeStore } from '@/store/modules/tenant-scope'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import ArtDictDisplay from '@/components/core/base/art-dict-display/index.vue'
-  import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
   import BusinessTableWorkspaceActions from '@/components/business/business-table-workspace-actions/index.vue'
   import BusinessWorkspaceHeader, {
     type BusinessWorkspaceMetric
@@ -222,12 +222,7 @@
       minWidth: 210,
       fixed: 'left',
       formatter: (row) => (
-        <div class="inspection-category-page__identity">
-          <span aria-hidden="true">
-            <ArtSvgIcon icon="ri:filter-3-line" />
-          </span>
-          <strong title={row.categoryName}>{row.categoryName}</strong>
-        </div>
+        <BusinessTableIdentityCell primary={row.categoryName} icon="ri:filter-3-line" />
       )
     },
     {
@@ -235,8 +230,10 @@
       label: '检验类别编码',
       minWidth: 170,
       formatter: (row) => (
-        <span class="inspection-category-page__code" title={row.categoryCode}>
-          {row.categoryCode}
+        <span title={row.categoryCode}>
+          <ElTag type="primary" effect="light" size="small" round>
+            {row.categoryCode}
+          </ElTag>
         </span>
       )
     },
@@ -343,44 +340,6 @@
   .inspection-category-page {
     gap: 12px;
     min-width: 0;
-
-    :deep(.inspection-category-page__identity) {
-      display: grid;
-      grid-template-columns: 34px minmax(0, 1fr);
-      gap: 10px;
-      align-items: center;
-      min-width: 0;
-
-      > span {
-        display: grid;
-        place-items: center;
-        width: 34px;
-        height: 34px;
-        color: var(--theme-color);
-        background: color-mix(in srgb, var(--theme-color) 9%, var(--el-bg-color));
-        border-radius: var(--el-border-radius-base);
-      }
-
-      strong {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        color: var(--el-text-color-primary);
-        white-space: nowrap;
-      }
-    }
-
-    :deep(.inspection-category-page__code) {
-      display: inline-block;
-      max-width: 100%;
-      padding: 4px 8px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      font-size: 12px;
-      color: var(--theme-color);
-      white-space: nowrap;
-      background: color-mix(in srgb, var(--theme-color) 7%, var(--el-bg-color));
-      border-radius: var(--el-border-radius-small);
-    }
 
     :deep(.inspection-category-page__actions) {
       display: flex;

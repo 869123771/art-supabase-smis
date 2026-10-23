@@ -75,7 +75,7 @@
   import ArtStatusSegmented from '@/components/core/forms/art-status-segmented/index.vue'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import ArtDictDisplay from '@/components/core/base/art-dict-display/index.vue'
-  import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
+  import BusinessTableIdentityCell from '@/components/business/business-table-identity-cell/index.vue'
   import BusinessTableWorkspaceActions from '@/components/business/business-table-workspace-actions/index.vue'
   import BusinessWorkspaceHeader, {
     type BusinessWorkspaceMetric
@@ -276,15 +276,11 @@
       minWidth: 230,
       fixed: 'left',
       formatter: (row) => (
-        <div class="risk-control-page__identity">
-          <span>
-            <ArtSvgIcon icon="ri:radar-line" />
-          </span>
-          <div>
-            <strong>{row.riskPointName}</strong>
-            <small>{row.siteName}</small>
-          </div>
-        </div>
+        <BusinessTableIdentityCell
+          primary={row.riskPointName}
+          secondary={row.siteName}
+          icon="ri:radar-line"
+        />
       )
     },
     {
@@ -574,37 +570,6 @@
     :deep(.risk-control-page__code) {
       font-size: 12px;
       color: var(--theme-color);
-    }
-
-    :deep(.risk-control-page__identity) {
-      display: grid;
-      grid-template-columns: 34px minmax(0, 1fr);
-      gap: 10px;
-      align-items: center;
-    }
-
-    :deep(.risk-control-page__identity > span) {
-      display: grid;
-      place-items: center;
-      width: 34px;
-      height: 34px;
-      color: var(--theme-color);
-      background: color-mix(in srgb, var(--theme-color) 9%, var(--el-bg-color));
-      border-radius: var(--el-border-radius-base);
-    }
-
-    :deep(.risk-control-page__identity strong),
-    :deep(.risk-control-page__identity small) {
-      display: block;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    :deep(.risk-control-page__identity small) {
-      margin-top: 2px;
-      font-size: 11px;
-      color: var(--el-text-color-secondary);
     }
 
     :deep(.risk-control-page__tags) {

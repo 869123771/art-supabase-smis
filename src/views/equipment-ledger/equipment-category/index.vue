@@ -66,6 +66,7 @@
 </template>
 
 <script setup lang="tsx">
+  import { ElTag } from 'element-plus'
   import { createDateTimeFormatter } from '@/utils/ui/format'
 
   import { toDictionaryOption } from '@/utils/form/option'
@@ -276,8 +277,10 @@
       minWidth: 180,
       sortable: true,
       formatter: (row) => (
-        <span class="equipment-category-page__code" title={row.categoryCode}>
-          {row.categoryCode}
+        <span title={row.categoryCode}>
+          <ElTag type="primary" effect="light" size="small" round>
+            {row.categoryCode}
+          </ElTag>
         </span>
       )
     },
@@ -426,19 +429,6 @@
     &__table {
       min-width: 0;
       height: 100%;
-    }
-
-    :deep(.equipment-category-page__code) {
-      display: inline-block;
-      max-width: 100%;
-      padding: 4px 8px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      font-size: 12px;
-      color: var(--theme-color);
-      white-space: nowrap;
-      background: color-mix(in srgb, var(--theme-color) 7%, var(--el-bg-color));
-      border-radius: var(--el-border-radius-small);
     }
 
     :deep(.equipment-category-page__inspection) {

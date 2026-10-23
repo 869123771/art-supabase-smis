@@ -68,7 +68,6 @@
 
   import type { TableRequestOptions } from '@/hooks/core/useTable'
   import { getFriendlySupabaseErrorMessage } from '@/utils/supabase'
-  import { normalizeNullableText } from '@/utils/form/normalize'
   import { ElImage, ElMessage } from 'element-plus'
   import type { SearchFormItem } from '@/components/core/forms/art-search-bar/index.vue'
   import type {
@@ -81,6 +80,7 @@
   import { buildSupabasePageRange } from '@/utils/supabase/pagination'
   import { exportExcel } from '@/utils/file'
   import { loadAllDocumentPages } from '@/utils/business/document-detail-list'
+  import { createImportReferenceLookup } from '@/utils/business/import-reference'
   import TreeUtils from '@/utils/tree'
   import { useArtFeedback } from '@/hooks/core/useArtFeedback'
   import { useUserStore } from '@/store/modules/user'
@@ -98,8 +98,6 @@
     fetchHazardSourceList,
     saveHazardSource,
     type SmisHazardSource,
-    type SmisHazardSourceLevel,
-    type SmisHazardSourceRiskLevel,
     type SmisHazardSourceSearchParams,
     type SmisHazardSite,
     type SmisTreeOrganization
@@ -110,6 +108,7 @@
   } from './modules/hazard-source-dialog.vue'
   import HazardStatisticsDialog from './modules/hazard-statistics-dialog.vue'
   import HazardSourceDetailDrawer from './modules/hazard-source-detail-drawer.vue'
+  import { prepareHazardSourceImport } from './hazard-source-import'
 
   const formatTableDateTime = createDateTimeFormatter({
     format: 'YYYY-MM-DD HH:mm',
@@ -129,23 +128,6 @@
   interface DetailExpose {
     handleOpen: (row: SmisHazardSource) => Promise<void>
   }
-  interface ImportRow {
-    hazardName?: string
-    siteName?: string
-    hazardLevel?: string
-    riskLevel?: string
-    controlOrganizationName?: string
-    responsibleEmployeeNo?: string
-    quantity?: number | string
-    location?: string
-    evaluationDate?: string
-    evaluationOrganization?: string
-    filingDate?: string
-    filingOrganization?: string
-    filingNo?: string
-    remark?: string
-  }
-
   const userStore = useUserStore()
   const { getDictMap } = storeToRefs(userStore)
   const { confirmDelete } = useArtFeedback()
@@ -402,57 +384,31 @@
   const importRows = async (rows: unknown[]): Promise<void> => {
     const flatSites = siteTree.treeToList(state.sites) as SmisHazardSite[]
     const flatOrgs = orgTree.treeToList(state.organizations) as SmisTreeOrganization[]
-    for (const raw of rows as ImportRow[]) {
-      const site = flatSites.find((item) => item.siteName === String(raw.siteName || '').trim())
-      const org = flatOrgs.find(
-        (item) => item.organizationName === String(raw.controlOrganizationName || '').trim()
-      )
-      if (!site) throw new Error(`未找到场所：${raw.siteName}`)
-      if (!org) throw new Error(`未找到管控部门：${raw.controlOrganizationName}`)
-      const hazardLevel = resolveDictValue(
-        'smisHazardSourceLevel',
-        raw.hazardLevel
-      ) as SmisHazardSourceLevel
-      const riskLevel = resolveDictValue(
-        'smisHazardSourceRiskLevel',
-        raw.riskLevel
-      ) as SmisHazardSourceRiskLevel
-      if (!hazardLevel || !riskLevel) throw new Error('危险等级或风险等级无法识别')
-      const quantityText = String(raw.quantity ?? '').trim()
-      const quantity = quantityText ? Number(quantityText) : null
-      if (quantity !== null && (!Number.isFinite(quantity) || quantity <= 0)) {
-        throw new Error(`数量必须为大于0的数字：${raw.quantity}`)
-      }
-      let employeeId: string | undefined
-      if (raw.responsibleEmployeeNo) {
-        const employees = await fetchHazardSourceEmployees({
-          keyword: String(raw.responsibleEmployeeNo),
-          from: 0,
-          to: 99
-        })
-        employeeId = employees.data.find(
-          (item) => item.employeeNo === String(raw.responsibleEmployeeNo).trim()
-        )?.id
-        if (!employeeId) throw new Error(`未找到责任人员工号：${raw.responsibleEmployeeNo}`)
-      }
-      await saveHazardSource({
-        hazardName: String(raw.hazardName || '').trim(),
-        siteId: site.id,
-        hazardLevel,
-        riskLevel,
-        controlOrganizationId: org.id,
-        responsibleEmployeeId: employeeId,
-        quantity,
-        location: normalizeNullableText(String(raw.location || '')),
-        evaluationDate: normalizeNullableText(String(raw.evaluationDate || '')),
-        evaluationOrganization: normalizeNullableText(String(raw.evaluationOrganization || '')),
-        filingDate: normalizeNullableText(String(raw.filingDate || '')),
-        filingOrganization: normalizeNullableText(String(raw.filingOrganization || '')),
-        filingNo: normalizeNullableText(String(raw.filingNo || '')),
-        imageUrls: [],
-        remark: String(raw.remark || '')
+    const prepared = prepareHazardSourceImport(
+      rows,
+      flatSites.map((item) => ({ id: item.id, name: item.siteName })),
+      flatOrgs.map((item) => ({ id: item.id, name: item.organizationName })),
+      resolveDictValue
+    )
+    const resolveEmployee = createImportReferenceLookup(async (employeeNo) => {
+      const employees = await fetchHazardSourceEmployees({
+        keyword: employeeNo,
+        from: 0,
+        to: 99
       })
+      return employees.data.filter((item) => item.employeeNo === employeeNo)
+    })
+    const resolved = []
+    for (const row of prepared) {
+      const employee = row.responsibleEmployeeNo
+        ? await resolveEmployee(
+            row.responsibleEmployeeNo,
+            `第 ${row.fileRow} 行责任人员工号：${row.responsibleEmployeeNo}`
+          )
+        : undefined
+      resolved.push({ ...row.payload, responsibleEmployeeId: employee?.id })
     }
+    for (const payload of resolved) await saveHazardSource(payload)
   }
   const downloadTemplate = async (): Promise<void> => {
     await exportExcel({

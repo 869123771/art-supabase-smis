@@ -275,7 +275,6 @@
   import {
     fetchSafetyQualificationAnalysis,
     type SmisCertificateCategory,
-    type SmisSafetyQualificationAnalysisResult,
     type SmisSafetyQualificationDimensionStat,
     type SmisSafetyQualificationEquipmentProjectStat,
     type SmisSafetyQualificationHolderStat,

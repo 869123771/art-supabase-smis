@@ -67,6 +67,7 @@
 </template>
 
 <script setup lang="tsx">
+  import { ElTag } from 'element-plus'
   import { createDateTimeFormatter } from '@/utils/ui/format'
 
   import { toDictionaryOption } from '@/utils/form/option'
@@ -278,8 +279,10 @@
       label: '位置编码',
       minWidth: 160,
       formatter: (row) => (
-        <span class="storage-location-page__code" title={row.locationCode}>
-          {row.locationCode}
+        <span title={row.locationCode}>
+          <ElTag type="primary" effect="light" size="small" round>
+            {row.locationCode}
+          </ElTag>
         </span>
       )
     },
@@ -435,19 +438,6 @@
     &__table {
       min-width: 0;
       height: 100%;
-    }
-
-    :deep(.storage-location-page__code) {
-      display: inline-block;
-      max-width: 100%;
-      padding: 4px 8px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      font-size: 12px;
-      color: var(--theme-color);
-      white-space: nowrap;
-      background: color-mix(in srgb, var(--theme-color) 7%, var(--el-bg-color));
-      border-radius: var(--el-border-radius-small);
     }
 
     :deep(.storage-location-page__actions) {
